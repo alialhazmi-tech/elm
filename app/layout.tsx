@@ -1,38 +1,49 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "Starter Project",
-  description: "A clean starting point for building your site.",
-  icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
+  metadataBase: new URL("https://alelm.net"),
+  title: {
+    default: "العلم | المعرفة وراء الخبر",
+    template: "%s | العلم",
   },
+  description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
+  applicationName: "العلم",
+  authors: [{ name: "فريق تحرير العلم" }],
+  creator: "العلم",
+  publisher: "العلم",
+  formatDetection: { email: false, address: false, telephone: false },
+  openGraph: {
+    type: "website",
+    locale: "ar_SA",
+    siteName: "العلم",
+    title: "العلم | المعرفة وراء الخبر",
+    description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
+    url: "/",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "العلم - المعرفة وراء الخبر" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "العلم | المعرفة وراء الخبر",
+    description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
+    images: ["/og.png"],
+  },
+  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  manifest: "/manifest.webmanifest",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export const viewport: Viewport = {
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5f1e8" },
+    { media: "(prefers-color-scheme: dark)", color: "#071827" },
+  ],
+};
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+    <html lang="ar" dir="rtl">
+      <body>{children}</body>
     </html>
   );
 }
