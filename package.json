@@ -14,9 +14,10 @@
     "test:unit": "node --test tests/*.test.mjs",
     "budget": "node scripts/check-performance-budget.mjs",
     "policy:check": "node scripts/policy-check.mjs",
-    "test": "npm run lint && npm run typecheck && npm run build && npm run test:unit && npm run budget",
+    "test": "npm run lint && npm run typecheck && npm run build:gate && NEXT_DIST_DIR=.next-gate npm run test:unit && NEXT_DIST_DIR=.next-gate npm run budget",
     "cf:build": "opennextjs-cloudflare build",
-    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
+    "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "build:gate": "NEXT_DIST_DIR=.next-gate next build"
   },
   "dependencies": {
     "next": "16.3.0",

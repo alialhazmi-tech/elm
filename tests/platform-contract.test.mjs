@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { readFile, stat } from "node:fs/promises";
 import test from "node:test";
 
-const htmlPath = new URL("../.next/server/app/index.html", import.meta.url);
-const routesPath = new URL("../.next/routes-manifest.json", import.meta.url);
+const DIST = process.env.NEXT_DIST_DIR ?? ".next";
+const htmlPath = new URL(`../${DIST}/server/app/index.html`, import.meta.url);
+const routesPath = new URL(`../${DIST}/routes-manifest.json`, import.meta.url);
 const ogPath = new URL("../public/og.png", import.meta.url);
 
 test("renders Arabic RTL metadata with the approved knowledge positioning", async () => {
