@@ -108,10 +108,10 @@ main { overflow: clip; }
 
 .hero {
   width: min(1220px, calc(100% - 3rem));
-  min-height: 39rem;
+  min-height: 32rem;
   margin: 2.5rem auto 0;
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
+  grid-template-columns: 1.05fr 0.95fr;
   border-radius: var(--radius-lg);
   overflow: hidden;
   background: var(--navy-900);
@@ -119,7 +119,7 @@ main { overflow: clip; }
 }
 
 .hero-copy {
-  padding: clamp(2.5rem, 6vw, 5.5rem);
+  padding: clamp(2rem, 4vw, 3.5rem);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -130,12 +130,13 @@ main { overflow: clip; }
 .eyebrow span { width: 2.4rem; height: 3px; background: var(--yellow); border-radius: 2rem; }
 
 .hero h1 {
-  max-width: 11ch;
+  max-width: 20ch;
   margin: 0;
-  font-size: clamp(3.1rem, 7vw, 6.2rem);
+  font-size: clamp(1.9rem, 3.4vw, 3.2rem);
   font-weight: 900;
-  line-height: 1.08;
-  letter-spacing: -0.055em;
+  line-height: 1.28;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
 }
 
 .hero-deck { max-width: 40rem; margin: 2rem 0 0; color: #d5e0e9; font-size: clamp(1rem, 1.4vw, 1.22rem); }
@@ -246,7 +247,7 @@ main { overflow: clip; }
 .story-art::before, .story-art::after { content: ""; position: absolute; border-radius: 50%; }
 .story-art::before { width: 13rem; height: 13rem; inset: -4rem auto auto -2rem; border: 2.5rem solid rgb(255 255 255 / 0.12); }
 .story-art::after { width: 9rem; height: 9rem; inset: auto 2rem -3rem auto; background: rgb(245 200 66 / 0.5); }
-.story-art span { position: absolute; inset: auto auto 1rem 1.2rem; z-index: 2; color: white; font-family: Georgia, serif; font-size: 3.5rem; opacity: 0.85; }
+.story-art > span:not(.story-series) { position: absolute; inset: auto auto 1rem 1.2rem; z-index: 2; color: white; font-family: Georgia, serif; font-size: 3.5rem; opacity: 0.85; }
 .story-art-2 { background: #126f6c; }
 .story-art-3 { background: #82445a; }
 .story-art-4 { background: #3e5478; }
@@ -356,3 +357,105 @@ footer p { margin: 0; font-size: 0.82rem; }
   .series-chip { background: #0e263a; border-color: color-mix(in srgb, var(--series-color) 50%, #0e263a); }
   .newsletter { color: var(--navy-950); }
 }
+
+/* ===== صور حقيقية داخل البطاقات والهيرو ===== */
+.story-link { display: block; color: inherit; text-decoration: none; }
+.story-card:has(.story-link:hover) { transform: translateY(-4px); }
+.story-art { position: relative; overflow: hidden; }
+.story-image { width: 100%; height: 100%; object-fit: cover; }
+.story-art .story-series {
+  position: absolute; z-index: 2; font-family: inherit; opacity: 1; inset-inline-start: 0.75rem; inset-block-end: 0.75rem;
+  background: var(--series-color, var(--navy-900)); color: #fff;
+  font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.7rem; border-radius: 999px;
+}
+.hero-visual { position: relative; overflow: hidden; }
+.hero-image { object-fit: cover; opacity: 0.92; }
+.hero h1 a { color: inherit; text-decoration: none; }
+.hero h1 a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+
+/* ===== رأس الموقع: البحث ===== */
+.header-search input {
+  border: 1px solid var(--line); border-radius: 999px; background: var(--paper);
+  padding: 0.45rem 1rem; font: inherit; font-size: 0.85rem; color: var(--ink); min-width: 11rem;
+}
+.header-search input:focus-visible { outline: 2px solid var(--emerald); outline-offset: 2px; }
+
+/* ===== المسار والصفحات الداخلية ===== */
+.breadcrumb {
+  display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+  font-size: 0.8rem; color: var(--muted); margin-bottom: 1.5rem;
+}
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--navy-900); text-decoration: underline; }
+
+.article-shell { max-width: 62rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+.article-head { max-width: 44rem; }
+.series-badge {
+  display: inline-block; background: var(--series-color, var(--navy-900)); color: #fff;
+  font-size: 0.78rem; font-weight: 700; padding: 0.25rem 0.85rem;
+  border-radius: 999px; text-decoration: none; margin-bottom: 1rem;
+}
+.article-head h1 {
+  font-size: clamp(1.9rem, 4vw, 3rem); line-height: 1.3; margin: 0 0 1rem;
+  color: var(--navy-950); text-wrap: balance;
+}
+.article-deck { font-size: 1.1rem; color: var(--muted); line-height: 1.9; margin: 0 0 1.25rem; }
+.article-meta {
+  display: flex; gap: 1.25rem; flex-wrap: wrap;
+  font-size: 0.82rem; color: var(--muted); padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+.article-figure {
+  position: relative; margin: 2rem 0; aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md); overflow: hidden; background: var(--navy-900);
+}
+.article-image { object-fit: cover; }
+.article-body { max-width: 40rem; font-size: 1.05rem; line-height: 2.05; color: var(--ink); }
+.article-body p { margin: 0 0 1.25rem; }
+.article-placeholder {
+  background: var(--ivory); border-inline-start: 3px solid var(--emerald);
+  padding: 1rem 1.25rem; border-radius: var(--radius-sm); font-size: 0.95rem; color: var(--muted);
+}
+.series-note {
+  margin: 2.5rem 0 0; padding: 1.5rem 1.75rem; border-radius: var(--radius-md);
+  background: var(--paper); border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--series-color, var(--emerald));
+}
+.series-note p { margin: 0; font-size: 0.8rem; color: var(--muted); }
+.series-note h2 { margin: 0.15rem 0 0.4rem; font-size: 1.35rem; color: var(--navy-950); }
+.series-note-desc { font-size: 0.95rem !important; color: var(--ink) !important; }
+.series-note a { display: inline-block; margin-top: 0.85rem; font-weight: 700; color: var(--emerald); }
+
+/* ===== صفحات السلسلة والقسم والبحث ===== */
+.series-hero, .section-hero {
+  max-width: 72rem; margin: 0 auto; padding: 3rem 1.5rem 1.5rem;
+}
+.series-hero h1, .section-hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.4rem); margin: 0.5rem 0 0.75rem;
+  color: var(--navy-950); position: relative; display: inline-block;
+}
+.series-hero h1::after {
+  content: ""; display: block; height: 5px; border-radius: 3px; margin-top: 0.6rem;
+  background: var(--series-color, var(--emerald));
+}
+.series-hero-desc { font-size: 1.1rem; color: var(--muted); margin: 0 0 0.5rem; max-width: 40rem; }
+.series-hero-count, .section-hero-count { font-size: 0.85rem; color: var(--muted); margin: 0; }
+
+.series-switch {
+  display: flex; gap: 0.5rem; flex-wrap: wrap;
+  max-width: 72rem; margin: 0 auto; padding: 0.5rem 1.5rem 0;
+}
+.series-switch a {
+  font-size: 0.85rem; padding: 0.35rem 0.9rem; border-radius: 999px;
+  border: 1px solid var(--line); color: var(--muted); text-decoration: none; background: var(--paper);
+}
+.series-switch a:hover { border-color: var(--series-color, var(--emerald)); color: var(--navy-900); }
+.series-switch a.is-active {
+  background: var(--series-color, var(--navy-900)); border-color: transparent; color: #fff; font-weight: 700;
+}
+
+.empty-state { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+
+/* الزخارف الدائرية صُممت للصور المولّدة؛ تُخفى عند وجود صورة حقيقية. */
+.story-art:has(.story-image)::before,
+.story-art:has(.story-image)::after { display: none; }

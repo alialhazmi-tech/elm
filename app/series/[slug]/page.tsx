@@ -1,0 +1,79 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
+import { StoryCard } from "@/app/_components/story-card";
+import { SERIES, seedContentProvider } from "@/lib/content/provider";
+
+export const revalidate = 300;
+
+type Params = { params: Promise<{ slug: string }> };
+
+export async function generateStaticParams() {
+  return SERIES.map((series) => ({ slug: series.slug }));
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { slug } = await params;
+  const series = await seedContentProvider.getSeries(slug);
+  if (!series) return { title: "السلسلة غير موجودة" };
+
+  return {
+    title: `سلسلة ${series.name}`,
+    description: series.description,
+    alternates: { canonical: `/series/${series.slug}` },
+  };
+}
+
+export default async function SeriesPage({ params }: Params) {
+  const { slug } = await params;
+  const series = await seedContentProvider.getSeries(slug);
+  if (!series) notFound();
+
+  const stories = await seedContentProvider.listBySeries(series.slug);
+
+  return (
+    <>
+      <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
+      <SiteHeader />
+
+      <main id="main-content">
+        <section
+          className="series-hero"
+          style={{ "--series-color": series.color } as React.CSSProperties}
+        >
+          <p className="eyebrow"><span />سلسلة من سلاسل العلم</p>
+          <h1>{series.name}</h1>
+          <p className="series-hero-desc">{series.description}</p>
+          <p className="series-hero-count">{stories.length} مادة منشورة</p>
+        </section>
+
+        <nav className="series-switch" aria-label="السلاسل الأخرى">
+          {SERIES.map((item) => (
+            <Link
+              key={item.slug}
+              href={`/series/${item.slug}`}
+              className={item.slug === series.slug ? "is-active" : undefined}
+              style={{ "--series-color": item.color } as React.CSSProperties}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="content-shell">
+          <section className="content-section">
+            <div className="story-grid">
+              {stories.map((story, index) => (
+                <StoryCard key={story.id} story={story} index={index} />
+              ))}
+            </div>
+          </section>
+        </div>
+      </main>
+
+      <SiteFooter />
+    </>
+  );
+}

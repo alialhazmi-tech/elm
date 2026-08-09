@@ -33,6 +33,8 @@ const nextConfig: NextConfig = {
     deviceSizes: [360, 640, 768, 1024, 1280, 1920],
     imageSizes: [320, 480, 640],
     dangerouslyAllowSVG: false,
+    // أصل الوسائط الحالي؛ ينتقل إلى media.alelm.net على R2 ضمن M4.
+    remotePatterns: [{ protocol: "https", hostname: "dash.alelm.net", pathname: "/wp-content/**" }],
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

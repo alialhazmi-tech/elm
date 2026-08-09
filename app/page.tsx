@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+
+import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
+import { StoryCard } from "@/app/_components/story-card";
 import { getHomeBundle } from "@/lib/content/home";
-import { mockContentProvider } from "@/lib/content/mock-provider";
-import type { Story } from "@/lib/content/types";
+import { seedContentProvider, seriesOf } from "@/lib/content/provider";
+import { storyHref } from "@/lib/content/types";
 
 export const revalidate = 120;
 
@@ -12,28 +17,11 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const navItems = ["السلاسل", "وراء الخبر", "مرئي", "صوتي"];
-
-function StoryCard({ story, index }: { story: Story; index: number }) {
-  return (
-    <article className="story-card" data-story-id={story.id}>
-      <div className={`story-art story-art-${(index % 4) + 1}`} aria-hidden="true">
-        <span>{String(index + 1).padStart(2, "0")}</span>
-      </div>
-      <div className="story-copy">
-        <div className="story-meta">
-          <span>{story.eyebrow}</span>
-          <span>{story.readingMinutes} دقائق</span>
-        </div>
-        <h3>{story.title}</h3>
-        <p>{story.excerpt}</p>
-      </div>
-    </article>
-  );
-}
-
 export default async function Home() {
-  const bundle = await getHomeBundle(mockContentProvider);
+  const bundle = await getHomeBundle(seedContentProvider);
+  const hero = bundle.hero;
+  const heroSeries = seriesOf(hero);
+
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -45,41 +33,33 @@ export default async function Home() {
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <header className="site-header">
-        <div className="header-inner">
-          <a className="brand" href="#top" aria-label="العلم - الصفحة الرئيسية">
-            <span className="brand-mark" aria-hidden="true">ع</span>
-            <span className="brand-word">العلم</span>
-          </a>
-          <nav aria-label="التنقل الرئيسي">
-            {navItems.map((item) => (
-              <a key={item} href={`#${item === "السلاسل" ? "series" : "content"}`}>
-                {item}
-              </a>
-            ))}
-          </nav>
-          <span className="edition">منصة معرفة عربية</span>
-        </div>
-      </header>
+      <SiteHeader />
 
       <main id="main-content">
-        <section className="hero" id="top" aria-labelledby="hero-title" data-story-id={bundle.hero.id}>
+        <section className="hero" id="top" aria-labelledby="hero-title" data-story-id={hero.id}>
           <div className="hero-copy">
-            <p className="eyebrow"><span />{bundle.hero.eyebrow}</p>
-            <h1 id="hero-title">{bundle.hero.title}</h1>
-            <p className="hero-deck">{bundle.hero.excerpt}</p>
+            <p className="eyebrow"><span />{heroSeries ? `سلسلة ${heroSeries.name}` : hero.eyebrow}</p>
+            <h1 id="hero-title">
+              <Link href={storyHref(hero)}>{hero.title}</Link>
+            </h1>
+            <p className="hero-deck">{hero.excerpt}</p>
             <div className="hero-meta">
-              <span>{bundle.hero.readingMinutes} دقائق قراءة</span>
-              <span>سلسلة لماذا</span>
+              <span>{hero.readingMinutes} دقائق قراءة</span>
+              <span>{hero.eyebrow}</span>
             </div>
           </div>
-          <div className="hero-visual" aria-hidden="true">
-            <div className="orbit orbit-a" />
-            <div className="orbit orbit-b" />
-            <div className="visual-grid" />
-            <div className="visual-card visual-card-one"><b>المكان</b><span>ذاكرة</span></div>
-            <div className="visual-card visual-card-two"><b>الزمن</b><span>سياق</span></div>
-            <div className="visual-number">24</div>
+          <div className="hero-visual">
+            {hero.image ? (
+              <Image
+                className="hero-image"
+                src={hero.image}
+                alt=""
+                fill
+                sizes="(max-width: 900px) 100vw, 55vw"
+                priority
+              />
+            ) : null}
+            <div className="visual-grid" aria-hidden="true" />
           </div>
         </section>
 
@@ -93,16 +73,17 @@ export default async function Home() {
           </div>
           <div className="series-list" role="list">
             {bundle.series.map((item, index) => (
-              <article
+              <Link
                 className="series-chip"
                 key={item.slug}
                 role="listitem"
+                href={`/series/${item.slug}`}
                 style={{ "--series-color": item.color } as React.CSSProperties}
               >
                 <span className="series-index">{String(index + 1).padStart(2, "0")}</span>
                 <h3>{item.name}</h3>
                 <p>{item.description}</p>
-              </article>
+              </Link>
             ))}
           </div>
         </section>
@@ -136,11 +117,7 @@ export default async function Home() {
         </section>
       </main>
 
-      <footer>
-        <div className="footer-brand">العلم</div>
-        <p>منصة إعلام ومعرفة سعودية تضع السياق قبل السرعة.</p>
-        <p className="footer-note">نسخة تأسيسية - المحتوى المعروض بيانات تطوير غير منشورة.</p>
-      </footer>
+      <SiteFooter />
 
       <script
         type="application/ld+json"

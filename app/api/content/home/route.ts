@@ -1,8 +1,8 @@
 import { getHomeBundle } from "@/lib/content/home";
-import { mockContentProvider } from "@/lib/content/mock-provider";
+import { seedContentProvider } from "@/lib/content/provider";
 
 export async function GET() {
-  const bundle = await getHomeBundle(mockContentProvider);
+  const bundle = await getHomeBundle(seedContentProvider);
 
   return Response.json(bundle, {
     headers: {
