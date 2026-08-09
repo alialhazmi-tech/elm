@@ -47,6 +47,16 @@ test("emits the required M0 security headers without temporary domains", async (
   assert.doesNotMatch(headers["Content-Security-Policy"], /allorigins|stage2?\.jakelelm/i);
 });
 
+test("production CSP never leaks the development eval and websocket allowances", async () => {
+  const routes = JSON.parse(await readFile(routesPath, "utf8"));
+  const headers = Object.fromEntries(routes.headers[0].headers.map(({ key, value }) => [key, value]));
+  const csp = headers["Content-Security-Policy"];
+
+  // التطوير يحتاج unsafe-eval وws: لأجل React وHMR؛ الإنتاج يجب أن يبقى صارمًا.
+  assert.doesNotMatch(csp, /unsafe-eval/, "unsafe-eval تسرّب إلى بناء الإنتاج");
+  assert.match(csp, /connect-src 'self'(;|$)/, "connect-src يجب أن يكون 'self' وحده في الإنتاج");
+});
+
 test("keeps the M0 homepage and social card deliberately small", async () => {
   const htmlStats = await stat(htmlPath);
   const png = await readFile(ogPath);
