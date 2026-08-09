@@ -215,7 +215,7 @@ export const seedContentProvider: ContentProvider = {
       quickTake: hero.quickTake ?? quickTakeFrom(hero.excerpt),
     };
 
-    const briefPalette = ["#2B5C9E", "#D9CDB4", "#2B5C9E"];
+    const briefPalette = ["#1A6BB5", "#0B2748", "#5BA3E0"];
     const brief: BriefItem[] = [heroWithTake, ...minis, dataStory]
       .filter((story): story is Story => story !== null)
       .slice(0, 3)
