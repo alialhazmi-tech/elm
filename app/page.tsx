@@ -4,8 +4,8 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader, UrgentBar } from "@/app/_components/site-chrome";
 import { MiniCard, MosaicCard, VideoCard } from "@/app/_components/story-card";
-import { toEasternDigits } from "@/lib/format";
-import { seedContentProvider, seriesOf } from "@/lib/content/provider";
+import { brandDate, toEasternDigits } from "@/lib/format";
+import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
 export const revalidate = 120;
@@ -23,6 +23,7 @@ export default async function Home() {
   const home = await seedContentProvider.getHome();
   const heroSeries = seriesOf(home.hero);
   const dataSeries = home.dataStory ? seriesOf(home.dataStory) : undefined;
+  const today = brandDate(new Date().toISOString());
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -39,6 +40,15 @@ export default async function Home() {
       <UrgentBar story={home.hero} />
 
       <main id="main-content" className="wrap">
+        <div className="day-strip" aria-label="تاريخ اليوم">
+          <time dateTime={new Date().toISOString().slice(0, 10)}>
+            {toEasternDigits(today.hijri)}
+            <span aria-hidden="true"> · </span>
+            {toEasternDigits(today.gregorian)}
+          </time>
+          <span className="day-strip-tag">تغطية مستمرة</span>
+        </div>
+
         {/* موجز اليوم */}
         <section className="ai-surface brief" aria-label="موجز اليوم">
           <span className="ai-chip"><span className="spark">✦</span> موجز العلم</span>
@@ -79,19 +89,14 @@ export default async function Home() {
                 </Link>
               ) : null}
               <h2>
-                <Link href={storyHref(home.hero)}>{home.hero.title}</Link>
+                <Link className="stretched" href={storyHref(home.hero)}>
+                  {home.hero.title}
+                </Link>
               </h2>
-              <p>{home.hero.excerpt.slice(0, 150)}{home.hero.excerpt.length > 150 ? "…" : ""}</p>
-              {home.hero.quickTake ? (
-                <div className="quick-take">
-                  <div className="qt-head">✦ خلاصة قبل القراءة</div>
-                  <ul>
-                    {home.hero.quickTake.map((point) => (
-                      <li key={point}>{point}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
+              <div className="b-meta">
+                <span>{sectionName(home.hero.section)}</span>
+                <span>{toEasternDigits(home.hero.readingMinutes)} دقائق قراءة</span>
+              </div>
             </div>
           </article>
 
@@ -101,10 +106,10 @@ export default async function Home() {
             ))}
             {home.dataStory ? (
               <article className="data-card" data-story-id={home.dataStory.id}>
-                <span className="kick">
-                  {dataSeries ? `${dataSeries.name} · ` : ""}أسواق واقتصاد
-                </span>
-                <Link href={storyHref(home.dataStory)}>
+                <Link className="stretched data-card-link" href={storyHref(home.dataStory)}>
+                  <span className="kick">
+                    {dataSeries ? `${dataSeries.name} · ` : ""}أسواق واقتصاد
+                  </span>
                   <div className="data-num">
                     {toEasternDigits((/(\d{2,4})\s*%/.exec(home.dataStory.title)?.[1]) ?? "—")}
                     <small>٪</small>
@@ -122,6 +127,58 @@ export default async function Home() {
               </article>
             ) : null}
           </div>
+        </section>
+
+        {/* الأكثر قراءة */}
+        {home.mostRead.length > 0 ? (
+          <section className="most-read" aria-label="الأكثر قراءة">
+            <div className="section-head">
+              <h2>الأكثر قراءة</h2>
+              <span className="sub">مواد أخرى تستحق الانتباه</span>
+            </div>
+            <ol className="most-read-list">
+              {home.mostRead.map((story, index) => {
+                const series = seriesOf(story);
+                return (
+                  <li key={story.id} data-story-id={story.id}>
+                    <span className="mr-no" aria-hidden="true">
+                      {toEasternDigits(String(index + 1).padStart(2, "0"))}
+                    </span>
+                    <div className="mr-body">
+                      <span
+                        className="mr-kick"
+                        style={{ color: series?.color ?? "var(--ink-3)" }}
+                      >
+                        {series?.name ?? sectionName(story.section)}
+                      </span>
+                      <Link href={storyHref(story)}>{story.title}</Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </section>
+        ) : null}
+
+        {/* وراء الخبر — المحتوى قبل خريطة السلاسل */}
+        <div className="section-head">
+          <h2>وراء الخبر</h2>
+          <span className="sub">السياق قبل السرعة</span>
+          <Link className="more" href="/politics">الأرشيف ←</Link>
+        </div>
+        <section className="mosaic" aria-label="وراء الخبر">
+          {home.mosaic[0] ? <MosaicCard story={home.mosaic[0]} tall /> : null}
+          {home.mosaic[1] ? <MosaicCard story={home.mosaic[1]} className="m-wide" /> : null}
+          {home.question ? (
+            <article className="q-card">
+              <span className="q-mark" aria-hidden="true">؟</span>
+              <div className="m-kick"><span>لماذا</span></div>
+              <h3>
+                <Link href={home.question.href}>{home.question.title}</Link>
+              </h3>
+              <p>{home.question.text}</p>
+            </article>
+          ) : null}
         </section>
 
         {/* حزام السلاسل */}
@@ -143,6 +200,30 @@ export default async function Home() {
             </Link>
           ))}
         </nav>
+
+        {/* بالأرقام */}
+        {home.numbers.length > 0 ? (
+          <section className="numbers" aria-label="بالأرقام">
+            <div className="section-head">
+              <h2>بالأرقام</h2>
+              <span className="sub">أرقام من المواد — وكل رقم يحيل لمصدره</span>
+            </div>
+            <div className="num-grid">
+              {home.numbers.map((stat) => (
+                <Link key={stat.label} className="num-card" href={stat.href ?? "/infographics"}>
+                  <div className="v">
+                    {toEasternDigits(stat.value)}
+                    {stat.suffix ? <small>{toEasternDigits(stat.suffix)}</small> : null}
+                  </div>
+                  <p>{stat.label}</p>
+                </Link>
+              ))}
+            </div>
+            <div className="num-foot">
+              <span className="spark">✦</span> الأرقام تُستخرج من عناوين المواد المنشورة وتحيل إليها
+            </div>
+          </section>
+        ) : null}
 
         {/* اسأل العلم */}
         <section className="ai-surface ask-block" aria-label="اسأل العلم">
@@ -170,51 +251,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-
-        {/* وراء الخبر */}
-        <div className="section-head">
-          <h2>وراء الخبر</h2>
-          <span className="sub">السياق قبل السرعة</span>
-          <Link className="more" href="/politics">الأرشيف ←</Link>
-        </div>
-        <section className="mosaic" aria-label="وراء الخبر">
-          {home.mosaic[0] ? <MosaicCard story={home.mosaic[0]} tall /> : null}
-          {home.mosaic[1] ? <MosaicCard story={home.mosaic[1]} className="m-wide" /> : null}
-          {home.question ? (
-            <article className="q-card">
-              <span className="q-mark" aria-hidden="true">؟</span>
-              <div className="m-kick"><span>لماذا</span></div>
-              <h3>
-                <Link href={home.question.href}>{home.question.title}</Link>
-              </h3>
-              <p>{home.question.text}</p>
-            </article>
-          ) : null}
-        </section>
-
-        {/* بالأرقام */}
-        {home.numbers.length > 0 ? (
-          <section className="numbers" aria-label="بالأرقام">
-            <div className="section-head">
-              <h2>بالأرقام</h2>
-              <span className="sub">أرقام من المواد — وكل رقم يحيل لمصدره</span>
-            </div>
-            <div className="num-grid">
-              {home.numbers.map((stat) => (
-                <Link key={stat.label} className="num-card" href={stat.href ?? "/infographics"}>
-                  <div className="v">
-                    {toEasternDigits(stat.value)}
-                    {stat.suffix ? <small>{toEasternDigits(stat.suffix)}</small> : null}
-                  </div>
-                  <p>{stat.label}</p>
-                </Link>
-              ))}
-            </div>
-            <div className="num-foot">
-              <span className="spark">✦</span> الأرقام تُستخرج من عناوين المواد المنشورة وتحيل إليها
-            </div>
-          </section>
-        ) : null}
 
         {/* مرئي */}
         {home.videos.length > 0 ? (
