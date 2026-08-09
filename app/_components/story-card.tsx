@@ -1,43 +1,73 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { toEasternDigits } from "@/lib/format";
 import { sectionName, seriesOf } from "@/lib/content/provider";
+import { toEasternDigits } from "@/lib/format";
 import { storyHref, type Story } from "@/lib/content/types";
 
 /**
- * بطاقة الخبر: حد علوي كحلي، كicker بلون التمييز (لا أحمر)،
- * والأرقام عربية شرقية.
  * صور البطاقات width/height بلا sizes عمدًا: مرشّحا 1x/2x فقط —
  * روابط ووردبريس العربية تُرمَّز إلى ~250 حرفًا فكل مرشح إضافي يضخّم HTML.
  */
 
 const relativeTime = (iso?: string): string | null => {
   if (!iso) return null;
-  const hours = Math.round((Date.now() - new Date(iso).getTime()) / 3_600_000);
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const hours = Math.round(diffMs / 3_600_000);
   if (hours < 1) return "قبل قليل";
   if (hours < 24) return `منذ ${toEasternDigits(hours)} ساعات`;
-  return `منذ ${toEasternDigits(Math.round(hours / 24))} أيام`;
+  const days = Math.round(hours / 24);
+  return `منذ ${toEasternDigits(days)} أيام`;
 };
 
-type Props = {
-  story: Story;
-  withImage?: boolean;
-  showExcerpt?: boolean;
-};
-
-export function NewsCard({ story, withImage = false, showExcerpt = false }: Props) {
+/** بطاقة مصغرة — عمود البنتو الجانبي. */
+export function MiniCard({ story }: { story: Story }) {
   const series = seriesOf(story);
   const when = relativeTime(story.publishedAt);
-  const hasImage = withImage && story.image;
 
   return (
-    <article className={hasImage ? "n-card with-image" : "n-card"} data-story-id={story.id}>
-      {hasImage ? (
-        <Image className="c-img" src={story.image as string} alt="" width={640} height={380} />
+    <article className="mini" style={{ "--kc": series?.color } as React.CSSProperties} data-story-id={story.id}>
+      <div>
+        <span className="kick">{series?.name ?? story.eyebrow}</span>
+        <h3>
+          <Link href={storyHref(story)}>{story.title}</Link>
+        </h3>
+        <time>
+          {when ? `${when} · ` : ""}
+          {toEasternDigits(story.readingMinutes)} دقائق
+        </time>
+      </div>
+      {story.image ? (
+        <Image className="m-img" src={story.image} alt="" width={236} height={172} />
       ) : null}
-      <div className="n-body">
-        <div className="kicker">
+    </article>
+  );
+}
+
+/** بطاقة الفسيفساء — قصص «وراء الخبر» والسلاسل والأقسام. */
+export function MosaicCard({
+  story,
+  tall = false,
+  className,
+}: {
+  story: Story;
+  tall?: boolean;
+  className?: string;
+}) {
+  const series = seriesOf(story);
+  const when = relativeTime(story.publishedAt);
+
+  return (
+    <article
+      className={["m-card", tall ? "m-tall" : "", className ?? ""].join(" ").trim()}
+      style={{ "--kc": series?.color } as React.CSSProperties}
+      data-story-id={story.id}
+    >
+      {story.image ? (
+        <Image className="c-img" src={story.image} alt="" width={640} height={tall ? 590 : 400} />
+      ) : null}
+      <div className="m-body">
+        <div className="m-kick">
           <span>
             {series ? `${series.name} · ` : ""}
             {sectionName(story.section)}
@@ -47,15 +77,16 @@ export function NewsCard({ story, withImage = false, showExcerpt = false }: Prop
         <h3>
           <Link href={storyHref(story)}>{story.title}</Link>
         </h3>
-        {showExcerpt ? (
-          <p>{story.excerpt.slice(0, 130)}{story.excerpt.length > 130 ? "…" : ""}</p>
+        {tall ? <p>{story.excerpt.slice(0, 140)}{story.excerpt.length > 140 ? "…" : ""}</p> : null}
+        {story.factCheck ? (
+          <span className="verdict">✓ دقّقها العلم: شائعة متداولة — الحقيقة داخل المادة</span>
         ) : null}
       </div>
     </article>
   );
 }
 
-/** بطاقة فيديو — العنوان على تدرّج كحلي أسفل الصورة وفق معالجة الصور. */
+/** بطاقة فيديو — قسم مرئي وصوتي. */
 export function VideoCard({ story }: { story: Story }) {
   return (
     <article className="video-card" data-story-id={story.id}>

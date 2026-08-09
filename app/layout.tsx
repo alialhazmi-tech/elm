@@ -1,19 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic } from "next/font/google";
+import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
 
-// الخطوط الرسمية من دليل الهوية: Noto Kufi للعناوين والشعار، IBM Plex للمتون.
-const displayFont = Noto_Kufi_Arabic({
+// تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
+const displayFont = Alexandria({
   subsets: ["arabic", "latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: ["700", "800"],
   variable: "--f-display",
   display: "swap",
 });
 
-const textFont = IBM_Plex_Sans_Arabic({
+const textFont = Readex_Pro({
   subsets: ["arabic", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "700"],
   variable: "--f-text",
+  display: "swap",
+});
+
+const logoFont = Noto_Kufi_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["900"],
+  variable: "--f-logo",
   display: "swap",
 });
 
@@ -64,7 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="ar"
       dir="rtl"
-      className={`${displayFont.variable} ${textFont.variable}`}
+      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
       suppressHydrationWarning
     >
       <body>
