@@ -14,5 +14,7 @@
 | M0 | Cloudflare/WAF/actual TTFB | BLOCKED | لا تغيير خارجي | - | baseline study only | credentials/domain access | تنفيذ فور الصلاحية |
 | M0 | Jaak AlElm | BLOCKED | غير معروض في الواجهة الجديدة لتجنب dead experience | `app/page.tsx` | visual presence absent | content inventory | hide route or populate |
 | M1 | Initial RTL visual language | DONE | tokens، RTL، responsive، dark preference، rail للسلاسل | `app/globals.css` | visual QA قيد التنفيذ | ليس Storybook كاملًا | M1 component docs |
+| M4 | إيداع وثيقة السياسة التحريرية | VERIFIED | الدستور التحريري مودع في المستودع بمعرفات قواعد ثابتة تطابق الكود؛ يرفع الحاجز الأول في المسار الحرج | `docs/editorial-policy.md` | مراجعة مطابقة للوثيقة الأصلية (مايو 2023) | تعديل الوثيقة يستلزم تعديل القاعدة واختبارها | مراجعة تحريرية لاعتماد الصياغة |
+| M4 | M4-T6 Policy Guard rules engine | VERIFIED | 39 قاعدة حتمية (قواميس/أنماط/عدّ) بثلاث شدات، تطبيع عربي، إصلاح آلي، سجل تدقيق، وبوابة منع الاعتماد | `lib/policy/**`, `scripts/policy-check.mjs`, `examples/draft-sample.json` | 24 اختبارًا إيجابيًا وسلبيًا؛ lint وtypecheck نظيفان | لا نموذج لغوي بعد؛ القواعد السياقية تُعلَّم `needsHumanReview` | M4-T7/T8 للطبقة النموذجية والحوكمة |
 
 الحالة `DONE` تعني أن التنفيذ موجود؛ تتحول إلى `VERIFIED` فقط بعد اجتياز جميع بوابات الاختبار ذات الصلة.

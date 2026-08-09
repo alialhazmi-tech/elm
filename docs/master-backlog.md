@@ -62,7 +62,7 @@
 
 ### Epic M4-E2: AI governed layer
 
-- **M4-T6 - Policy Guard rules engine.** Rule/validator/test/severity/audit؛ deterministic أولًا.
+- **M4-T6 - Policy Guard rules engine.** Rule/validator/test/severity/audit؛ deterministic أولًا. الحالة: `VERIFIED`. المخرجات: `docs/editorial-policy.md` كمصدر ملزم، و`lib/policy/` بـ39 قاعدة حتمية موزعة على protocol/restricted/editorial/formatting/production، وثلاث شدات (`blocking`/`warning`/`suggestion`)، وتطبيع عربي يقاوم التشكيل واختلاف الألف والهمزات، وإصلاح آلي غير متداخل، وسجل تدقيق ببصمة المنفذ والقواعد القاطعة. الاختبار: `tests/policy-guard.test.mjs` (24 حالة إيجابية وسلبية) ضمن `npm test`. الأداة: `npm run policy:check -- examples/draft-sample.json`. المتبقي: ربطها بواجهة المحرر عند بناء CMS (M4-T1/T2).
 - **M4-T7 - Editorial Assistant/transformers.** Suggestions فقط وبوابة بشرية وحدود النصوص.
 - **M4-T8 - provider abstraction/governance.** usage/cost/latency/version/budget/privacy/evaluation samples.
 - **M4-T9 - semantic layer.** related/duplicate/trend-gap use cases مع corpus evaluation.
