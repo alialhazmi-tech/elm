@@ -56,6 +56,9 @@ export default async function ArticlePage({ params }: Params) {
 
   const series = seriesOf(story);
   const related = await seedContentProvider.listRelated(story, 3);
+  const nextInSeries = series
+    ? related.find((item) => item.series === series.slug)
+    : undefined;
   const published = story.publishedAt ? new Date(story.publishedAt) : null;
 
   const articleSchema = {
@@ -172,10 +175,19 @@ export default async function ArticlePage({ params }: Params) {
 
           {series ? (
             <aside className="series-note" style={{ "--sc": series.color } as React.CSSProperties}>
-              <p className="sn-kick">هذه المادة ضمن سلسلة</p>
-              <h2>{series.name}</h2>
-              <p className="sn-desc">{series.description}</p>
-              <Link href={`/series/${series.slug}`}>تصفح السلسلة ←</Link>
+              <div className="series-note-copy">
+                <p className="sn-kick">أنت تقرأ ضمن سلسلة</p>
+                <h2>{series.name}</h2>
+                <p className="sn-desc">{series.description}</p>
+                <Link href={`/series/${series.slug}`}>تصفح السلسلة كاملة ←</Link>
+              </div>
+              {nextInSeries ? (
+                <Link className="series-next" href={storyHref(nextInSeries)}>
+                  <span>أكمل الفهم</span>
+                  <b>{nextInSeries.title}</b>
+                  <small>{toEasternDigits(nextInSeries.readingMinutes)} دقائق قراءة ←</small>
+                </Link>
+              ) : null}
             </aside>
           ) : null}
         </article>

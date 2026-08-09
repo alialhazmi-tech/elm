@@ -71,6 +71,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="ar"
       dir="rtl"
+      data-scroll-behavior="smooth"
       className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
       suppressHydrationWarning
     >

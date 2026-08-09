@@ -33,21 +33,28 @@ export default async function SeriesPage({ params }: Params) {
   if (!series) notFound();
 
   const stories = await seedContentProvider.listBySeries(series.slug);
+  const seriesIndex = SERIES.findIndex((item) => item.slug === series.slug);
 
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader active="/series/absat" />
+      <SiteHeader active="/series" />
 
       <main id="main-content">
-        <section className="hub-hero" style={{ "--sc": series.color } as React.CSSProperties}>
-          <p className="eyebrow">سلسلة من طيف العلم</p>
-          <h1>{series.name}</h1>
-          <p className="hub-desc">{series.description}</p>
-          <p className="hub-count">{toEasternDigits(stories.length)} مادة منشورة</p>
+        <section className="hub-hero series-detail-hero" style={{ "--sc": series.color } as React.CSSProperties}>
+          <div>
+            <p className="eyebrow">سلسلة {toEasternDigits(String(seriesIndex + 1).padStart(2, "0"))} من {toEasternDigits(9)}</p>
+            <h1>{series.name}</h1>
+            <p className="hub-desc">{series.description}</p>
+            <p className="hub-count">{toEasternDigits(stories.length)} مادة منشورة</p>
+          </div>
+          <span className="series-detail-mark" aria-hidden="true">
+            {toEasternDigits(String(seriesIndex + 1).padStart(2, "0"))}
+          </span>
         </section>
 
         <nav className="series-switch" aria-label="السلاسل الأخرى">
+          <Link href="/series">كل السلاسل</Link>
           {SERIES.map((item) => (
             <Link
               key={item.slug}
@@ -62,9 +69,14 @@ export default async function SeriesPage({ params }: Params) {
 
         <div className="wrap">
           {stories.length > 0 ? (
-            <div className="grid-3">
-              {stories.map((story) => (
-                <MosaicCard key={story.id} story={story} />
+            <div className="series-feed">
+              {stories.map((story, index) => (
+                <MosaicCard
+                  key={story.id}
+                  story={story}
+                  tall={index === 0}
+                  className={index === 0 ? "series-lead" : undefined}
+                />
               ))}
             </div>
           ) : (

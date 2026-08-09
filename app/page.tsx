@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader, UrgentBar } from "@/app/_components/site-chrome";
+import { SeriesNavigator } from "@/app/_components/series-navigator";
 import { MiniCard, MosaicCard, VideoCard } from "@/app/_components/story-card";
 import { brandDate, toEasternDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
@@ -49,6 +50,8 @@ export default async function Home() {
           <span className="day-strip-tag">تغطية مستمرة</span>
         </div>
 
+        <SeriesNavigator series={home.series} />
+
         {/* موجز اليوم */}
         <section className="ai-surface brief" aria-label="موجز اليوم">
           <span className="ai-chip"><span className="spark">✦</span> موجز العلم</span>
@@ -88,11 +91,11 @@ export default async function Home() {
                   {heroSeries.name}
                 </Link>
               ) : null}
-              <h2>
+              <h1>
                 <Link className="stretched" href={storyHref(home.hero)}>
                   {home.hero.title}
                 </Link>
-              </h2>
+              </h1>
               <div className="b-meta">
                 <span>{sectionName(home.hero.section)}</span>
                 <span>{toEasternDigits(home.hero.readingMinutes)} دقائق قراءة</span>
@@ -180,26 +183,6 @@ export default async function Home() {
             </article>
           ) : null}
         </section>
-
-        {/* حزام السلاسل */}
-        <div className="section-head">
-          <h2>تسع سلاسل، تسع طرق للفهم</h2>
-          <span className="sub">لكل مادة سلسلتها — واللون يقودك</span>
-          <Link className="more" href="/series/absat">كل السلاسل ←</Link>
-        </div>
-        <nav className="series-band" aria-label="سلاسل العلم">
-          {home.series.map((series) => (
-            <Link
-              key={series.slug}
-              className="series-seg"
-              href={`/series/${series.slug}`}
-              style={{ "--sc": series.color } as React.CSSProperties}
-            >
-              <b>{series.name}</b>
-              <span>{series.description}</span>
-            </Link>
-          ))}
-        </nav>
 
         {/* بالأرقام */}
         {home.numbers.length > 0 ? (

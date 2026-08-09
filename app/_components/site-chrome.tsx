@@ -5,6 +5,7 @@ import { storyHref, type Story } from "@/lib/content/types";
 
 const NAV = [
   { label: "الرئيسية", href: "/" },
+  { label: "السلاسل", href: "/series" },
   { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "رياضة", href: "/sport" },

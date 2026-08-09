@@ -19,7 +19,9 @@ const contentSecurityPolicy = [
   isDevelopment ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   isDevelopment ? "connect-src 'self' ws: wss:" : "connect-src 'self'",
-  "upgrade-insecure-requests",
+  // ترقية HTTP منطقية في الإنتاج فقط؛ في التطوير تحوّل أصول localhost إلى HTTPS
+  // وتمنع المعاينة على الأجهزة والشاشات الأخرى في الشبكة المحلية.
+  ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");
 
 const securityHeaders = [

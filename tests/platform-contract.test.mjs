@@ -26,7 +26,7 @@ test("deduplicates canonical story IDs across the entire homepage", async () => 
 
   assert.ok(ids.length >= 7, "expected hero and section stories");
   assert.equal(new Set(ids).size, ids.length, `duplicate IDs found: ${ids.join(", ")}`);
-  assert.equal((html.match(/class="series-seg"/g) ?? []).length, 9, "حزام السلاسل التسع مفقود");
+  assert.equal((html.match(/class="series-lens"/g) ?? []).length, 9, "بوابة السلاسل التسع مفقودة");
 });
 
 test("emits the required M0 security headers without temporary domains", async () => {
