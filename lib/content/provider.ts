@@ -2,8 +2,8 @@
  * مزود المحتوى الحالي: يقرأ من بذرة `seed.ts` المشتقة من مواد alelm.net المنشورة.
  * يُستبدل لاحقًا بمحوّل WordPress ثم بـ«تحرير العلم» دون تغيير العقد (M2-T1/M2-T2).
  *
- * الإثراءات هنا (خلاصة القراءة، الشائعة/الحقيقة، الأرقام) مشتقة من نصوص المواد
- * الحقيقية نفسها — وعند وصول خدمات الذكاء تتولد آليًا وتمر على اعتماد المحرر.
+ * الإثراءات هنا (الشائعة/الحقيقة، الأرقام) مشتقة من نصوص المواد الحقيقية نفسها —
+ * وعند وصول خدمات الذكاء تتولد آليًا وتمر على اعتماد المحرر.
  */
 
 import { asc, desc } from "drizzle-orm";
@@ -128,15 +128,6 @@ export const KNOWN_SECTIONS = [
   ...new Set(SEED_CORPUS.stories.map((story) => story.section)),
 ];
 
-/** يقسم المقتطف إلى نقاط خلاصة قصيرة — بديل مؤقت لخدمة التلخيص المعتمدة. */
-function quickTakeFrom(excerpt: string): string[] | undefined {
-  const parts = excerpt
-    .split(/(?<=[.؟!])\s+/)
-    .map((part) => part.replace(/[…]+$/, "").trim())
-    .filter((part) => part.length > 24);
-  return parts.length >= 2 ? parts.slice(0, 3) : undefined;
-}
-
 const STAT_PATTERNS: Array<{ pattern: RegExp; label: (story: Story) => string }> = [
   { pattern: /(\d{2,4})\s*%/u, label: (story) => story.title.replace(/[…]+$/, "") },
   { pattern: /(?:^|\s)(\d{1,3})\s+سعودي/u, label: (story) => story.title },
@@ -210,24 +201,24 @@ export const seedContentProvider: ContentProvider = {
 
     const homeVideos = takeUniqueStories(videos, seen, 2);
 
-    const heroWithTake: Story = {
-      ...hero,
-      quickTake: hero.quickTake ?? quickTakeFrom(hero.excerpt),
-    };
-
-    const briefPalette = ["#1A6BB5", "#0B2748", "#5BA3E0"];
-    const brief: BriefItem[] = [heroWithTake, ...minis, dataStory]
+    const brief: BriefItem[] = [hero, ...minis, dataStory]
       .filter((story): story is Story => story !== null)
       .slice(0, 3)
-      .map((story, index) => ({
+      .map((story) => ({
         title: story.title,
         href: storyHref(story),
-        color: briefPalette[index % briefPalette.length],
+        color: seriesOf(story)?.color ?? "#3d7ef7",
       }));
+
+    // الأكثر قراءة: مواد حديثة غير مكررة مع ما عُرض أعلاه — بلا عدّادات إنتاجية بعد.
+    const mostRead = stories
+      .filter((story) => !seen.has(story.id) && story.section !== "videos")
+      .sort(byDateDesc)
+      .slice(0, 5);
 
     return {
       brief,
-      hero: heroWithTake,
+      hero,
       minis,
       dataStory,
       mosaic,
@@ -235,6 +226,7 @@ export const seedContentProvider: ContentProvider = {
       videos: homeVideos,
       numbers: extractNumbers(stories),
       series: SERIES,
+      mostRead,
     };
   },
 

@@ -66,11 +66,18 @@ export function SiteFooter() {
   return (
     <footer className="footer">
       <div className="footer-inner">
-        <span className="brand-word">العلم</span>
-        <span className="footer-rule" aria-hidden="true" />
-        <p>منصة إعلامية سعودية — الخبر كما هو.</p>
+        <div className="footer-brand">
+          <span className="brand-word">العلم</span>
+          <p>منصة إعلام ومعرفة سعودية — المعرفة وراء الخبر.</p>
+        </div>
+        <nav className="footer-nav" aria-label="روابط الفوتر">
+          {NAV.filter((item) => item.href !== "/").map((item) => (
+            <Link key={item.href} href={item.href}>{item.label}</Link>
+          ))}
+          <Link href="/search">ابحث</Link>
+        </nav>
         <span className="left">
-          نسخة تطوير — العناوين والصور من مواد alelm.net المنشورة، والمصدر النهائي «تحرير العلم»
+          نسخة تطوير — العناوين والصور من مواد alelm.net المنشورة
         </span>
       </div>
     </footer>

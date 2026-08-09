@@ -30,7 +30,7 @@ export function MiniCard({ story }: { story: Story }) {
       <div>
         <span className="kick">{series?.name ?? story.eyebrow}</span>
         <h3>
-          <Link href={storyHref(story)}>{story.title}</Link>
+          <Link className="stretched" href={storyHref(story)}>{story.title}</Link>
         </h3>
         <time>
           {when ? `${when} · ` : ""}

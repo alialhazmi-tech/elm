@@ -32,8 +32,6 @@ export type Story = {
   series?: SeriesSlug;
   image?: string;
   publishedAt?: string;
-  /** خلاصة قبل القراءة — تُشتق اليوم من المقتطف، ومن خدمة الذكاء بعد اعتماد المحرر لاحقًا. */
-  quickTake?: string[];
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح». */
   factCheck?: FactCheck;
 };
@@ -62,6 +60,8 @@ export type HomeData = {
   videos: Story[];
   numbers: NumberStat[];
   series: Series[];
+  /** مواد فريدة غير معروضة في البنتو/الفسيفساء/المرئي. */
+  mostRead: Story[];
 };
 
 /** رابط المادة مطابق لبنية الإنتاج 1:1 — شرط الهجرة بلا فقد فهرسة. */
