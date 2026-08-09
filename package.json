@@ -17,9 +17,13 @@
     "test": "npm run lint && npm run typecheck && npm run build:gate && NEXT_DIST_DIR=.next-gate npm run test:unit && NEXT_DIST_DIR=.next-gate npm run budget",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "build:gate": "NEXT_DIST_DIR=.next-gate next build"
+    "build:gate": "NEXT_DIST_DIR=.next-gate next build",
+    "db:push": "node --env-file=.env.local node_modules/.bin/drizzle-kit push",
+    "db:seed": "node --env-file=.env.local scripts/db-seed.mjs"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2",
     "next": "16.3.0",
     "react": "19.2.6",
     "react-dom": "19.2.6"
@@ -32,6 +36,7 @@
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "drizzle-kit": "^0.31.10",
     "esbuild": "0.28.2",
     "eslint": "9.39.4",
     "eslint-plugin-jsx-a11y": "6.10.2",

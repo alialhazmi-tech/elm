@@ -6,6 +6,10 @@
  * الحقيقية نفسها — وعند وصول خدمات الذكاء تتولد آليًا وتمر على اعتماد المحرر.
  */
 
+import { asc, desc } from "drizzle-orm";
+
+import { stories as storiesTable } from "@/db/schema";
+import { getDb } from "@/lib/db";
 import { SECTION_NAMES, seedStories, seedVideos } from "./seed";
 import { takeUniqueStories } from "./dedupe";
 import type {
@@ -21,18 +25,8 @@ import type {
 import { storyHref } from "./types";
 import { normalizeArabic } from "@/lib/policy/normalize";
 
-/** السلاسل — الكحلي الرسمي #0E2A52 موحّدًا وفق دليل الهوية (لا طيف ألوان). */
-export const SERIES: Series[] = [
-  { slug: "absat", name: "أبسط", description: "شرح متدرج للمعقد", color: "#0E2A52" },
-  { slug: "aghrab", name: "أغرب", description: "ما لا تتوقعه", color: "#0E2A52" },
-  { slug: "efhamha-sah", name: "افهمها صح", description: "الحقيقة ضد الشائعة", color: "#0E2A52" },
-  { slug: "bel-arqam", name: "بالأرقام", description: "البيانات تحكي", color: "#0E2A52" },
-  { slug: "shakhsiat", name: "شخصيات", description: "سِيَر صنعت أثرًا", color: "#0E2A52" },
-  { slug: "limatha", name: "لماذا", description: "الأسباب خلف الظواهر", color: "#0E2A52" },
-  { slug: "matha-law", name: "ماذا لو", description: "سيناريوهات واحتمالات", color: "#0E2A52" },
-  { slug: "bel-tarikh", name: "بالتاريخ", description: "الزمن يعطي السياق", color: "#0E2A52" },
-  { slug: "matha-baad", name: "ماذا بعد", description: "قراءة التداعيات", color: "#0E2A52" },
-]
+export { SERIES } from "./series";
+import { SERIES } from "./series";
 
 const byDateDesc = (a: Story, b: Story) =>
   (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "");
@@ -55,9 +49,73 @@ function enrich(story: Story): Story {
   return story;
 }
 
-const articles = [...seedStories].sort(byDateDesc).map(enrich);
-const videos = [...seedVideos].map(enrich);
-const stories = [...articles, ...videos];
+const seedArticles = [...seedStories].sort(byDateDesc).map(enrich);
+const seedVideosList = [...seedVideos].map(enrich);
+
+type Corpus = { articles: Story[]; videos: Story[]; stories: Story[]; source: "db" | "seed" };
+
+const SEED_CORPUS: Corpus = {
+  articles: seedArticles,
+  videos: seedVideosList,
+  stories: [...seedArticles, ...seedVideosList],
+  source: "seed",
+};
+
+const DB_CACHE_MS = 60_000;
+let corpusCache: { at: number; value: Corpus } | null = null;
+let dbWarned = false;
+
+/** يقرأ المحتوى من Neon بكاش دقيقة؛ وعند غياب القاعدة أو فشلها يسقط للبذرة. */
+async function loadCorpus(): Promise<Corpus> {
+  const db = getDb();
+  if (!db) return SEED_CORPUS;
+  if (corpusCache && Date.now() - corpusCache.at < DB_CACHE_MS) return corpusCache.value;
+
+  try {
+    const rows = await db
+      .select()
+      .from(storiesTable)
+      .orderBy(desc(storiesTable.publishedAt), asc(storiesTable.id));
+
+    if (rows.length === 0) return SEED_CORPUS;
+
+    const mapped: Story[] = rows.map((row) =>
+      enrich({
+        id: row.id,
+        slug: row.slug,
+        section: row.section,
+        title: row.title,
+        excerpt: row.excerpt,
+        eyebrow: row.eyebrow,
+        readingMinutes: row.readingMinutes,
+        series: (row.seriesSlug as Story["series"]) ?? undefined,
+        image: row.image ?? undefined,
+        publishedAt: row.publishedAt ?? undefined,
+        factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
+      }),
+    );
+
+    const value: Corpus = {
+      articles: mapped.filter((story) => story.section !== "videos"),
+      videos: mapped.filter((story) => story.section === "videos"),
+      stories: mapped,
+      source: "db",
+    };
+    corpusCache = { at: Date.now(), value };
+    return value;
+  } catch (error) {
+    if (!dbWarned) {
+      dbWarned = true;
+      console.error("[content] فشل القراءة من قاعدة البيانات — السقوط للبذرة:", error);
+    }
+    return SEED_CORPUS;
+  }
+}
+
+/** مصدر المحتوى الفعلي للطلب الحالي — للتشخيص والترويسات. */
+export async function contentSource(): Promise<"db" | "seed"> {
+  return (await loadCorpus()).source;
+}
 
 export const sectionName = (slug: string) => SECTION_NAMES[slug] ?? slug;
 export const seriesBySlug = new Map(SERIES.map((item) => [item.slug, item]));
@@ -66,7 +124,9 @@ export function seriesOf(story: Story): Series | undefined {
   return story.series ? seriesBySlug.get(story.series) : undefined;
 }
 
-export const KNOWN_SECTIONS = [...new Set(stories.map((story) => story.section))];
+export const KNOWN_SECTIONS = [
+  ...new Set(SEED_CORPUS.stories.map((story) => story.section)),
+];
 
 /** يقسم المقتطف إلى نقاط خلاصة قصيرة — بديل مؤقت لخدمة التلخيص المعتمدة. */
 function quickTakeFrom(excerpt: string): string[] | undefined {
@@ -111,6 +171,7 @@ function extractNumbers(from: Story[]): NumberStat[] {
 
 export const seedContentProvider: ContentProvider = {
   async getHome(): Promise<HomeData> {
+    const { articles, videos, stories } = await loadCorpus();
     const seen = new Set<string>();
 
     // الهيرو يتجنب الإنفوجرافيك: صوره تحمل نصًا مطبوعًا يتزاحم مع العنوان.
@@ -178,6 +239,7 @@ export const seedContentProvider: ContentProvider = {
   },
 
   async getStory(id) {
+    const { stories } = await loadCorpus();
     return stories.find((story) => story.id === id) ?? null;
   },
 
@@ -190,14 +252,17 @@ export const seedContentProvider: ContentProvider = {
   },
 
   async listBySeries(slug) {
+    const { stories } = await loadCorpus();
     return stories.filter((story) => story.series === slug);
   },
 
   async listBySection(section) {
+    const { stories } = await loadCorpus();
     return stories.filter((story) => story.section === section);
   },
 
   async listRelated(story, limit = 3) {
+    const { stories } = await loadCorpus();
     const sameSeries = stories.filter(
       (item) => item.id !== story.id && item.series === story.series,
     );
@@ -216,13 +281,14 @@ export const seedContentProvider: ContentProvider = {
   },
 
   async listAll() {
-    return stories;
+    return (await loadCorpus()).stories;
   },
 
   async search(query) {
     const needle = normalizeArabic(query).toLowerCase();
     if (!needle) return [];
 
+    const { stories } = await loadCorpus();
     return stories.filter((story) => {
       const haystack = normalizeArabic(`${story.title} ${story.excerpt}`).toLowerCase();
       return haystack.includes(needle);
