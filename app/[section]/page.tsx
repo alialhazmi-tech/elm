@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { StoryCard } from "@/app/_components/story-card";
+import { MosaicCard } from "@/app/_components/story-card";
 import { KNOWN_SECTIONS, sectionName, seedContentProvider } from "@/lib/content/provider";
 
 export const revalidate = 180;
@@ -29,29 +29,25 @@ export default async function SectionPage({ params }: Params) {
   if (!KNOWN_SECTIONS.includes(section)) notFound();
 
   const stories = await seedContentProvider.listBySection(section);
-  const [lead, ...rest] = stories;
 
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader />
+      <SiteHeader active={`/${section}`} />
 
       <main id="main-content">
-        <section className="section-hero">
-          <p className="eyebrow"><span />قسم</p>
+        <section className="hub-hero">
+          <p className="eyebrow">قسم</p>
           <h1>{sectionName(section)}</h1>
-          <p className="section-hero-count">{stories.length} مادة</p>
+          <p className="hub-count">{stories.length} مادة</p>
         </section>
 
-        <div className="content-shell">
-          <section className="content-section">
-            <div className="story-grid">
-              {lead ? <StoryCard story={lead} index={0} priority /> : null}
-              {rest.map((story, index) => (
-                <StoryCard key={story.id} story={story} index={index + 1} />
-              ))}
-            </div>
-          </section>
+        <div className="wrap">
+          <div className="grid-3">
+            {stories.map((story, index) => (
+              <MosaicCard key={story.id} story={story} tall={index === 0} />
+            ))}
+          </div>
         </div>
       </main>
 

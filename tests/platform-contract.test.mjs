@@ -10,7 +10,8 @@ const ogPath = new URL("../public/og.png", import.meta.url);
 test("renders Arabic RTL metadata with the approved knowledge positioning", async () => {
   const html = await readFile(htmlPath, "utf8");
 
-  assert.match(html, /<html lang="ar" dir="rtl">/);
+  // وسم html يحمل أصناف next/font — نطابق البداية لا الوسم كاملًا.
+  assert.match(html, /<html lang="ar" dir="rtl"/);
   assert.match(html, /property="og:locale" content="ar_SA"/);
   assert.match(html, /rel="canonical" href="https:\/\/alelm\.net"/);
   assert.match(html, /منصة إعلام ومعرفة سعودية/);
@@ -25,7 +26,7 @@ test("deduplicates canonical story IDs across the entire homepage", async () => 
 
   assert.ok(ids.length >= 7, "expected hero and section stories");
   assert.equal(new Set(ids).size, ids.length, `duplicate IDs found: ${ids.join(", ")}`);
-  assert.equal((html.match(/class="series-chip"/g) ?? []).length, 9);
+  assert.equal((html.match(/class="series-seg"/g) ?? []).length, 9, "حزام السلاسل التسع مفقود");
 });
 
 test("emits the required M0 security headers without temporary domains", async () => {

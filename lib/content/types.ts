@@ -16,6 +16,11 @@ export type Series = {
   color: string;
 };
 
+export type FactCheck = {
+  rumor: string;
+  truth: string;
+};
+
 export type Story = {
   id: string;
   slug: string;
@@ -27,18 +32,35 @@ export type Story = {
   series?: SeriesSlug;
   image?: string;
   publishedAt?: string;
+  /** خلاصة قبل القراءة — تُشتق اليوم من المقتطف، ومن خدمة الذكاء بعد اعتماد المحرر لاحقًا. */
+  quickTake?: string[];
+  /** بلوك الشائعة/الحقيقة لقالب «افهمها صح». */
+  factCheck?: FactCheck;
 };
 
-export type HomeSectionKey = "behindNews" | "video" | "podcast" | "infographic";
+export type NumberStat = {
+  value: string;
+  suffix?: string;
+  label: string;
+  href?: string;
+};
 
-export type HomeBundle = {
+export type BriefItem = {
+  title: string;
+  href: string;
+  color: string;
+};
+
+/** حزمة الرئيسية بتوزيع «المنشور»: بنتو + فسيفساء + أرقام + مرئي. */
+export type HomeData = {
+  brief: BriefItem[];
   hero: Story;
-  sections: Array<{
-    key: HomeSectionKey;
-    title: string;
-    kicker: string;
-    stories: Story[];
-  }>;
+  minis: Story[];
+  dataStory: Story | null;
+  mosaic: Story[];
+  question: { kick: string; title: string; text: string; href: string } | null;
+  videos: Story[];
+  numbers: NumberStat[];
   series: Series[];
 };
 
@@ -48,11 +70,7 @@ export function storyHref(story: Story): string {
 }
 
 export interface ContentProvider {
-  getHomeCandidates(): Promise<{
-    hero: Story;
-    sections: HomeBundle["sections"];
-    series: Series[];
-  }>;
+  getHome(): Promise<HomeData>;
   getStory(id: string): Promise<Story | null>;
   getSeries(slug: string): Promise<Series | null>;
   listSeries(): Promise<Series[]>;

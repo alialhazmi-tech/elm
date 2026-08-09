@@ -1,5 +1,20 @@
 import type { Metadata, Viewport } from "next";
+import { Alexandria, Readex_Pro } from "next/font/google";
 import "./globals.css";
+
+const displayFont = Alexandria({
+  subsets: ["arabic", "latin"],
+  weight: ["700", "800"],
+  variable: "--f-display",
+  display: "swap",
+});
+
+const textFont = Readex_Pro({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
+  variable: "--f-text",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://alelm.net"),
@@ -35,15 +50,26 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f1e8" },
-    { media: "(prefers-color-scheme: dark)", color: "#071827" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f7fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a1322" },
   ],
 };
 
+/** يقرأ تفضيل الثيم المحفوظ قبل الرسم الأول لمنع وميض التبديل. */
+const themeInit = `(function(){try{var t=localStorage.getItem("alelm-theme");if(t==="dark"||t==="light"){document.documentElement.dataset.theme=t}}catch(e){}})()`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ar" dir="rtl">
-      <body>{children}</body>
+    <html
+      lang="ar"
+      dir="rtl"
+      className={`${displayFont.variable} ${textFont.variable}`}
+      suppressHydrationWarning
+    >
+      <body>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+        {children}
+      </body>
     </html>
   );
 }

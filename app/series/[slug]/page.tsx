@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { StoryCard } from "@/app/_components/story-card";
+import { MosaicCard } from "@/app/_components/story-card";
 import { SERIES, seedContentProvider } from "@/lib/content/provider";
 
 export const revalidate = 300;
@@ -36,17 +36,14 @@ export default async function SeriesPage({ params }: Params) {
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader />
+      <SiteHeader active="/series/absat" />
 
       <main id="main-content">
-        <section
-          className="series-hero"
-          style={{ "--series-color": series.color } as React.CSSProperties}
-        >
-          <p className="eyebrow"><span />سلسلة من سلاسل العلم</p>
+        <section className="hub-hero" style={{ "--sc": series.color } as React.CSSProperties}>
+          <p className="eyebrow">سلسلة من طيف العلم</p>
           <h1>{series.name}</h1>
-          <p className="series-hero-desc">{series.description}</p>
-          <p className="series-hero-count">{stories.length} مادة منشورة</p>
+          <p className="hub-desc">{series.description}</p>
+          <p className="hub-count">{stories.length} مادة منشورة</p>
         </section>
 
         <nav className="series-switch" aria-label="السلاسل الأخرى">
@@ -55,21 +52,23 @@ export default async function SeriesPage({ params }: Params) {
               key={item.slug}
               href={`/series/${item.slug}`}
               className={item.slug === series.slug ? "is-active" : undefined}
-              style={{ "--series-color": item.color } as React.CSSProperties}
+              style={{ "--sc": item.color } as React.CSSProperties}
             >
               {item.name}
             </Link>
           ))}
         </nav>
 
-        <div className="content-shell">
-          <section className="content-section">
-            <div className="story-grid">
-              {stories.map((story, index) => (
-                <StoryCard key={story.id} story={story} index={index} />
+        <div className="wrap">
+          {stories.length > 0 ? (
+            <div className="grid-3">
+              {stories.map((story) => (
+                <MosaicCard key={story.id} story={story} />
               ))}
             </div>
-          </section>
+          ) : (
+            <p className="empty-state">مواد هذه السلسلة في الطريق.</p>
+          )}
         </div>
       </main>
 

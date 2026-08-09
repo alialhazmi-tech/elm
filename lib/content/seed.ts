@@ -432,3 +432,40 @@ export const seedStories: Story[] = [
     publishedAt: "2026-08-06T15:36:39+03:00",
   },
 ];
+
+/** مواد المرئي — من alelm.net/videos (لُقطت 2026-08-09). */
+export const seedVideos: Story[] = [
+  {
+    id: "262549",
+    slug: "%d9%87%d9%84-%d9%8a%d9%86%d8%ac%d9%88-%d8%a3%d8%ba%d9%86%d9%8a%d8%a7%d8%a1-%d8%a3%d9%85%d8%b1%d9%8a%d9%83%d8%a7-%d9%85%d9%86-%d8%a7%d9%84%d8%b6%d8%b1%d8%a7%d8%a6%d8%a8-%d9%81%d9%8a-%d8%b9%d9%87%d8%af",
+    section: "videos",
+    title: "هل ينجو أغنياء أمريكا من الضرائب في عهد ترامب؟",
+    excerpt: "تفاصيل مفاجئة حول انخفاض معدلات التدقيق والرقابة الضريبيةفي الولايات المتحدة الأمريكية",
+    eyebrow: "مرئي",
+    readingMinutes: 3,
+    series: "efhamha-sah",
+    image: "https://dash.alelm.net/wp-content/uploads/2026/08/%D8%B9%D8%B1%D8%B6%D9%8A.png",
+  },
+  {
+    id: "262404",
+    slug: "%d9%83%d9%8a%d9%81-%d8%aa%d8%aa%d9%84%d8%a7%d8%b9%d8%a8-%d8%a7%d9%84%d9%85%d8%ad%d9%84%d9%8a%d8%a7%d8%aa-%d8%a7%d9%84%d8%a7%d8%b5%d8%b7%d9%86%d8%a7%d8%b9%d9%8a%d8%a9-%d8%a8%d8%a7%d9%84%d8%af%d9%85",
+    section: "videos",
+    title: "كيف تتلاعب المحليات الاصطناعية بالدماغ؟",
+    excerpt: "هل تساءلت يومًا لماذا تشعر بالجوع الشديد بعد تناول مشروب \"خالٍ من السعرات\"؟ الإجابة لا تبدأ من المعدة، بل من الغرف المظلمة داخل عقولنا! في هذا الفيديو، نستعرض أحدث ما توصلت إليه الأبحاث العلمية المشتركة بين جامعات (أكسفو",
+    eyebrow: "مرئي",
+    readingMinutes: 3,
+    series: "absat",
+    image: "https://dash.alelm.net/wp-content/uploads/2026/07/%D9%83%D9%8A%D9%81-%D8%AA%D8%AA%D9%84%D8%A7%D8%B9%D8%A8-%D8%A7%D9%84%D9%85%D8%AD%D9%84%D9%8A%D8%A7%D8%AA-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A%D8%A9-%D8%A8%D8%A7%D9%84%D8%AF%D9%85%D8%A7%D8%BA%D8%9F-01.png",
+  },
+  {
+    id: "262367",
+    slug: "%d8%b9%d8%a7%d9%84%d9%85-%d8%a7%d9%84%d8%b8%d9%84%d8%a7%d9%85-%d8%a7%d9%84%d8%b3%d8%ad%d9%8a%d9%82",
+    section: "videos",
+    title: "عالم الظلام السحيق",
+    excerpt: "كائنات الظلام البحرية كيف تحيا المخلوقات في أعماق المحيط تحت ضغط يسحق الحديد؟",
+    eyebrow: "مرئي",
+    readingMinutes: 3,
+    series: "aghrab",
+    image: "https://dash.alelm.net/wp-content/uploads/2026/07/%D8%A7%D9%86%D8%B3%D8%AA%D8%A7-1.png",
+  },
+];

@@ -3,8 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { EndingPoll } from "@/app/_components/poll";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { StoryCard } from "@/app/_components/story-card";
+import { MosaicCard } from "@/app/_components/story-card";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -46,6 +47,14 @@ const DATE_FORMAT = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
   year: "numeric",
 });
 
+const TOOLBAR = [
+  { label: "لخّص لي", primary: true, spark: true },
+  { label: "اشرحها أبسط" },
+  { label: "🎧 استمع" },
+  { label: "ناقش المادة" },
+  { label: "مشاركة" },
+];
+
 export default async function ArticlePage({ params }: Params) {
   const { id } = await params;
   const story = await seedContentProvider.getStory(id);
@@ -84,13 +93,13 @@ export default async function ArticlePage({ params }: Params) {
           ) : null}
         </nav>
 
-        <article className="article" data-story-id={story.id}>
+        <article data-story-id={story.id}>
           <header className="article-head">
             {series ? (
               <Link
-                className="series-badge"
+                className="series-chip"
                 href={`/series/${series.slug}`}
-                style={{ "--series-color": series.color } as React.CSSProperties}
+                style={{ "--sc": series.color } as React.CSSProperties}
               >
                 {series.name}
               </Link>
@@ -99,10 +108,27 @@ export default async function ArticlePage({ params }: Params) {
             <p className="article-deck">{story.excerpt}</p>
             <div className="article-meta">
               <span>{sectionName(story.section)}</span>
-              {published ? <time dateTime={story.publishedAt}>{DATE_FORMAT.format(published)}</time> : null}
+              {published ? (
+                <time dateTime={story.publishedAt}>{DATE_FORMAT.format(published)}</time>
+              ) : null}
               <span>{story.readingMinutes} دقائق قراءة</span>
+              <span>تحرير: فريق العلم</span>
             </div>
           </header>
+
+          <div className="ai-surface ai-toolbar" aria-label="أدوات القارئ — تصل مع مرحلة خدمات الذكاء">
+            {TOOLBAR.map((tool) => (
+              <span
+                key={tool.label}
+                className={tool.primary ? "tool primary" : "tool"}
+                aria-disabled="true"
+                title="تصل مع مرحلة خدمات الذكاء"
+              >
+                {tool.spark ? <span className="spark">✦</span> : null}
+                {tool.label}
+              </span>
+            ))}
+          </div>
 
           {story.image ? (
             <figure className="article-figure">
@@ -112,41 +138,62 @@ export default async function ArticlePage({ params }: Params) {
                 fill
                 sizes="(max-width: 900px) 100vw, 860px"
                 priority
-                className="article-image"
               />
             </figure>
           ) : null}
 
           <div className="article-body">
             <p>{story.excerpt}</p>
+
+            {story.factCheck ? (
+              <div className="fact-block">
+                <div className="fact-rumor">
+                  <b>✕ الشائعة</b>
+                  <p>{story.factCheck.rumor}</p>
+                </div>
+                <div className="fact-truth">
+                  <b>✓ الحقيقة</b>
+                  <p>{story.factCheck.truth}</p>
+                </div>
+              </div>
+            ) : null}
+
             <p className="article-placeholder">
               نص المادة الكامل يصل من مصدر المحتوى عند ربط محوّل WordPress ثم «تحرير العلم».
-              هذه الصفحة تعرض القالب الحقيقي: المسار، السلسلة، الصورة، التاريخ، زمن القراءة،
+              هذه الصفحة هي القالب الفعلي: المسار، السلسلة، الصورة، التاريخ، أدوات القارئ،
               وبيانات NewsArticle المهيكلة.
             </p>
           </div>
 
+          <EndingPoll
+            pollId={story.id}
+            question="هل غيّرت هذه المادة فهمك للموضوع؟"
+            options={[
+              { label: "نعم، أضافت لي سياقًا جديدًا", votes: 34 },
+              { label: "كنت أعرف أغلب ما فيها", votes: 12 },
+            ]}
+          />
+
           {series ? (
-            <aside className="series-note" style={{ "--series-color": series.color } as React.CSSProperties}>
-              <p>هذه المادة ضمن سلسلة</p>
+            <aside className="series-note" style={{ "--sc": series.color } as React.CSSProperties}>
+              <p className="sn-kick">هذه المادة ضمن سلسلة</p>
               <h2>{series.name}</h2>
-              <p className="series-note-desc">{series.description}</p>
-              <Link href={`/series/${series.slug}`}>تصفح السلسلة</Link>
+              <p className="sn-desc">{series.description}</p>
+              <Link href={`/series/${series.slug}`}>تصفح السلسلة ←</Link>
             </aside>
           ) : null}
         </article>
 
         {related.length > 0 ? (
-          <section className="content-section" aria-labelledby="related-title">
-            <div className="section-heading">
+          <section aria-labelledby="related-title">
+            <div className="section-head">
               <div>
-                <p>لا تفوّت</p>
                 <h2 id="related-title">مواد ذات صلة</h2>
               </div>
             </div>
-            <div className="story-grid">
-              {related.map((item, index) => (
-                <StoryCard key={item.id} story={item} index={index} />
+            <div className="grid-3">
+              {related.map((item) => (
+                <MosaicCard key={item.id} story={item} />
               ))}
             </div>
           </section>
