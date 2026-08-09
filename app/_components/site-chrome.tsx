@@ -1,40 +1,28 @@
 import Link from "next/link";
 
 import { ThemeToggle } from "./theme-toggle";
+import { storyHref, type Story } from "@/lib/content/types";
 
 const NAV = [
-  { label: "وراء الخبر", href: "/politics" },
-  { label: "السلاسل", href: "/series/absat" },
-  { label: "بالأرقام", href: "/infographics" },
-  { label: "مرئي", href: "/videos" },
+  { label: "الرئيسية", href: "/" },
+  { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "رياضة", href: "/sport" },
+  { label: "تحليل", href: "/infographics" },
+  { label: "مرئي", href: "/videos" },
 ];
 
-/** شعار «المنشور»: الخبر يدخل ضوءًا ويخرج طيفًا من السلاسل. */
-export function PrismMark({ size = 38 }: { size?: number }) {
-  return (
-    <svg width={size} height={(size * 36) / 40} viewBox="0 0 44 40" aria-hidden="true">
-      <path d="M22 3 L41 37 H3 Z" fill="#12284b" />
-      <path d="M22 3 L41 37 H3 Z" fill="none" stroke="#f5b92e" strokeWidth="1.6" />
-      <line x1="44" y1="20" x2="30" y2="20" stroke="#f5b92e" strokeWidth="2.4" />
-      <line x1="14" y1="14" x2="0" y2="9" stroke="#ef476f" strokeWidth="2.2" />
-      <line x1="13" y1="20" x2="0" y2="20" stroke="#3d7ef7" strokeWidth="2.2" />
-      <line x1="14" y1="26" x2="0" y2="31" stroke="#12b5a0" strokeWidth="2.2" />
-    </svg>
-  );
-}
-
+/**
+ * الهيدر وفق دليل الهوية: لوح مداد، اللوجوتايب السالب (كلمة «العلم» وحدها —
+ * Noto Kufi ‏900 بتتبّع ‎-2%‎، بلا رمز مرافق)، والنشط بحد أحمر سفلي.
+ */
 export function SiteHeader({ active }: { active?: string }) {
   return (
     <header className="topbar">
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
-          <PrismMark />
-          <span>
-            <span className="brand-word">العلم</span>
-            <span className="brand-tag">المعرفة وراء الخبر</span>
-          </span>
+          <span className="brand-word">العلم</span>
+          <span className="brand-tag">الخبر كما هو</span>
         </Link>
         <nav className="topnav" aria-label="التنقل الرئيسي">
           {NAV.map((item) => (
@@ -48,9 +36,8 @@ export function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
         <div className="top-tools">
-          <Link className="ask-pill" href="/search" aria-label="اسأل العلم — البحث">
-            <span className="spark">✦</span>
-            <span className="hint">اسأل العلم عن أي شيء…</span>
+          <Link className="ask-pill" href="/search" aria-label="البحث في العلم">
+            <span className="hint">ابحث في العلم…</span>
             <kbd>⌘K</kbd>
           </Link>
           <ThemeToggle />
@@ -60,12 +47,28 @@ export function SiteHeader({ active }: { active?: string }) {
   );
 }
 
+/** شريط الأخبار العاجلة — الأحمر إشارة السرعة، نص متحرك من اليمين إلى اليسار. */
+export function UrgentBar({ story }: { story: Story }) {
+  return (
+    <div className="urgent-bar" role="status" aria-label="خبر عاجل">
+      <span className="tag">عاجل</span>
+      <span className="sep" aria-hidden="true">|</span>
+      <div className="urgent-track">
+        <Link className="urgent-text" href={storyHref(story)}>
+          {story.title} — {story.excerpt.slice(0, 120)}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 export function SiteFooter() {
   return (
     <footer className="footer">
       <div className="footer-inner">
         <span className="brand-word">العلم</span>
-        <p>منصة إعلام ومعرفة سعودية — السياق قبل السرعة.</p>
+        <span className="footer-rule" aria-hidden="true" />
+        <p>منصة إعلامية سعودية — الخبر كما هو.</p>
         <span className="left">
           نسخة تطوير — العناوين والصور من مواد alelm.net المنشورة، والمصدر النهائي «تحرير العلم»
         </span>

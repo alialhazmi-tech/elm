@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 
 import { EndingPoll } from "@/app/_components/poll";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
+import { NewsCard } from "@/app/_components/story-card";
+import { brandDate, toEasternDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -39,13 +40,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     },
   };
 }
-
-// الأرقام الإنجليزية إلزامية وفق الدستور التحريري § 7 (nu-latn).
-const DATE_FORMAT = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
 
 const TOOLBAR = [
   { label: "لخّص لي", primary: true, spark: true },
@@ -108,10 +102,12 @@ export default async function ArticlePage({ params }: Params) {
             <p className="article-deck">{story.excerpt}</p>
             <div className="article-meta">
               <span>{sectionName(story.section)}</span>
-              {published ? (
-                <time dateTime={story.publishedAt}>{DATE_FORMAT.format(published)}</time>
+              {published && story.publishedAt ? (
+                <time dateTime={story.publishedAt}>
+                  {brandDate(story.publishedAt).hijri} — {brandDate(story.publishedAt).gregorian}
+                </time>
               ) : null}
-              <span>{story.readingMinutes} دقائق قراءة</span>
+              <span>{toEasternDigits(story.readingMinutes)} دقائق قراءة</span>
               <span>تحرير: فريق العلم</span>
             </div>
           </header>
@@ -141,6 +137,7 @@ export default async function ArticlePage({ params }: Params) {
               />
             </figure>
           ) : null}
+          {story.image ? <p className="figure-credit">المصدر: العلم</p> : null}
 
           <div className="article-body">
             <p>{story.excerpt}</p>
@@ -193,7 +190,7 @@ export default async function ArticlePage({ params }: Params) {
             </div>
             <div className="grid-3">
               {related.map((item) => (
-                <MosaicCard key={item.id} story={item} />
+                <NewsCard key={item.id} story={item} withImage showExcerpt />
               ))}
             </div>
           </section>

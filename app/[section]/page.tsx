@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
+import { toEasternDigits } from "@/lib/format";
+import { NewsCard } from "@/app/_components/story-card";
 import { KNOWN_SECTIONS, sectionName, seedContentProvider } from "@/lib/content/provider";
 
 export const revalidate = 180;
@@ -39,13 +40,13 @@ export default async function SectionPage({ params }: Params) {
         <section className="hub-hero">
           <p className="eyebrow">قسم</p>
           <h1>{sectionName(section)}</h1>
-          <p className="hub-count">{stories.length} مادة</p>
+          <p className="hub-count">{toEasternDigits(stories.length)} مادة</p>
         </section>
 
         <div className="wrap">
           <div className="grid-3">
-            {stories.map((story, index) => (
-              <MosaicCard key={story.id} story={story} tall={index === 0} />
+            {stories.map((story) => (
+              <NewsCard key={story.id} story={story} withImage showExcerpt />
             ))}
           </div>
         </div>

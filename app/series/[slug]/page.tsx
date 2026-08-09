@@ -3,7 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
+import { toEasternDigits } from "@/lib/format";
+import { NewsCard } from "@/app/_components/story-card";
 import { SERIES, seedContentProvider } from "@/lib/content/provider";
 
 export const revalidate = 300;
@@ -40,10 +41,10 @@ export default async function SeriesPage({ params }: Params) {
 
       <main id="main-content">
         <section className="hub-hero" style={{ "--sc": series.color } as React.CSSProperties}>
-          <p className="eyebrow">سلسلة من طيف العلم</p>
+          <p className="eyebrow">سلسلة من سلاسل العلم</p>
           <h1>{series.name}</h1>
           <p className="hub-desc">{series.description}</p>
-          <p className="hub-count">{stories.length} مادة منشورة</p>
+          <p className="hub-count">{toEasternDigits(stories.length)} مادة منشورة</p>
         </section>
 
         <nav className="series-switch" aria-label="السلاسل الأخرى">
@@ -63,7 +64,7 @@ export default async function SeriesPage({ params }: Params) {
           {stories.length > 0 ? (
             <div className="grid-3">
               {stories.map((story) => (
-                <MosaicCard key={story.id} story={story} />
+                <NewsCard key={story.id} story={story} withImage showExcerpt />
               ))}
             </div>
           ) : (

@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Readex_Pro } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 
-const displayFont = Alexandria({
+// الخطوط الرسمية من دليل الهوية: Noto Kufi للعناوين والشعار، IBM Plex للمتون.
+const displayFont = Noto_Kufi_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["700", "800"],
+  weight: ["600", "700", "800", "900"],
   variable: "--f-display",
   display: "swap",
 });
 
-const textFont = Readex_Pro({
+const textFont = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--f-text",
   display: "swap",
 });
@@ -50,8 +51,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f7fb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a1322" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A1A33" },
   ],
 };
 
