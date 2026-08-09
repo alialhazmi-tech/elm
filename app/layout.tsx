@@ -1,26 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
+import { IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 
-// تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
-const displayFont = Alexandria({
+// الخطوط الرسمية من دليل الهوية: Noto Kufi للعناوين والشعار، IBM Plex للمتون.
+const displayFont = Noto_Kufi_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["700", "800"],
+  weight: ["600", "700", "800", "900"],
   variable: "--f-display",
   display: "swap",
 });
 
-const textFont = Readex_Pro({
+const textFont = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
+  weight: ["300", "400", "500", "600", "700"],
   variable: "--f-text",
-  display: "swap",
-});
-
-const logoFont = Noto_Kufi_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["900"],
-  variable: "--f-logo",
   display: "swap",
 });
 
@@ -58,8 +51,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F5F7FA" },
-    { media: "(prefers-color-scheme: dark)", color: "#060E18" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F5F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A1A33" },
   ],
 };
 
@@ -71,7 +64,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html
       lang="ar"
       dir="rtl"
-      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
+      className={`${displayFont.variable} ${textFont.variable}`}
       suppressHydrationWarning
     >
       <body>

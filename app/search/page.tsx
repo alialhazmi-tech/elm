@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { toEasternDigits } from "@/lib/format";
-import { MosaicCard } from "@/app/_components/story-card";
+import { NewsCard } from "@/app/_components/story-card";
 import { seedContentProvider } from "@/lib/content/provider";
 
 export const metadata: Metadata = {
@@ -36,9 +36,8 @@ export default async function SearchPage({ searchParams }: Props) {
         </section>
 
         <div className="wrap">
-          <section className="ai-surface ask-block" style={{ marginTop: 0 }}>
+          <section className="ask-block" style={{ marginTop: 0 }}>
             <form className="ask-form" action="/search" role="search">
-              <span className="spark" aria-hidden="true">✦</span>
               <input
                 type="search"
                 name="q"
@@ -64,7 +63,7 @@ export default async function SearchPage({ searchParams }: Props) {
           {results.length > 0 ? (
             <div className="grid-3">
               {results.map((story) => (
-                <MosaicCard key={story.id} story={story} />
+                <NewsCard key={story.id} story={story} withImage showExcerpt />
               ))}
             </div>
           ) : null}

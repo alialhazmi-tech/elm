@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 
 import { EndingPoll } from "@/app/_components/poll";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
+import { NewsCard } from "@/app/_components/story-card";
 import { brandDate, toEasternDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
@@ -137,6 +137,7 @@ export default async function ArticlePage({ params }: Params) {
               />
             </figure>
           ) : null}
+          {story.image ? <p className="figure-credit">المصدر: العلم</p> : null}
 
           <div className="article-body">
             <p>{story.excerpt}</p>
@@ -189,7 +190,7 @@ export default async function ArticlePage({ params }: Params) {
             </div>
             <div className="grid-3">
               {related.map((item) => (
-                <MosaicCard key={item.id} story={item} />
+                <NewsCard key={item.id} story={item} withImage showExcerpt />
               ))}
             </div>
           </section>
