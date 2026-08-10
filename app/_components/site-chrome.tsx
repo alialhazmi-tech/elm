@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 import { ThemeToggle } from "./theme-toggle";
-import { storyHref, type Story } from "@/lib/content/types";
 
 const NAV = [
   { label: "الرئيسية", href: "/" },
@@ -45,21 +44,6 @@ export function SiteHeader({ active }: { active?: string }) {
         </div>
       </div>
     </header>
-  );
-}
-
-/** شريط الأخبار العاجلة — الأحمر إشارة السرعة، نص متحرك من اليمين إلى اليسار. */
-export function UrgentBar({ story }: { story: Story }) {
-  return (
-    <div className="urgent-bar" role="status" aria-label="خبر عاجل">
-      <span className="tag">عاجل</span>
-      <span className="sep" aria-hidden="true">|</span>
-      <div className="urgent-track">
-        <Link className="urgent-text" href={storyHref(story)}>
-          {story.title} — {story.excerpt.slice(0, 120)}
-        </Link>
-      </div>
-    </div>
   );
 }
 

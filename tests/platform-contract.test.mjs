@@ -16,6 +16,7 @@ test("renders Arabic RTL metadata with the approved knowledge positioning", asyn
   assert.match(html, /rel="canonical" href="https:\/\/alelm\.net"/);
   assert.match(html, /منصة إعلام ومعرفة سعودية/);
   assert.match(html, /"@type":"Organization"/);
+  assert.doesNotMatch(html, /[\u0660-\u0669\u06F0-\u06F9]/, "الواجهة يجب أن تستخدم الأرقام اللاتينية فقط");
   assert.doesNotMatch(html, /name="keywords"/i);
   assert.doesNotMatch(html, /hagerh|allorigins|stage2?\.jakelelm/i);
 });
@@ -26,7 +27,7 @@ test("deduplicates canonical story IDs across the entire homepage", async () => 
 
   assert.ok(ids.length >= 7, "expected hero and section stories");
   assert.equal(new Set(ids).size, ids.length, `duplicate IDs found: ${ids.join(", ")}`);
-  assert.equal((html.match(/class="series-lens"/g) ?? []).length, 9, "بوابة السلاسل التسع مفقودة");
+  assert.equal((html.match(/class="series-lens"/g) ?? []).length, 8, "بوابة السلاسل الثماني مفقودة");
 });
 
 test("emits the required M0 security headers without temporary domains", async () => {

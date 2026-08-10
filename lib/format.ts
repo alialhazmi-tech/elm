@@ -1,31 +1,35 @@
-/**
- * تنسيق العرض وفق دليل الهوية V1.0 (2026):
- * «الأرقام العربية الشرقية في المتون، والتاريخ هجري ثم ميلادي».
- */
+/** تنسيق العرض الموحد: جميع الأرقام لاتينية، مع بقاء أسماء الأشهر عربية. */
 
-const EASTERN = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+const ARABIC_INDIC = /[\u0660-\u0669\u06F0-\u06F9]/g;
 
-/** يحوّل الأرقام اللاتينية إلى عربية شرقية، ويستبدل % بـ٪. */
-export function toEasternDigits(input: string | number): string {
+/** يحوّل أي أرقام عربية أو فارسية إلى الأرقام اللاتينية 0–9. */
+export function toLatinDigits(input: string | number): string {
   return String(input)
-    .replace(/\d/g, (digit) => EASTERN[Number(digit)])
-    .replace(/%/g, "٪");
+    .replace(ARABIC_INDIC, (digit) => {
+      const code = digit.codePointAt(0) ?? 0;
+      const base = code >= 0x06f0 ? 0x06f0 : 0x0660;
+      return String(code - base);
+    })
+    .replace(/٪/g, "%");
 }
 
-const HIJRI = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura", {
+const HIJRI = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", {
   day: "numeric",
   month: "long",
   year: "numeric",
 });
 
-const GREGORIAN = new Intl.DateTimeFormat("ar-SA-u-ca-gregory", {
+const GREGORIAN = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
   day: "numeric",
   month: "long",
   year: "numeric",
 });
 
-/** «هجري ثم ميلادي» بأرقام شرقية — بنية العرض من دليل الهوية. */
+/** «هجري ثم ميلادي» بأسماء أشهر عربية وأرقام لاتينية. */
 export function brandDate(iso: string): { hijri: string; gregorian: string } {
   const date = new Date(iso);
-  return { hijri: HIJRI.format(date), gregorian: GREGORIAN.format(date) };
+  return {
+    hijri: toLatinDigits(HIJRI.format(date)),
+    gregorian: toLatinDigits(GREGORIAN.format(date)),
+  };
 }

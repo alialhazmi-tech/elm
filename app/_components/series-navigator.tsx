@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { toEasternDigits } from "@/lib/format";
+import { toLatinDigits } from "@/lib/format";
 import type { Series } from "@/lib/content/types";
 
 export function SeriesNavigator({ series }: { series: Series[] }) {
@@ -13,7 +13,7 @@ export function SeriesNavigator({ series }: { series: Series[] }) {
           <p>الخبر نقطة البداية. كل سلسلة تمنحك زاوية مختلفة للوصول إلى الصورة الكاملة.</p>
         </div>
         <Link className="series-gateway-all" href="/series">
-          استكشف السلاسل التسع <span aria-hidden="true">←</span>
+          استكشف السلاسل الثماني <span aria-hidden="true">←</span>
         </Link>
       </div>
 
@@ -25,8 +25,8 @@ export function SeriesNavigator({ series }: { series: Series[] }) {
             href={`/series/${item.slug}`}
             style={{ "--sc": item.color } as React.CSSProperties}
           >
-            <span className="series-lens-no" aria-hidden="true">
-              {toEasternDigits(String(index + 1).padStart(2, "0"))}
+            <span className="series-lens-no latin-number" dir="ltr" lang="en" aria-hidden="true">
+              {toLatinDigits(String(index + 1).padStart(2, "0"))}
             </span>
             <span className="series-lens-copy">
               <b>{item.name}</b>

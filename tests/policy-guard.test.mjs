@@ -238,15 +238,18 @@ test("ضوابط العاجل: السقف اليومي والمصادر الأو
 });
 
 test("قواعد التنسيق: الأرقام والتواريخ والوحدات وأسماء المنصات", () => {
-  // دليل الهوية V1.0 نسخ بند الأرقام الإنجليزية: الشرقية هي المعتمدة في المتون.
-  const digits = guard({ body: `${compliantBody()} بلغت النسبة 50 بالمئة` });
-  assert.deepEqual(findingFor(digits, "FORMAT-EASTERN-DIGITS").autofix, {
+  const digits = guard({ body: `${compliantBody()} بلغت النسبة \u0665\u0660 بالمئة` });
+  assert.deepEqual(findingFor(digits, "FORMAT-LATIN-DIGITS").autofix, {
     field: "body",
-    from: "50",
-    to: "٥٠",
+    from: "\u0665\u0660",
+    to: "50",
   });
-  const title = guard({ title: "ارتفاع الأسعار 50 بالمئة اليوم" });
-  assert.equal(has(title, "FORMAT-EASTERN-DIGITS"), false, "القاعدة مقصورة على المتن");
+  const title = guard({ title: "ارتفاع الأسعار \u06F5\u06F0 بالمئة اليوم" });
+  assert.deepEqual(findingFor(title, "FORMAT-LATIN-DIGITS").autofix, {
+    field: "title",
+    from: "\u06F5\u06F0",
+    to: "50",
+  });
 
   const marker = guard({ body: `${compliantBody()} صدر القرار عام 1444هـ` });
   assert.deepEqual(findingFor(marker, "FORMAT-DATE-MARKER").autofix, {
@@ -350,13 +353,13 @@ test("معايير نشر الصور: الحقوق والمحظورات والت
 test("guardWithAutofix يطبّق التصحيحات ثم يعيد الفحص", () => {
   const draft = {
     ...baseDraft(),
-    body: `${compliantBody()} بلغت النسبة 50 بالمئة عبر فيسبوك`,
+    body: `${compliantBody()} بلغت النسبة \u0665\u0660 بالمئة عبر فيسبوك`,
   };
 
   const { draft: fixed, report, autofixesApplied } = guardWithAutofix(draft);
 
   assert.ok(autofixesApplied >= 2);
-  assert.match(fixed.body, /٥٠ بالمئة/);
+  assert.match(fixed.body, /50 بالمئة/);
   assert.match(fixed.body, /Facebook/);
   assert.equal(report.counts.suggestion, 0, "لا تبقى اقتراحات بعد الإصلاح الآلي");
 });

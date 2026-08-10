@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   نظام تصميم «المنشور» — العلم يستقبل الخبر ويخرجه طيفًا من تسع سلاسل.
+   نظام تصميم «المنشور» — العلم يستقبل الخبر ويخرجه طيفًا من ثماني سلاسل.
    الرموز أولًا؛ كل مكوّن يقرأ من الرموز ولا يحمل ألوانًا خاصة.
    ============================================================ */
 
@@ -19,7 +19,6 @@
   --ink-deep: #0A1A33;
   --head-ink-2: #C7D2E4;
   --accent: #2B5C9E;
-  --urgent: #C62134;
   --r-ui: 4px;
   --gold: #f5b92e;
   --scrim: linear-gradient(180deg, rgb(11 26 51 / 0) 30%, rgb(11 26 51 / 0.88) 82%);
@@ -29,7 +28,7 @@
   --r-md: 18px;
   --r-lg: 26px;
 
-  /* طيف السلاسل التسع — القيم مطابقة لـ SERIES في lib/content/provider.ts */
+  /* طيف السلاسل الثماني — القيم مطابقة لـ SERIES في lib/content/series.ts */
   --c-absat: #12b5a0;
   --c-aghrab: #ef476f;
   --c-efhamha: #eda313;
@@ -38,10 +37,10 @@
   --c-limatha: #14a8d6;
   --c-mathalaw: #f26a1b;
   --c-tarikh: #c08a2e;
-  --c-mathabaad: #2eb873;
+  --success: #2eb873;
   --spectrum: linear-gradient(270deg,
     var(--c-absat), var(--c-aghrab), var(--c-efhamha), var(--c-arqam),
-    var(--c-shakhsiat), var(--c-limatha), var(--c-mathalaw), var(--c-tarikh), var(--c-mathabaad));
+    var(--c-shakhsiat), var(--c-limatha), var(--c-mathalaw), var(--c-tarikh));
 
   --font-display: var(--f-display, 'Alexandria'), var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
   --font-text: var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
@@ -114,6 +113,22 @@ img { max-width: 100%; display: block; }
 ::selection { background: color-mix(in srgb, var(--gold) 45%, transparent); }
 :focus-visible { outline: 2.5px solid var(--c-arqam); outline-offset: 2px; border-radius: 4px; }
 
+/* الأرقام البارزة بخط لاتيني صريح؛ بعض الخطوط العربية ترسم 9 قريبًا جدًا من ٩. */
+.latin-number,
+.series-index-stat b.latin-number,
+.series-lens-no.latin-number,
+.series-directory-no.latin-number,
+.series-detail-mark.latin-number,
+.most-read-list .mr-no.latin-number,
+.data-num.latin-number,
+.num-card .v.latin-number {
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-family: Arial, Helvetica, sans-serif;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
 .wrap { max-width: 1200px; margin: 0 auto; padding: 0 22px; }
 
 .skip-link {
@@ -124,7 +139,6 @@ img { max-width: 100%; display: block; }
 
 /* ============ الهيدر ============ */
 .topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: relative; }
-.topbar::after { content: ""; display: block; height: 3px; background: var(--spectrum); }
 .topbar-inner {
   max-width: 1200px; margin: 0 auto; padding: 13px 22px;
   display: flex; align-items: center; gap: 24px;
@@ -196,16 +210,74 @@ img { max-width: 100%; display: block; }
 .series-chip { position: relative; z-index: 2; }
 
 /* موجز اليوم */
-.brief { margin-top: 12px; padding: 15px 22px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-.brief-copy b { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
-.brief-copy span { display: block; font-size: 12px; color: var(--ink-3); margin-top: 1px; }
-.brief-items { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-inline-start: auto; }
-.brief-items a {
-  display: flex; align-items: center; gap: 7px; max-width: 30ch;
-  transition: color 0.15s ease, transform 0.15s ease;
+.brief {
+  margin-top: 18px; overflow: hidden; border: 1px solid var(--line);
+  border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--shadow);
 }
-.brief-items a:hover { color: var(--ink); }
-.brief-items a::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--dot, var(--gold)); }
+.brief-head {
+  display: grid; grid-template-columns: minmax(220px, 0.72fr) minmax(320px, 1.28fr);
+  gap: 34px; align-items: end; padding: 28px 30px 24px;
+  background: linear-gradient(125deg, color-mix(in srgb, var(--navy) 6%, var(--surface)), var(--surface) 62%);
+}
+.brief-brand { display: flex; align-items: center; gap: 13px; }
+.brief-mark {
+  width: 42px; height: 42px; flex: none; display: grid; place-items: center;
+  border-radius: 12px; color: var(--gold); background: var(--navy-deep);
+  box-shadow: 0 8px 18px rgb(11 26 51 / 0.18); font-size: 17px;
+}
+.brief-kicker {
+  display: block; color: var(--ink); font-family: var(--font-display);
+  font-size: 15px; font-weight: 800;
+}
+.brief-status { display: block; margin-top: 3px; color: var(--ink-3); font-size: 11.5px; }
+.brief-intro h2 {
+  margin: 0; color: var(--ink); font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px); line-height: 1.25; letter-spacing: -0.025em;
+}
+.brief-intro p { margin: 7px 0 0; color: var(--ink-2); font-size: 13px; }
+.brief-items {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line);
+}
+.brief-items li { min-width: 0; position: relative; }
+.brief-items li + li { border-inline-start: 1px solid var(--line); }
+.brief-items li::before {
+  content: ""; position: absolute; inset-block-start: -1px; inset-inline: 22px;
+  height: 2px; background: var(--brief-accent, var(--accent));
+}
+.brief-items a {
+  min-height: 178px; padding: 22px; display: flex; flex-direction: column;
+  color: var(--ink); transition: background 0.18s ease, transform 0.18s ease;
+}
+.brief-item-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.brief-label { color: var(--brief-accent, var(--accent)); font-size: 11px; font-weight: 700; }
+.brief-no { color: var(--ink-3); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; }
+.brief-items strong {
+  margin-top: 15px; display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; font-family: var(--font-display); font-size: 16px; line-height: 1.65;
+}
+.brief-action {
+  display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 14px;
+  color: var(--ink-3); font-size: 11.5px; font-weight: 600;
+}
+.brief-action b { color: var(--brief-accent, var(--accent)); font-size: 16px; transition: transform 0.18s ease; }
+.brief-items a:hover { background: var(--surface-2); }
+.brief-items a:hover .brief-action b { transform: translateX(-4px); }
+.brief-foot {
+  padding: 10px 22px; display: flex; justify-content: space-between; gap: 14px;
+  border-top: 1px solid var(--line); color: var(--ink-3); background: var(--surface-2);
+  font-size: 10.5px;
+}
+
+@media (max-width: 760px) {
+  .brief-head { grid-template-columns: 1fr; gap: 20px; padding: 22px 20px 20px; }
+  .brief-items { grid-template-columns: 1fr; }
+  .brief-items li + li { border-inline-start: 0; border-top: 1px solid var(--line); }
+  .brief-items a { min-height: 0; padding: 20px; }
+  .brief-items strong { margin-top: 10px; -webkit-line-clamp: 2; }
+  .brief-action { margin-top: 12px; }
+  .brief-foot { align-items: flex-start; flex-direction: column; gap: 3px; }
+}
 
 /* ============ البنتو ============ */
 .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; margin-top: 22px; }
@@ -457,26 +529,26 @@ img { max-width: 100%; display: block; }
 .article-body { max-width: 42rem; font-size: 1rem; line-height: 2.05; }
 .article-body p { margin: 0 0 1.1rem; }
 .article-placeholder {
-  background: var(--surface-2); border-inline-start: 3px solid var(--c-mathabaad);
+  background: var(--surface-2); border-inline-start: 3px solid var(--success);
   padding: 0.9rem 1.15rem; border-radius: var(--r-sm); font-size: 0.88rem; color: var(--ink-2);
 }
 .fact-block { margin: 1.4rem 0; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); }
 .fact-block > div { padding: 13px 18px; }
 .fact-rumor { background: color-mix(in srgb, var(--c-aghrab) 8%, var(--surface)); }
-.fact-truth { background: color-mix(in srgb, var(--c-mathabaad) 9%, var(--surface)); }
+.fact-truth { background: color-mix(in srgb, var(--success) 9%, var(--surface)); }
 .fact-block b { display: flex; gap: 8px; align-items: center; font-size: 12.5px; }
 .fact-rumor b { color: var(--c-aghrab); }
-.fact-truth b { color: var(--c-mathabaad); }
+.fact-truth b { color: var(--success); }
 .fact-block p { margin: 5px 0 0; font-size: 13px; color: var(--ink-2); }
 .series-note {
   margin: 1.8rem 0 0; padding: 1.2rem 1.5rem; border-radius: var(--r-md);
   background: var(--surface); border: 1px solid var(--line);
-  border-inline-start: 4px solid var(--sc, var(--c-mathabaad));
+  border-inline-start: 4px solid var(--sc, var(--success));
 }
 .series-note .sn-kick { margin: 0; font-size: 0.75rem; color: var(--ink-3); }
 .series-note h2 { margin: 0.1rem 0 0.3rem; font-size: 1.25rem; }
 .series-note .sn-desc { font-size: 0.9rem; color: var(--ink-2); margin: 0; }
-.series-note a { display: inline-block; margin-top: 0.7rem; font-weight: 700; font-size: 0.85rem; color: var(--sc, var(--c-mathabaad)); }
+.series-note a { display: inline-block; margin-top: 0.7rem; font-weight: 700; font-size: 0.85rem; color: var(--sc, var(--success)); }
 .series-note a:hover { text-decoration: underline; }
 .series-note:has(.series-next) {
   display: grid;
@@ -572,7 +644,6 @@ img { max-width: 100%; display: block; }
   .most-read-list li:hover { border-color: color-mix(in srgb, var(--c-arqam) 35%, var(--line)); }
   .b-main:hover .b-img { transform: scale(1.06); }
   .series-seg:hover { transform: translateY(-2px); }
-  .brief-items a:hover { transform: translateX(-2px); }
 }
 
 /* أيقونة تبديل الثيم — تُختار عبر CSS فلا يحتاج المكوّن حالة */
@@ -586,8 +657,7 @@ img { max-width: 100%; display: block; }
 
 /* ============================================================
    الهيدر الملمّع (ثابت بتدرج مداد) والفوتر المداد فوق تصميم «المنشور»
-   — لوجوتايب «العلم» Noto Kufi 900، تبويبات كبسولية بتمييز كحلي فاتح،
-   وشريط العاجل المتدرج. خيط الطيف يبقى توقيع التصميم.
+   — لوجوتايب «العلم» Noto Kufi 900، وتبويبات كبسولية بتمييز كحلي فاتح.
    ============================================================ */
 /* ============ الهيدر ============ */
 .topbar {
@@ -650,29 +720,6 @@ img { max-width: 100%; display: block; }
   color: #FFFFFF;
   border-color: rgb(255 255 255 / 0.28);
   background: rgb(255 255 255 / 0.08);
-}
-
-/* شريط العاجل — الأحمر الوحيد المقصود في الواجهة */
-.urgent-bar {
-  background: linear-gradient(90deg, #9F1239 0%, var(--urgent) 55%, #BE123C 100%);
-  color: #FFFFFF; overflow: hidden;
-  display: flex; align-items: center; gap: 14px; padding: 7px 24px; font-size: 13px;
-  letter-spacing: 0.01em;
-}
-.urgent-bar .tag {
-  font-weight: 700; font-family: var(--font-display); flex: none;
-  font-size: 12px; letter-spacing: 0.04em;
-  background: rgb(0 0 0 / 0.18); padding: 3px 10px; border-radius: 4px;
-}
-.urgent-bar .sep { opacity: 0.45; flex: none; }
-.urgent-track { overflow: hidden; flex: 1; }
-.urgent-text { display: inline-block; white-space: nowrap; opacity: 0.96; }
-@media (prefers-reduced-motion: no-preference) {
-  .urgent-text { animation: urgent-slide 32s linear infinite; }
-  @keyframes urgent-slide {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(100%); }
-  }
 }
 
 /* الفوتر المداد المرافق للهيدر — يحل محل فوتر المنشور الفاتح */

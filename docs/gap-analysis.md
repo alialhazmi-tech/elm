@@ -13,7 +13,7 @@
 | منع تكرار الرئيسية | عقد home bundle ومنطق dedupe مركزي | يحتاج بيانات WordPress الفعلية واختبارًا عليها | M0 | P0 | read API | منخفض |
 | Jaak AlElm | غير معروض في الواجهة الجديدة | قرار التعبئة أو الإخفاء في الإنتاج يحتاج inventory | M0 | P1 | WordPress access | منخفض |
 | قياس قبل/بعد | بوابة budget قيد التنفيذ؛ baseline الدراسة محفوظ | لا RUM ولا قياس شبكة خليجي حالي | M0/M5 | P0 | بيئة منشورة + analytics | مرتفع |
-| Design System عربي RTL | tokens وRTL وdark preference ونمط أولي للسلاسل | Storybook، AA audit والقوالب التسعة الكاملة لم تكتمل | M1 | P1 | اعتماد الهوية/Figma | متوسط |
+| Design System عربي RTL | tokens وRTL وdark preference ونمط أولي للسلاسل | Storybook، AA audit والقوالب الثمانية الكاملة لم تكتمل | M1 | P1 | اعتماد الهوية/Figma | متوسط |
 | API محايدة | `ContentProvider` و`home-bundle.v1` | WordPress adapter وOpenAPI وarticle/SEO bundles غير منفذة | M2 | P0 | WordPress credentials | مرتفع |
 | صفحات المنتج | Home تأسيسية فقط | article/series/program/episode/media/author/search | M2 | P0 | API contracts + DS | مرتفع |
 | التفاعل القابل للقياس | غير منفذ عمدًا | polls/newsletter/follow/save/push/accounts/events | M3 | P1 | analytics + privacy + auth | متوسط |

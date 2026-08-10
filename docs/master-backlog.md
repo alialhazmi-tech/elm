@@ -24,7 +24,7 @@
 
 - **M1-T1 - tokens والطباعة والشبكة.** المخرجات: ألوان، spacing، typography، light/dark، RTL. الاعتماديات: اعتماد الهوية. الاختبارات: visual/a11y. DoD: tokens موثقة بلا CSS متفرق.
 - **M1-T2 - مكتبة المكونات.** Cards/buttons/inputs/nav/media/quotes/data/charts/tables/modals/feedback/loading/error. الاختبارات: unit + axe + visual. DoD: Storybook في الحالتين والاتجاهين.
-- **M1-T3 - قوالب السلاسل التسع.** المكونات المميزة حرفيًا وفق الوثيقة. الاختبارات: snapshots وkeyboard. DoD: identity/archive/follow affordance لكل سلسلة.
+- **M1-T3 - قوالب السلاسل الثماني.** المكونات المميزة حرفيًا وفق نطاق المنتج المعتمد. الاختبارات: snapshots وkeyboard. DoD: identity/archive/follow affordance لكل سلسلة.
 
 ## M2 - الواجهة وطبقة API
 

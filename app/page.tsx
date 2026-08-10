@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
-import { SiteFooter, SiteHeader, UrgentBar } from "@/app/_components/site-chrome";
+import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { SeriesNavigator } from "@/app/_components/series-navigator";
 import { MiniCard, MosaicCard, VideoCard } from "@/app/_components/story-card";
-import { brandDate, toEasternDigits } from "@/lib/format";
+import { brandDate, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -38,34 +38,56 @@ export default async function Home() {
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
       <SiteHeader active="/" />
-      <UrgentBar story={home.hero} />
 
       <main id="main-content" className="wrap">
         <div className="day-strip" aria-label="تاريخ اليوم">
           <time dateTime={new Date().toISOString().slice(0, 10)}>
-            {toEasternDigits(today.hijri)}
+            {toLatinDigits(today.hijri)}
             <span aria-hidden="true"> · </span>
-            {toEasternDigits(today.gregorian)}
+            {toLatinDigits(today.gregorian)}
           </time>
           <span className="day-strip-tag">تغطية مستمرة</span>
         </div>
 
         <SeriesNavigator series={home.series} />
 
-        {/* موجز اليوم */}
-        <section className="ai-surface brief" aria-label="موجز اليوم">
-          <span className="ai-chip"><span className="spark">✦</span> موجز العلم</span>
-          <div className="brief-copy">
-            <b>ما وراء خبر اليوم — في دقيقة</b>
-            <span>يُبنى من مواد المحررين المنشورة، ويُحدَّث على مدار اليوم</span>
-          </div>
-          <div className="brief-items">
-            {home.brief.map((item) => (
-              <Link key={item.href} href={item.href} style={{ "--dot": item.color } as React.CSSProperties}>
-                {item.title.length > 46 ? `${item.title.slice(0, 46)}…` : item.title}
-              </Link>
+        {/* موجز العلم: مدخل تحريري سريع إلى أهم زوايا اليوم */}
+        <section className="brief" aria-labelledby="brief-title">
+          <header className="brief-head">
+            <div className="brief-brand">
+              <span className="brief-mark" aria-hidden="true">✦</span>
+              <div>
+                <span className="brief-kicker">موجز العلم</span>
+                <span className="brief-status">يُحدّث على مدار اليوم</span>
+              </div>
+            </div>
+            <div className="brief-intro">
+              <h2 id="brief-title">المشهد اليوم، بوضوح.</h2>
+              <p>ثلاث قصص مختارة تمنحك الصورة الأهم قبل التفاصيل.</p>
+            </div>
+          </header>
+
+          <ol className="brief-items">
+            {home.brief.map((item, index) => (
+              <li key={item.href} style={{ "--brief-accent": item.color } as React.CSSProperties}>
+                <Link href={item.href}>
+                  <span className="brief-item-top">
+                    <span className="brief-label">{item.label}</span>
+                    <span className="brief-no latin-number" dir="ltr" lang="en">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </span>
+                  <strong>{item.title}</strong>
+                  <span className="brief-action" aria-hidden="true">اقرأ القصة <b>←</b></span>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ol>
+
+          <footer className="brief-foot">
+            <span>مختار من مواد المحررين المنشورة</span>
+            <span>مختصر، موثوق، ومن دون ضجيج</span>
+          </footer>
         </section>
 
         {/* البنتو الرئيسي */}
@@ -98,7 +120,7 @@ export default async function Home() {
               </h1>
               <div className="b-meta">
                 <span>{sectionName(home.hero.section)}</span>
-                <span>{toEasternDigits(home.hero.readingMinutes)} دقائق قراءة</span>
+                <span>{toLatinDigits(home.hero.readingMinutes)} دقائق قراءة</span>
               </div>
             </div>
           </article>
@@ -113,8 +135,8 @@ export default async function Home() {
                   <span className="kick">
                     {dataSeries ? `${dataSeries.name} · ` : ""}أسواق واقتصاد
                   </span>
-                  <div className="data-num">
-                    {toEasternDigits((/(\d{2,4})\s*%/.exec(home.dataStory.title)?.[1]) ?? "—")}
+                  <div className="data-num latin-number" dir="ltr" lang="en">
+                    {toLatinDigits((/(\d{2,4})\s*%/.exec(home.dataStory.title)?.[1]) ?? "—")}
                     <small>٪</small>
                   </div>
                   <p>{home.dataStory.title}</p>
@@ -144,8 +166,8 @@ export default async function Home() {
                 const series = seriesOf(story);
                 return (
                   <li key={story.id} data-story-id={story.id}>
-                    <span className="mr-no" aria-hidden="true">
-                      {toEasternDigits(String(index + 1).padStart(2, "0"))}
+                    <span className="mr-no latin-number" dir="ltr" lang="en" aria-hidden="true">
+                      {toLatinDigits(String(index + 1).padStart(2, "0"))}
                     </span>
                     <div className="mr-body">
                       <span
@@ -194,9 +216,9 @@ export default async function Home() {
             <div className="num-grid">
               {home.numbers.map((stat) => (
                 <Link key={stat.label} className="num-card" href={stat.href ?? "/infographics"}>
-                  <div className="v">
-                    {toEasternDigits(stat.value)}
-                    {stat.suffix ? <small>{toEasternDigits(stat.suffix)}</small> : null}
+                  <div className="v latin-number" dir="ltr" lang="en">
+                    {toLatinDigits(stat.value)}
+                    {stat.suffix ? <small>{toLatinDigits(stat.suffix)}</small> : null}
                   </div>
                   <p>{stat.label}</p>
                 </Link>

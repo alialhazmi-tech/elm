@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { toEasternDigits } from "@/lib/format";
+import { toLatinDigits } from "@/lib/format";
 import { SERIES, seedContentProvider } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -10,7 +10,7 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "سلاسل العلم",
-  description: "تسع سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.",
+  description: "ثماني سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.",
   alternates: { canonical: "/series" },
 };
 
@@ -31,14 +31,14 @@ export default async function SeriesIndexPage() {
         <section className="series-index-hero">
           <div className="series-index-copy">
             <p className="series-index-kicker">سلاسل العلم</p>
-            <h1>تسع طرق لرؤية الخبر كاملًا.</h1>
+            <h1>ثماني طرق لرؤية الخبر كاملًا.</h1>
             <p>
               لا نكتفي بتصنيف ما يحدث. نختار لكل قصة الطريقة الأنسب لفهمها:
-              نشرح المعقد، نختبر الشائعة، نقرأ الأرقام، ونستشرف ما بعد الخبر.
+              نشرح المعقد، نختبر الشائعة، نقرأ الأرقام، ونبني احتمالات المستقبل.
             </p>
           </div>
-          <div className="series-index-stat" aria-label="تسع سلاسل معرفية">
-            <b>{toEasternDigits(9)}</b>
+          <div className="series-index-stat" aria-label="ثماني سلاسل معرفية">
+            <b className="latin-number" dir="ltr" lang="en">{toLatinDigits(SERIES.length)}</b>
             <span>سلاسل معرفية</span>
             <small>هوية واحدة، زوايا متعددة</small>
           </div>
@@ -54,11 +54,11 @@ export default async function SeriesIndexPage() {
                 style={{ "--sc": series.color } as React.CSSProperties}
               >
                 <div className="series-directory-top">
-                  <span className="series-directory-no" aria-hidden="true">
-                    {toEasternDigits(String(index + 1).padStart(2, "0"))}
+                  <span className="series-directory-no latin-number" dir="ltr" lang="en" aria-hidden="true">
+                    {toLatinDigits(String(index + 1).padStart(2, "0"))}
                   </span>
                   <span className="series-directory-count">
-                    {toEasternDigits(stories.length)} مادة
+                    {toLatinDigits(stories.length)} مادة
                   </span>
                 </div>
                 <h2>{series.name}</h2>

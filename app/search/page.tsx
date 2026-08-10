@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { toEasternDigits } from "@/lib/format";
+import { toLatinDigits } from "@/lib/format";
 import { MosaicCard } from "@/app/_components/story-card";
 import { seedContentProvider } from "@/lib/content/provider";
 
@@ -30,7 +30,7 @@ export default async function SearchPage({ searchParams }: Props) {
           <h1>{query ? `نتائج «${query}»` : "ابحث في العلم"}</h1>
           <p className="hub-count">
             {query
-              ? `${toEasternDigits(results.length)} نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات`
+              ? `${toLatinDigits(results.length)} نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات`
               : "اكتب سؤالك أو كلمتك — والإجابات الذكية بالإحالة للمصدر تصل مع مرحلة خدمات الذكاء"}
           </p>
         </section>

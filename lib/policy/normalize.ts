@@ -24,7 +24,7 @@ export function normalizeArabic(input: string): string {
     .trim();
 }
 
-/** يحوّل الأرقام العربية-الهندية إلى أرقام إنجليزية. */
+/** يحوّل الأرقام العربية والفارسية إلى أرقام لاتينية. */
 export function toLatinDigits(input: string): string {
   return input.replace(ARABIC_INDIC, (digit) => {
     const code = digit.codePointAt(0) ?? 0;

@@ -6,8 +6,7 @@ export type SeriesSlug =
   | "shakhsiat"
   | "limatha"
   | "matha-law"
-  | "bel-tarikh"
-  | "matha-baad";
+  | "bel-tarikh";
 
 export type Series = {
   slug: SeriesSlug;
@@ -47,6 +46,7 @@ export type BriefItem = {
   title: string;
   href: string;
   color: string;
+  label: string;
 };
 
 /** حزمة الرئيسية بتوزيع «المنشور»: بنتو + فسيفساء + أرقام + مرئي. */

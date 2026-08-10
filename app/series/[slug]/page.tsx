@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { toEasternDigits } from "@/lib/format";
+import { toLatinDigits } from "@/lib/format";
 import { MosaicCard } from "@/app/_components/story-card";
 import { SERIES, seedContentProvider } from "@/lib/content/provider";
 
@@ -43,13 +43,13 @@ export default async function SeriesPage({ params }: Params) {
       <main id="main-content">
         <section className="hub-hero series-detail-hero" style={{ "--sc": series.color } as React.CSSProperties}>
           <div>
-            <p className="eyebrow">سلسلة {toEasternDigits(String(seriesIndex + 1).padStart(2, "0"))} من {toEasternDigits(9)}</p>
+            <p className="eyebrow">سلسلة {toLatinDigits(String(seriesIndex + 1).padStart(2, "0"))} من {toLatinDigits(9)}</p>
             <h1>{series.name}</h1>
             <p className="hub-desc">{series.description}</p>
-            <p className="hub-count">{toEasternDigits(stories.length)} مادة منشورة</p>
+            <p className="hub-count">{toLatinDigits(stories.length)} مادة منشورة</p>
           </div>
-          <span className="series-detail-mark" aria-hidden="true">
-            {toEasternDigits(String(seriesIndex + 1).padStart(2, "0"))}
+          <span className="series-detail-mark latin-number" dir="ltr" lang="en" aria-hidden="true">
+            {toLatinDigits(String(seriesIndex + 1).padStart(2, "0"))}
           </span>
         </section>
 

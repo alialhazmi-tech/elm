@@ -14,5 +14,4 @@ export const SERIES: Series[] = [
   { slug: "limatha", name: "لماذا", description: "الأسباب خلف الظواهر", color: "#14a8d6" },
   { slug: "matha-law", name: "ماذا لو", description: "سيناريوهات واحتمالات", color: "#f26a1b" },
   { slug: "bel-tarikh", name: "بالتاريخ", description: "الزمن يعطي السياق", color: "#c08a2e" },
-  { slug: "matha-baad", name: "ماذا بعد", description: "قراءة التداعيات", color: "#2eb873" },
 ];

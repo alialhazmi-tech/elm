@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { sectionName, seriesOf } from "@/lib/content/provider";
-import { toEasternDigits } from "@/lib/format";
+import { toLatinDigits } from "@/lib/format";
 import { storyHref, type Story } from "@/lib/content/types";
 
 /**
@@ -15,9 +15,9 @@ const relativeTime = (iso?: string): string | null => {
   const diffMs = Date.now() - new Date(iso).getTime();
   const hours = Math.round(diffMs / 3_600_000);
   if (hours < 1) return "قبل قليل";
-  if (hours < 24) return `منذ ${toEasternDigits(hours)} ساعات`;
+  if (hours < 24) return `منذ ${toLatinDigits(hours)} ساعات`;
   const days = Math.round(hours / 24);
-  return `منذ ${toEasternDigits(days)} أيام`;
+  return `منذ ${toLatinDigits(days)} أيام`;
 };
 
 /** بطاقة مصغرة — عمود البنتو الجانبي. */
@@ -34,7 +34,7 @@ export function MiniCard({ story }: { story: Story }) {
         </h3>
         <time>
           {when ? `${when} · ` : ""}
-          {toEasternDigits(story.readingMinutes)} دقائق
+          {toLatinDigits(story.readingMinutes)} دقائق
         </time>
       </div>
       {story.image ? (
@@ -97,7 +97,7 @@ export function VideoCard({ story }: { story: Story }) {
       <Link className="video-copy" href={storyHref(story)}>
         <span className="kick">مرئي · فيديوجرافيك</span>
         <h3>{story.title}</h3>
-        <time>{toEasternDigits(story.readingMinutes)} دقائق مشاهدة</time>
+        <time>{toLatinDigits(story.readingMinutes)} دقائق مشاهدة</time>
       </Link>
     </article>
   );

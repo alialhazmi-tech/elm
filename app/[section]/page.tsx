@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { toEasternDigits } from "@/lib/format";
+import { toLatinDigits } from "@/lib/format";
 import { MosaicCard } from "@/app/_components/story-card";
 import { KNOWN_SECTIONS, sectionName, seedContentProvider } from "@/lib/content/provider";
 
@@ -40,7 +40,7 @@ export default async function SectionPage({ params }: Params) {
         <section className="hub-hero">
           <p className="eyebrow">قسم</p>
           <h1>{sectionName(section)}</h1>
-          <p className="hub-count">{toEasternDigits(stories.length)} مادة</p>
+          <p className="hub-count">{toLatinDigits(stories.length)} مادة</p>
         </section>
 
         <div className="wrap">

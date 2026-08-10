@@ -64,6 +64,13 @@ const SEED_CORPUS: Corpus = {
 const DB_CACHE_MS = 60_000;
 let corpusCache: { at: number; value: Corpus } | null = null;
 let dbWarned = false;
+const supportedSeriesSlugs = new Set<string>(SERIES.map((series) => series.slug));
+
+function normalizeSeriesSlug(value: string | null): SeriesSlug | undefined {
+  // توافق انتقالي مع المواد المخزنة قبل اعتماد نطاق السلاسل الثماني.
+  if (value === "matha-baad") return "limatha";
+  return value && supportedSeriesSlugs.has(value) ? (value as SeriesSlug) : undefined;
+}
 
 /** يقرأ المحتوى من Neon بكاش دقيقة؛ وعند غياب القاعدة أو فشلها يسقط للبذرة. */
 async function loadCorpus(): Promise<Corpus> {
@@ -88,7 +95,7 @@ async function loadCorpus(): Promise<Corpus> {
         excerpt: row.excerpt,
         eyebrow: row.eyebrow,
         readingMinutes: row.readingMinutes,
-        series: (row.seriesSlug as Story["series"]) ?? undefined,
+        series: normalizeSeriesSlug(row.seriesSlug),
         image: row.image ?? undefined,
         publishedAt: row.publishedAt ?? undefined,
         factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
@@ -204,11 +211,15 @@ export const seedContentProvider: ContentProvider = {
     const brief: BriefItem[] = [hero, ...minis, dataStory]
       .filter((story): story is Story => story !== null)
       .slice(0, 3)
-      .map((story) => ({
-        title: story.title,
-        href: storyHref(story),
-        color: seriesOf(story)?.color ?? "#3d7ef7",
-      }));
+      .map((story) => {
+        const storySeries = seriesOf(story);
+        return {
+          title: story.title,
+          href: storyHref(story),
+          color: storySeries?.color ?? "#3d7ef7",
+          label: storySeries?.name ?? sectionName(story.section),
+        };
+      });
 
     // الأكثر قراءة: مواد حديثة غير مكررة مع ما عُرض أعلاه — بلا عدّادات إنتاجية بعد.
     const mostRead = stories

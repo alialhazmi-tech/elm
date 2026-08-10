@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { EndingPoll } from "@/app/_components/poll";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
-import { brandDate, toEasternDigits } from "@/lib/format";
+import { brandDate, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -110,7 +110,7 @@ export default async function ArticlePage({ params }: Params) {
                   {brandDate(story.publishedAt).hijri} — {brandDate(story.publishedAt).gregorian}
                 </time>
               ) : null}
-              <span>{toEasternDigits(story.readingMinutes)} دقائق قراءة</span>
+              <span>{toLatinDigits(story.readingMinutes)} دقائق قراءة</span>
               <span>تحرير: فريق العلم</span>
             </div>
           </header>
@@ -185,7 +185,7 @@ export default async function ArticlePage({ params }: Params) {
                 <Link className="series-next" href={storyHref(nextInSeries)}>
                   <span>أكمل الفهم</span>
                   <b>{nextInSeries.title}</b>
-                  <small>{toEasternDigits(nextInSeries.readingMinutes)} دقائق قراءة ←</small>
+                  <small>{toLatinDigits(nextInSeries.readingMinutes)} دقائق قراءة ←</small>
                 </Link>
               ) : null}
             </aside>

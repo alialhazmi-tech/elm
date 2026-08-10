@@ -10,7 +10,7 @@
   Cloudflare Workers) + Drizzle ORM. المخطط في `db/schema.ts` (سلاسل + مواد).
 - **النشر المستهدف:** Cloudflare Workers عبر OpenNext (`npm run cf:build` / `cf:preview`).
   لا يوجد نشر إنتاجي آلي بعد.
-- **التصميم:** «المنشور» — بنتو الرئيسية، موجز العلم، حزام السلاسل التسع بألوان الطيف،
+- **التصميم:** «المنشور» — بنتو الرئيسية، موجز العلم، حزام السلاسل الثماني بألوان الطيف،
   «اسأل العلم»، لوح «بالأرقام» — تحت هيدر ثابت بتدرج المداد ولوجوتايب «العلم»
   (Noto Kufi 900)، وخطا Alexandria/Readex Pro، مع وضع داكن محفوظ.
 
@@ -32,7 +32,7 @@ curl -sI localhost:3000/api/content/home | grep -i x-content-source   # db أو 
 
 ```bash
 npm run db:push   # مزامنة المخطط إلى Neon
-npm run db:seed   # زرع/تحديث upsert — 9 سلاسل و37 مادة من أرشيف alelm.net
+npm run db:seed   # زرع/تحديث upsert — 8 سلاسل و37 مادة من أرشيف alelm.net
 ```
 
 المزود `lib/content/provider.ts` يقرأ من القاعدة أولًا بكاش 60 ثانية، ويسقط إلى
@@ -50,7 +50,7 @@ npm run cf:build  # تحقق توافق OpenNext/Workers
 - لتشغيل الاختبارات منفردة: `NEXT_DIST_DIR=.next-gate npm run test:unit` — اختبارات
   العقد تقرأ ناتج البناء، وتشغيلها على مجلد dev يفشل زورًا.
 - العقود المفحوصة: `lang="ar" dir="rtl"`، ترويسات الأمان وCSP صارم في الإنتاج،
-  تفرد مواد الرئيسية، حزام السلاسل = 9، حجم HTML، ميزانية 200KiB مضغوطة للرئيسية.
+  تفرد مواد الرئيسية، عدسات السلاسل = 8، حجم HTML، ميزانية 200KiB مضغوطة للرئيسية.
 
 ## حارس السياسة التحريرية
 
@@ -80,7 +80,7 @@ app/                    الصفحات: الرئيسية، [section]/[id]/[slug]
   _components/          الهيدر والفوتر، البطاقات، مستكشف السلاسل، الاستفتاء، الثيم
   api/content/home/     تغذية الرئيسية (مع ترويسة X-Content-Source)
 db/ + drizzle.config.ts مخطط Drizzle واتصال Neon
-lib/content/            المزود db-first، البذرة، تعريف السلاسل التسع
+lib/content/            المزود db-first، البذرة، تعريف السلاسل الثماني
 lib/policy/             محرك حارس السياسة وقواعده وقواميسه
 scripts/                db-seed، policy-check، ميزانية الأداء
 tests/                  عقد المنصة + اختبارات الحارس (29)

@@ -1,7 +1,7 @@
 /** بند 7: قواعد الكتابة والتنسيق — أغلبها قابل للإصلاح الآلي. */
 
 import type { Rule } from "../types.ts";
-import { findPhrases } from "../normalize.ts";
+import { findPhrases, toLatinDigits } from "../normalize.ts";
 import { PLATFORM_NAMES, UNIT_ABBREVIATIONS } from "../dictionary.ts";
 import { abbreviationRule, collectProse, makeFinding } from "./shared.ts";
 
@@ -10,33 +10,30 @@ const NUMERIC_DATE = /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/g;
 const CLOCK_SUFFIX = /\d{1,2}:\d{2}\s*(AM|PM|صباحًا|صباحا|مساءً|مساء)/giu;
 const CURRENCY_TERMS = ["ريال سعودي", "ريالًا سعوديًا", "SAR"] as const;
 
-const EASTERN_DIGIT = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
-const LATIN_RUN = /\d+/g;
+const ARABIC_INDIC_RUN = /[\u0660-\u0669\u06F0-\u06F9]+/g;
 
 /**
- * دليل الهوية V1.0 (2026) § نبرة الكتابة نسخ بند الأرقام الإنجليزية في دستور 2023:
- * «الأرقام العربية الشرقية في المتون». القاعدة تقترح التحويل في متن المادة فقط —
- * الحقول التقنية (الروابط، السكربتات) تبقى كما هي.
+ * قرار المنتج المعتمد: الأرقام اللاتينية 0–9 في جميع الحقول التحريرية.
+ * الحقول التقنية مثل الروابط والسكربتات ليست ضمن collectProse.
  */
-const easternDigits: Rule = {
-  id: "FORMAT-EASTERN-DIGITS",
+const latinDigits: Rule = {
+  id: "FORMAT-LATIN-DIGITS",
   category: "formatting",
   severity: "suggestion",
-  policyRef: "دليل الهوية V1.0 — نبرة الكتابة",
-  title: "الأرقام العربية الشرقية في المتون",
+  policyRef: "دليل الهوية V1.0 — قرار المنتج المعتمد",
+  title: "الأرقام اللاتينية في المحتوى",
   run(draft) {
     return collectProse(draft)
-      .filter((entry) => entry.field === "body")
       .flatMap((entry) => {
-        LATIN_RUN.lastIndex = 0;
-        return [...entry.value.matchAll(LATIN_RUN)].map((match) => {
-          const eastern = match[0].replace(/\d/g, (d) => EASTERN_DIGIT[Number(d)]);
-          return makeFinding(easternDigits, {
+        ARABIC_INDIC_RUN.lastIndex = 0;
+        return [...entry.value.matchAll(ARABIC_INDIC_RUN)].map((match) => {
+          const latin = toLatinDigits(match[0]);
+          return makeFinding(latinDigits, {
             field: entry.field,
-            message: `وفق دليل الهوية: استبدل «${match[0]}» بالأرقام العربية الشرقية «${eastern}».`,
+            message: `استبدل «${match[0]}» بالأرقام اللاتينية «${latin}».`,
             excerpt: match[0],
             index: match.index,
-            autofix: { field: entry.field, from: match[0], to: eastern },
+            autofix: { field: entry.field, from: match[0], to: latin },
           });
         });
       });
@@ -212,7 +209,7 @@ const entityHashtags: Rule = {
 };
 
 export const formattingRules: Rule[] = [
-  easternDigits,
+  latinDigits,
   dateMarker,
   dateShape,
   timeShape,
