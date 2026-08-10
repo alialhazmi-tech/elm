@@ -77,7 +77,7 @@ npm run policy:check -- draft.json --json            # مخرج JSON للأتم�
 
 ```
 app/                    الصفحات: الرئيسية، [section]/[id]/[slug]، series/، search/
-  _components/          الهيدر والفوتر، البطاقات، حزام السلاسل، الاستفتاء، الثيم
+  _components/          الهيدر والفوتر، البطاقات، مستكشف السلاسل، الاستفتاء، الثيم
   api/content/home/     تغذية الرئيسية (مع ترويسة X-Content-Source)
 db/ + drizzle.config.ts مخطط Drizzle واتصال Neon
 lib/content/            المزود db-first، البذرة، تعريف السلاسل التسع
