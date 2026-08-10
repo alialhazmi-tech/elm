@@ -22,7 +22,7 @@ export function SiteHeader({ active }: { active?: string }) {
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
           <span className="brand-word">العلم</span>
-          <span className="brand-tag">الخبر كما هو</span>
+          <span className="brand-tag">المعرفة بسلاسة</span>
         </Link>
         <nav className="topnav" aria-label="التنقل الرئيسي">
           {NAV.map((item) => (
