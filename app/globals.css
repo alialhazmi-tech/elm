@@ -1160,3 +1160,33 @@ img { max-width: 100%; display: block; }
   .series-note:has(.series-next) { grid-template-columns: 1fr; }
   .series-note .series-next { border-inline-start: 0; border-top: 1px solid var(--line); }
 }
+
+/* ============================================================
+   شريط العاجل المطور — رفيع، ساكن، نبضة هادئة، يختفي وحده
+   بانتهاء الصلاحية. الأحمر هنا إشارة سرعة لا زينة (≤10%).
+   ============================================================ */
+.breaking { background: linear-gradient(90deg, rgb(159 18 57 / .16), rgb(198 33 52 / .1) 55%, transparent); border-top: 1px solid rgb(255 255 255 / .05); }
+.breaking-inner { max-width: 1180px; margin: 0 auto; padding: 7px 24px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.breaking-dot { width: 8px; height: 8px; border-radius: 50%; background: #ff4d5e; flex: none; box-shadow: 0 0 0 0 rgb(255 77 94 / .55); }
+@media (prefers-reduced-motion: no-preference) {
+  .breaking-dot { animation: breaking-pulse 2.2s ease-out infinite; }
+  @keyframes breaking-pulse {
+    0% { box-shadow: 0 0 0 0 rgb(255 77 94 / .55); }
+    70% { box-shadow: 0 0 0 9px rgb(255 77 94 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(255 77 94 / 0); }
+  }
+}
+.breaking-tag { font-family: var(--font-display); font-weight: 800; font-size: 11px; letter-spacing: .05em; color: #ff8d99; flex: none; }
+.breaking-title { color: #f2d8db; font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.breaking-title:hover { color: #ffffff; }
+
+/* أرشيف السلاسل — فهرس السلاسل وصفحاتها */
+.series-archive { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--line); }
+.series-archive-title { font-family: var(--font-display); font-weight: 800; font-size: 19px; margin: 0 0 4px; }
+.series-archive-desc { color: var(--ink-2); font-size: 13px; margin: 0 0 16px; }
+.series-archive-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.series-archive-card { display: flex; flex-direction: column; gap: 3px; background: var(--surface); border: 1px solid var(--line); border-inline-start: 3px solid var(--sc); border-radius: 10px; padding: 12px 15px; text-decoration: none; color: inherit; }
+.series-archive-card:hover { border-color: var(--line-2); border-inline-start-color: var(--sc); }
+.series-archive-name { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
+.series-archive-meta { color: var(--ink-3); font-size: 11px; }
+.series-archived-badge { display: inline-block; vertical-align: middle; margin-inline-start: 10px; font-family: var(--font-display); font-weight: 700; font-size: 11px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 12px; }

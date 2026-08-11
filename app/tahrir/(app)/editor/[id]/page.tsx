@@ -37,6 +37,9 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 slug: story.slug,
                 seriesSlug: story.seriesSlug,
                 image: story.image,
+                format: story.format,
+                pinned: story.pinned === 1,
+                breakingUntil: story.breakingUntil,
                 status: story.status,
               }
             : null

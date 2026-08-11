@@ -18,6 +18,9 @@ export const SECTION_NAMES: Record<string, string> = {
   sciences: "علوم",
   varieties: "منوعات",
   news: "أخبار",
+  "current-events": "أحداث جارية",
+  world: "عالم",
+  ksa: "السعودية",
   infographics: "إنفوجرافيك",
   videos: "مرئي",
 };

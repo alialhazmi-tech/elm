@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { toLatinDigits } from "@/lib/format";
-import { SERIES, seedContentProvider } from "@/lib/content/provider";
+import { listVisibleArchivedSeries, SERIES, seedContentProvider } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
 export const revalidate = 300;
@@ -15,6 +15,13 @@ export const metadata: Metadata = {
 };
 
 export default async function SeriesIndexPage() {
+  const archived = await listVisibleArchivedSeries();
+  const archivedCatalog = await Promise.all(
+    archived.map(async (series) => ({
+      series,
+      count: (await seedContentProvider.listBySeries(series.slug)).length,
+    })),
+  );
   const catalog = await Promise.all(
     SERIES.map(async (series) => ({
       series,
@@ -78,6 +85,30 @@ export default async function SeriesIndexPage() {
             );
           })}
         </section>
+
+        {archivedCatalog.length > 0 && (
+          <section className="wrap series-archive" aria-label="أرشيف السلاسل">
+            <h2 className="series-archive-title">من أرشيف العلم</h2>
+            <p className="series-archive-desc">
+              سلاسل اكتملت رسالتها وتوقفت عن النشر الجديد — موادها باقية حية بروابطها.
+            </p>
+            <div className="series-archive-grid">
+              {archivedCatalog.map(({ series, count }) => (
+                <Link
+                  key={series.slug}
+                  className="series-archive-card"
+                  href={`/series/${series.slug}`}
+                  style={{ "--sc": series.color } as React.CSSProperties}
+                >
+                  <span className="series-archive-name">{series.name}</span>
+                  <span className="series-archive-meta">
+                    {toLatinDigits(count)} مادة · أرشيف
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <SiteFooter />

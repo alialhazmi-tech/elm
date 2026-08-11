@@ -5,14 +5,15 @@ import { notFound } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { toLatinDigits } from "@/lib/format";
 import { MosaicCard } from "@/app/_components/story-card";
-import { SERIES, seedContentProvider } from "@/lib/content/provider";
+import { ALL_SERIES, SERIES, seedContentProvider } from "@/lib/content/provider";
 
 export const revalidate = 300;
 
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return SERIES.map((series) => ({ slug: series.slug }));
+  // المتقاعدة تُبنى أيضًا — أرشيفها حي بقرار المالك.
+  return ALL_SERIES.map((series) => ({ slug: series.slug }));
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -43,8 +44,12 @@ export default async function SeriesPage({ params }: Params) {
       <main id="main-content">
         <section className="hub-hero series-detail-hero" style={{ "--sc": series.color } as React.CSSProperties}>
           <div>
-            <p className="eyebrow">سلسلة {toLatinDigits(String(seriesIndex + 1).padStart(2, "0"))} من {toLatinDigits(9)}</p>
-            <h1>{series.name}</h1>
+            <p className="eyebrow">
+              {series.archived
+                ? "من أرشيف العلم — اكتملت رسالتها"
+                : `سلسلة ${toLatinDigits(String(seriesIndex + 1).padStart(2, "0"))} من ${toLatinDigits(SERIES.length)}`}
+            </p>
+            <h1>{series.name}{series.archived && <span className="series-archived-badge">أرشيف</span>}</h1>
             <p className="hub-desc">{series.description}</p>
             <p className="hub-count">{toLatinDigits(stories.length)} مادة منشورة</p>
           </div>

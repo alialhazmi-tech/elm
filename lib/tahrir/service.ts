@@ -64,11 +64,21 @@ export interface DraftInput {
   slug: string;
   seriesSlug: string | null;
   image: string | null;
+  format?: string;
+  /** undefined = لا تغيير — التثبيت والعاجل من صلاحية المعتمدين فقط. */
+  pinned?: boolean;
+  breakingUntil?: string | null;
 }
 
 export async function saveDraft(input: DraftInput, actor: string): Promise<void> {
   const db = requireDb();
   const now = new Date().toISOString();
+
+  const privileged = {
+    ...(input.format !== undefined ? { format: input.format } : {}),
+    ...(input.pinned !== undefined ? { pinned: input.pinned ? 1 : 0 } : {}),
+    ...(input.breakingUntil !== undefined ? { breakingUntil: input.breakingUntil } : {}),
+  };
 
   await db
     .insert(stories)
@@ -84,6 +94,7 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
       status: "draft",
       authorName: actor,
       updatedAt: now,
+      ...privileged,
     })
     .onConflictDoUpdate({
       target: stories.id,
@@ -96,6 +107,7 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
         seriesSlug: input.seriesSlug,
         image: input.image,
         updatedAt: now,
+        ...privileged,
       },
     });
 }
@@ -253,4 +265,18 @@ export async function guardMediaFor(imageUrl: string | null | undefined) {
       flags: asset.flags ? asset.flags.split(",").filter(Boolean) : [],
     },
   ];
+}
+
+/** إظهار/إخفاء سلسلة متقاعدة من فهارس الاستكشاف — صفحتها تبقى حية دائمًا. */
+export async function setSeriesHidden(slug: string, hidden: boolean, actor: string) {
+  const db = requireDb();
+  const { series } = await import("@/db/schema");
+  await db.update(series).set({ hidden: hidden ? 1 : 0 }).where(eq(series.slug, slug));
+  await audit(actor, hidden ? "series:hide" : "series:show", undefined, slug);
+}
+
+export async function listSeriesRows() {
+  const db = requireDb();
+  const { series } = await import("@/db/schema");
+  return db.select().from(series);
 }

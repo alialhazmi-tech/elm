@@ -6,10 +6,18 @@ export type SeriesSlug =
   | "shakhsiat"
   | "limatha"
   | "matha-law"
-  | "bel-tarikh";
+  | "bel-tarikh"
+  // سلاسل متقاعدة — صفحات أرشيف حية بقرار المالك (2026-08-11)
+  | "qalu"
+  | "taqarir"
+  | "muwaththaq"
+  | "matha-baad"
+  | "elm-mondial";
 
 export type Series = {
   slug: SeriesSlug;
+  /** سلسلة متقاعدة: أرشيفها حي لكنها خارج حزام الاستكشاف. */
+  archived?: boolean;
   name: string;
   description: string;
   color: string;
@@ -29,6 +37,12 @@ export type Story = {
   eyebrow: string;
   readingMinutes: number;
   series?: SeriesSlug;
+  /** شكل المادة (خبر/إنفوجرافيك/فيديو/تقرير/بودكاست) — منفصل عن الموضوع. */
+  format?: string;
+  /** مثبتة في صدارة الرئيسية بقرار معتمد. */
+  pinned?: boolean;
+  /** عاجل حتى هذا الوقت (ISO) — بعده يختفي الشريط تلقائيًا. */
+  breakingUntil?: string;
   image?: string;
   publishedAt?: string;
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح». */

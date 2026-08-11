@@ -1,7 +1,7 @@
-import { SERIES } from "@/lib/content/series";
+import { ARCHIVED_SERIES, SERIES } from "@/lib/content/series";
 import { getSession } from "@/lib/tahrir/auth";
-import { listForDashboard, listProposals } from "@/lib/tahrir/service";
-import { ProposalDecision, ProposalForm } from "../../_components/series-client";
+import { listForDashboard, listProposals, listSeriesRows } from "@/lib/tahrir/service";
+import { ArchiveToggle, ProposalDecision, ProposalForm } from "../../_components/series-client";
 
 export const metadata = { title: "السلاسل" };
 export const dynamic = "force-dynamic";
@@ -18,10 +18,13 @@ function daysAgoIso(days: number): string {
 
 export default async function SeriesPage() {
   const session = await getSession();
-  const [rows, proposals] = await Promise.all([
+  const [rows, proposals, seriesRows] = await Promise.all([
     listForDashboard().catch(() => []),
     listProposals().catch(() => []),
+    listSeriesRows().catch(() => []),
   ]);
+  const hiddenBySlug = new Map(seriesRows.map((row) => [row.slug, row.hidden === 1]));
+  const canToggle = session?.role === "approver" || session?.role === "chief";
 
   const weekAgo = daysAgoIso(7);
   const withCounts = SERIES.map((series) => {
@@ -59,6 +62,38 @@ export default async function SeriesPage() {
           <div style={{ fontSize: 10.5, color: "var(--t-ink3)", marginTop: 10, lineHeight: 1.8 }}>
             أسماء السلاسل وألوانها جزء من هوية الموقع المفحوصة بالعقود — تعديلها أو تفعيل سلسلة
             مقبولة يمر كإصدار تقني، لا من اللوحة.
+          </div>
+
+          <div className="th-panel" style={{ marginTop: 14 }}>
+            <div className="hd">
+              <h2>أرشيف السلاسل — صفحات حية بمفتاح ظهور</h2>
+            </div>
+            {ARCHIVED_SERIES.map((series) => {
+              const hidden = hiddenBySlug.get(series.slug) ?? true;
+              const count = rows.filter((row) => row.seriesSlug === series.slug).length;
+              return (
+                <div className="th-qrow" key={series.slug}>
+                  <span
+                    className="th-serchip"
+                    style={{ "--sc": series.color } as React.CSSProperties}
+                  >
+                    {series.name}
+                  </span>
+                  <span className="t">
+                    {series.description} · {count} مادة
+                  </span>
+                  {hidden ? (
+                    <span className="th-gchip warn">مخفية من الفهرس</span>
+                  ) : (
+                    <span className="th-gchip ok">ظاهرة في الفهرس</span>
+                  )}
+                  {canToggle && <ArchiveToggle slug={series.slug} hidden={hidden} />}
+                </div>
+              );
+            })}
+            <div className="th-audlock">
+              الإخفاء يرفع السلسلة من فهرس /series فقط — صفحتها وموادها وروابطها تبقى حية دائمًا.
+            </div>
           </div>
         </div>
 

@@ -25,8 +25,8 @@ import type {
 import { storyHref } from "./types";
 import { normalizeArabic } from "@/lib/policy/normalize";
 
-export { SERIES } from "./series";
-import { SERIES } from "./series";
+export { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
+import { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
 
 const byDateDesc = (a: Story, b: Story) =>
   (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "");
@@ -64,11 +64,10 @@ const SEED_CORPUS: Corpus = {
 const DB_CACHE_MS = 60_000;
 let corpusCache: { at: number; value: Corpus } | null = null;
 let dbWarned = false;
-const supportedSeriesSlugs = new Set<string>(SERIES.map((series) => series.slug));
+const supportedSeriesSlugs = new Set<string>(ALL_SERIES.map((series) => series.slug));
 
 function normalizeSeriesSlug(value: string | null): SeriesSlug | undefined {
-  // توافق انتقالي مع المواد المخزنة قبل اعتماد نطاق السلاسل الثماني.
-  if (value === "matha-baad") return "limatha";
+  // المتقاعدة سلاسل مشروعة بأرشيف حي — لا إعادة تعيين (قرار المالك 2026-08-11).
   return value && supportedSeriesSlugs.has(value) ? (value as SeriesSlug) : undefined;
 }
 
@@ -101,6 +100,9 @@ async function loadCorpus(): Promise<Corpus> {
         image: row.image ?? undefined,
         publishedAt: row.publishedAt ?? undefined,
         factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
+        format: row.format ?? undefined,
+        pinned: row.pinned === 1,
+        breakingUntil: row.breakingUntil ?? undefined,
       }),
     );
 
@@ -121,13 +123,44 @@ async function loadCorpus(): Promise<Corpus> {
   }
 }
 
+export interface BreakingItem {
+  title: string;
+  href: string;
+  until: string;
+}
+
+/** أحدث مادة «عاجل» سارية الصلاحية — يختفي الشريط وحده بانتهائها. */
+export async function getBreaking(): Promise<BreakingItem | null> {
+  const { stories } = await loadCorpus();
+  const now = new Date().toISOString();
+  const active = stories
+    .filter((story) => story.breakingUntil && story.breakingUntil > now)
+    .sort((a, b) => (b.breakingUntil ?? "").localeCompare(a.breakingUntil ?? ""));
+  const story = active[0];
+  return story ? { title: story.title, href: storyHref(story), until: story.breakingUntil! } : null;
+}
+
+/** المتقاعدة الظاهرة في فهرس السلاسل — مفتاح الإظهار/الإخفاء من «تحرير العلم». */
+export async function listVisibleArchivedSeries(): Promise<Series[]> {
+  const db = getDb();
+  if (!db) return ARCHIVED_SERIES;
+  try {
+    const { series: seriesTable } = await import("@/db/schema");
+    const rows = await db.select().from(seriesTable);
+    const hiddenSlugs = new Set(rows.filter((row) => row.hidden === 1).map((row) => row.slug));
+    return ARCHIVED_SERIES.filter((series) => !hiddenSlugs.has(series.slug));
+  } catch {
+    return ARCHIVED_SERIES;
+  }
+}
+
 /** مصدر المحتوى الفعلي للطلب الحالي — للتشخيص والترويسات. */
 export async function contentSource(): Promise<"db" | "seed"> {
   return (await loadCorpus()).source;
 }
 
 export const sectionName = (slug: string) => SECTION_NAMES[slug] ?? slug;
-export const seriesBySlug = new Map(SERIES.map((item) => [item.slug, item]));
+export const seriesBySlug = new Map(ALL_SERIES.map((item) => [item.slug, item]));
 
 export function seriesOf(story: Story): Series | undefined {
   return story.series ? seriesBySlug.get(story.series) : undefined;
@@ -174,9 +207,11 @@ export const seedContentProvider: ContentProvider = {
     const { articles, videos, stories } = await loadCorpus();
     const seen = new Set<string>();
 
-    // الهيرو يتجنب الإنفوجرافيك: صوره تحمل نصًا مطبوعًا يتزاحم مع العنوان.
+    // المثبت بقرار معتمد يتصدر؛ وإلا فالهيرو يتجنب الإنفوجرافيك (صوره نصية متزاحمة).
     const hero =
-      articles.find((story) => story.section !== "infographics" && story.image) ?? articles[0];
+      articles.find((story) => story.pinned && story.image) ??
+      articles.find((story) => story.section !== "infographics" && story.image) ??
+      articles[0];
     seen.add(hero.id);
 
     const minis = takeUniqueStories(

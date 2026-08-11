@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { getBreaking } from "@/lib/content/provider";
 import { ThemeToggle } from "./theme-toggle";
 
 const NAV = [
@@ -13,10 +14,32 @@ const NAV = [
 ];
 
 /**
+ * شريط العاجل المطور (قرار المالك 2026-08-11): رفيع وساكن بلا زحف،
+ * نبضة ضوئية هادئة، يظهر فقط ما دامت الصلاحية سارية ويختفي وحده —
+ * الصلاحية يضبطها المعتمد في «تحرير العلم» (الافتراضي ساعتان).
+ */
+async function BreakingBar() {
+  const breaking = await getBreaking().catch(() => null);
+  if (!breaking) return null;
+
+  return (
+    <div className="breaking" role="status" aria-label="خبر عاجل">
+      <div className="breaking-inner">
+        <span className="breaking-dot" aria-hidden="true" />
+        <span className="breaking-tag">عاجل</span>
+        <Link className="breaking-title" href={breaking.href}>
+          {breaking.title}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/**
  * الهيدر: لوح مداد، اللوجوتايب السالب (كلمة «العلم» وحدها —
  * Noto Kufi ‏900)، والنشط بتمييز كحلي فاتح دون أحمر.
  */
-export function SiteHeader({ active }: { active?: string }) {
+export async function SiteHeader({ active }: { active?: string }) {
   return (
     <header className="topbar">
       <div className="topbar-inner">
@@ -43,6 +66,7 @@ export function SiteHeader({ active }: { active?: string }) {
           <ThemeToggle />
         </div>
       </div>
+      <BreakingBar />
     </header>
   );
 }

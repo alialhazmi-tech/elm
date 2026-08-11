@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/lib/tahrir/auth";
+import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { audit, saveDraft } from "@/lib/tahrir/service";
 
 export async function POST(request: Request) {
@@ -16,6 +16,9 @@ export async function POST(request: Request) {
     slug?: string;
     seriesSlug?: string | null;
     image?: string | null;
+    format?: string;
+    pinned?: boolean;
+    breakingUntil?: string | null;
   } | null;
 
   if (!input?.title?.trim()) {
@@ -37,6 +40,10 @@ export async function POST(request: Request) {
       slug,
       seriesSlug: input.seriesSlug || null,
       image: input.image?.trim() || null,
+      format: input.format?.trim() || undefined,
+      ...(APPROVER_ROLES.includes(session.role)
+        ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
+        : {}),
     },
     session.displayName,
   );

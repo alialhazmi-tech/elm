@@ -10,6 +10,8 @@ export const series = pgTable("series", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   color: text("color").notNull(),
+  /** سلسلة مخفية من فهارس الاستكشاف (المتقاعدة) — صفحتها تبقى حية. */
+  hidden: integer("hidden").notNull().default(0),
 });
 
 export const stories = pgTable("stories", {
@@ -33,6 +35,12 @@ export const stories = pgTable("stories", {
   updatedAt: text("updated_at"),
   /** موعد النشر المجدول (ISO) — تُرقّى المادة آليًا بعد مرورها على الحارس لحظة الموعد. */
   scheduledAt: text("scheduled_at"),
+  /** شكل المادة: news | infographic | video | report | podcast — منفصل عن القسم الموضوعي. */
+  format: text("format").notNull().default("news"),
+  /** مثبتة في صدارة الرئيسية (قرار معتمد). */
+  pinned: integer("pinned").notNull().default(0),
+  /** عاجل حتى (ISO) — يظهر شريط العاجل ما دام المستقبل، ويختفي وحده. */
+  breakingUntil: text("breaking_until"),
 });
 
 /** مكتبة وسائط «تحرير العلم» — الحقوق تُفحص قبل الاستخدام (الدستور §12). */

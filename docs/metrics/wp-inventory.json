@@ -1,0 +1,302 @@
+{
+  "generatedAt": "2026-08-11T11:50:10.197Z",
+  "source": "https://dash.alelm.net/wp-json/wp/v2 (قراءة عامة)",
+  "totals": {
+    "posts": 28899,
+    "media": 96959,
+    "pages": 5
+  },
+  "categories": [
+    {
+      "id": 110,
+      "slug": "current-events",
+      "name": "أحداث جارية",
+      "count": 7386
+    },
+    {
+      "id": 113,
+      "slug": "politics",
+      "name": "سياسة",
+      "count": 6504
+    },
+    {
+      "id": 90,
+      "slug": "economy",
+      "name": "اقتصاد",
+      "count": 3938
+    },
+    {
+      "id": 154,
+      "slug": "varieties",
+      "name": "منوعات",
+      "count": 3474
+    },
+    {
+      "id": 91,
+      "slug": "world",
+      "name": "عالم",
+      "count": 3145
+    },
+    {
+      "id": 84,
+      "slug": "health",
+      "name": "صحة",
+      "count": 2974
+    },
+    {
+      "id": 92,
+      "slug": "technology",
+      "name": "تقنية",
+      "count": 2724
+    },
+    {
+      "id": 232,
+      "slug": "sciences",
+      "name": "علوم",
+      "count": 2193
+    },
+    {
+      "id": 87,
+      "slug": "sport",
+      "name": "رياضة",
+      "count": 2033
+    },
+    {
+      "id": 109,
+      "slug": "ksa",
+      "name": "السعودية",
+      "count": 1830
+    },
+    {
+      "id": 381,
+      "slug": "infographics",
+      "name": "إنفوجرافيك",
+      "count": 1771
+    },
+    {
+      "id": 231,
+      "slug": "business",
+      "name": "أعمال",
+      "count": 1309
+    },
+    {
+      "id": 85,
+      "slug": "art",
+      "name": "فن",
+      "count": 848
+    },
+    {
+      "id": 230,
+      "slug": "culture",
+      "name": "ثقافة",
+      "count": 487
+    },
+    {
+      "id": 2,
+      "slug": "uncategorized",
+      "name": "غير مصنف",
+      "count": 95
+    },
+    {
+      "id": 1,
+      "slug": "%d8%ba%d9%8a%d8%b1-%d9%85%d8%b5%d9%86%d9%81",
+      "name": "غير مصنف",
+      "count": 67
+    }
+  ],
+  "tags": {
+    "active": [
+      {
+        "id": 78,
+        "slug": "%d8%a8%d8%a7%d9%84%d8%a3%d8%b1%d9%82%d8%a7%d9%85",
+        "name": "#بالأرقام",
+        "count": 6671
+      },
+      {
+        "id": 108,
+        "slug": "%d8%a3%d8%a8%d8%b3%d8%b7",
+        "name": "#أبسط",
+        "count": 4971
+      },
+      {
+        "id": 94,
+        "slug": "%d9%84%d9%85%d8%a7%d8%b0%d8%a7",
+        "name": "#لماذا",
+        "count": 3223
+      },
+      {
+        "id": 102,
+        "slug": "%d8%a7%d9%81%d9%87%d9%85%d9%87%d8%a7-%d8%b5%d8%ad",
+        "name": "#افهمها_صح",
+        "count": 2096
+      },
+      {
+        "id": 107,
+        "slug": "%d8%a8%d8%a7%d9%84%d8%aa%d8%a7%d8%b1%d9%8a%d8%ae",
+        "name": "#بالتاريخ",
+        "count": 1947
+      },
+      {
+        "id": 106,
+        "slug": "%d8%b4%d8%ae%d8%b5%d9%8a%d8%a7%d8%aa",
+        "name": "#شخصيات",
+        "count": 1668
+      },
+      {
+        "id": 198,
+        "slug": "%d8%a7%d9%84%d8%b9%d9%84%d9%85",
+        "name": "#العلم",
+        "count": 1353
+      },
+      {
+        "id": 103,
+        "slug": "%d8%a3%d8%ba%d8%b1%d8%a8",
+        "name": "#أغرب",
+        "count": 1108
+      },
+      {
+        "id": 396,
+        "slug": "%d9%85%d8%a7%d8%b0%d8%a7_%d8%a8%d8%b9%d8%af",
+        "name": "#ماذا_بعد",
+        "count": 553
+      },
+      {
+        "id": 93,
+        "slug": "%d9%85%d8%a7%d8%b0%d8%a7_%d9%84%d9%88",
+        "name": "#ماذا_لو",
+        "count": 376
+      },
+      {
+        "id": 199,
+        "slug": "%d9%82%d8%a7%d9%84%d9%88%d8%a7",
+        "name": "#قالوا",
+        "count": 306
+      },
+      {
+        "id": 406,
+        "slug": "%d8%a7%d9%84%d8%b9%d9%84%d9%85_%d9%81%d9%8a_%d8%a7%d9%84%d9%85%d9%88%d9%86%d8%af%d9%8a%d8%a7%d9%84",
+        "name": "#العلم_في_المونديال",
+        "count": 109
+      },
+      {
+        "id": 160,
+        "slug": "%d8%aa%d9%82%d8%a7%d8%b1%d9%8a%d8%b1",
+        "name": "#تقارير",
+        "count": 33
+      },
+      {
+        "id": 161,
+        "slug": "%d9%85%d9%88%d8%ab%d9%82",
+        "name": "#موثق",
+        "count": 14
+      },
+      {
+        "id": 407,
+        "slug": "%d8%a7%d9%84%d9%83%d8%b9%d8%a8%d8%a9_%d8%a7%d9%84%d9%85%d8%b4%d8%b1%d9%81%d8%a9",
+        "name": "#الكعبة_المشرفة",
+        "count": 2
+      }
+    ],
+    "junkCount": 16
+  },
+  "postTypes": [
+    {
+      "id": 63,
+      "slug": "news",
+      "name": "الأخبار",
+      "count": 21709
+    },
+    {
+      "id": 62,
+      "slug": "infographics",
+      "name": "الانفوجرافيك",
+      "count": 6675
+    },
+    {
+      "id": 59,
+      "slug": "videos",
+      "name": "الفيديو",
+      "count": 679
+    },
+    {
+      "id": 60,
+      "slug": "reports",
+      "name": "التقارير",
+      "count": 75
+    },
+    {
+      "id": 61,
+      "slug": "podcasts",
+      "name": "البودكاست",
+      "count": 4
+    },
+    {
+      "id": 399,
+      "slug": "jakalelm",
+      "name": "جاك العلم",
+      "count": 0
+    }
+  ],
+  "postStatuses": [
+    {
+      "id": 83,
+      "slug": "published-ar",
+      "name": "تم النشر",
+      "count": 25423
+    },
+    {
+      "id": 81,
+      "slug": "approved-ar",
+      "name": "معتمد",
+      "count": 930
+    },
+    {
+      "id": 82,
+      "slug": "drafts-ar",
+      "name": "مسودة",
+      "count": 775
+    },
+    {
+      "id": 70,
+      "slug": "drafts",
+      "name": "Draft",
+      "count": 94
+    },
+    {
+      "id": 68,
+      "slug": "published",
+      "name": "Published",
+      "count": 57
+    },
+    {
+      "id": 69,
+      "slug": "approved",
+      "name": "Approved",
+      "count": 22
+    },
+    {
+      "id": 144,
+      "slug": "%d9%84%d9%84%d8%aa%d8%b9%d8%af%d9%8a%d9%84",
+      "name": "للتعديل",
+      "count": 5
+    },
+    {
+      "id": 143,
+      "slug": "for-revision",
+      "name": "For Revision",
+      "count": 1
+    }
+  ],
+  "sampleLinks": [
+    {
+      "id": 263146,
+      "link": "https://dash.alelm.net/economy/263146/%d8%a3%d8%b3%d8%b9%d8%a7%d8%b1-%d8%a7%d9%84%d9%86%d9%81%d8%b7-5/",
+      "status": "publish"
+    },
+    {
+      "id": 263139,
+      "link": "https://dash.alelm.net/varieties/263139/%d8%b2%d9%84%d8%b2%d8%a7%d9%84-%d9%83%d9%88%d9%84%d9%88%d9%85%d8%a8%d9%8a%d8%a7-2/",
+      "status": "publish"
+    }
+  ]
+}

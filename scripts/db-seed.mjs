@@ -5,7 +5,7 @@
 
 import { neon } from "@neondatabase/serverless";
 
-import { SERIES } from "../lib/content/series.ts";
+import { ALL_SERIES } from "../lib/content/series.ts";
 import { seedStories, seedVideos } from "../lib/content/seed.ts";
 
 const url = process.env.DATABASE_URL;
@@ -16,10 +16,10 @@ if (!url) {
 
 const sql = neon(url);
 
-for (const s of SERIES) {
+for (const s of ALL_SERIES) {
   await sql`
-    insert into series (slug, name, description, color)
-    values (${s.slug}, ${s.name}, ${s.description}, ${s.color})
+    insert into series (slug, name, description, color, hidden)
+    values (${s.slug}, ${s.name}, ${s.description}, ${s.color}, 0)
     on conflict (slug) do update
       set name = excluded.name, description = excluded.description, color = excluded.color`;
 }

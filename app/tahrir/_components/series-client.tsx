@@ -78,3 +78,23 @@ export function ProposalDecision({ id }: { id: string }) {
     </span>
   );
 }
+
+export function ArchiveToggle({ slug, hidden }: { slug: string; hidden: boolean }) {
+  const router = useRouter();
+
+  return (
+    <button
+      className="th-mini"
+      onClick={async () => {
+        await fetch("/api/tahrir/series/visibility", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, hidden: !hidden }),
+        });
+        router.refresh();
+      }}
+    >
+      {hidden ? "أظهر في الفهرس" : "أخفِ من الفهرس"}
+    </button>
+  );
+}

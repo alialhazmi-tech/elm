@@ -14,6 +14,9 @@ interface EditorInitial {
   slug: string;
   seriesSlug: string | null;
   image: string | null;
+  format: string;
+  pinned: boolean;
+  breakingUntil: string | null;
   status: string;
 }
 
@@ -25,6 +28,14 @@ interface Props {
   initial: EditorInitial | null;
 }
 
+const FORMATS: Array<[string, string]> = [
+  ["news", "خبر"],
+  ["infographics", "إنفوجرافيك"],
+  ["videos", "فيديو"],
+  ["reports", "تقرير"],
+  ["podcasts", "بودكاست"],
+];
+
 const SEVERITY_LABELS: Record<string, string> = {
   blocking: "قاطع",
   warning: "تحذير",
@@ -32,6 +43,10 @@ const SEVERITY_LABELS: Record<string, string> = {
 };
 
 const wordCount = (text: string) => text.trim().split(/\s+/u).filter(Boolean).length;
+
+function hoursAhead(hours: number): string {
+  return new Date(Date.now() + hours * 3_600_000).toISOString();
+}
 
 export function EditorClient({ role, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
@@ -43,6 +58,9 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [seriesSlug, setSeriesSlug] = useState(initial?.seriesSlug ?? null);
   const [image, setImage] = useState(initial?.image ?? "");
+  const [format, setFormat] = useState(initial?.format ?? "news");
+  const [pinned, setPinned] = useState(initial?.pinned ?? false);
+  const [breakingUntil, setBreakingUntil] = useState<string | null>(initial?.breakingUntil ?? null);
   const [scheduleAt, setScheduleAt] = useState("");
   const [status, setStatus] = useState(initial?.status ?? "draft");
   const [report, setReport] = useState<GuardReport | null>(null);
@@ -85,7 +103,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
     const response = await fetch("/api/tahrir/story", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id || undefined, title, excerpt, body, section, slug, seriesSlug, image: image || null }),
+      body: JSON.stringify({ id: id || undefined, title, excerpt, body, section, slug, seriesSlug, image: image || null, format, pinned, breakingUntil }),
     }).catch(() => null);
     setBusy(false);
 
@@ -286,7 +304,59 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
           </div>
         </div>
 
+        {canApprove && (
+          <div className="th-panel">
+            <div className="th-meta">
+              <div className="lb">أدوات النشر — للمعتمدين</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <button
+                  className="th-mini"
+                  style={pinned ? { background: "var(--t-gold)", borderColor: "var(--t-gold)", color: "#1a1503", fontWeight: 700 } : undefined}
+                  onClick={() => setPinned(!pinned)}
+                >
+                  {pinned ? "★ مثبتة في صدارة الرئيسية — اضغط للإلغاء" : "تثبيت في صدارة الرئيسية"}
+                </button>
+                {breakingUntil ? (
+                  <div style={{ fontSize: 11, lineHeight: 1.8 }}>
+                    <span className="th-gchip block">عاجل حتى {breakingUntil.slice(11, 16)} UTC</span>{" "}
+                    <button className="th-mini" onClick={() => setBreakingUntil(null)}>
+                      أنهِ العاجل
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                    <button className="th-mini" onClick={() => setBreakingUntil(hoursAhead(2))}>
+                      ⚡ عاجل لساعتين
+                    </button>
+                    <button className="th-mini" onClick={() => setBreakingUntil(hoursAhead(6))}>
+                      عاجل لست ساعات
+                    </button>
+                  </div>
+                )}
+                <div style={{ fontSize: 9.5, color: "var(--t-ink3)", lineHeight: 1.7 }}>
+                  الشريط يظهر في الموقع فور الحفظ ويختفي وحده بانتهاء الصلاحية.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="th-panel">
+          <div className="th-meta">
+            <div className="lb">الشكل</div>
+            <div className="th-serpick">
+              {FORMATS.map(([slug2, name]) => (
+                <button
+                  key={slug2}
+                  className={format === slug2 ? "on" : ""}
+                  style={{ "--sc": "var(--t-navy)" } as React.CSSProperties}
+                  onClick={() => setFormat(slug2)}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="th-meta">
             <div className="lb">السلسلة</div>
             <div className="th-serpick">
