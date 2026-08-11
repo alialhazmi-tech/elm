@@ -214,9 +214,15 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
         <textarea
           className="th-ed-sum"
           placeholder="✦ قبل القراءة — خلاصة في سطر واحد"
+          maxLength={220}
           value={excerpt}
           onChange={(event) => setExcerpt(event.target.value)}
         />
+        <div className="th-ed-cnt">
+          <span className={excerpt.length > 180 ? "bad" : "good"}>
+            الموجز {excerpt.length} حرفًا (الهدف ≤ 180)
+          </span>
+        </div>
         <textarea
           ref={bodyRef}
           className="th-ed-body"

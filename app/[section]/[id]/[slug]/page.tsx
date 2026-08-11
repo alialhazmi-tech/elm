@@ -163,12 +163,6 @@ export default async function ArticlePage({ params }: Params) {
                 </div>
               </div>
             ) : null}
-
-            <p className="article-placeholder">
-              نص المادة الكامل يصل من مصدر المحتوى عند ربط محوّل WordPress ثم «تحرير العلم».
-              هذه الصفحة هي القالب الفعلي: المسار، السلسلة، الصورة، التاريخ، أدوات القارئ،
-              وبيانات NewsArticle المهيكلة.
-            </p>
           </div>
 
           <EndingPoll

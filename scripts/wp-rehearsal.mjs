@@ -74,8 +74,18 @@ function htmlToParagraphs(html) {
 
 const cleanTitle = (t) => decodeEntities(t).replace(/\s+/g, " ").trim();
 
-const cleanExcerpt = (t) =>
-  htmlToParagraphs(t).replace(/\s*\[…\]\s*$/, "…").replace(/\n+/g, " ").trim();
+/** موجز العرض لا يتجاوز ~180 حرفًا — القطع على حدود الكلمات، والحسم بعلامة «…». */
+const EXCERPT_MAX = 180;
+const clampExcerpt = (input) => {
+  const wpTruncated = /(\[…\]|…)\s*$/u.test(input);
+  const text = input.replace(/\s*(\[…\]|…)\s*$/u, "").trim();
+  if (text.length <= EXCERPT_MAX) return wpTruncated ? `${text}…` : text;
+  const cut = text.slice(0, EXCERPT_MAX + 1);
+  const space = cut.lastIndexOf(" ");
+  return `${cut.slice(0, space > 120 ? space : EXCERPT_MAX).replace(/[،؛:.\s]+$/u, "")}…`;
+};
+
+const cleanExcerpt = (t) => clampExcerpt(htmlToParagraphs(t).replace(/\n+/g, " ").trim());
 
 /** وسم السلسلة (بالاسم العربي) → سلاج سلاسلنا. */
 const SERIES_BY_TAG = {
