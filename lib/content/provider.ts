@@ -101,6 +101,7 @@ async function loadCorpus(): Promise<Corpus> {
         publishedAt: row.publishedAt ?? undefined,
         factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
         format: row.format ?? undefined,
+        body: row.body || undefined,
         pinned: row.pinned === 1,
         breakingUntil: row.breakingUntil ?? undefined,
       }),

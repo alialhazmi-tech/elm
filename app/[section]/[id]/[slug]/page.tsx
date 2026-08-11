@@ -142,7 +142,14 @@ export default async function ArticlePage({ params }: Params) {
           ) : null}
 
           <div className="article-body">
-            <p>{story.excerpt}</p>
+            {story.body ? (
+              story.body
+                .split(/\n{2,}/)
+                .filter((paragraph) => paragraph.trim())
+                .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
+            ) : (
+              <p>{story.excerpt}</p>
+            )}
 
             {story.factCheck ? (
               <div className="fact-block">
