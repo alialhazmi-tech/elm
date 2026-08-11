@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { getStory, scheduleStory } from "@/lib/tahrir/service";
@@ -25,7 +26,7 @@ export async function POST(request: Request) {
   const story = id ? await getStory(id) : null;
   if (!story) return NextResponse.json({ error: "المادة غير موجودة." }, { status: 404 });
 
-  const report = runPolicyGuard({ id: story.id, title: story.title, body: story.body });
+  const report = runPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body) });
   if (!report.canRequestApproval) {
     return NextResponse.json(
       { error: "ممنوعة الجدولة: مخالفات قاطعة لم تُعالج.", blocking: report.audit.blockingRuleIds },

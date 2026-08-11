@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { audit, saveDraft } from "@/lib/tahrir/service";
 
@@ -17,6 +18,9 @@ export async function POST(request: Request) {
     seriesSlug?: string | null;
     image?: string | null;
     format?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+    keywords?: string[];
     pinned?: boolean;
     breakingUntil?: string | null;
   } | null;
@@ -26,6 +30,17 @@ export async function POST(request: Request) {
   }
 
   const id = input.id?.trim() || crypto.randomUUID();
+  // متن المحرر الغني يُنقّى عند الحفظ — والعرض ينقّي ثانية (القاعدة ليست مصدر ثقة).
+  const rawBody = input.body ?? "";
+  const body = looksLikeHtml(rawBody) ? sanitizeBodyHtml(rawBody) : rawBody;
+  const keywords = Array.isArray(input.keywords)
+    ? input.keywords
+        .filter((keyword): keyword is string => typeof keyword === "string")
+        .map((keyword) => keyword.trim())
+        .filter(Boolean)
+        .slice(0, 12)
+        .map((keyword) => keyword.slice(0, 40))
+    : undefined;
   const slug =
     input.slug?.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") ||
     `story-${id.slice(0, 8)}`;
@@ -35,12 +50,15 @@ export async function POST(request: Request) {
       id,
       title: input.title.trim(),
       excerpt: input.excerpt?.trim() ?? "",
-      body: input.body ?? "",
+      body,
       section: input.section?.trim() || "news",
       slug,
       seriesSlug: input.seriesSlug || null,
       image: input.image?.trim() || null,
       format: input.format?.trim() || undefined,
+      seoTitle: input.seoTitle?.trim().slice(0, 90) ?? "",
+      seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",
+      keywords,
       ...(APPROVER_ROLES.includes(session.role)
         ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
         : {}),

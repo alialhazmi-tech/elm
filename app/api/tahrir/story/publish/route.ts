@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
   const report = runPolicyGuard({
     id: story.id,
     title: story.title,
-    body: story.body,
+    body: stripHtmlToText(story.body),
     media: await guardMediaFor(story.image),
   });
   if (!report.canRequestApproval) {

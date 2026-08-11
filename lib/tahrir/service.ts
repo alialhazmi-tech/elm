@@ -3,6 +3,7 @@
 import { desc, eq, sql } from "drizzle-orm";
 
 import { auditLog, stories, users } from "@/db/schema";
+import { stripHtmlToText } from "@/lib/content/html";
 import { getDb } from "@/lib/db";
 
 export type StoryRow = typeof stories.$inferSelect;
@@ -65,6 +66,9 @@ export interface DraftInput {
   seriesSlug: string | null;
   image: string | null;
   format?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  keywords?: string[];
   /** undefined = لا تغيير — التثبيت والعاجل من صلاحية المعتمدين فقط. */
   pinned?: boolean;
   breakingUntil?: string | null;
@@ -79,6 +83,14 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
     ...(input.pinned !== undefined ? { pinned: input.pinned ? 1 : 0 } : {}),
     ...(input.breakingUntil !== undefined ? { breakingUntil: input.breakingUntil } : {}),
   };
+  const seo = {
+    ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle || null } : {}),
+    ...(input.seoDescription !== undefined ? { seoDescription: input.seoDescription || null } : {}),
+    ...(input.keywords !== undefined ? { keywords: input.keywords } : {}),
+  };
+  // دقائق القراءة من نص المتن الفعلي — 200 كلمة/دقيقة بين 1 و15.
+  const words = stripHtmlToText(input.body).split(/\s+/u).filter(Boolean).length;
+  const readingMinutes = Math.min(15, Math.max(1, Math.round(words / 200) || 1));
 
   await db
     .insert(stories)
@@ -94,7 +106,9 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
       status: "draft",
       authorName: actor,
       updatedAt: now,
+      readingMinutes,
       ...privileged,
+      ...seo,
     })
     .onConflictDoUpdate({
       target: stories.id,
@@ -107,7 +121,9 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
         seriesSlug: input.seriesSlug,
         image: input.image,
         updatedAt: now,
+        readingMinutes,
         ...privileged,
+        ...seo,
       },
     });
 }
@@ -223,7 +239,7 @@ export async function promoteDueScheduled(): Promise<number> {
   let promoted = 0;
   for (const story of due) {
     if (!story.scheduledAt || story.scheduledAt > now) continue;
-    const report = runPolicyGuard({ id: story.id, title: story.title, body: story.body });
+    const report = runPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body) });
     if (report.canRequestApproval) {
       await db
         .update(stories)

@@ -41,6 +41,12 @@ export const stories = pgTable("stories", {
   pinned: integer("pinned").notNull().default(0),
   /** عاجل حتى (ISO) — يظهر شريط العاجل ما دام المستقبل، ويختفي وحده. */
   breakingUntil: text("breaking_until"),
+  /** عنوان SEO (يسقط للعنوان عند غيابه) — يتولد بالذكاء ويحرره البشر. */
+  seoTitle: text("seo_title"),
+  /** وصف SEO (يسقط للموجز عند غيابه). */
+  seoDescription: text("seo_description"),
+  /** كلمات مفتاحية: مصفوفة نصوص jsonb — تتولد بالذكاء وتُحرر يدويًا. */
+  keywords: jsonb("keywords"),
 }, (table) => [
   index("stories_status_idx").on(table.status),
   index("stories_published_at_idx").on(table.publishedAt),

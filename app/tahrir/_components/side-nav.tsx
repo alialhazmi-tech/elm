@@ -2,6 +2,29 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+const closeNav = () => document.body.classList.remove("th-nav-open");
+
+/** زر القائمة على الجوال — يفتح الشريط الجانبي كدُرج وينغلق مع كل تنقّل. */
+export function MenuButton() {
+  const pathname = usePathname();
+  useEffect(closeNav, [pathname]);
+
+  return (
+    <button
+      className="th-burger"
+      aria-label="فتح القائمة"
+      onClick={() => document.body.classList.toggle("th-nav-open")}
+    >
+      ☰
+    </button>
+  );
+}
+
+export function NavBackdrop() {
+  return <div className="th-backdrop" aria-hidden="true" onClick={closeNav} />;
+}
 
 export function SideNav({ reviewCount, total }: { reviewCount: number; total: number }) {
   const pathname = usePathname();

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { getSession } from "@/lib/tahrir/auth";
 
@@ -14,6 +15,6 @@ export async function POST(request: Request) {
     body?: string;
   };
 
-  const report = runPolicyGuard({ title, body });
+  const report = runPolicyGuard({ title, body: stripHtmlToText(body) });
   return NextResponse.json(report);
 }

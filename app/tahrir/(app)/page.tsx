@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SERIES } from "@/lib/content/series";
+import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { getSession } from "@/lib/tahrir/auth";
 import {
@@ -14,8 +15,20 @@ import {
 export const metadata = { title: "نظرة اليوم" };
 export const dynamic = "force-dynamic";
 
+/** التحية بساعة الرياض — صباحًا حتى الظهر ثم مساء المعرفة. */
+function greeting() {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      hour12: false,
+      timeZone: "Asia/Riyadh",
+    }).format(new Date()),
+  );
+  return hour >= 5 && hour < 12 ? "صباح المعرفة" : "مساء المعرفة";
+}
+
 function guardChip(title: string, body: string) {
-  const report = runPolicyGuard({ title, body });
+  const report = runPolicyGuard({ title, body: stripHtmlToText(body) });
   if (report.counts.blocking > 0)
     return { cls: "block", label: `${report.counts.blocking} قاطع` };
   if (report.counts.warning > 0) return { cls: "warn", label: `${report.counts.warning} تحذير` };
@@ -46,7 +59,7 @@ export default async function OverviewPage() {
   return (
     <main className="th-screen">
       <div className="th-hello">
-        <h1>صباح المعرفة يا {session?.displayName.split(" ")[0]}</h1>
+        <h1>{greeting()} يا {session?.displayName.split(" ")[0]}</h1>
         <span className="d">
           {todayCount > 0 ? `${todayCount} مواد نُشرت اليوم` : "لم يُنشر شيء بعد اليوم"}
         </span>

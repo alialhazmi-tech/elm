@@ -12,6 +12,8 @@ export interface AiSettingsData {
     improve: boolean;
     proofread: boolean;
     classify: boolean;
+    seo: boolean;
+    full_edit: boolean;
     images: boolean;
   };
   models: { editorial: string; light: string; image: string };
@@ -26,6 +28,8 @@ export const DEFAULT_AI_SETTINGS: AiSettingsData = {
     improve: true,
     proofread: true,
     classify: true,
+    seo: true,
+    full_edit: true,
     images: true,
   },
   models: {

@@ -7,6 +7,7 @@ import { EndingPoll } from "@/app/_components/poll";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { brandDate, toLatinDigits } from "@/lib/format";
+import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -28,14 +29,17 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const story = await seedContentProvider.getStory(id);
   if (!story) return { title: "المادة غير موجودة" };
 
+  const seoTitle = story.seoTitle || story.title;
+  const seoDescription = story.seoDescription || story.excerpt;
   return {
-    title: story.title,
-    description: story.excerpt,
+    title: seoTitle,
+    description: seoDescription,
+    keywords: story.keywords?.length ? story.keywords : undefined,
     alternates: { canonical: `/${section}/${id}/${slug}` },
     openGraph: {
       type: "article",
-      title: story.title,
-      description: story.excerpt,
+      title: seoTitle,
+      description: seoDescription,
       images: story.image ? [{ url: story.image }] : undefined,
     },
   };
@@ -65,7 +69,8 @@ export default async function ArticlePage({ params }: Params) {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline: story.title,
-    description: story.excerpt,
+    description: story.seoDescription || story.excerpt,
+    keywords: story.keywords?.length ? story.keywords.join(", ") : undefined,
     datePublished: story.publishedAt,
     articleSection: sectionName(story.section),
     image: story.image ? [story.image] : undefined,
@@ -142,7 +147,10 @@ export default async function ArticlePage({ params }: Params) {
           ) : null}
 
           <div className="article-body">
-            {story.body ? (
+            {story.body && looksLikeHtml(story.body) ? (
+              // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
+              <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
+            ) : story.body ? (
               story.body
                 .split(/\n{2,}/)
                 .filter((paragraph) => paragraph.trim())

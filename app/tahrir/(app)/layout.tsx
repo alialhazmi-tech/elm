@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/tahrir/auth";
 import { promoteDueScheduled, statusCounts } from "@/lib/tahrir/service";
-import { LogoutButton, SideNav } from "../_components/side-nav";
+import { LogoutButton, MenuButton, NavBackdrop, SideNav } from "../_components/side-nav";
 
 const ROLE_LABELS: Record<string, string> = {
   editor: "محرر",
@@ -47,8 +47,10 @@ export default async function TahrirAppLayout({
           <LogoutButton />
         </div>
       </aside>
+      <NavBackdrop />
       <div className="th-main">
         <div className="th-top">
+          <MenuButton />
           <div className="th-crumb">
             تحرير العلم
             <small>{today}</small>

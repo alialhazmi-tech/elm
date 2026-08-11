@@ -1,4 +1,5 @@
 import { SERIES } from "@/lib/content/series";
+import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { bodiesFor, listAudit, listLatestByStatus, listPage, seriesDistribution, statusCounts } from "@/lib/tahrir/service";
 
@@ -34,7 +35,7 @@ export default async function StatsPage() {
   const sampleBodies = await bodiesFor(samplePage.map((row) => row.id));
   const guardTotals = { blocking: 0, warning: 0, suggestion: 0, clean: 0 };
   for (const [, content] of sampleBodies) {
-    const report = runPolicyGuard({ title: content.title, body: content.body });
+    const report = runPolicyGuard({ title: content.title, body: stripHtmlToText(content.body) });
     guardTotals.blocking += report.counts.blocking;
     guardTotals.warning += report.counts.warning;
     guardTotals.suggestion += report.counts.suggestion;
