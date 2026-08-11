@@ -505,7 +505,7 @@ img { max-width: 100%; display: block; }
 .article-head { max-width: none; }
 .article-head h1 {
   font-size: clamp(1.5rem, 3vw, 2.15rem); font-weight: 800; line-height: 1.45;
-  margin: 0.9rem 0 0.8rem; text-wrap: balance;
+  margin: 0.9rem 0 0.8rem;
 }
 .article-deck { font-size: 1.02rem; color: var(--ink-2); line-height: 1.95; margin: 0 0 1.1rem; }
 .article-meta {
@@ -1200,3 +1200,95 @@ img { max-width: 100%; display: block; }
 .series-archive-name { font-family: var(--font-display); font-weight: 700; font-size: 14.5px; }
 .series-archive-meta { color: var(--ink-3); font-size: 11px; }
 .series-archived-badge { display: inline-block; vertical-align: middle; margin-inline-start: 10px; font-family: var(--font-display); font-weight: 700; font-size: 11px; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 2px 12px; }
+
+/* ============ جاك العلم — القارئ الغامر ============ */
+/* المداد ثابت هنا عمدًا — القصة ليلية في الوضعين، كالنموذج المعتمد */
+.jak-stage { background: radial-gradient(120% 100% at 50% 0%, #12284b 0%, #060f1f 70%); padding: 0; }
+.jak-col { max-width: 620px; margin: 0 auto; background: var(--navy-deep); color: #fff; box-shadow: 0 40px 90px rgb(0 0 0 / 0.5); }
+@media (min-width: 700px) { .jak-stage { padding: 38px 0 56px; } .jak-col { border-radius: 22px; overflow: hidden; } }
+
+.jak-slide { min-height: 92svh; scroll-snap-align: start; position: relative; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; justify-content: center; padding: 3.4rem 1.7rem 3rem; }
+.jak-art { position: absolute; inset: 0; z-index: -2; }
+.jak-art img { object-fit: cover; }
+/* السكريم: يذيب الصورة في المداد ويضمن تباين النص مهما جاءت فاتحة */
+.jak-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgb(11 26 51 / 0.55) 0%, rgb(11 26 51 / 0.18) 30%, rgb(11 26 51 / 0.55) 62%, rgb(11 26 51 / 0.96) 100%); }
+.jart-a { background: radial-gradient(120% 80% at 80% 10%, #274b76 0%, transparent 55%), radial-gradient(100% 60% at 60% 95%, rgb(201 160 106 / 0.55) 0%, transparent 55%), var(--navy-deep); }
+.jart-b { background: radial-gradient(100% 90% at 25% 20%, #123f57 0%, transparent 55%), radial-gradient(120% 80% at 85% 70%, rgb(23 201 177 / 0.4) 0%, transparent 45%), var(--navy-deep); }
+.jart-c { background: radial-gradient(110% 90% at 75% 25%, rgb(122 90 8 / 0.8) 0%, transparent 50%), radial-gradient(120% 90% at 20% 80%, rgb(245 185 46 / 0.3) 0%, transparent 55%), var(--navy-deep); }
+
+.jak-slide .jak-kick { font-family: var(--font-display); font-size: 0.68rem; font-weight: 800; letter-spacing: 0.13em; color: var(--gold); display: block; }
+.jak-slide h1, .jak-slide h2 { color: #fff; font-weight: 900; line-height: 1.5; margin: 0.6rem 0 0.5rem; text-wrap: balance; }
+.jak-slide h1 { font-size: clamp(1.55rem, 5.5vw, 2rem); }
+.jak-slide h2 { font-size: clamp(1.3rem, 4.5vw, 1.6rem); }
+.jak-slide p { font-size: 0.9rem; line-height: 2; margin: 0; color: #cdd8ea; }
+.jak-bottom { margin-top: auto; position: relative; }
+.jak-center { text-align: center; position: relative; }
+.jak-brand, .jak-endlogo { font-family: var(--f-logo, var(--font-display)); font-weight: 900; color: #fff; }
+.jak-brand { position: absolute; top: 1.6rem; inset-inline-end: 1.7rem; font-size: 1rem; z-index: 5; }
+.jak-brand i, .jak-endlogo i { color: var(--gold); font-style: normal; }
+.jak-cue { position: absolute; bottom: 0.9rem; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: #c7d2e4; animation: jak-cue 2s infinite; }
+@keyframes jak-cue { 50% { transform: translate(-50%, 6px); } }
+.jak-num { position: absolute; top: 2.6rem; inset-inline-start: 1.4rem; font-family: var(--font-display); font-size: 6.5rem; font-weight: 900; color: rgb(255 255 255 / 0.06); line-height: 1; z-index: -1; font-variant-numeric: tabular-nums; }
+.jak-idx { position: absolute; bottom: 0.85rem; left: 0; right: 0; text-align: center; font-size: 0.6rem; color: rgb(255 255 255 / 0.4); letter-spacing: 0.2em; }
+
+/* الرقم المتحرك */
+.jak-big { font-family: var(--font-display); font-size: clamp(4.6rem, 18vw, 6.4rem); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, #ffd35e 10%, var(--gold) 55%, #b97d0a); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 80px rgb(245 185 46 / 0.25); }
+.jak-big small { font-size: 0.45em; font-weight: 900; }
+.jak-biglbl { font-size: 0.95rem !important; margin-top: 1rem !important; color: #e6edf8 !important; font-weight: 700; }
+.jak-stat .jak-kick { margin-bottom: 0.8rem; }
+
+/* المقارنة */
+.jak-duel { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1.3rem; }
+.jak-side { display: grid; grid-template-columns: minmax(56px, auto) 1fr auto; gap: 0.8rem; align-items: center; text-align: right; }
+.jak-side .y { font-size: 0.7rem; color: #8fa3c0; font-variant-numeric: tabular-nums; }
+.jak-side .bar { height: 2.1rem; border-radius: 10px; background: rgb(255 255 255 / 0.08); overflow: hidden; position: relative; }
+.jak-side .bar i { position: absolute; inset-block: 0; inset-inline-start: 0; width: 0; border-radius: 10px; transition: width 1.2s cubic-bezier(0.2, 0.7, 0.2, 1); background: linear-gradient(90deg, #33507a, #5b9bff); }
+.jak-side.now .bar i { background: linear-gradient(90deg, #b97d0a, var(--gold)); }
+.jak-slide.in .jak-side .bar i { width: var(--w, 100%); }
+.jak-side .n { font-family: var(--font-display); font-size: 1.4rem; font-weight: 900; font-variant-numeric: tabular-nums; min-width: 3.2rem; color: #fff; }
+.jak-side.now .n { color: var(--gold); }
+.jak-gain { margin-top: 1.1rem !important; color: #17c9b1 !important; font-weight: 800; font-size: 0.78rem !important; }
+
+/* التسلسل الزمني */
+.jak-tl { margin-top: 1.2rem; position: relative; padding-inline-start: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; text-align: right; }
+.jak-tl::before { content: ""; position: absolute; inset-block: 4px; inset-inline-start: 4px; width: 2px; background: linear-gradient(180deg, var(--gold), rgb(245 185 46 / 0.05)); }
+.jak-tl .pt { position: relative; }
+.jak-tl .pt::before { content: ""; position: absolute; inset-inline-start: -1.55rem; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 14px rgb(245 185 46 / 0.6); }
+.jak-tl .yr { font-family: var(--font-display); font-weight: 900; color: var(--gold); font-size: 0.75rem; font-variant-numeric: tabular-nums; display: block; }
+.jak-tl .pt b { font-size: 0.9rem; display: block; color: #fff; }
+.jak-tl .pt .dt { font-size: 0.75rem; color: #9fb0c7; display: block; }
+
+/* الاقتباس */
+.jak-qm { font-size: 7rem; color: rgb(245 185 46 / 0.16); line-height: 0.4; font-family: Georgia, serif; user-select: none; }
+.jak-quote blockquote { margin: 0; font-size: 1.2rem; font-weight: 800; line-height: 2; color: #fff; text-wrap: balance; }
+.jak-quote cite { display: block; margin-top: 1rem; font-size: 0.72rem; color: #8fa3c0; font-style: normal; }
+
+/* القوائم والخلاصة */
+.jak-items, .jak-sum { list-style: none; margin: 1.1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.65rem; text-align: right; }
+.jak-items li, .jak-sum li { background: rgb(255 255 255 / 0.06); border: 1px solid rgb(255 255 255 / 0.09); border-radius: 14px; padding: 0.75rem 1rem; font-size: 0.82rem; display: flex; gap: 0.75rem; align-items: center; color: #e6edf8; }
+.jak-items li b.n { font-family: var(--font-display); color: #17c9b1; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.jak-sum li::before { content: "✓"; color: var(--gold); font-weight: 900; }
+
+/* حقيقة سريعة */
+.jak-fk { font-family: var(--font-display); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.13em; background: rgb(255 255 255 / 0.12); border-radius: 999px; padding: 0.25rem 1rem; display: inline-block; color: #fff; }
+.jak-fact h2 { margin-top: 0.9rem; }
+
+/* الختامية */
+.jak-endlogo { font-size: 1.7rem; }
+.jak-share { display: flex; gap: 0.5rem; justify-content: center; margin-top: 1.3rem; }
+.jak-share a, .jak-share span { border: 1px solid rgb(255 255 255 / 0.25); border-radius: 999px; padding: 0.4rem 1.1rem; font-size: 0.72rem; color: #fff; text-decoration: none; cursor: pointer; }
+.jak-next { display: block; margin: 1.4rem auto 0; max-width: 320px; background: rgb(255 255 255 / 0.07); border: 1px solid rgb(255 255 255 / 0.12); border-radius: 14px; padding: 0.8rem 1rem; font-size: 0.72rem; text-align: right; color: #8fa3c0; text-decoration: none; }
+.jak-next b { display: block; font-size: 0.82rem; margin-top: 2px; color: #fff; }
+
+/* حركة الدخول — CSS فقط، والكشف من jak-motion */
+.jrv { opacity: 0; transform: translateY(20px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.jrv.jd1 { transition-delay: 0.15s; } .jrv.jd2 { transition-delay: 0.32s; } .jrv.jd3 { transition-delay: 0.5s; }
+.jak-slide.in .jrv { opacity: 1; transform: none; }
+.jak-art { opacity: 0; transform: scale(1.06); transition: opacity 1s ease, transform 1.4s ease; }
+.jak-slide.in .jak-art { opacity: 1; transform: scale(1); }
+@media (prefers-reduced-motion: reduce) {
+  .jrv, .jak-art { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .jak-cue { animation: none; }
+  .jak-side .bar i { transition: none; }
+  .jak-slide.in .jak-side .bar i, .jak-side .bar i { width: var(--w, 100%); }
+}

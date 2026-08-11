@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
 
 /**
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
     id: story.id,
     title: story.title,
     body: stripHtmlToText(story.body),
+    surface: story.format === "jakalelm" ? ("design" as const) : undefined,
     media: await guardMediaFor(story.image),
   });
   if (!report.canRequestApproval) {
@@ -37,5 +39,6 @@ export async function POST(request: Request) {
   }
 
   await setStatus(story.id, "published", session.username, `نشر بقرار ${session.displayName}`);
+  revalidatePublicStory({ section: story.section, id: story.id, slug: story.slug });
   return NextResponse.json({ ok: true });
 }

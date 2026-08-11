@@ -4,11 +4,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EndingPoll } from "@/app/_components/poll";
+import { JakStory } from "@/app/_components/jak-slides";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { brandDate, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
-import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
+import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
+import type { JakSlide, SlideData, SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
 
 export const revalidate = 300;
@@ -60,6 +62,65 @@ export default async function ArticlePage({ params }: Params) {
 
   const series = seriesOf(story);
   const related = await seedContentProvider.listRelated(story, 3);
+
+  // «جاك العلم»: نفس الرابط المقدس، قالب قراءة غامر مختلف كليًا.
+  if (story.format === "jakalelm") {
+    const slideRows = await listPublicSlides(story.id);
+    const slides: JakSlide[] = slideRows.map((row) => ({
+      id: row.id,
+      type: row.type as SlideType,
+      title: row.title,
+      body: row.body,
+      stat: row.stat,
+      statLabel: row.statLabel,
+      image: row.image,
+      imageStyle: row.imageStyle,
+      imagePrompt: row.imagePrompt,
+      sourceContext: row.sourceContext,
+      hidden: row.hidden === 1,
+      data: (row.data as SlideData) ?? null,
+    }));
+    const nextStory = related[0];
+
+    return (
+      <>
+        <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
+        <SiteHeader />
+        {/* الالتقاط المرن على تمرير الصفحة — proximity لا يحبس القارئ */}
+        <style>{`html{scroll-snap-type:y proximity}`}</style>
+        <main id="main-content">
+          <JakStory
+            meta={{
+              title: story.title,
+              sectionName: sectionName(story.section),
+              readingMinutes: story.readingMinutes,
+              shareUrl: `https://alelm.net${storyHref(story)}`,
+              next: nextStory ? { title: nextStory.title, href: storyHref(nextStory) } : null,
+            }}
+            slides={slides}
+          />
+        </main>
+        <SiteFooter />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "NewsArticle",
+              headline: story.title,
+              description: story.seoDescription || story.excerpt,
+              keywords: story.keywords?.length ? story.keywords.join(", ") : undefined,
+              datePublished: story.publishedAt,
+              articleSection: sectionName(story.section),
+              image: story.image ? [story.image] : undefined,
+              publisher: { "@type": "Organization", name: "العلم", url: "https://alelm.net" },
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
+        <link rel="canonical" href={`https://alelm.net${storyHref(story)}`} />
+      </>
+    );
+  }
   const nextInSeries = series
     ? related.find((item) => item.series === series.slug)
     : undefined;

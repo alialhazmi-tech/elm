@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { audit, saveDraft } from "@/lib/tahrir/service";
 
 export async function POST(request: Request) {
@@ -66,6 +67,8 @@ export async function POST(request: Request) {
     session.displayName,
   );
   await audit(session.username, "draft:save", id);
+  // إبطال فوري — بلا هذا، تعديل مادة منشورة يبقى غائبًا عن الموقع حتى 300 ثانية (كاش ISR).
+  revalidatePublicStory({ section: input.section?.trim() || "news", id, slug });
 
   return NextResponse.json({ ok: true, id, slug });
 }

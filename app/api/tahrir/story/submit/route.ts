@@ -21,6 +21,7 @@ export async function POST(request: Request) {
     id: story.id,
     title: story.title,
     body: stripHtmlToText(story.body),
+    surface: story.format === "jakalelm" ? ("design" as const) : undefined,
     media: await guardMediaFor(story.image),
   });
   if (!report.canRequestApproval) {

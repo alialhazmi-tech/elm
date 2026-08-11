@@ -228,7 +228,14 @@ export async function scheduleStory(id: string, scheduledAt: string, actor: stri
  * السليمة تُنشر، والمخالفة تعود للاعتماد ويُدوَّن المنع. تُستدعى من
  * تحميل اللوحة ومن /api/tahrir/tick (لمراقب خارجي).
  */
-export async function promoteDueScheduled(): Promise<number> {
+export interface PromotedStory {
+  id: string;
+  section: string;
+  slug: string;
+}
+
+/** يعيد المواد التي نُشرت فعلًا — ليبطل مستدعيها (Route Handler) كاش صفحاتها العامة. */
+export async function promoteDueScheduled(): Promise<PromotedStory[]> {
   const db = requireDb();
   const now = new Date().toISOString();
   const due = await db
@@ -236,17 +243,22 @@ export async function promoteDueScheduled(): Promise<number> {
     .from(stories)
     .where(eq(stories.status, "scheduled"));
 
-  let promoted = 0;
+  const promoted: PromotedStory[] = [];
   for (const story of due) {
     if (!story.scheduledAt || story.scheduledAt > now) continue;
-    const report = runPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body) });
+    const report = runPolicyGuard({
+      id: story.id,
+      title: story.title,
+      body: stripHtmlToText(story.body),
+      surface: story.format === "jakalelm" ? ("design" as const) : undefined,
+    });
     if (report.canRequestApproval) {
       await db
         .update(stories)
         .set({ status: "published", publishedAt: now, updatedAt: now })
         .where(eq(stories.id, story.id));
       await audit("النظام", "publish:scheduled", story.id, "نشر مجدول — مرّ على الحارس لحظة الموعد");
-      promoted += 1;
+      promoted.push({ id: story.id, section: story.section, slug: story.slug });
     } else {
       await db
         .update(stories)

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { promoteDueScheduled } from "@/lib/tahrir/service";
 
 /**
@@ -8,6 +9,7 @@ import { promoteDueScheduled } from "@/lib/tahrir/service";
  * كل دقائق — لا تكشف بيانات ولا تحتاج جلسة، وفعلها idempotent.
  */
 export async function GET() {
-  const promoted = await promoteDueScheduled().catch(() => 0);
-  return NextResponse.json({ ok: true, promoted });
+  const promoted = await promoteDueScheduled().catch(() => []);
+  promoted.forEach(revalidatePublicStory);
+  return NextResponse.json({ ok: true, promoted: promoted.length });
 }

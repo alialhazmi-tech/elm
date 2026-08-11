@@ -144,6 +144,24 @@ export async function getBreaking(): Promise<BreakingItem | null> {
   return story ? { title: story.title, href: storyHref(story), until: story.breakingUntil! } : null;
 }
 
+/** شرائح «جاك العلم» لمادة منشورة — الظاهرة فقط وبترتيبها. */
+export async function listPublicSlides(storyId: string) {
+  const db = getDb();
+  if (!db) return [];
+  try {
+    const { storySlides } = await import("@/db/schema");
+    const { asc: ascOp } = await import("drizzle-orm");
+    const rows = await db
+      .select()
+      .from(storySlides)
+      .where(eq(storySlides.storyId, storyId))
+      .orderBy(ascOp(storySlides.position));
+    return rows.filter((row) => row.hidden !== 1);
+  } catch {
+    return [];
+  }
+}
+
 /** المتقاعدة الظاهرة في فهرس السلاسل — مفتاح الإظهار/الإخفاء من «تحرير العلم». */
 export async function listVisibleArchivedSeries(): Promise<Series[]> {
   const db = getDb();

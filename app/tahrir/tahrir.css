@@ -419,3 +419,26 @@
 .th-keychip { font: 700 10px var(--f-display); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
 .th-keychip.ok { color: var(--t-ok); background: var(--t-ok-bg); }
 .th-keychip.miss { color: var(--t-block); background: var(--t-block-bg); }
+
+/* ============ جاك العلم — المحرر ============ */
+.th-jak-head .th-jak-bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 10px 16px; }
+.th-jak-grid { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 14px; margin-top: 14px; align-items: start; }
+@media (max-width: 1000px) { .th-jak-grid { grid-template-columns: 1fr; } }
+.th-jslide { margin-bottom: 10px; }
+.th-jslide.off { opacity: 0.55; }
+.th-jslide-hd { display: flex; gap: 10px; align-items: center; padding: 10px 14px; }
+.th-jslide-hd .grip { color: var(--t-ink3); cursor: grab; }
+.th-jslide-hd .tt { flex: 1; min-width: 0; font-size: 12.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.th-jslide-bd { display: flex; flex-direction: column; gap: 8px; padding: 4px 14px 12px; border-top: 1px solid var(--t-line); }
+.th-jslide-bd .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 640px) { .th-jslide-bd .row2 { grid-template-columns: 1fr; } }
+.th-jslide-ops { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; padding: 8px 14px 10px; border-top: 1px solid var(--t-line); }
+.th-jslide-ops .th-mini.ai { color: #6d28d9; border-color: #e4d6fb; background: #f8f5ff; }
+:root[data-theme="dark"] .th .th-jslide-ops .th-mini.ai { color: #b79af5; border-color: #3c2c66; background: #221836; }
+.th-jsrc { background: var(--t-sug-bg); color: var(--t-sug); border-radius: 8px; padding: 7px 11px; font-size: 10.5px; line-height: 1.8; }
+.th-jakprev { background: #000; border-radius: 30px; padding: 8px; box-shadow: 0 20px 60px rgb(11 26 51 / .4); }
+.th-jakprev-screen { height: 560px; border-radius: 24px; overflow-y: auto; overflow-x: hidden; scroll-snap-type: y proximity; scrollbar-width: none; background: var(--t-midad); }
+.th-jakprev-screen::-webkit-scrollbar { display: none; }
+.th-jakprev-screen .jak-stage { padding: 0; background: none; }
+.th-jakprev-screen .jak-col { max-width: none; border-radius: 0; box-shadow: none; }
+.th-jakprev-screen .jak-slide { min-height: 544px; }

@@ -27,7 +27,7 @@ const dayOf = (iso: string) =>
 
 export default async function SchedulePage() {
   // نبضة الترقية تعمل مع كل فتح للشاشة — والمراقب الخارجي يضرب /api/tahrir/tick.
-  await promoteDueScheduled().catch(() => 0);
+  await promoteDueScheduled().catch(() => []);
   const [latestPublished, scheduled] = await Promise.all([
     listLatestByStatus("published", 60).catch(() => []),
     listLatestByStatus("scheduled", 100).catch(() => []),

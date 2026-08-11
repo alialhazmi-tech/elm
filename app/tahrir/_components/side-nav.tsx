@@ -50,6 +50,9 @@ export function SideNav({ reviewCount, total }: { reviewCount: number; total: nu
         <span className="ic">✓</span> الاعتماد {reviewCount > 0 && <span className="n">{reviewCount}</span>}
       </Link>
       <div className="sec">المحتوى</div>
+      <Link href="/tahrir/jak" className={active("/tahrir/jak")}>
+        <span className="ic">▦</span> جاك العلم
+      </Link>
       <Link href="/tahrir/series" className={active("/tahrir/series")}>
         <span className="ic">◈</span> السلاسل
       </Link>

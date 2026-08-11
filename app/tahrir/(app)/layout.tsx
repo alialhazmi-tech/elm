@@ -17,7 +17,9 @@ export default async function TahrirAppLayout({
   const session = await getSession();
   if (!session) redirect("/tahrir/login");
 
-  await promoteDueScheduled().catch(() => 0);
+  // النشر التلقائي هنا يبطل نفسه خلال 300 ثانية عبر ISR — الإبطال الفوري في /api/tahrir/tick فقط
+  // (revalidatePath يرفض العمل أثناء رندر مكوّن خادم مثل هذا الـlayout).
+  await promoteDueScheduled().catch(() => []);
   const counts = await statusCounts().catch(() => ({}) as Record<string, number>);
   const reviewCount = counts.review ?? 0;
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);

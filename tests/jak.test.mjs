@@ -1,0 +1,81 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import { extractNumbers, unverifiedNumbers, normalizeSlide, validateJakPlan } from "../lib/ai/jak.ts";
+import { projectSlides } from "../lib/tahrir/jak.ts";
+import { runPolicyGuard } from "../lib/policy/index.ts";
+
+const SOURCE =
+  "ارتفعت مساهمة الاقتصاد الرقمي إلى 15% بنهاية 2025، وبلغت تغطية الجيل الخامس 73% من المدن، " +
+  "وتضاعف الاستثمار من 1.2 مليار ريال في 2019 إلى 3.9 مليار في 2026.";
+
+test("استخراج الأرقام يطبّع الهندية واللاتينية والفواصل", () => {
+  assert.deepEqual(extractNumbers("بلغت ٧٣% عام 2025 و1,200 وحدة"), ["73", "2025", "1200"]);
+});
+
+test("مدقق الأرقام: الموجود في المصدر يمر وغير الموجود يُكشف", () => {
+  assert.deepEqual(unverifiedNumbers("تغطية 73% بنهاية 2025", SOURCE), []);
+  assert.deepEqual(unverifiedNumbers("قفزة 88% غير مسبوقة", SOURCE), ["88"]);
+});
+
+test("الخطة تُسقط شريحة برقم مخترع وتبقي الصادقة — مع سبب الإسقاط", () => {
+  const plan = validateJakPlan(
+    {
+      title: "قفزة الاقتصاد الرقمي",
+      excerpt: "خمس سنوات غيّرت الخريطة",
+      slides: [
+        { type: "stat", stat: "73%", statLabel: "تغطية الجيل الخامس من المدن", sourceContext: "بلغت تغطية الجيل الخامس 73%" },
+        { type: "stat", stat: "99%", statLabel: "رقم مخترع لم يرد في المصدر" },
+        { type: "text", title: "الرقمنة صارت بنية", body: "مساهمة الاقتصاد الرقمي بلغت 15% بنهاية 2025." },
+      ],
+    },
+    SOURCE,
+  );
+  assert.equal(plan.slides.length, 2);
+  assert.equal(plan.dropped.length, 1);
+  assert.match(plan.dropped[0].reason, /99/);
+});
+
+test("نوع الشريحة المجهول يُسقط بنيويًا لا يمر", () => {
+  const plan = validateJakPlan(
+    { slides: [{ type: "megaslide", title: "غريب" }, { type: "fact", title: "حقيقة من المصدر" }] },
+    SOURCE,
+  );
+  assert.equal(plan.slides.length, 1);
+  assert.equal(plan.dropped[0].reason, "نوع شريحة غير معروف");
+});
+
+test("خطة بلا أي شريحة صالحة ترفض بخطأ واضح", () => {
+  assert.throws(() => validateJakPlan({ slides: [{ type: "stat", stat: "500%" }] }, SOURCE), /شريحة صالحة/);
+});
+
+test("التطبيع يقص الحقول ويحصر الأنماط ويرمم بيانات الأنواع", () => {
+  const slide = normalizeSlide({
+    type: "comparison",
+    title: "م".repeat(300),
+    imageStyle: "neon",
+    sides: [{ label: "2019", value: "1.2" }, { label: "2026", value: "3.9" }, { label: "زائد", value: "7" }],
+  });
+  assert.equal(slide.title.length, 140);
+  assert.equal(slide.imageStyle, "real");
+  assert.equal(slide.data.sides.length, 2);
+});
+
+test("إسقاط الشرائح نصًا يتجاهل المخفية ويشمل بيانات الأنواع", () => {
+  const text = projectSlides([
+    { id: "1", type: "stat", title: "", body: "", stat: "73%", statLabel: "تغطية المدن", image: null, imageStyle: null, imagePrompt: "", sourceContext: "", hidden: false, data: null },
+    { id: "2", type: "text", title: "مخفية", body: "لا تظهر", stat: "", statLabel: "", image: null, imageStyle: null, imagePrompt: "", sourceContext: "", hidden: true, data: null },
+    { id: "3", type: "comparison", title: "المقارنة", body: "", stat: "", statLabel: "", image: null, imageStyle: null, imagePrompt: "", sourceContext: "", hidden: false, data: { sides: [{ label: "2019", value: "1.2" }, { label: "2026", value: "3.9" }] } },
+  ]);
+  assert.match(text, /73% — تغطية المدن/);
+  assert.match(text, /2019: 1.2 مقابل 2026: 3.9/);
+  assert.ok(!text.includes("مخفية"));
+});
+
+test("السطح البصري يعفي من حد كلمات المتن ولا يعفي من بقية القواعد", () => {
+  const short = { title: "عنوان معرفي واضح", body: "متن قصير من شرائح." };
+  const asText = runPolicyGuard({ ...short, surface: "text" });
+  const asDesign = runPolicyGuard({ ...short, surface: "design" });
+  assert.ok(asText.findings.some((finding) => finding.ruleId === "BODY-WORD-RANGE"));
+  assert.ok(!asDesign.findings.some((finding) => finding.ruleId === "BODY-WORD-RANGE"));
+});

@@ -14,6 +14,7 @@ export interface AiSettingsData {
     classify: boolean;
     seo: boolean;
     full_edit: boolean;
+    jak: boolean;
     images: boolean;
   };
   models: { editorial: string; light: string; image: string };
@@ -30,6 +31,7 @@ export const DEFAULT_AI_SETTINGS: AiSettingsData = {
     classify: true,
     seo: true,
     full_edit: true,
+    jak: true,
     images: true,
   },
   models: {

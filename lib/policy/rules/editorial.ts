@@ -145,6 +145,8 @@ const bodyWordRange: Rule = {
   title: "طول المادة بين 300 و2000 كلمة",
   run(draft) {
     if (draft.body === undefined) return [];
+    // الأسطح البصرية (جاك العلم وأشباهه) شرائح لا مقالًا — حد الكلمات قاعدة نصية (§6).
+    if (draft.surface === "design") return [];
     const words = countWords(draft.body);
     if (words >= BODY_MIN_WORDS && words <= BODY_MAX_WORDS) return [];
 

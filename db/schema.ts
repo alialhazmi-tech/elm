@@ -53,6 +53,40 @@ export const stories = pgTable("stories", {
   index("stories_section_idx").on(table.section),
 ]);
 
+/**
+ * شرائح «جاك العلم» — التقرير التفاعلي العمودي. المادة الأم صف في stories
+ * بشكل jakalelm، وكل شريحة صف هنا: المعنى والبيانات لا الشكل (العرض قرار الواجهة).
+ */
+export const storySlides = pgTable("story_slides", {
+  id: text("id").primaryKey(),
+  storyId: text("story_id").notNull(),
+  position: integer("position").notNull(),
+  /** hero | text | stat | comparison | timeline | quote | list | fact | summary | end */
+  type: text("type").notNull(),
+  title: text("title").notNull().default(""),
+  body: text("body").notNull().default(""),
+  /** الرقم البارز بالأرقام اللاتينية كما ورد في المصدر — "73%"، "3.9". */
+  stat: text("stat").notNull().default(""),
+  statLabel: text("stat_label").notNull().default(""),
+  image: text("image"),
+  imageStyle: text("image_style"),
+  imagePrompt: text("image_prompt").notNull().default(""),
+  /** المقطع الأصلي من المصدر الذي استُخرجت منه الشريحة — للمراجعة البشرية. */
+  sourceContext: text("source_context").notNull().default(""),
+  hidden: integer("hidden").notNull().default(0),
+  /** تفاصيل النوع: أطراف المقارنة، نقاط التسلسل، عناصر القائمة، نسبة الاقتباس. */
+  data: jsonb("data"),
+}, (table) => [
+  index("story_slides_story_idx").on(table.storyId, table.position),
+]);
+
+/** مصدر جاك العلم النصي الأصلي — مرجع مدقق الأرقام وعمليات إعادة التوليد. */
+export const jakSources = pgTable("jak_sources", {
+  storyId: text("story_id").primaryKey(),
+  source: text("source").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 /** مكتبة وسائط «تحرير العلم» — الحقوق تُفحص قبل الاستخدام (الدستور §12). */
 export const media = pgTable("media", {
   id: text("id").primaryKey(),
