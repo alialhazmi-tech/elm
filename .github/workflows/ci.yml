@@ -1,0 +1,26 @@
+# بوابة الجودة على GitHub — نفس بوابة npm test المحلية:
+# lint + typecheck + بناء معزول + اختبارات العقد والحارس + ميزانية JS.
+# لا تحتاج أسرارًا: بلا DATABASE_URL يسقط المزود آمنًا إلى البذرة.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
