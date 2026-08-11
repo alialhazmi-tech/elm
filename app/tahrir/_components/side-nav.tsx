@@ -33,6 +33,13 @@ export function SideNav({ reviewCount, total }: { reviewCount: number; total: nu
       <Link href="/tahrir/media" className={active("/tahrir/media")}>
         <span className="ic">▤</span> الوسائط
       </Link>
+      <div className="sec">الذكاء الاصطناعي</div>
+      <Link href="/tahrir/ai-images" className={active("/tahrir/ai-images")}>
+        <span className="ic">◪</span> توليد الصور
+      </Link>
+      <Link href="/tahrir/ai-settings" className={active("/tahrir/ai-settings")}>
+        <span className="ic">✦</span> إعدادات الذكاء
+      </Link>
       <div className="sec">المنصة</div>
       <Link href="/tahrir/stats" className={active("/tahrir/stats")}>
         <span className="ic">∿</span> الإحصاءات

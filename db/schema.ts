@@ -58,6 +58,28 @@ export const media = pgTable("media", {
   flags: text("flags").notNull().default(""),
   uploadedBy: text("uploaded_by").notNull(),
   createdAt: text("created_at").notNull(),
+  /** مولّدة بالذكاء — توسم بشفافية، وحقوقها داخلية فتُوثق تلقائيًا. */
+  aiGenerated: integer("ai_generated").notNull().default(0),
+});
+
+/** إعدادات نظام الذكاء — صف واحد jsonb يديره رئيس التحرير من اللوحة. */
+export const aiSettings = pgTable("ai_settings", {
+  id: text("id").primaryKey().default("main"),
+  data: jsonb("data").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+/** سجل استهلاك الذكاء — أساس فرض السقوف اليومية والشهرية. */
+export const aiUsage = pgTable("ai_usage", {
+  id: text("id").primaryKey(),
+  at: text("at").notNull(),
+  tool: text("tool").notNull(),
+  model: text("model").notNull(),
+  inputTokens: integer("input_tokens").notNull().default(0),
+  outputTokens: integer("output_tokens").notNull().default(0),
+  /** بالسنت تجنبًا لكسور الفاصلة العائمة. */
+  costCents: integer("cost_cents").notNull().default(0),
+  actor: text("actor").notNull(),
 });
 
 /** مقترحات سلاسل جديدة — بشروط الدستور، والاعتماد لرئيس التحرير. */

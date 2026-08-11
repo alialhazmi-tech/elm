@@ -56,6 +56,7 @@ export async function POST(request: Request) {
       rightsCleared: 0,
       flags: "",
       uploadedBy: session.displayName,
+      aiGenerated: 0,
     },
     session.username,
   );

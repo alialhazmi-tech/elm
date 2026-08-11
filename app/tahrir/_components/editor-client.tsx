@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import type { Finding, GuardReport } from "@/lib/policy/types";
 
+import { AiPanel } from "./ai-panel";
+
 interface EditorInitial {
   id: string;
   title: string;
@@ -67,6 +69,8 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+  const selectionRef = useRef<{ start: number; end: number }>({ start: 0, end: 0 });
 
   function scheduleGuard(nextTitle: string, nextBody: string) {
     if (timer.current) clearTimeout(timer.current);
@@ -214,14 +218,45 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
           onChange={(event) => setExcerpt(event.target.value)}
         />
         <textarea
+          ref={bodyRef}
           className="th-ed-body"
           placeholder="نص المادة…"
           value={body}
           onChange={(event) => onBody(event.target.value)}
+          onSelect={(event) => {
+            const target = event.target as HTMLTextAreaElement;
+            selectionRef.current = { start: target.selectionStart, end: target.selectionEnd };
+          }}
         />
       </div>
 
       <div className="th-ed-side">
+        <AiPanel
+          getDraft={() => {
+            const { start, end } = selectionRef.current;
+            return {
+              title,
+              body,
+              selection: end > start ? body.slice(start, end) : undefined,
+            };
+          }}
+          onInsertTitle={(text) => onTitle(text)}
+          onInsertExcerpt={(text) => setExcerpt(text)}
+          onReplaceBody={(text, selectionOnly) => {
+            const { start, end } = selectionRef.current;
+            if (selectionOnly && end > start) {
+              onBody(body.slice(0, start) + text + body.slice(end));
+            } else {
+              onBody(text);
+            }
+          }}
+          onClassify={(c) => {
+            if (c.seriesSlug) setSeriesSlug(c.seriesSlug);
+            setSection(c.section);
+            setFormat(c.format);
+          }}
+        />
+
         <div className="th-panel">
           <div className="th-guard-hd">
             <span className={`dot ${blocking === 0 ? "ok" : ""}`} />
