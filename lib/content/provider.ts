@@ -6,7 +6,7 @@
  * وعند وصول خدمات الذكاء تتولد آليًا وتمر على اعتماد المحرر.
  */
 
-import { asc, desc } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 
 import { stories as storiesTable } from "@/db/schema";
 import { getDb } from "@/lib/db";
@@ -79,9 +79,11 @@ async function loadCorpus(): Promise<Corpus> {
   if (corpusCache && Date.now() - corpusCache.at < DB_CACHE_MS) return corpusCache.value;
 
   try {
+    // الموقع العام يرى المنشور فقط — مسودات «تحرير العلم» لا تتسرب هنا.
     const rows = await db
       .select()
       .from(storiesTable)
+      .where(eq(storiesTable.status, "published"))
       .orderBy(desc(storiesTable.publishedAt), asc(storiesTable.id));
 
     if (rows.length === 0) return SEED_CORPUS;
