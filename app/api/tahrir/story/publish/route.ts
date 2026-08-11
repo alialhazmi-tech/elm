@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { runPolicyGuard } from "@/lib/policy";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
-import { getStory, setStatus } from "@/lib/tahrir/service";
+import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
 
 /**
  * الاعتماد والنشر — للمعتمدين ورئيس التحرير فقط؛ بوابة الاعتماد بشرية دائمًا.
@@ -19,7 +19,12 @@ export async function POST(request: Request) {
   const story = id ? await getStory(id) : null;
   if (!story) return NextResponse.json({ error: "المادة غير موجودة." }, { status: 404 });
 
-  const report = runPolicyGuard({ id: story.id, title: story.title, body: story.body });
+  const report = runPolicyGuard({
+    id: story.id,
+    title: story.title,
+    body: story.body,
+    media: await guardMediaFor(story.image),
+  });
   if (!report.canRequestApproval) {
     return NextResponse.json(
       {

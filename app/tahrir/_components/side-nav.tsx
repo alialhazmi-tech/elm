@@ -20,8 +20,25 @@ export function SideNav({ reviewCount, total }: { reviewCount: number; total: nu
       <Link href="/tahrir/editor/new" className={active("/tahrir/editor")}>
         <span className="ic">✎</span> المحرر
       </Link>
+      <Link href="/tahrir/schedule" className={active("/tahrir/schedule")}>
+        <span className="ic">◷</span> الجدولة
+      </Link>
       <Link href="/tahrir/stories?status=review" className="">
         <span className="ic">✓</span> الاعتماد {reviewCount > 0 && <span className="n">{reviewCount}</span>}
+      </Link>
+      <div className="sec">المحتوى</div>
+      <Link href="/tahrir/series" className={active("/tahrir/series")}>
+        <span className="ic">◈</span> السلاسل
+      </Link>
+      <Link href="/tahrir/media" className={active("/tahrir/media")}>
+        <span className="ic">▤</span> الوسائط
+      </Link>
+      <div className="sec">المنصة</div>
+      <Link href="/tahrir/stats" className={active("/tahrir/stats")}>
+        <span className="ic">∿</span> الإحصاءات
+      </Link>
+      <Link href="/tahrir/audit" className={active("/tahrir/audit")}>
+        <span className="ic">≡</span> سجل التدقيق
       </Link>
     </nav>
   );

@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     section?: string;
     slug?: string;
     seriesSlug?: string | null;
+    image?: string | null;
   } | null;
 
   if (!input?.title?.trim()) {
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
       section: input.section?.trim() || "news",
       slug,
       seriesSlug: input.seriesSlug || null,
+      image: input.image?.trim() || null,
     },
     session.displayName,
   );

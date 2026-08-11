@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/tahrir/auth";
-import { listForDashboard } from "@/lib/tahrir/service";
+import { listForDashboard, promoteDueScheduled } from "@/lib/tahrir/service";
 import { LogoutButton, SideNav } from "../_components/side-nav";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -17,6 +17,7 @@ export default async function TahrirAppLayout({
   const session = await getSession();
   if (!session) redirect("/tahrir/login");
 
+  await promoteDueScheduled().catch(() => 0);
   const rows = await listForDashboard().catch(() => []);
   const reviewCount = rows.filter((row) => row.status === "review").length;
 

@@ -8,7 +8,12 @@ import { listForDashboard, STATUS_LABELS, type StoryStatus } from "@/lib/tahrir/
 export const metadata = { title: "المواد" };
 export const dynamic = "force-dynamic";
 
-const STATUS_PILLS: Record<StoryStatus, string> = { published: "pub", review: "rev", draft: "dft" };
+const STATUS_PILLS: Record<StoryStatus, string> = {
+  published: "pub",
+  review: "rev",
+  scheduled: "sch",
+  draft: "dft",
+};
 const seriesBySlug = new Map<string, (typeof SERIES)[number]>(
   SERIES.map((series) => [series.slug, series]),
 );
@@ -25,6 +30,7 @@ export default async function StoriesPage({
     all: rows.length,
     published: rows.filter((row) => row.status === "published").length,
     review: rows.filter((row) => row.status === "review").length,
+    scheduled: rows.filter((row) => row.status === "scheduled").length,
     draft: rows.filter((row) => row.status === "draft").length,
   };
 
@@ -47,6 +53,12 @@ export default async function StoriesPage({
           href="/tahrir/stories?status=review"
         >
           بانتظار الاعتماد <b>{counts.review}</b>
+        </Link>
+        <Link
+          className={`th-fch ${status === "scheduled" ? "on" : ""}`}
+          href="/tahrir/stories?status=scheduled"
+        >
+          مجدول <b>{counts.scheduled}</b>
         </Link>
         <Link
           className={`th-fch ${status === "draft" ? "on" : ""}`}

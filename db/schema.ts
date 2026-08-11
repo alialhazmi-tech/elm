@@ -26,11 +26,42 @@ export const stories = pgTable("stories", {
   publishedAt: text("published_at"),
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح»: { rumor, truth }. */
   factCheck: jsonb("fact_check"),
-  /** سير عمل «تحرير العلم»: draft → review → published. البذرة القديمة كلها published. */
+  /** سير عمل «تحرير العلم»: draft → review → scheduled → published. البذرة القديمة كلها published. */
   status: text("status").notNull().default("published"),
   body: text("body").notNull().default(""),
   authorName: text("author_name").notNull().default(""),
   updatedAt: text("updated_at"),
+  /** موعد النشر المجدول (ISO) — تُرقّى المادة آليًا بعد مرورها على الحارس لحظة الموعد. */
+  scheduledAt: text("scheduled_at"),
+});
+
+/** مكتبة وسائط «تحرير العلم» — الحقوق تُفحص قبل الاستخدام (الدستور §12). */
+export const media = pgTable("media", {
+  id: text("id").primaryKey(),
+  /** المسار العام للملف (محليًا /uploads/…؛ لاحقًا R2). */
+  url: text("url").notNull(),
+  filename: text("filename").notNull(),
+  mime: text("mime").notNull(),
+  bytes: integer("bytes").notNull(),
+  width: integer("width"),
+  height: integer("height"),
+  rightsCleared: integer("rights_cleared").notNull().default(0),
+  /** أعلام §12 مفصولة بفواصل: social-watermark, competitor-logo, gore… */
+  flags: text("flags").notNull().default(""),
+  uploadedBy: text("uploaded_by").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
+/** مقترحات سلاسل جديدة — بشروط الدستور، والاعتماد لرئيس التحرير. */
+export const seriesProposals = pgTable("series_proposals", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  valueCase: text("value_case").notNull(),
+  gapCase: text("gap_case").notNull(),
+  impactCase: text("impact_case").notNull(),
+  proposedBy: text("proposed_by").notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: text("created_at").notNull(),
 });
 
 /** مستخدمو لوحة «تحرير العلم» — الأدوار: editor | approver | chief. */

@@ -13,6 +13,7 @@ interface EditorInitial {
   section: string;
   slug: string;
   seriesSlug: string | null;
+  image: string | null;
   status: string;
 }
 
@@ -20,6 +21,7 @@ interface Props {
   role: string;
   series: Array<{ slug: string; name: string; color: string }>;
   sections: Array<[string, string]>;
+  recentMedia: Array<{ url: string; filename: string }>;
   initial: EditorInitial | null;
 }
 
@@ -31,7 +33,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 
 const wordCount = (text: string) => text.trim().split(/\s+/u).filter(Boolean).length;
 
-export function EditorClient({ role, series, sections, initial }: Props) {
+export function EditorClient({ role, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -40,6 +42,8 @@ export function EditorClient({ role, series, sections, initial }: Props) {
   const [section, setSection] = useState(initial?.section ?? "news");
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [seriesSlug, setSeriesSlug] = useState(initial?.seriesSlug ?? null);
+  const [image, setImage] = useState(initial?.image ?? "");
+  const [scheduleAt, setScheduleAt] = useState("");
   const [status, setStatus] = useState(initial?.status ?? "draft");
   const [report, setReport] = useState<GuardReport | null>(null);
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
@@ -81,7 +85,7 @@ export function EditorClient({ role, series, sections, initial }: Props) {
     const response = await fetch("/api/tahrir/story", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id || undefined, title, excerpt, body, section, slug, seriesSlug }),
+      body: JSON.stringify({ id: id || undefined, title, excerpt, body, section, slug, seriesSlug, image: image || null }),
     }).catch(() => null);
     setBusy(false);
 
@@ -117,6 +121,31 @@ export function EditorClient({ role, series, sections, initial }: Props) {
     }
     setStatus("review");
     setMessage({ kind: "ok", text: "أُرسلت للاعتماد — بانتظار المعتمد البشري." });
+  }
+
+  async function schedule() {
+    if (!scheduleAt) {
+      setMessage({ kind: "err", text: "اختر موعد الجدولة أولًا." });
+      return;
+    }
+    const savedId = await save();
+    if (!savedId) return;
+
+    setBusy(true);
+    const response = await fetch("/api/tahrir/story/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: savedId, scheduledAt: new Date(scheduleAt).toISOString() }),
+    }).catch(() => null);
+    setBusy(false);
+
+    const data = await response?.json().catch(() => null);
+    if (!response?.ok) {
+      setMessage({ kind: "err", text: data?.error ?? "تعذرت الجدولة." });
+      return;
+    }
+    setStatus("scheduled");
+    setMessage({ kind: "ok", text: "جُدولت — الحارس سيفحصها ثانية لحظة الموعد." });
   }
 
   async function publish() {
@@ -235,6 +264,20 @@ export function EditorClient({ role, series, sections, initial }: Props) {
                 اعتماد ونشر الآن
               </button>
             )}
+            {canApprove && status !== "published" && (
+              <>
+                <input
+                  className="th-input"
+                  type="datetime-local"
+                  value={scheduleAt}
+                  onChange={(event) => setScheduleAt(event.target.value)}
+                  aria-label="موعد الجدولة"
+                />
+                <button className="th-save" onClick={schedule} disabled={!gateOpen || busy}>
+                  {status === "scheduled" ? "تعديل موعد الجدولة" : "جدولة النشر"}
+                </button>
+              </>
+            )}
             {status === "published" && (
               <button className="th-save" onClick={save} disabled={busy}>
                 تحديث المادة المنشورة
@@ -272,6 +315,44 @@ export function EditorClient({ role, series, sections, initial }: Props) {
                 </option>
               ))}
             </select>
+          </div>
+          <div className="th-meta">
+            <div className="lb">صورة المادة</div>
+            <input
+              className="th-input ltr"
+              placeholder="/uploads/… أو رابط خارجي"
+              value={image}
+              onChange={(event) => setImage(event.target.value)}
+            />
+            {recentMedia.length > 0 && (
+              <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                {recentMedia.map((item) => (
+                  <button
+                    key={item.url}
+                    className="th-mini"
+                    title={item.filename}
+                    style={{
+                      padding: 0,
+                      width: 44,
+                      height: 32,
+                      overflow: "hidden",
+                      borderColor: image === item.url ? "var(--t-gold)" : undefined,
+                    }}
+                    onClick={() => setImage(item.url)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.url}
+                      alt={item.filename}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ fontSize: 9.5, color: "var(--t-ink3)", marginTop: 6 }}>
+              المصغرات من المكتبة موثقة الحقوق فقط — صورة غير موثقة تمنع النشر (§12).
+            </div>
           </div>
           <div className="th-meta">
             <div className="lb">الرابط (لاتيني)</div>
