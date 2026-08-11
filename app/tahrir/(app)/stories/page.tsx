@@ -3,11 +3,18 @@ import Link from "next/link";
 import { SERIES } from "@/lib/content/series";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { runPolicyGuard } from "@/lib/policy";
-import { listForDashboard, STATUS_LABELS, type StoryStatus } from "@/lib/tahrir/service";
+import {
+  bodiesFor,
+  listPage,
+  statusCounts,
+  STATUS_LABELS,
+  type StoryStatus,
+} from "@/lib/tahrir/service";
 
 export const metadata = { title: "المواد" };
 export const dynamic = "force-dynamic";
 
+const PER_PAGE = 30;
 const STATUS_PILLS: Record<StoryStatus, string> = {
   published: "pub",
   review: "rev",
@@ -18,67 +25,63 @@ const seriesBySlug = new Map<string, (typeof SERIES)[number]>(
   SERIES.map((series) => [series.slug, series]),
 );
 
+const VALID_STATUSES = new Set(["published", "review", "scheduled", "draft"]);
+
 export default async function StoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<{ status?: string; p?: string }>;
 }) {
-  const { status } = await searchParams;
-  const rows = await listForDashboard().catch(() => []);
+  const params = await searchParams;
+  const status = VALID_STATUSES.has(params.status ?? "")
+    ? (params.status as StoryStatus)
+    : undefined;
+  const page = Math.max(1, Number(params.p) || 1);
 
-  const counts = {
-    all: rows.length,
-    published: rows.filter((row) => row.status === "published").length,
-    review: rows.filter((row) => row.status === "review").length,
-    scheduled: rows.filter((row) => row.status === "scheduled").length,
-    draft: rows.filter((row) => row.status === "draft").length,
+  const [counts, rows] = await Promise.all([statusCounts(), listPage(status, page, PER_PAGE)]);
+  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
+  const filteredTotal = status ? (counts[status] ?? 0) : total;
+  const totalPages = Math.max(1, Math.ceil(filteredTotal / PER_PAGE));
+
+  // الحارس على المعروض فقط — لا على الأرشيف كله
+  const bodies = await bodiesFor(rows.map((row) => row.id));
+
+  const href = (targetStatus?: string, targetPage = 1) => {
+    const query = new URLSearchParams();
+    if (targetStatus) query.set("status", targetStatus);
+    if (targetPage > 1) query.set("p", String(targetPage));
+    const suffix = query.toString();
+    return `/tahrir/stories${suffix ? `?${suffix}` : ""}`;
   };
-
-  const filtered = status ? rows.filter((row) => row.status === status) : rows;
 
   return (
     <main className="th-screen">
       <div className="th-filters">
-        <Link className={`th-fch ${!status ? "on" : ""}`} href="/tahrir/stories">
-          الكل <b>{counts.all}</b>
+        <Link className={`th-fch ${!status ? "on" : ""}`} href={href()}>
+          الكل <b>{total}</b>
         </Link>
-        <Link
-          className={`th-fch ${status === "published" ? "on" : ""}`}
-          href="/tahrir/stories?status=published"
-        >
-          منشور <b>{counts.published}</b>
-        </Link>
-        <Link
-          className={`th-fch ${status === "review" ? "on" : ""}`}
-          href="/tahrir/stories?status=review"
-        >
-          بانتظار الاعتماد <b>{counts.review}</b>
-        </Link>
-        <Link
-          className={`th-fch ${status === "scheduled" ? "on" : ""}`}
-          href="/tahrir/stories?status=scheduled"
-        >
-          مجدول <b>{counts.scheduled}</b>
-        </Link>
-        <Link
-          className={`th-fch ${status === "draft" ? "on" : ""}`}
-          href="/tahrir/stories?status=draft"
-        >
-          مسودة <b>{counts.draft}</b>
-        </Link>
+        {(["published", "review", "scheduled", "draft"] as const).map((key) => (
+          <Link key={key} className={`th-fch ${status === key ? "on" : ""}`} href={href(key)}>
+            {STATUS_LABELS[key]} <b>{counts[key] ?? 0}</b>
+          </Link>
+        ))}
       </div>
 
-      {filtered.length === 0 && (
+      {rows.length === 0 && (
         <div className="th-panel">
           <div className="th-empty">لا مواد بهذه الحالة.</div>
         </div>
       )}
 
-      {filtered.map((story) => {
+      {rows.map((story) => {
         const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
-        const report = runPolicyGuard({ id: story.id, title: story.title, body: story.body });
-        const chip =
-          report.counts.blocking > 0
+        const content = bodies.get(story.id);
+        const report = content
+          ? runPolicyGuard({ id: story.id, title: content.title, body: content.body })
+          : null;
+        const chip = !report
+          ? { cls: "ok", label: "—" }
+          : report.counts.blocking > 0
             ? { cls: "block", label: `${report.counts.blocking} قاطع` }
             : report.counts.warning > 0
               ? { cls: "warn", label: `${report.counts.warning} تحذير` }
@@ -110,6 +113,24 @@ export default async function StoriesPage({
           </Link>
         );
       })}
+
+      {totalPages > 1 && (
+        <div className="th-filters" style={{ marginTop: 14, justifyContent: "center" }}>
+          {page > 1 && (
+            <Link className="th-fch" href={href(status, page - 1)}>
+              → الأحدث
+            </Link>
+          )}
+          <span className="th-fch on">
+            صفحة {page} من {totalPages}
+          </span>
+          {page < totalPages && (
+            <Link className="th-fch" href={href(status, page + 1)}>
+              الأقدم ←
+            </Link>
+          )}
+        </div>
+      )}
     </main>
   );
 }

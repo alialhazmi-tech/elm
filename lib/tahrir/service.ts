@@ -280,3 +280,109 @@ export async function listSeriesRows() {
   const { series } = await import("@/db/schema");
   return db.select().from(series);
 }
+
+/* ============ استعلامات رشيقة — للقوائم بلا متون (الأداء مع آلاف المواد) ============ */
+
+import { and, inArray } from "drizzle-orm";
+
+const LITE_COLUMNS = {
+  id: stories.id,
+  slug: stories.slug,
+  section: stories.section,
+  title: stories.title,
+  status: stories.status,
+  seriesSlug: stories.seriesSlug,
+  authorName: stories.authorName,
+  publishedAt: stories.publishedAt,
+  updatedAt: stories.updatedAt,
+  scheduledAt: stories.scheduledAt,
+  format: stories.format,
+};
+
+export type StoryLite = {
+  [K in keyof typeof LITE_COLUMNS]: (typeof stories.$inferSelect)[K];
+};
+
+const recencyOrder = desc(sql`coalesce(${stories.updatedAt}, ${stories.publishedAt})`);
+
+/** عدّادات الحالات بضربة SQL واحدة — بدل جلب كل الصفوف للعد. */
+export async function statusCounts(): Promise<Record<string, number>> {
+  const db = requireDb();
+  const rows = await db
+    .select({ status: stories.status, count: sql<number>`count(*)` })
+    .from(stories)
+    .groupBy(stories.status);
+  return Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
+}
+
+/** صفحة واحدة من المواد — أعمدة خفيفة فقط. */
+export async function listPage(
+  status: StoryStatus | undefined,
+  page: number,
+  perPage: number,
+): Promise<StoryLite[]> {
+  const db = requireDb();
+  const query = db
+    .select(LITE_COLUMNS)
+    .from(stories)
+    .orderBy(recencyOrder)
+    .limit(perPage)
+    .offset(Math.max(0, page - 1) * perPage);
+  return status ? query.where(eq(stories.status, status)) : query;
+}
+
+/** أحدث مواد حالة معينة — للنظرة والجدولة، خفيفة. */
+export async function listLatestByStatus(status: StoryStatus, limit: number): Promise<StoryLite[]> {
+  const db = requireDb();
+  return db
+    .select(LITE_COLUMNS)
+    .from(stories)
+    .where(eq(stories.status, status))
+    .orderBy(recencyOrder)
+    .limit(limit);
+}
+
+/** المتون لمعرفات محددة — لفحص الحارس على المعروض فقط. */
+export async function bodiesFor(ids: string[]): Promise<Map<string, { title: string; body: string }>> {
+  if (ids.length === 0) return new Map();
+  const db = requireDb();
+  const rows = await db
+    .select({ id: stories.id, title: stories.title, body: stories.body })
+    .from(stories)
+    .where(inArray(stories.id, ids));
+  return new Map(rows.map((row) => [row.id, { title: row.title, body: row.body }]));
+}
+
+/** عدد المنشور اليوم — تجميعي. */
+export async function publishedTodayCount(): Promise<number> {
+  const db = requireDb();
+  const today = new Date().toISOString().slice(0, 10);
+  const [row] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(stories)
+    .where(and(eq(stories.status, "published"), gteText(stories.publishedAt, today)));
+  return Number(row?.count ?? 0);
+}
+
+/** توزيع السلاسل تجميعيًا: [seriesSlug, total, أسبوعي]. */
+export async function seriesDistribution(): Promise<
+  Array<{ seriesSlug: string; total: number; week: number }>
+> {
+  const db = requireDb();
+  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const rows = await db
+    .select({
+      seriesSlug: stories.seriesSlug,
+      total: sql<number>`count(*)`,
+      week: sql<number>`count(*) filter (where ${stories.publishedAt} >= ${weekAgo})`,
+    })
+    .from(stories)
+    .groupBy(stories.seriesSlug);
+  return rows
+    .filter((row) => row.seriesSlug)
+    .map((row) => ({ seriesSlug: row.seriesSlug!, total: Number(row.total), week: Number(row.week) }));
+}
+
+function gteText(column: typeof stories.publishedAt, value: string) {
+  return sql`${column} >= ${value}`;
+}

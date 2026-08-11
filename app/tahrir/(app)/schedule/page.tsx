@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { SERIES } from "@/lib/content/series";
-import { listForDashboard, promoteDueScheduled } from "@/lib/tahrir/service";
+import { listLatestByStatus, promoteDueScheduled } from "@/lib/tahrir/service";
 
 export const metadata = { title: "جدولة النشر" };
 export const dynamic = "force-dynamic";
@@ -28,23 +28,24 @@ const dayOf = (iso: string) =>
 export default async function SchedulePage() {
   // نبضة الترقية تعمل مع كل فتح للشاشة — والمراقب الخارجي يضرب /api/tahrir/tick.
   await promoteDueScheduled().catch(() => 0);
-  const rows = await listForDashboard().catch(() => []);
+  const [latestPublished, scheduled] = await Promise.all([
+    listLatestByStatus("published", 60).catch(() => []),
+    listLatestByStatus("scheduled", 100).catch(() => []),
+  ]);
 
   const todayIso = new Date().toISOString().slice(0, 10);
-  const todayItems = rows
-    .filter(
-      (row) =>
-        (row.status === "published" && (row.publishedAt ?? "").startsWith(todayIso)) ||
-        (row.status === "scheduled" && (row.scheduledAt ?? "").startsWith(todayIso)),
-    )
+  const todayItems = [
+    ...latestPublished.filter((row) => (row.publishedAt ?? "").startsWith(todayIso)),
+    ...scheduled.filter((row) => (row.scheduledAt ?? "").startsWith(todayIso)),
+  ]
     .map((row) => ({
       row,
       at: row.status === "scheduled" ? row.scheduledAt! : row.publishedAt!,
     }))
     .sort((a, b) => a.at.localeCompare(b.at));
 
-  const upcoming = rows
-    .filter((row) => row.status === "scheduled" && !(row.scheduledAt ?? "").startsWith(todayIso))
+  const upcoming = scheduled
+    .filter((row) => !(row.scheduledAt ?? "").startsWith(todayIso))
     .sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""));
 
   return (

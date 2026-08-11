@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/lib/tahrir/auth";
-import { listForDashboard, promoteDueScheduled } from "@/lib/tahrir/service";
+import { promoteDueScheduled, statusCounts } from "@/lib/tahrir/service";
 import { LogoutButton, SideNav } from "../_components/side-nav";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -18,8 +18,9 @@ export default async function TahrirAppLayout({
   if (!session) redirect("/tahrir/login");
 
   await promoteDueScheduled().catch(() => 0);
-  const rows = await listForDashboard().catch(() => []);
-  const reviewCount = rows.filter((row) => row.status === "review").length;
+  const counts = await statusCounts().catch(() => ({}) as Record<string, number>);
+  const reviewCount = counts.review ?? 0;
+  const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
 
   const today = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
     weekday: "long",
@@ -36,7 +37,7 @@ export default async function TahrirAppLayout({
           <div className="t">المعرفة بسلاسة</div>
           <span className="badge">تحرير العلم · لوحة التحكم</span>
         </div>
-        <SideNav reviewCount={reviewCount} total={rows.length} />
+        <SideNav reviewCount={reviewCount} total={total} />
         <div className="th-user">
           <div className="av">{session.displayName.slice(0, 1)}</div>
           <div>

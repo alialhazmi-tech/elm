@@ -1,6 +1,6 @@
 import { SERIES } from "@/lib/content/series";
 import { runPolicyGuard } from "@/lib/policy";
-import { listAudit, listForDashboard } from "@/lib/tahrir/service";
+import { bodiesFor, listAudit, listLatestByStatus, listPage, seriesDistribution, statusCounts } from "@/lib/tahrir/service";
 
 export const metadata = { title: "الإحصاءات" };
 export const dynamic = "force-dynamic";
@@ -12,26 +12,29 @@ function daysAgoIso(days: number): string {
 }
 
 export default async function StatsPage() {
-  const [rows, audit] = await Promise.all([
-    listForDashboard().catch(() => []),
+  const [counts, audit, recentPublished, distribution] = await Promise.all([
+    statusCounts().catch(() => ({}) as Record<string, number>),
     listAudit(500).catch(() => []),
+    listLatestByStatus("published", 400).catch(() => []),
+    seriesDistribution().catch(() => []),
   ]);
 
-  const published = rows.filter((row) => row.status === "published");
-
-  // إيقاع النشر آخر 14 يومًا حسب اليوم — من التواريخ الفعلية.
+  // إيقاع النشر آخر 14 يومًا حسب اليوم — من أحدث المنشور (خفيف بلا متون).
   const twoWeeksAgo = daysAgoIso(14);
-  const recent = published.filter((row) => (row.publishedAt ?? "") >= twoWeeksAgo);
+  const recent = recentPublished.filter((row) => (row.publishedAt ?? "") >= twoWeeksAgo);
   const byDay = DAY_NAMES.map((name, index) => ({
     name,
     count: recent.filter((row) => new Date(row.publishedAt!).getDay() === index).length,
   }));
   const maxDay = Math.max(1, ...byDay.map((day) => day.count));
 
-  // الحارس على المخزون الحالي كله — فحص حي بالمحرك نفسه.
+  // الحارس على أحدث 100 مادة — عينة حية بدل مسح الأرشيف كله في كل زيارة.
+  const GUARD_SAMPLE = 100;
+  const samplePage = await listPage(undefined, 1, GUARD_SAMPLE).catch(() => []);
+  const sampleBodies = await bodiesFor(samplePage.map((row) => row.id));
   const guardTotals = { blocking: 0, warning: 0, suggestion: 0, clean: 0 };
-  for (const row of rows) {
-    const report = runPolicyGuard({ id: row.id, title: row.title, body: row.body });
+  for (const [, content] of sampleBodies) {
+    const report = runPolicyGuard({ title: content.title, body: content.body });
     guardTotals.blocking += report.counts.blocking;
     guardTotals.warning += report.counts.warning;
     guardTotals.suggestion += report.counts.suggestion;
@@ -39,11 +42,14 @@ export default async function StatsPage() {
   }
   const maxGuard = Math.max(1, guardTotals.blocking, guardTotals.warning, guardTotals.suggestion);
 
+  const totalsBySlug = new Map(distribution.map((row) => [row.seriesSlug, row.total]));
   const seriesCounts = SERIES.map((series) => ({
     ...series,
-    count: published.filter((row) => row.seriesSlug === series.slug).length,
+    count: totalsBySlug.get(series.slug) ?? 0,
   })).sort((a, b) => b.count - a.count);
   const maxSeries = Math.max(1, ...seriesCounts.map((series) => series.count));
+  const published = { length: counts.published ?? 0 };
+  const rows = { length: Object.values(counts).reduce((sum, value) => sum + value, 0) };
 
   const guardBlocks = audit.filter(
     (row) => row.action === "schedule:blocked" || row.action.startsWith("series:proposal"),
@@ -71,7 +77,7 @@ export default async function StatsPage() {
         <div className="th-tile">
           <div className="lb">مواد سليمة من الحارس</div>
           <div className="v">{guardTotals.clean}</div>
-          <div className="tr up">بلا أي ملاحظة</div>
+          <div className="tr up">من أحدث 100</div>
         </div>
         <div className="th-tile">
           <div className="lb">قراء الآن</div>
@@ -116,7 +122,7 @@ export default async function StatsPage() {
         <div>
           <div className="th-panel">
             <div className="hd">
-              <h2>حارس السياسة — المخزون الحالي</h2>
+              <h2>حارس السياسة — أحدث 100 مادة</h2>
             </div>
             <div className="th-serbars">
               <div className="th-serb" style={{ "--sc": "var(--t-block)" } as React.CSSProperties}>

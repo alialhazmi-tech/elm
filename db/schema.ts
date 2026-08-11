@@ -3,7 +3,7 @@
  * يُدفع إلى Neon عبر `npm run db:push`، ويُزرع من البذرة عبر `npm run db:seed`.
  */
 
-import { integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
 
 export const series = pgTable("series", {
   slug: text("slug").primaryKey(),
@@ -41,7 +41,11 @@ export const stories = pgTable("stories", {
   pinned: integer("pinned").notNull().default(0),
   /** عاجل حتى (ISO) — يظهر شريط العاجل ما دام المستقبل، ويختفي وحده. */
   breakingUntil: text("breaking_until"),
-});
+}, (table) => [
+  index("stories_status_idx").on(table.status),
+  index("stories_published_at_idx").on(table.publishedAt),
+  index("stories_section_idx").on(table.section),
+]);
 
 /** مكتبة وسائط «تحرير العلم» — الحقوق تُفحص قبل الاستخدام (الدستور §12). */
 export const media = pgTable("media", {

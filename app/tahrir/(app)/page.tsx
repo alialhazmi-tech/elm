@@ -3,13 +3,19 @@ import Link from "next/link";
 import { SERIES } from "@/lib/content/series";
 import { runPolicyGuard } from "@/lib/policy";
 import { getSession } from "@/lib/tahrir/auth";
-import { listForDashboard, type StoryRow } from "@/lib/tahrir/service";
+import {
+  bodiesFor,
+  listLatestByStatus,
+  publishedTodayCount,
+  seriesDistribution,
+  statusCounts,
+} from "@/lib/tahrir/service";
 
 export const metadata = { title: "نظرة اليوم" };
 export const dynamic = "force-dynamic";
 
-function guardChip(story: StoryRow) {
-  const report = runPolicyGuard({ id: story.id, title: story.title, body: story.body });
+function guardChip(title: string, body: string) {
+  const report = runPolicyGuard({ title, body });
   if (report.counts.blocking > 0)
     return { cls: "block", label: `${report.counts.blocking} قاطع` };
   if (report.counts.warning > 0) return { cls: "warn", label: `${report.counts.warning} تحذير` };
@@ -18,56 +24,53 @@ function guardChip(story: StoryRow) {
 
 export default async function OverviewPage() {
   const session = await getSession();
-  const rows = await listForDashboard().catch(() => []);
+  const [counts, todayCount, review, latestPublished, distribution] = await Promise.all([
+    statusCounts().catch(() => ({}) as Record<string, number>),
+    publishedTodayCount().catch(() => 0),
+    listLatestByStatus("review", 5).catch(() => []),
+    listLatestByStatus("published", 3).catch(() => []),
+    seriesDistribution().catch(() => []),
+  ]);
+  const reviewBodies = await bodiesFor(review.map((row) => row.id));
 
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const publishedToday = rows.filter(
-    (row) => row.status === "published" && (row.publishedAt ?? "").startsWith(todayIso),
-  );
-  const review = rows.filter((row) => row.status === "review");
-  const drafts = rows.filter((row) => row.status === "draft");
-  const latestPublished = rows.filter((row) => row.status === "published").slice(0, 3);
-
+  const totalsBySlug = new Map(distribution.map((row) => [row.seriesSlug, row.total]));
   const seriesCounts = SERIES.map((series) => ({
     ...series,
-    count: rows.filter((row) => row.seriesSlug === series.slug).length,
+    count: totalsBySlug.get(series.slug) ?? 0,
   }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
   const maxCount = Math.max(1, ...seriesCounts.map((series) => series.count));
+  const totalStories = Object.values(counts).reduce((sum, value) => sum + value, 0);
 
   return (
     <main className="th-screen">
       <div className="th-hello">
         <h1>صباح المعرفة يا {session?.displayName.split(" ")[0]}</h1>
         <span className="d">
-          {publishedToday.length > 0
-            ? `${publishedToday.length} مواد نُشرت اليوم`
-            : "لم يُنشر شيء بعد اليوم"}
+          {todayCount > 0 ? `${todayCount} مواد نُشرت اليوم` : "لم يُنشر شيء بعد اليوم"}
         </span>
       </div>
 
       <div className="th-tiles">
         <div className="th-tile">
           <div className="lb">منشور اليوم</div>
-          <div className="v">{publishedToday.length}</div>
-          <div className="tr">من أصل {rows.filter((r) => r.status === "published").length} منشورة</div>
+          <div className="v">{todayCount}</div>
+          <div className="tr">من أصل {counts.published ?? 0} منشورة</div>
         </div>
         <div className="th-tile">
           <div className="lb">بانتظار الاعتماد</div>
-          <div className="v">{review.length}</div>
-          <div className="tr">{review.length > 0 ? "تحتاج قرار معتمد" : "القائمة فارغة"}</div>
+          <div className="v">{counts.review ?? 0}</div>
+          <div className="tr">{(counts.review ?? 0) > 0 ? "تحتاج قرار معتمد" : "القائمة فارغة"}</div>
         </div>
         <div className="th-tile">
           <div className="lb">مسودات نشطة</div>
-          <div className="v">{drafts.length}</div>
-          <div className="tr up">
-            {drafts.filter((row) => guardChip(row).cls === "ok").length} سليمة من الحارس
-          </div>
+          <div className="v">{counts.draft ?? 0}</div>
+          <div className="tr">تحرير جارٍ</div>
         </div>
         <div className="th-tile">
           <div className="lb">إجمالي المواد</div>
-          <div className="v">{rows.length}</div>
+          <div className="v">{totalStories}</div>
           <div className="tr">عبر {SERIES.length} سلاسل</div>
         </div>
       </div>
@@ -81,8 +84,9 @@ export default async function OverviewPage() {
             </Link>
           </div>
           {review.length === 0 && <div className="th-empty">لا مواد بانتظار الاعتماد الآن.</div>}
-          {review.slice(0, 5).map((story) => {
-            const chip = guardChip(story);
+          {review.map((story) => {
+            const content = reviewBodies.get(story.id);
+            const chip = content ? guardChip(content.title, content.body) : { cls: "ok", label: "—" };
             return (
               <Link key={story.id} className="th-qrow" href={`/tahrir/editor/${story.id}`}>
                 <span className={`th-gchip ${chip.cls}`}>{chip.label}</span>

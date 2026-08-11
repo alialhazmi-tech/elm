@@ -1,6 +1,6 @@
 import { ARCHIVED_SERIES, SERIES } from "@/lib/content/series";
 import { getSession } from "@/lib/tahrir/auth";
-import { listForDashboard, listProposals, listSeriesRows } from "@/lib/tahrir/service";
+import { listProposals, listSeriesRows, seriesDistribution } from "@/lib/tahrir/service";
 import { ArchiveToggle, ProposalDecision, ProposalForm } from "../../_components/series-client";
 
 export const metadata = { title: "السلاسل" };
@@ -12,29 +12,22 @@ const PROPOSAL_LABELS: Record<string, { label: string; cls: string }> = {
   rejected: { label: "مرفوض", cls: "block" },
 };
 
-function daysAgoIso(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toISOString();
-}
-
 export default async function SeriesPage() {
   const session = await getSession();
-  const [rows, proposals, seriesRows] = await Promise.all([
-    listForDashboard().catch(() => []),
+  const [distribution, proposals, seriesRows] = await Promise.all([
+    seriesDistribution().catch(() => []),
     listProposals().catch(() => []),
     listSeriesRows().catch(() => []),
   ]);
+  const bySlug = new Map(distribution.map((row) => [row.seriesSlug, row]));
   const hiddenBySlug = new Map(seriesRows.map((row) => [row.slug, row.hidden === 1]));
   const canToggle = session?.role === "approver" || session?.role === "chief";
 
-  const weekAgo = daysAgoIso(7);
-  const withCounts = SERIES.map((series) => {
-    const all = rows.filter((row) => row.seriesSlug === series.slug);
-    return {
-      ...series,
-      count: all.length,
-      week: all.filter((row) => (row.publishedAt ?? "") >= weekAgo).length,
-    };
-  });
+  const withCounts = SERIES.map((series) => ({
+    ...series,
+    count: bySlug.get(series.slug)?.total ?? 0,
+    week: bySlug.get(series.slug)?.week ?? 0,
+  }));
   const maxWeek = Math.max(1, ...withCounts.map((series) => series.week));
 
   return (
@@ -70,7 +63,7 @@ export default async function SeriesPage() {
             </div>
             {ARCHIVED_SERIES.map((series) => {
               const hidden = hiddenBySlug.get(series.slug) ?? true;
-              const count = rows.filter((row) => row.seriesSlug === series.slug).length;
+              const count = bySlug.get(series.slug)?.total ?? 0;
               return (
                 <div className="th-qrow" key={series.slug}>
                   <span
