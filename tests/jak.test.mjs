@@ -3,7 +3,13 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { extractNumbers, unverifiedNumbers, normalizeSlide, validateJakPlan } from "../lib/ai/jak.ts";
-import { isLandscapeReport, projectSlides, reportLayoutIssues } from "../lib/tahrir/jak.ts";
+import {
+  imageGenerationPrompt,
+  imageGenerationSize,
+  isLandscapeReport,
+  projectSlides,
+  reportLayoutIssues,
+} from "../lib/tahrir/jak.ts";
 import { runPolicyGuard } from "../lib/policy/index.ts";
 
 const SOURCE =
@@ -142,4 +148,16 @@ test("حفظ شرائح جاك يستخدم batch المتوافق مع neon-htt
   const replaceSlidesBody = source.slice(source.indexOf("export async function replaceSlides"));
   assert.match(replaceSlidesBody, /await db\.batch\(/);
   assert.doesNotMatch(replaceSlidesBody, /await db\.transaction\(/);
+});
+
+test("صور التقرير تطلب 16:9 وتحترم موضع العنصر ومساحة النص", () => {
+  const slide = normalizeSlide({
+    type: "hero",
+    imagePrompt: "Saudi digital economy skyline",
+    data: { canvas: "landscape", template: "cover", focalPoint: "left", textSafeArea: "right" },
+  });
+  assert.equal(imageGenerationSize(slide), "cover");
+  assert.match(imageGenerationPrompt(slide), /16:9 landscape/);
+  assert.match(imageGenerationPrompt(slide), /subject on the left/);
+  assert.match(imageGenerationPrompt(slide), /negative space on the right/);
 });

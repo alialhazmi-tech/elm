@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     prompt?: string;
     style?: string;
     size?: string;
+    count?: number;
   } | null;
 
   if (!input?.prompt?.trim()) {
@@ -40,6 +41,8 @@ export async function POST(request: Request) {
       style,
       size: input.size ?? "cover",
       model: settings.models.image,
+      // مكتبة التوليد العامة تبقى بخيارين افتراضيًا؛ جاك يطلب صورة واحدة صراحةً.
+      count: input.count === 1 ? 1 : 2,
     });
 
     const dir = path.join(process.cwd(), "public", "uploads");

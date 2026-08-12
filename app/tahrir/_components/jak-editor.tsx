@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation";
 
 import type { JakCanvas, JakSlide, ReportTemplate, SlideType } from "@/lib/tahrir/jak";
 import {
+  imageGenerationPrompt,
+  imageGenerationSize,
   isLandscapeReport,
   reportLayoutIssues,
   REPORT_TEMPLATE_NAMES,
@@ -97,6 +99,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   const [preview, setPreview] = useState(false);
   const [busy, setBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState<string | null>(null);
+  const [imageProgress, setImageProgress] = useState<{ done: number; total: number } | null>(null);
   const [scheduleAt, setScheduleAt] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -132,7 +135,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   /* ============ عمليات الشرائح ============ */
 
   const patch = (slideId: string, partial: Partial<EditorSlide>) =>
-    setSlides(slides.map((slide) => (slide.id === slideId ? { ...slide, ...partial } : slide)));
+    setSlides((current) => current.map((slide) => (slide.id === slideId ? { ...slide, ...partial } : slide)));
 
   const move = (index: number, delta: number) => {
     const target = index + delta;
@@ -183,30 +186,76 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
     ok("طُبّق المقترح — القرار النهائي عند الحفظ.");
   }
 
+  async function requestGeneratedImage(slide: EditorSlide): Promise<string> {
+    const response = await fetch("/api/tahrir/ai/image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt: imageGenerationPrompt(slide),
+        style: slide.imageStyle ?? "real",
+        size: imageGenerationSize(slide),
+        count: 1,
+      }),
+    }).catch(() => null);
+    const data = await response?.json().catch(() => null);
+    if (!response?.ok || !data?.images?.[0]?.url) {
+      throw new Error(data?.error ?? "تعذر توليد الخلفية.");
+    }
+    return data.images[0].url as string;
+  }
+
   async function generateImage(index: number) {
     const slide = slides[index];
-    const basePrompt = slide.imagePrompt.trim();
-    const prompt = slide.data?.canvas === "landscape"
-      ? `${basePrompt}. Cinematic editorial background, 16:9 landscape, subject on the ${slide.data.focalPoint ?? "left"}, clear dark negative space on the ${slide.data.textSafeArea ?? "right"} for Arabic typography, no text, no letters, no logos.`
-      : basePrompt;
-    if (!basePrompt) {
+    if (!slide.imagePrompt.trim()) {
       err("اكتب وصف الخلفية أولًا (imagePrompt).");
       return;
     }
     setAiBusy(`${slide.id}:image`);
-    const response = await fetch("/api/tahrir/ai/image", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, style: slide.imageStyle ?? "real", size: "portrait" }),
-    }).catch(() => null);
-    const data = await response?.json().catch(() => null);
-    setAiBusy(null);
-    if (!response?.ok || !data?.images?.[0]?.url) {
-      err(data?.error ?? "تعذر توليد الخلفية.");
+    setMessage(null);
+    try {
+      const image = await requestGeneratedImage(slide);
+      patch(slide.id, { image });
+      ok("وُلّدت الخلفية ودخلت المكتبة موثقة الحقوق.");
+    } catch (error) {
+      err(error instanceof Error ? error.message : "تعذر توليد الخلفية.");
+    } finally {
+      setAiBusy(null);
+    }
+  }
+
+  async function generateReportImages() {
+    const pending = slides.filter((slide) =>
+      slide.data?.canvas === "landscape" && !slide.hidden && !slide.image && slide.imagePrompt.trim(),
+    );
+    if (pending.length === 0) {
+      ok("كل صفحات التقرير التي تحمل وصفًا بصريًا لديها صور بالفعل.");
       return;
     }
-    patch(slide.id, { image: data.images[0].url });
-    ok("وُلّدت الخلفية ودخلت المكتبة موثقة الحقوق.");
+
+    setAiBusy("report-images");
+    setImageProgress({ done: 0, total: pending.length });
+    setMessage(null);
+    let generated = 0;
+    const failures: string[] = [];
+
+    for (const slide of pending) {
+      try {
+        const image = await requestGeneratedImage(slide);
+        patch(slide.id, { image });
+        generated += 1;
+      } catch (error) {
+        failures.push(error instanceof Error ? error.message : "تعذر توليد صورة.");
+      }
+      setImageProgress({ done: generated + failures.length, total: pending.length });
+    }
+
+    setAiBusy(null);
+    setImageProgress(null);
+    if (failures.length > 0) {
+      err(`وُلّدت ${generated} من ${pending.length} صورة. ${failures[0]}`);
+    } else {
+      ok(`وُلّدت ${generated} صورة 16:9 وأضيفت إلى صفحات التقرير.`);
+    }
   }
 
   /* ============ الحفظ والنشر ============ */
@@ -412,6 +461,13 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
             {status === "published" ? "منشور" : status === "review" ? "بانتظار الاعتماد" : status === "scheduled" ? "مجدول" : "مسودة"}
           </span>
           {isLandscapeReport(slides) && <span className="th-report-badge">▭ تقرير 16:9</span>}
+          {isLandscapeReport(slides) && (
+            <button className="th-mini" onClick={generateReportImages} disabled={aiBusy !== null}>
+              {aiBusy === "report-images" && imageProgress
+                ? `✦ توليد الصور ${imageProgress.done}/${imageProgress.total}`
+                : `✦ ولّد صور التقرير (${slides.filter((slide) => slide.data?.canvas === "landscape" && !slide.hidden && !slide.image && slide.imagePrompt.trim()).length})`}
+            </button>
+          )}
           <button className="th-mini" onClick={() => setPreview(!preview)}>
             {preview ? "أغلق المعاينة" : isLandscapeReport(slides) ? "▭ معاينة التقرير" : "📱 معاينة جاك العلم"}
           </button>
@@ -624,7 +680,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
                     onChange={(event) => patch(slide.id, { imagePrompt: event.target.value })}
                   />
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-                    <button className="th-mini" onClick={() => generateImage(index)} disabled={aiBusy === `${slide.id}:image`}>
+                    <button className="th-mini" onClick={() => generateImage(index)} disabled={aiBusy !== null}>
                       {aiBusy === `${slide.id}:image` ? "✦ يولّد…" : slide.image ? "✦ أعد التوليد" : "✦ ولّد الخلفية"}
                     </button>
                     {IMAGE_STYLES.map(([styleKey, styleName]) => (

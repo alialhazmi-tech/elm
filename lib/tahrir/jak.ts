@@ -87,6 +87,16 @@ export interface JakSlide {
 export const isLandscapeReport = (slides: JakSlide[]) =>
   slides.some((slide) => slide.data?.canvas === "landscape");
 
+/** إعدادات توليد الصورة مشتقة من سطح العرض حتى لا يطلب التقرير صورة عمودية. */
+export const imageGenerationSize = (slide: JakSlide): "cover" | "portrait" =>
+  slide.data?.canvas === "landscape" ? "cover" : "portrait";
+
+export function imageGenerationPrompt(slide: JakSlide): string {
+  const basePrompt = slide.imagePrompt.trim();
+  if (!basePrompt || slide.data?.canvas !== "landscape") return basePrompt;
+  return `${basePrompt}. Cinematic editorial background, 16:9 landscape, subject on the ${slide.data.focalPoint ?? "left"}, clear dark negative space on the ${slide.data.textSafeArea ?? "right"} for Arabic typography, no text, no letters, no logos.`;
+}
+
 /** ملاحظات حتمية تمنع ازدحام قوالب 16:9 قبل التصدير. */
 export function reportLayoutIssues(slide: JakSlide): string[] {
   if (slide.data?.canvas !== "landscape") return [];
