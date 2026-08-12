@@ -1333,7 +1333,7 @@ img { max-width: 100%; display: block; }
 .jak-report-foot b { color: var(--gold); font-variant-numeric: tabular-nums; }
 
 .jak-report-eyebrow {
-  display: inline-block; font: 800 1.15cqw/1 var(--font-display); letter-spacing: .16em; color: var(--gold);
+  display: inline-block; font: 800 1.15cqw/1 var(--font-display); color: var(--gold);
   border-inline-start: .28cqw solid var(--gold); padding-inline-start: .9cqw; margin-bottom: 1.6cqw;
 }
 
@@ -1342,8 +1342,8 @@ img { max-width: 100%; display: block; }
 .safe-right .jak-report-copy { inset-inline-end: 4.6cqw; }
 .safe-left .jak-report-copy { inset-inline-start: 4.6cqw; }
 .safe-center .jak-report-copy, .kind-cover .jak-report-copy { inset-inline-start: 4.6cqw; width: 62cqw; }
-.jak-report-copy h1 { font: 900 4.4cqw/1.32 var(--font-display); margin: 0 0 1.4cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
-.jak-report-copy h2 { font: 800 3.3cqw/1.38 var(--font-display); margin: 0 0 1.2cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
+.jak-report-copy h1 { color: #fff; font: 900 4.4cqw/1.32 var(--font-display); margin: 0 0 1.4cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
+.jak-report-copy h2 { color: #fff; font: 800 3.3cqw/1.38 var(--font-display); margin: 0 0 1.2cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
 .jak-report-copy > p { font-size: 1.5cqw; line-height: 1.95; margin: 0; color: rgb(255 255 255 / .9); max-width: 44cqw; }
 .jak-report-inline-stat { display: flex; align-items: baseline; gap: 1.2cqw; margin-top: 1.8cqw; }
 .jak-report-inline-stat strong { font: 900 5cqw/1 var(--font-display); background: linear-gradient(180deg, #ffd35e, #b97d0a); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -1352,7 +1352,7 @@ img { max-width: 100%; display: block; }
 .jak-report-list li { position: relative; padding-inline-start: 2.2cqw; font-size: 1.45cqw; line-height: 1.7; color: rgb(255 255 255 / .92); }
 .jak-report-list li::before { content: ""; position: absolute; inset-inline-start: 0; top: .62cqw; width: .75cqw; height: .75cqw; border-radius: 50%; background: var(--gold); }
 .kind-quote .jak-report-copy { width: 66cqw; bottom: 10cqw; }
-.kind-quote blockquote { font: 800 3.1cqw/1.6 var(--font-display); margin: 0; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .55); }
+.kind-quote blockquote { color: #fff; font: 800 3.1cqw/1.6 var(--font-display); margin: 0; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .55); }
 .kind-quote blockquote::before { content: "”"; color: var(--gold); font-family: Georgia, serif; font-size: 5cqw; line-height: 0; vertical-align: -.4cqw; margin-inline-end: .5cqw; }
 .kind-quote cite { display: block; margin-top: 1.6cqw; font-size: 1.25cqw; font-style: normal; color: rgb(255 255 255 / .65); }
 
@@ -1364,16 +1364,17 @@ img { max-width: 100%; display: block; }
   background-size: 3.2cqw 3.2cqw;
 }
 .jak-report-dashboard-head { position: absolute; z-index: 3; top: 11cqw; inset-inline: 4.6cqw; }
-.jak-report-dashboard-head h2 { font: 900 3.1cqw/1.35 var(--font-display); margin: 0; text-wrap: balance; }
+.jak-report-dashboard-head h2 { color: #fff; font: 900 3.1cqw/1.35 var(--font-display); margin: 0; text-wrap: balance; }
 .jak-report-dashboard-head p { font-size: 1.4cqw; color: rgb(255 255 255 / .7); margin: .8cqw 0 0; max-width: 60cqw; }
 .jak-report-blocks { position: absolute; z-index: 3; bottom: 8.5cqw; inset-inline: 4.6cqw; display: grid; gap: 1.6cqw; }
 .jak-report-blocks.count-1, .jak-report-blocks.count-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .jak-report-blocks.count-3, .jak-report-blocks.count-5, .jak-report-blocks.count-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .jak-report-blocks.count-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .jak-report-block { background: rgb(255 255 255 / .045); border: 1px solid rgb(255 255 255 / .1); border-top: .25cqw solid var(--gold); border-radius: 1cqw; padding: 1.8cqw 1.6cqw; }
+.jak-report-countup { font-variant-numeric: tabular-nums; }
 .jak-report-block strong { display: block; font: 900 3.6cqw/1 var(--font-display); background: linear-gradient(180deg, #ffd35e, #b97d0a); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.jak-report-block small { display: block; font: 700 1.05cqw/1 var(--font-display); color: rgb(255 255 255 / .5); margin-top: .7cqw; letter-spacing: .08em; }
-.jak-report-block h3 { font: 700 1.45cqw/1.35 var(--font-display); margin: .9cqw 0 0; }
+.jak-report-block small { display: block; font: 700 1.05cqw/1 var(--font-display); color: rgb(255 255 255 / .5); margin-top: .7cqw; }
+.jak-report-block h3 { color: #fff; font: 700 1.45cqw/1.35 var(--font-display); margin: .9cqw 0 0; }
 .jak-report-block p { font-size: 1.2cqw; line-height: 1.7; color: rgb(255 255 255 / .75); margin: .5cqw 0 0; }
 
 @media (max-width: 720px) {

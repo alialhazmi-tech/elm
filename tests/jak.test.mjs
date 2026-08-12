@@ -210,3 +210,36 @@ test("قارئ interactions يستخرج الصورة المختصرة دون ت
   });
   assert.deepEqual(images, [{ base64: "abc", mime: "image/jpeg" }]);
 });
+
+test("تباين التقرير مضمون: العناوين بيضاء صراحةً ولا تباعد بين الحروف العربية", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const block = styles.slice(styles.indexOf("جاك العلم — التقرير البصري الأفقي"));
+
+  // القاعدة العامة h1..h4 تفرض لون الحبر الداكن، فاللون الأبيض يجب أن يُكتب صراحةً
+  for (const selector of [
+    ".jak-report-copy h1",
+    ".jak-report-copy h2",
+    ".jak-report-dashboard-head h2",
+    ".jak-report-block h3",
+    ".kind-quote blockquote",
+  ]) {
+    const rule = block.slice(block.indexOf(selector), block.indexOf(selector) + 200);
+    assert.match(rule, /color: #fff/, `${selector} بلا لون أبيض صريح`);
+  }
+
+  // العربية تنقطع حروفها مع letter-spacing
+  assert.doesNotMatch(block, /letter-spacing/);
+});
+
+test("أرقام التقرير تصعد عند ظهور الصفحة والقيمة النهائية في HTML الخادم", async () => {
+  const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
+  const motion = await readFile(new URL("../app/_components/jak-report-motion.tsx", import.meta.url), "utf8");
+
+  assert.match(component, /data-countup=\{number\}/);
+  assert.match(component, /<StatValue value=\{block\.value\} \/>/);
+  assert.match(component, /<StatValue value=\{slide\.stat\} \/>/);
+  assert.match(motion, /IntersectionObserver/);
+  assert.match(motion, /prefers-reduced-motion/);
+  // السنة تصعد من نافذة قصيرة قبلها لا من الصفر
+  assert.match(motion, /target >= 1900 && target <= 2100/);
+});

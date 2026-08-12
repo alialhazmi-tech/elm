@@ -13,9 +13,28 @@ import { useState } from "react";
 
 import type { JakSlide, SlideData } from "@/lib/tahrir/jak";
 
+import { JakReportMotion } from "./jak-report-motion";
+
 interface ReportMeta {
   title: string;
   sectionName: string;
+}
+
+/**
+ * يفصل الرقم عن لاحقته («3.9 مليار ريال» → 3.9 + مليار ريال) ليصعد الرقم وحده،
+ * وتبقى القيمة كاملة في HTML الخادم كما هي.
+ */
+function StatValue({ value }: { value: string }) {
+  const match = /^(\D*?)(\d+(?:\.\d+)?)([\s\S]*)$/.exec(value.trim());
+  if (!match) return <>{value}</>;
+  const [, prefix, number, suffix] = match;
+  return (
+    <>
+      {prefix}
+      <span className="jak-report-countup" data-countup={number}>{number}</span>
+      {suffix}
+    </>
+  );
 }
 
 /** شكل الصفحة: غلاف · اقتباس · صورة ساردة · لوح بيانات. */
@@ -111,7 +130,7 @@ function ReportPage({ slide, index, total, meta }: {
           {slide.body && <p>{slide.body}</p>}
           {slide.stat && (
             <div className="jak-report-inline-stat">
-              <strong dir="ltr">{slide.stat}</strong>
+              <strong dir="ltr"><StatValue value={slide.stat} /></strong>
               <span>{slide.statLabel}</span>
             </div>
           )}
@@ -135,7 +154,7 @@ function ReportPage({ slide, index, total, meta }: {
           <div className={`jak-report-blocks count-${Math.min(blocks.length, 6)}`}>
             {blocks.slice(0, 6).map((block, blockIndex) => (
               <article className="jak-report-block" key={blockIndex}>
-                {block.value && <strong dir="ltr">{block.value}</strong>}
+                {block.value && <strong dir="ltr"><StatValue value={block.value} /></strong>}
                 {block.label && <small>{block.label}</small>}
                 {block.title && <h3>{block.title}</h3>}
                 {block.body && <p>{block.body}</p>}
@@ -166,6 +185,7 @@ export function JakReport({ meta, slides }: { meta: ReportMeta; slides: JakSlide
           meta={meta}
         />
       ))}
+      <JakReportMotion />
     </div>
   );
 }
