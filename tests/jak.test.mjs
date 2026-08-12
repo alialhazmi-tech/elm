@@ -153,30 +153,40 @@ test("حفظ شرائح جاك يستخدم batch المتوافق مع neon-htt
   assert.doesNotMatch(replaceSlidesBody, /await db\.transaction\(/);
 });
 
-test("صور التقرير تُولد كعناصر تحريرية مستقلة بجوار النص", () => {
+test("صور التقرير تُولد كمشاهد غامرة تملأ الإطار بمساحة هادئة للنص", () => {
   const slide = normalizeSlide({
     type: "hero",
     imagePrompt: "Saudi digital economy skyline",
     data: { canvas: "landscape", template: "cover", focalPoint: "left", textSafeArea: "right" },
   });
   assert.equal(imageGenerationSize(slide), "cover");
-  assert.match(imageGenerationPrompt(slide), /16:9 landscape/);
-  assert.match(imageGenerationPrompt(slide), /dedicated image panel alongside Arabic text/);
+  assert.match(imageGenerationPrompt(slide), /16:9 cinematic full-bleed/);
+  assert.match(imageGenerationPrompt(slide), /full-bleed scene filling the entire frame/);
   assert.match(imageGenerationPrompt(slide), /subject on the left/);
-  assert.match(imageGenerationPrompt(slide), /not a wallpaper or background texture/);
+  // الصورة تصير الصفحة، فتُطلب مساحة هادئة في جهة النص لا لوح جانبي
+  assert.match(imageGenerationPrompt(slide), /negative space on the right third/);
+  assert.match(imageGenerationPrompt(slide), /no embedded text/);
 });
 
-test("قالب التقرير يضع الصورة في لوحة مستقلة لا في خلفية الصفحة", async () => {
+test("قالب التقرير يجعل الصورة خلفية الصفحة كاملة والنص فوقها بسكريم اتجاهي", async () => {
   const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.doesNotMatch(component, /jak-report-shade/);
-  assert.doesNotMatch(component, /jak-report-art-fallback/);
-  assert.match(styles, /\.jak-report-image-text \.jak-report-art/);
-  assert.match(styles, /\.jak-report-stats \.jak-report-art/);
-  assert.doesNotMatch(styles, /\.jak-report-art, \.jak-report-shade/);
-  assert.match(component, /onError=\{\(\) => onReadyChange\(false\)\}/);
-  assert.match(component, /artReady \? "has-art" : "no-art"/);
-  assert.match(styles, /\.jak-report-page:not\(\.has-art\) \.jak-report-art \{ visibility: hidden; \}/);
+
+  // الصورة تملأ الصفحة: لا لوح جانبي بعرض محدد
+  assert.match(component, /className="jak-report-bg"/);
+  assert.match(styles, /\.jak-report-bg \{ object-fit: cover; z-index: 0; \}/);
+  assert.doesNotMatch(styles, /\.jak-report-art/);
+
+  // سكريم اتجاهي يضمن تباين النص مهما كانت الصورة فاتحة
+  assert.match(component, /className="jak-report-scrim"/);
+  assert.match(styles, /\.has-art\.safe-right \.jak-report-scrim/);
+  assert.match(styles, /\.has-art\.safe-left \.jak-report-scrim/);
+
+  // الصفحة بلا صورة (أو بصورة فشل تحميلها) تسقط إلى لوح البيانات لا إلى فراغ
+  assert.match(component, /hasArt \? "has-art" : "no-art"/);
+  assert.match(component, /onError=\{\(\) => setArtReady\(false\)\}/);
+  assert.match(styles, /\.jak-report-page\.kind-data \{/);
+  assert.match(styles, /\.jak-report-page\.no-art \.jak-report-bg \{ visibility: hidden; \}/);
 });
 
 test("مادة جاك تفتح محرر جاك وبقية المواد تفتح المحرر العام", () => {

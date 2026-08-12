@@ -91,10 +91,16 @@ export const isLandscapeReport = (slides: JakSlide[]) =>
 export const imageGenerationSize = (slide: JakSlide): "cover" | "portrait" =>
   slide.data?.canvas === "landscape" ? "cover" : "portrait";
 
+/**
+ * الصورة تملأ الصفحة والنص يعيش فوقها، فتُطلب كمشهد سينمائي غامر
+ * بمساحة هادئة في جهة النص — عكس ما كانت تطلبه معالجة اللوح الجانبي.
+ */
 export function imageGenerationPrompt(slide: JakSlide): string {
   const basePrompt = slide.imagePrompt.trim();
   if (!basePrompt || slide.data?.canvas !== "landscape") return basePrompt;
-  return `${basePrompt}. Premium editorial visual asset, 16:9 landscape, composed for a dedicated image panel alongside Arabic text, primary subject on the ${slide.data.focalPoint ?? "left"}, strong visual hierarchy, no embedded text, no letters, no logos, not a wallpaper or background texture.`;
+  const subjectSide = slide.data.focalPoint ?? "left";
+  const quietSide = slide.data.textSafeArea ?? (subjectSide === "left" ? "right" : "left");
+  return `${basePrompt}. Premium editorial visual, 16:9 cinematic full-bleed scene filling the entire frame, atmospheric depth, primary subject on the ${subjectSide}, calm uncluttered negative space on the ${quietSide} third where Arabic headlines will be overlaid, deep navy and warm amber grade, no embedded text, no letters, no logos, no people faces in close-up.`;
 }
 
 /** ملاحظات حتمية تمنع ازدحام قوالب 16:9 قبل التصدير. */

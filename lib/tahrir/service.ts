@@ -149,6 +149,35 @@ export async function setStatus(
   await audit(actor, `status:${status}`, id, detail);
 }
 
+export type DeleteDraftResult = "deleted" | "not-found" | "not-draft";
+
+/** حذف دائم لمسودة فقط؛ المواد في سير الاعتماد أو المنشورة لا تمس. */
+export async function deleteDraft(id: string, actor: string): Promise<DeleteDraftResult> {
+  const db = requireDb();
+  const rows = await db.select().from(stories).where(eq(stories.id, id)).limit(1);
+  const story = rows[0];
+  if (!story) return "not-found";
+  if (story.status !== "draft") return "not-draft";
+
+  // تعليمة واحدة ذرّية: إن تغيرت الحالة بالتزامن لا تُحذف المادة ولا توابعها ولا يُكتب سجل مضلل.
+  const result = await db.execute<{ storyId: string }>(sql`
+    with deleted_story as (
+      delete from stories
+      where id = ${id} and status = 'draft'
+      returning id, title
+    ), deleted_slides as (
+      delete from story_slides where story_id in (select id from deleted_story)
+    ), deleted_source as (
+      delete from jak_sources where story_id in (select id from deleted_story)
+    )
+    insert into audit_log (id, at, actor, action, story_id, detail)
+    select ${crypto.randomUUID()}, ${new Date().toISOString()}, ${actor}, 'draft:delete', id, title
+    from deleted_story
+    returning story_id as "storyId"
+  `);
+  return result.rows.length > 0 ? "deleted" : "not-draft";
+}
+
 /* ============ المرحلة 2 ============ */
 
 import { media, seriesProposals } from "@/db/schema";

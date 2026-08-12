@@ -12,6 +12,7 @@ import {
   STATUS_LABELS,
   type StoryStatus,
 } from "@/lib/tahrir/service";
+import { DeleteDraftButton } from "../../_components/delete-draft-button";
 
 export const metadata = { title: "المواد" };
 export const dynamic = "force-dynamic";
@@ -96,14 +97,13 @@ export default async function StoriesPage({
         const storyStatus = story.status as StoryStatus;
 
         return (
-          <Link
+          <div
             key={story.id}
             className="th-srow"
-            href={editorHref(story)}
             style={{ "--sc": series?.color ?? "var(--t-line2)" } as React.CSSProperties}
           >
             <span className="rail" aria-hidden="true" />
-            <span style={{ minWidth: 0 }}>
+            <Link className="th-srow-main" href={editorHref(story)}>
               <span className="t" style={{ display: "block" }}>
                 {story.title}
               </span>
@@ -111,7 +111,7 @@ export default async function StoriesPage({
                 {story.authorName || SECTION_NAMES[story.section] || story.section} · حُدّثت{" "}
                 {(story.updatedAt ?? story.publishedAt ?? "").slice(0, 10) || "—"}
               </span>
-            </span>
+            </Link>
             <span className="chips">
               {series ? <span className="th-serchip">{series.name}</span> : null}
               {story.format === "jakalelm" ? <span className="th-report-badge">▦ جاك العلم</span> : null}
@@ -119,8 +119,9 @@ export default async function StoriesPage({
               <span className={`th-pill ${STATUS_PILLS[storyStatus] ?? "dft"}`}>
                 {STATUS_LABELS[storyStatus] ?? story.status}
               </span>
+              {storyStatus === "draft" ? <DeleteDraftButton id={story.id} title={story.title} /> : null}
             </span>
-          </Link>
+          </div>
         );
       })}
 

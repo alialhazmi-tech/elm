@@ -1,26 +1,31 @@
 "use client";
 
 /**
- * صفحات «جاك العلم» الأفقية 16:9.
- * الصور عناصر تحريرية مستقلة داخل التخطيط، والنص العربي يبقى HTML حيًا قابلًا للتحرير والطباعة.
+ * صفحات «جاك العلم» الأفقية 16:9 — معالجة غامرة بأسلوب التقرير المصمم.
+ *
+ * القاعدة: الشريحة ذات الصورة تصير صفحة كاملة بالصورة والنص فوقها خلف سكريم
+ * اتجاهي يضمن التباين؛ والشريحة بلا صورة تصير لوح بيانات على المداد.
+ * النص يبقى HTML حيًا في الحالين — قابلًا للقراءة والفهرسة والطباعة إلى PDF.
  */
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import type { JakSlide, ReportTemplate, SlideData } from "@/lib/tahrir/jak";
+import type { JakSlide, SlideData } from "@/lib/tahrir/jak";
 
 interface ReportMeta {
   title: string;
   sectionName: string;
 }
 
-const templateOf = (slide: JakSlide, index: number): ReportTemplate => {
-  if (slide.data?.template) return slide.data.template;
-  if (index === 0) return "cover";
-  if (slide.type === "stat" || slide.type === "comparison") return "stats";
-  if (slide.type === "list" || slide.type === "summary" || slide.type === "timeline") return "grid";
-  return "image-text";
+/** شكل الصفحة: غلاف · اقتباس · صورة ساردة · لوح بيانات. */
+type PageKind = "cover" | "quote" | "photo" | "data";
+
+const kindOf = (slide: JakSlide, index: number, hasArt: boolean): PageKind => {
+  if (!hasArt) return "data";
+  if (index === 0 || slide.type === "hero") return "cover";
+  if (slide.type === "quote") return "quote";
+  return "photo";
 };
 
 const fallbackBlocks = (slide: JakSlide): NonNullable<SlideData["blocks"]> => {
@@ -45,60 +50,62 @@ const fallbackBlocks = (slide: JakSlide): NonNullable<SlideData["blocks"]> => {
   return [];
 };
 
-function ReportArt({ slide, onReadyChange }: { slide: JakSlide; onReadyChange: (ready: boolean) => void }) {
-  useEffect(() => onReadyChange(false), [onReadyChange, slide.image]);
-  if (!slide.image) return null;
-  return (
-    <div className="jak-report-art">
-      <Image
-        src={slide.image}
-        alt=""
-        fill
-        unoptimized={slide.image.startsWith("/uploads/")}
-        sizes="(max-width: 1100px) 100vw, 1280px"
-        style={{ objectPosition: `${slide.data?.focalPoint ?? "center"} center` }}
-        onLoad={() => onReadyChange(true)}
-        onError={() => onReadyChange(false)}
-      />
-    </div>
-  );
-}
-
 function ReportPage({ slide, index, total, meta }: {
   slide: JakSlide;
   index: number;
   total: number;
   meta: ReportMeta;
 }) {
-  const template = templateOf(slide, index);
-  const blocks = fallbackBlocks(slide);
-  const safe = slide.data?.textSafeArea ?? (template === "image-text" ? "right" : "center");
+  // الصورة التي تفشل في التحميل تسقط الصفحة إلى لوح البيانات بدل ترك فراغ.
+  // الحالة تُصفَّر بتغير الصورة عبر مفتاح الصفحة في JakReport — لا حاجة لتأثير.
   const [artReady, setArtReady] = useState(false);
+
+  const hasArt = Boolean(slide.image) && artReady;
+  const kind = kindOf(slide, index, hasArt);
+  const eyebrow = slide.data?.eyebrow || (kind === "data" ? "بالأرقام" : "جاك العلم");
+  const safe = slide.data?.textSafeArea ?? (kind === "cover" ? "center" : "right");
+  const blocks = fallbackBlocks(slide);
+  const listItems = slide.data?.items ?? [];
 
   return (
     <section
-      className={`jak-report-page jak-report-${template} safe-${safe} ${artReady ? "has-art" : "no-art"}`}
+      className={`jak-report-page kind-${kind} safe-${safe} ${hasArt ? "has-art" : "no-art"}`}
       data-report-page
-      data-template={template}
+      data-template={kind}
     >
-      <ReportArt key={slide.image ?? "no-image"} slide={slide} onReadyChange={setArtReady} />
+      {slide.image && (
+        <Image
+          className="jak-report-bg"
+          src={slide.image}
+          alt=""
+          fill
+          unoptimized={slide.image.startsWith("/uploads/")}
+          sizes="(max-width: 1100px) 100vw, 1280px"
+          style={{ objectPosition: `${slide.data?.focalPoint ?? "center"} center` }}
+          onLoad={() => setArtReady(true)}
+          onError={() => setArtReady(false)}
+          priority={index === 0}
+        />
+      )}
+      <span className="jak-report-scrim" aria-hidden="true" />
+
       <header className="jak-report-brand">
         <span>الع<i>ل</i>م</span>
         <small>{meta.sectionName}</small>
       </header>
 
-      {template === "cover" && (
-        <div className="jak-report-cover-copy">
-          <span className="jak-report-eyebrow">{slide.data?.eyebrow || "تقرير بصري"}</span>
-          <h1>{slide.title || meta.title}</h1>
-          {slide.body && <p>{slide.body}</p>}
+      {kind === "quote" && (
+        <div className="jak-report-copy">
+          <span className="jak-report-eyebrow">{eyebrow}</span>
+          <blockquote>{slide.title}</blockquote>
+          {slide.data?.quoteBy && <cite>— {slide.data.quoteBy}</cite>}
         </div>
       )}
 
-      {template === "image-text" && (
+      {(kind === "cover" || kind === "photo") && (
         <div className="jak-report-copy">
-          <span className="jak-report-eyebrow">{slide.data?.eyebrow || "في الصورة"}</span>
-          <h2>{slide.title}</h2>
+          <span className="jak-report-eyebrow">{eyebrow}</span>
+          {kind === "cover" ? <h1>{slide.title || meta.title}</h1> : <h2>{slide.title}</h2>}
           {slide.body && <p>{slide.body}</p>}
           {slide.stat && (
             <div className="jak-report-inline-stat">
@@ -106,18 +113,25 @@ function ReportPage({ slide, index, total, meta }: {
               <span>{slide.statLabel}</span>
             </div>
           )}
+          {listItems.length > 0 && (
+            <ul className="jak-report-list">
+              {listItems.slice(0, 4).map((item, itemIndex) => (
+                <li key={itemIndex}>{item}</li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
 
-      {(template === "stats" || template === "grid") && (
-        <div className="jak-report-dashboard">
+      {kind === "data" && (
+        <>
           <div className="jak-report-dashboard-head">
-            <span className="jak-report-eyebrow">{slide.data?.eyebrow || (template === "stats" ? "بالأرقام" : "المشهد")}</span>
+            <span className="jak-report-eyebrow">{eyebrow}</span>
             <h2>{slide.title}</h2>
             {slide.body && <p>{slide.body}</p>}
           </div>
           <div className={`jak-report-blocks count-${Math.min(blocks.length, 6)}`}>
-            {blocks.map((block, blockIndex) => (
+            {blocks.slice(0, 6).map((block, blockIndex) => (
               <article className="jak-report-block" key={blockIndex}>
                 {block.value && <strong dir="ltr">{block.value}</strong>}
                 {block.label && <small>{block.label}</small>}
@@ -126,11 +140,11 @@ function ReportPage({ slide, index, total, meta }: {
               </article>
             ))}
           </div>
-        </div>
+        </>
       )}
 
       <footer className="jak-report-foot">
-        <span>#{slide.data?.eyebrow?.replace(/\s+/g, "_") || "جاك_العلم"}</span>
+        <span>#{eyebrow.replace(/\s+/g, "_")}</span>
         <b dir="ltr">{index + 1} / {total}</b>
       </footer>
     </section>
@@ -138,11 +152,17 @@ function ReportPage({ slide, index, total, meta }: {
 }
 
 export function JakReport({ meta, slides }: { meta: ReportMeta; slides: JakSlide[] }) {
-  const visible = slides.filter((slide) => !slide.hidden && slide.type !== "end");
+  const visible = slides.filter((slide) => !slide.hidden && (slide.type !== "end" || slide.image));
   return (
     <div className="jak-report" data-jak-report>
       {visible.map((slide, index) => (
-        <ReportPage key={slide.id} slide={slide} index={index} total={visible.length} meta={meta} />
+        <ReportPage
+          key={`${slide.id}-${slide.image ?? "none"}`}
+          slide={slide}
+          index={index}
+          total={visible.length}
+          meta={meta}
+        />
       ))}
     </div>
   );

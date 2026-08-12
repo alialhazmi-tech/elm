@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { stripHtmlToText } from "@/lib/content/html";
@@ -88,27 +88,55 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
   const [keywords, setKeywords] = useState<string[]>(initial?.keywords ?? []);
   const [keywordInput, setKeywordInput] = useState("");
   const [seoBusy, setSeoBusy] = useState(false);
+  const [imageUploadBusy, setImageUploadBusy] = useState(false);
+  const [imageUploadMessage, setImageUploadMessage] = useState("");
   const [fullEdit, setFullEdit] = useState<FullEditData | null>(null);
   const [fullBusy, setFullBusy] = useState(false);
   const [report, setReport] = useState<GuardReport | null>(null);
+  const [guardBusy, setGuardBusy] = useState(true);
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const guardSequence = useRef(0);
   const richRef = useRef<RichBodyHandle | null>(null);
+  const imageFileRef = useRef<HTMLInputElement | null>(null);
 
   const bodyText = () => richRef.current?.getText() ?? stripHtmlToText(body);
 
-  function scheduleGuard(nextTitle: string, nextBodyText: string) {
+  const runGuard = useCallback(async (
+    nextTitle: string,
+    nextBodyText: string,
+    nextImage: string,
+    nextFormat: string,
+  ) => {
+    const sequence = ++guardSequence.current;
+    setGuardBusy(true);
+    const response = await fetch("/api/tahrir/guard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: nextTitle, body: nextBodyText, image: nextImage || null, format: nextFormat }),
+    }).catch(() => null);
+    if (sequence !== guardSequence.current) return;
+    if (response?.ok) setReport((await response.json()) as GuardReport);
+    else setReport(null);
+    setGuardBusy(false);
+  }, []);
+
+  function scheduleGuard(nextTitle: string, nextBodyText: string, nextImage = image, nextFormat = format) {
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      const response = await fetch("/api/tahrir/guard", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: nextTitle, body: nextBodyText }),
-      }).catch(() => null);
-      if (response?.ok) setReport((await response.json()) as GuardReport);
-    }, 600);
+    setGuardBusy(true);
+    timer.current = setTimeout(() => void runGuard(nextTitle, nextBodyText, nextImage, nextFormat), 600);
   }
+
+  useEffect(() => {
+    timer.current = setTimeout(() => void runGuard(title, stripHtmlToText(body), image, format), 0);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+      guardSequence.current += 1;
+    };
+    // الفحص الأول يعكس القيم المحمّلة لحظة فتح المحرر؛ التعديلات اللاحقة تمر عبر scheduleGuard.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runGuard]);
 
   function onTitle(value: string) {
     setTitle(value);
@@ -140,6 +168,28 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
     const value = raw.replace(/^#/, "").trim();
     if (!value || keywords.includes(value) || keywords.length >= 12) return;
     setKeywords([...keywords, value]);
+  }
+
+  async function uploadStoryImage(files: FileList | null) {
+    const file = files?.[0];
+    if (!file || imageUploadBusy) return;
+    setImageUploadBusy(true);
+    setImageUploadMessage("جارٍ رفع الصورة…");
+
+    const form = new FormData();
+    form.append("file", file);
+    const response = await fetch("/api/tahrir/media", { method: "POST", body: form }).catch(() => null);
+    const data = await response?.json().catch(() => null);
+    setImageUploadBusy(false);
+    if (!response?.ok || !data?.url) {
+      setImageUploadMessage(data?.error ?? "تعذر رفع الصورة.");
+      return;
+    }
+
+    setImage(data.url);
+    scheduleGuard(title, bodyText(), data.url, format);
+    setImageUploadMessage("رُفعت واختيرت للمادة — يلزم توثيق الحقوق قبل الاعتماد.");
+    if (imageFileRef.current) imageFileRef.current.value = "";
   }
 
   async function generateSeo() {
@@ -196,6 +246,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
     if (fullEdit.classify.seriesSlug) setSeriesSlug(fullEdit.classify.seriesSlug);
     setSection(fullEdit.classify.section);
     setFormat(fullEdit.classify.format);
+    scheduleGuard(fullEdit.title.text, fullEdit.body.text, image, fullEdit.classify.format);
     setFullEdit(null);
     setMessage({ kind: "ok", text: "طُبّق التحرير الشامل — راجع ثم احفظ؛ لا يُنشر شيء آليًا." });
   }
@@ -237,7 +288,13 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
 
     const data = await response?.json().catch(() => null);
     if (!response?.ok) {
-      setMessage({ kind: "err", text: data?.error ?? "رفض الحارس الإرسال." });
+      if (response?.status === 422) {
+        await runGuard(title, bodyText(), image, format);
+      }
+      const blockingRules = Array.isArray(data?.blocking) && data.blocking.length > 0
+        ? ` (${data.blocking.join("، ")})`
+        : "";
+      setMessage({ kind: "err", text: `${data?.error ?? "رفض الحارس الإرسال."}${blockingRules}` });
       return;
     }
     setStatus("review");
@@ -293,7 +350,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
 
   const titleWords = wordCount(title);
   const blocking = report?.counts.blocking ?? 0;
-  const gateOpen = report ? report.canRequestApproval : true;
+  const gateOpen = !guardBusy && report?.canRequestApproval === true;
   const canApprove = role === "approver" || role === "chief";
 
   return (
@@ -394,6 +451,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
             if (c.seriesSlug) setSeriesSlug(c.seriesSlug);
             setSection(c.section);
             setFormat(c.format);
+            scheduleGuard(title, bodyText(), image, c.format);
           }}
         />
 
@@ -468,7 +526,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
 
         <div className="th-panel">
           <div className="th-guard-hd">
-            <span className={`dot ${blocking === 0 ? "ok" : ""}`} />
+            <span className={`dot ${!guardBusy && report && blocking === 0 ? "ok" : ""}`} />
             <h2>حارس السياسة</h2>
             <span className="cnt">
               {report ? `${report.rulesEvaluated} قاعدة · ${report.findings.length} ملاحظات` : "اكتب ليفحص"}
@@ -491,13 +549,15 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
           ))}
 
           <div className={`th-gate ${gateOpen ? "open" : ""}`}>
-            {gateOpen ? (
+            {guardBusy || !report ? (
+              <><b>جارٍ فحص المادة</b> — لا يمكن طلب الاعتماد قبل اكتمال الحارس.</>
+            ) : gateOpen ? (
               <>
                 <b>البوابة مفتوحة</b> — لا مخالفات قاطعة. الاعتماد النهائي بشري دائمًا.
               </>
             ) : (
               <>
-                <b>ممنوع طلب الاعتماد</b> حتى معالجة: {report?.audit.blockingRuleIds.join("، ")}
+                <b>ممنوع طلب الاعتماد</b> حتى معالجة: {report.audit.blockingRuleIds.join("، ")}
               </>
             )}
           </div>
@@ -594,7 +654,10 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
                   key={slug2}
                   className={format === slug2 ? "on" : ""}
                   style={{ "--sc": "var(--t-navy)" } as React.CSSProperties}
-                  onClick={() => setFormat(slug2)}
+                  onClick={() => {
+                    setFormat(slug2);
+                    scheduleGuard(title, bodyText(), image, slug2);
+                  }}
                 >
                   {name}
                 </button>
@@ -632,12 +695,52 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
           </div>
           <div className="th-meta">
             <div className="lb">صورة المادة</div>
+            <div className="th-image-upload">
+              <button
+                type="button"
+                className="th-mini"
+                onClick={() => imageFileRef.current?.click()}
+                disabled={imageUploadBusy}
+              >
+                {imageUploadBusy ? "يرفع…" : "↑ رفع صورة"}
+              </button>
+              <span>PNG / JPEG / WebP حتى 8MB</span>
+              <input
+                ref={imageFileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                hidden
+                onChange={(event) => void uploadStoryImage(event.target.files)}
+              />
+            </div>
+            {imageUploadMessage && <div className="th-image-upload-msg">{imageUploadMessage}</div>}
             <input
               className="th-input ltr"
               placeholder="/uploads/… أو رابط خارجي"
               value={image}
-              onChange={(event) => setImage(event.target.value)}
+              onChange={(event) => {
+                setImage(event.target.value);
+                scheduleGuard(title, bodyText(), event.target.value, format);
+              }}
             />
+            {image && (
+              <div className="th-image-preview">
+                {/* مسار ديناميكي من المكتبة؛ المعاينة تعرض الأصل مباشرة. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image} alt="معاينة صورة المادة" />
+                <button
+                  type="button"
+                  className="th-mini"
+                  onClick={() => {
+                    setImage("");
+                    setImageUploadMessage("");
+                    scheduleGuard(title, bodyText(), "", format);
+                  }}
+                >
+                  إزالة الصورة
+                </button>
+              </div>
+            )}
             {recentMedia.length > 0 && (
               <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                 {recentMedia.map((item) => (
@@ -652,7 +755,10 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
                       overflow: "hidden",
                       borderColor: image === item.url ? "var(--t-gold)" : undefined,
                     }}
-                    onClick={() => setImage(item.url)}
+                    onClick={() => {
+                      setImage(item.url);
+                      scheduleGuard(title, bodyText(), item.url, format);
+                    }}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
