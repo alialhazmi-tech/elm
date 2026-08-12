@@ -1300,16 +1300,16 @@ img { max-width: 100%; display: block; }
 .jak-report-art { position: absolute; z-index: 1; overflow: hidden; background: #111923; box-shadow: 0 2.2cqw 6cqw rgb(0 0 0 / .42); }
 .jak-report-art img { object-fit: cover; filter: saturate(.86) contrast(1.08); }
 .jak-report-art::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 .12cqw rgb(255 255 255 / .12); pointer-events: none; }
-.jak-report-art-fallback { background: radial-gradient(circle at 32% 38%, #2a405f 0, #111c2a 34%, #080c12 72%), linear-gradient(135deg, #101a28, #05080c); }
-.jak-report-page.safe-right .jak-report-art { left: 0; }
-.jak-report-page.safe-left .jak-report-art { right: 0; }
-.jak-report-page.safe-center .jak-report-art { left: 24cqw; }
-.jak-report-cover .jak-report-art { top: 0; bottom: 0; width: 52cqw; }
-.jak-report-image-text .jak-report-art { top: 11cqw; bottom: 7cqw; width: 48cqw; }
-.jak-report-stats .jak-report-art, .jak-report-grid .jak-report-art { top: 13cqw; bottom: 7cqw; width: 31cqw; }
-.jak-report-page.safe-center.jak-report-cover .jak-report-art { top: 5cqw; bottom: auto; width: 52cqw; height: 28cqw; }
-.jak-report-page.safe-center.jak-report-image-text .jak-report-art { top: 11cqw; bottom: auto; width: 52cqw; height: 25cqw; }
-.jak-report-page.safe-center.jak-report-stats .jak-report-art, .jak-report-page.safe-center.jak-report-grid .jak-report-art { top: 13cqw; bottom: 7cqw; width: 31cqw; height: auto; left: 5cqw; }
+.jak-report-page:not(.has-art) .jak-report-art { visibility: hidden; }
+.jak-report-page.has-art.safe-right .jak-report-art { left: 0; }
+.jak-report-page.has-art.safe-left .jak-report-art { right: 0; }
+.jak-report-page.has-art.safe-center .jak-report-art { left: 24cqw; }
+.jak-report-page.has-art.jak-report-cover .jak-report-art { top: 0; bottom: 0; width: 52cqw; }
+.jak-report-page.has-art.jak-report-image-text .jak-report-art { top: 11cqw; bottom: 7cqw; width: 48cqw; }
+.jak-report-page.has-art.jak-report-stats .jak-report-art, .jak-report-page.has-art.jak-report-grid .jak-report-art { top: 13cqw; bottom: 7cqw; width: 31cqw; }
+.jak-report-page.has-art.safe-center.jak-report-cover .jak-report-art { top: 5cqw; bottom: auto; width: 52cqw; height: 28cqw; }
+.jak-report-page.has-art.safe-center.jak-report-image-text .jak-report-art { top: 11cqw; bottom: auto; width: 52cqw; height: 25cqw; }
+.jak-report-page.has-art.safe-center.jak-report-stats .jak-report-art, .jak-report-page.has-art.safe-center.jak-report-grid .jak-report-art { top: 13cqw; bottom: 7cqw; width: 31cqw; height: auto; left: 5cqw; }
 .jak-report-brand { position: absolute; top: 4.5cqw; inset-inline: 4.8cqw; display: flex; justify-content: space-between; align-items: baseline; font-family: var(--f-logo, var(--font-display)); font-weight: 900; z-index: 3; }
 .jak-report-brand span { font-size: 2.3cqw; }
 .jak-report-brand i { color: #e31b35; font-style: normal; }
@@ -1320,6 +1320,7 @@ img { max-width: 100%; display: block; }
 .safe-right .jak-report-cover-copy { right: 6cqw; }
 .safe-left .jak-report-cover-copy { left: 6cqw; }
 .safe-center .jak-report-cover-copy { top: 36cqw; left: 17cqw; width: 66cqw; text-align: center; }
+.no-art .jak-report-cover-copy { top: 18cqw; left: 17cqw; right: auto; width: 66cqw; text-align: center; }
 .jak-report-cover-copy h1 { margin: 0; font: 900 5.1cqw/1.12 var(--font-display); color: #fff; text-wrap: balance; }
 .jak-report-cover-copy p { max-width: 38cqw; margin: 1.5cqw 0 0; font-size: 1.5cqw; line-height: 1.7; color: #dce3ec; }
 .safe-center .jak-report-cover-copy p { margin-inline: auto; }
@@ -1327,6 +1328,7 @@ img { max-width: 100%; display: block; }
 .safe-right .jak-report-copy { right: 6cqw; }
 .safe-left .jak-report-copy { left: 6cqw; }
 .safe-center .jak-report-copy { top: 38cqw; left: 21cqw; width: 58cqw; text-align: center; }
+.no-art .jak-report-copy { top: 18cqw; left: 20cqw; right: auto; width: 60cqw; text-align: center; }
 .jak-report-copy h2, .jak-report-dashboard h2 { margin: 0; font: 900 3.75cqw/1.18 var(--font-display); color: #fff; text-wrap: balance; }
 .jak-report-copy > p { margin: 1.4cqw 0 0; font-size: 1.45cqw; line-height: 1.7; color: #e0e5ed; }
 .jak-report-inline-stat { display: flex; gap: 1.4cqw; align-items: baseline; margin-top: 2.4cqw; border-top: .25cqw solid #e31b35; padding-top: 1.2cqw; }
@@ -1336,6 +1338,7 @@ img { max-width: 100%; display: block; }
 .safe-right .jak-report-dashboard { right: 5cqw; }
 .safe-left .jak-report-dashboard { left: 5cqw; }
 .safe-center .jak-report-dashboard { left: 36cqw; }
+.no-art .jak-report-dashboard { left: 5cqw; right: auto; width: 90cqw; }
 .jak-report-dashboard-head p { font-size: 1.55cqw; line-height: 1.7; color: #c9d2df; }
 .jak-report-blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.1cqw 2.8cqw; }
 .jak-report-stats .jak-report-blocks { grid-template-columns: repeat(3, minmax(0, 1fr)); }

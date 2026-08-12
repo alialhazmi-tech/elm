@@ -170,9 +170,13 @@ test("قالب التقرير يضع الصورة في لوحة مستقلة ل�
   const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.doesNotMatch(component, /jak-report-shade/);
+  assert.doesNotMatch(component, /jak-report-art-fallback/);
   assert.match(styles, /\.jak-report-image-text \.jak-report-art/);
   assert.match(styles, /\.jak-report-stats \.jak-report-art/);
   assert.doesNotMatch(styles, /\.jak-report-art, \.jak-report-shade/);
+  assert.match(component, /onError=\{\(\) => onReadyChange\(false\)\}/);
+  assert.match(component, /artReady \? "has-art" : "no-art"/);
+  assert.match(styles, /\.jak-report-page:not\(\.has-art\) \.jak-report-art \{ visibility: hidden; \}/);
 });
 
 test("مادة جاك تفتح محرر جاك وبقية المواد تفتح المحرر العام", () => {

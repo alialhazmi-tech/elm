@@ -1,4 +1,4 @@
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const IMAGE_FILENAME = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png|webp)$/i;
 const IMAGE_PREFIX = "uploads/";
@@ -54,6 +54,24 @@ export async function putStoredImage(input: {
       CacheControl: "public, max-age=31536000, immutable",
     }),
   );
+  const stored = await s3.send(new HeadObjectCommand({
+    Bucket: bucket,
+    Key: imageObjectKey(input.filename),
+  }));
+  if (stored.ContentLength !== input.body.byteLength) {
+    throw new Error("تعذر التحقق من اكتمال حفظ الصورة في المخزن.");
+  }
+}
+
+export async function headStoredImage(filename: string) {
+  const { s3, bucket } = storageClient();
+  const object = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: imageObjectKey(filename) }));
+  return {
+    contentType: object.ContentType ?? "application/octet-stream",
+    cacheControl: object.CacheControl ?? "public, max-age=31536000, immutable",
+    contentLength: object.ContentLength,
+    etag: object.ETag,
+  };
 }
 
 export async function getStoredImage(filename: string) {

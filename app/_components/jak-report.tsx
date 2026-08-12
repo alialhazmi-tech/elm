@@ -1,9 +1,12 @@
+"use client";
+
 /**
  * صفحات «جاك العلم» الأفقية 16:9.
  * الصور عناصر تحريرية مستقلة داخل التخطيط، والنص العربي يبقى HTML حيًا قابلًا للتحرير والطباعة.
  */
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 import type { JakSlide, ReportTemplate, SlideData } from "@/lib/tahrir/jak";
 
@@ -42,16 +45,20 @@ const fallbackBlocks = (slide: JakSlide): NonNullable<SlideData["blocks"]> => {
   return [];
 };
 
-function ReportArt({ slide }: { slide: JakSlide }) {
-  if (!slide.image) return <div className="jak-report-art jak-report-art-fallback" />;
+function ReportArt({ slide, onReadyChange }: { slide: JakSlide; onReadyChange: (ready: boolean) => void }) {
+  useEffect(() => onReadyChange(false), [onReadyChange, slide.image]);
+  if (!slide.image) return null;
   return (
     <div className="jak-report-art">
       <Image
         src={slide.image}
         alt=""
         fill
+        unoptimized={slide.image.startsWith("/uploads/")}
         sizes="(max-width: 1100px) 100vw, 1280px"
         style={{ objectPosition: `${slide.data?.focalPoint ?? "center"} center` }}
+        onLoad={() => onReadyChange(true)}
+        onError={() => onReadyChange(false)}
       />
     </div>
   );
@@ -66,14 +73,15 @@ function ReportPage({ slide, index, total, meta }: {
   const template = templateOf(slide, index);
   const blocks = fallbackBlocks(slide);
   const safe = slide.data?.textSafeArea ?? (template === "image-text" ? "right" : "center");
+  const [artReady, setArtReady] = useState(false);
 
   return (
     <section
-      className={`jak-report-page jak-report-${template} safe-${safe}`}
+      className={`jak-report-page jak-report-${template} safe-${safe} ${artReady ? "has-art" : "no-art"}`}
       data-report-page
       data-template={template}
     >
-      <ReportArt slide={slide} />
+      <ReportArt key={slide.image ?? "no-image"} slide={slide} onReadyChange={setArtReady} />
       <header className="jak-report-brand">
         <span>الع<i>ل</i>م</span>
         <small>{meta.sectionName}</small>
