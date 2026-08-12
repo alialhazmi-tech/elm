@@ -1394,7 +1394,16 @@ img { max-width: 100%; display: block; }
   .jak-report-foot { bottom: 4.6cqw; inset-inline: 5.5cqw; font-size: 2.8cqw; }
   .jak-report-eyebrow { font-size: 3cqw; border-inline-start-width: .7cqw; padding-inline-start: 2cqw; margin-bottom: 3.4cqw; }
 
-  .jak-report-copy { left: 5.5cqw; right: 5.5cqw; width: auto; max-width: none; bottom: 11cqw; }
+  /* الأسبقية: قواعد الجهات على الحاسوب (0-2-0) تغلب قاعدة مفردة داخل @media —
+     فتُعاد هنا بأسبقية مكافئة وإلا انضغط الغلاف في نصف العرض على الجوال. */
+  .jak-report-copy,
+  .safe-right .jak-report-copy,
+  .safe-left .jak-report-copy,
+  .safe-center .jak-report-copy,
+  .kind-cover .jak-report-copy,
+  .kind-cover.safe-center .jak-report-copy {
+    left: 5.5cqw; right: 5.5cqw; width: auto; max-width: none; bottom: 11cqw;
+  }
   .jak-report-copy h1 { font-size: 8cqw; line-height: 1.4; margin-bottom: 3cqw; }
   .jak-report-copy h2 { font-size: 6.4cqw; line-height: 1.45; margin-bottom: 2.6cqw; }
   .jak-report-copy > p { font-size: 3.7cqw; line-height: 1.9; max-width: none; }

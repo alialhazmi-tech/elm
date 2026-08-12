@@ -268,4 +268,6 @@ test("الجوال يكبّر خط التقرير ويطيل الصفحة بدل
   assert.match(mobile, /\.jak-report-copy > p \{ font-size: 3\.7cqw/);
   // لوح البيانات ينمو بمحتواه على الشاشة الصغيرة
   assert.match(mobile, /\.jak-report-page\.kind-data \{ aspect-ratio: auto/);
+  // قواعد الجهات على الحاسوب أعلى أسبقية من قاعدة مفردة داخل @media
+  assert.match(mobile, /\.kind-cover\.safe-center \.jak-report-copy \{\s*\n?\s*left: 5\.5cqw/);
 });
