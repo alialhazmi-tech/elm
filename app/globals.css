@@ -172,6 +172,11 @@ img { max-width: 100%; display: block; }
   display: inline-flex; align-items: center; justify-content: center; padding: 0;
 }
 .theme-toggle:hover { color: var(--ink); border-color: var(--ink-3); }
+.member-entry {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 6px 14px; border-radius: 999px;
+  background: var(--navy-deep); color: #fff; font-size: 11.5px; font-weight: 700;
+}
 
 /* ============ أسطح الذكاء ============ */
 .ai-surface {

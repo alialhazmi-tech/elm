@@ -64,6 +64,7 @@ export async function SiteHeader({ active }: { active?: string }) {
             <kbd>⌘K</kbd>
           </Link>
           <ThemeToggle />
+          <Link className="member-entry" href="/join">انضم</Link>
         </div>
       </div>
       <BreakingBar />
