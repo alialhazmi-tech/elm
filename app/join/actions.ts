@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
+import { safeInternalPath } from "@/lib/membership/paths";
 
 export type AuthFormState = { error?: string };
 
@@ -56,5 +57,6 @@ export async function signInMember(
   }
 
   const profile = memberId ? await getMemberProfile(memberId) : null;
-  redirect(profile?.onboardingCompleted ? "/for-you" : "/welcome");
+  const next = safeInternalPath(formData.get("next"));
+  redirect(profile?.onboardingCompleted ? (next ?? "/for-you") : "/welcome");
 }

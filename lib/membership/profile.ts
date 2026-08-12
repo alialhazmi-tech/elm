@@ -43,6 +43,8 @@ export async function saveMemberInterests(memberId: string, requestedIds: string
   }
   await db.insert(memberProfiles).values({ authUserId: memberId, onboardingCompleted: 1, personalizationEnabled: 1, createdAt: now, updatedAt: now })
     .onConflictDoUpdate({ target: memberProfiles.authUserId, set: { onboardingCompleted: 1, updatedAt: now } });
+  const { syncExplicitInterests } = await import("@/lib/personalization/interests");
+  await syncExplicitInterests(memberId, ids, now);
 
   const saved = ids.length
     ? await db.select({ id: memberInterests.interestId }).from(memberInterests)

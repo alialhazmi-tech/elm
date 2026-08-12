@@ -6,6 +6,7 @@ import { SiteHeader } from "@/app/_components/site-chrome";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
 import { JoinForm } from "./join-form";
+import { safeInternalPath } from "@/lib/membership/paths";
 import "./member-auth.css";
 
 export const metadata: Metadata = {
@@ -16,12 +17,14 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function JoinPage() {
+export default async function JoinPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next: nextRaw } = await searchParams;
+  const next = safeInternalPath(nextRaw);
   if (memberAuthConfigured) {
     const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
     if (data?.user) {
       const profile = await getMemberProfile(data.user.id);
-      redirect(profile.onboardingCompleted ? "/for-you" : "/welcome");
+      redirect(profile.onboardingCompleted ? (next ?? "/for-you") : "/welcome");
     }
   }
 
@@ -42,7 +45,7 @@ export default async function JoinPage() {
             </p>
           ) : null}
 
-          <JoinForm />
+          <JoinForm next={next} />
 
           <p className="member-auth-foot">
             <Link href="/">العودة إلى الرئيسية</Link>

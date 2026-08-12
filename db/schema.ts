@@ -191,6 +191,88 @@ export const memberInterests = pgTable("member_interests", {
   index("member_interests_interest_idx").on(table.interestId),
 ]);
 
+/** إعجاب فريد: عضو + مادة. الإلغاء يحذف الصف. */
+export const memberLikes = pgTable("member_likes", {
+  memberId: text("member_id").notNull(),
+  storyId: text("story_id").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.memberId, table.storyId] }),
+  index("member_likes_story_idx").on(table.storyId),
+]);
+
+/**
+ * أحداث تفاعل اقتصادية — لا heartbeat لكل ثانية.
+ * الأنواع: article_open, reading_progress, engaged_read, like, unlike,
+ * ai_summary, ai_simplify, ai_discuss, listen, related_click, closing_answer.
+ */
+export const memberEvents = pgTable("member_events", {
+  id: text("id").primaryKey(),
+  memberId: text("member_id").notNull(),
+  storyId: text("story_id").notNull(),
+  type: text("type").notNull(),
+  value: integer("value"),
+  durationMs: integer("duration_ms"),
+  createdAt: text("created_at").notNull(),
+}, (table) => [
+  index("member_events_member_created_idx").on(table.memberId, table.createdAt),
+  index("member_events_member_story_type_idx").on(table.memberId, table.storyId, table.type),
+  index("member_events_story_type_idx").on(table.storyId, table.type),
+]);
+
+/** ملخص علاقة العضو بالمادة — للقراءة السريعة بدل تجميع الأحداث الخام. */
+export const memberStoryStats = pgTable("member_story_stats", {
+  memberId: text("member_id").notNull(),
+  storyId: text("story_id").notNull(),
+  activeMs: integer("active_ms").notNull().default(0),
+  maxProgress: integer("max_progress").notNull().default(0),
+  visits: integer("visits").notNull().default(0),
+  lastVisitAt: text("last_visit_at").notNull(),
+  liked: integer("liked").notNull().default(0),
+  usedAi: integer("used_ai").notNull().default(0),
+  /** أسماء أدوات الذكاء المستخدمة: summary, simplify, discuss, listen */
+  aiTools: jsonb("ai_tools").notNull(),
+  closingAnswer: integer("closing_answer"),
+  interestScore: integer("interest_score").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.memberId, table.storyId] }),
+  index("member_story_stats_member_idx").on(table.memberId),
+  index("member_story_stats_member_score_idx").on(table.memberId, table.interestScore),
+]);
+
+/**
+ * درجات اهتمام العضو حسب مفتاح موضوعي مُسمّى:
+ * interest:health | section:technology | series:absat | format:news
+ */
+export const memberTopicScores = pgTable("member_topic_scores", {
+  memberId: text("member_id").notNull(),
+  topicKey: text("topic_key").notNull(),
+  kind: text("kind").notNull(),
+  /** explicit | inferred | like | deep_read | ai */
+  source: text("source").notNull(),
+  /** millipoints — 1000 ≈ اهتمام صريح واحد */
+  weight: integer("weight").notNull().default(0),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.memberId, table.topicKey] }),
+  index("member_topic_scores_member_idx").on(table.memberId),
+]);
+
+/** تصنيف المادة → موضوعات، مرة واحدة أو عند تغيّر المادة — خارج مسار فتح المقال. */
+export const storyTopics = pgTable("story_topics", {
+  storyId: text("story_id").notNull(),
+  topicKey: text("topic_key").notNull(),
+  kind: text("kind").notNull(),
+  weight: integer("weight").notNull().default(1000),
+  /** heuristic | haiku */
+  source: text("source").notNull().default("heuristic"),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.storyId, table.topicKey] }),
+  index("story_topics_topic_idx").on(table.topicKey),
+]);
+
 /** قائمة انتظار النشرة البريدية — المزود الخارجي (MailerLite/…) يُربط لاحقًا في M3-T3. */
 export const newsletterSubscribers = pgTable("newsletter_subscribers", {
   id: text("id").primaryKey(),

@@ -273,6 +273,8 @@
   overflow-wrap: anywhere;
 }
 
+.member-privacy-row { margin: 10px 0; }
+
 .member-signout {
   border: 1px solid var(--line-2);
   background: var(--surface);

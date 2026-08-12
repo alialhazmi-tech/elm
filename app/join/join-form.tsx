@@ -6,11 +6,12 @@ import { signInMember, signUpMember, type AuthFormState } from "./actions";
 
 const initialState: AuthFormState = {};
 
-function SignUpForm() {
+function SignUpForm({ next }: { next?: string | null }) {
   const [state, formAction, pending] = useActionState(signUpMember, initialState);
 
   return (
     <form action={formAction} className="member-auth-form" id="signup-panel">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <label>
         <span>الاسم الأول</span>
         <input
@@ -58,11 +59,12 @@ function SignUpForm() {
   );
 }
 
-function SignInForm() {
+function SignInForm({ next }: { next?: string | null }) {
   const [state, formAction, pending] = useActionState(signInMember, initialState);
 
   return (
     <form action={formAction} className="member-auth-form" id="signin-panel">
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <label>
         <span>البريد الإلكتروني</span>
         <input
@@ -98,7 +100,7 @@ function SignInForm() {
   );
 }
 
-export function JoinForm() {
+export function JoinForm({ next }: { next?: string | null }) {
   const [mode, setMode] = useState<"signup" | "signin">("signup");
 
   return (
@@ -124,7 +126,7 @@ export function JoinForm() {
         </button>
       </div>
 
-      {mode === "signup" ? <SignUpForm /> : <SignInForm />}
+      {mode === "signup" ? <SignUpForm next={next} /> : <SignInForm next={next} />}
 
       <p className="member-auth-terms">
         بالمتابعة أنت توافق على شروط الاستخدام وسياسة الخصوصية.

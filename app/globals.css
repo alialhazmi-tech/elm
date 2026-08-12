@@ -525,10 +525,24 @@ img { max-width: 100%; display: block; }
 .ai-toolbar .tool {
   font-size: 12px; font-weight: 600; color: var(--ink-2); border: 1px solid var(--line);
   background: var(--surface); border-radius: 999px; padding: 6px 14px;
-  display: inline-flex; gap: 6px; align-items: center; cursor: default;
+  display: inline-flex; gap: 6px; align-items: center; cursor: pointer;
+  font-family: inherit; text-decoration: none;
 }
+.ai-toolbar .tool:disabled { cursor: default; opacity: 0.65; }
+.ai-toolbar .tool.is-on { background: var(--navy); border-color: var(--navy); color: #fff; }
 .ai-toolbar .tool.primary { background: var(--navy); border-color: var(--navy); color: #fff; }
 .ai-toolbar .tool .spark { color: var(--gold); }
+.ai-reader-panel {
+  margin: 0 0 1.2rem; padding: 14px 16px; border: 1px solid var(--line);
+  border-radius: var(--r-md); background: var(--surface-2);
+}
+.ai-reader-panel h3 { font-size: 0.9rem; margin: 0 0 0.55rem; }
+.ai-reader-panel p { font-size: 0.92rem; line-height: 1.85; margin: 0 0 0.55rem; }
+.ai-reader-panel input {
+  width: 100%; margin: 0 0 10px; padding: 8px 12px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--surface); font: inherit;
+}
+.ai-reader-error { color: var(--c-aghrab); font-size: 0.82rem; margin: 0 0 1rem; }
 .article-figure {
   position: relative; margin: 1.6rem 0; aspect-ratio: 16 / 9;
   border-radius: var(--r-md); overflow: hidden; background: var(--navy-deep);

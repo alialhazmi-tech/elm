@@ -1,0 +1,36 @@
+import { eq } from "drizzle-orm";
+
+import { memberEvents, memberLikes, memberProfiles, memberStoryStats } from "@/db/schema";
+import { getDb } from "@/lib/db";
+import { clearInferredScores } from "./interests";
+
+export async function setPersonalizationEnabled(memberId: string, enabled: boolean) {
+  const db = getDb();
+  if (!db) throw new Error("MEMBERSHIP_DATABASE_UNAVAILABLE");
+  const now = new Date().toISOString();
+  await db
+    .insert(memberProfiles)
+    .values({
+      authUserId: memberId,
+      onboardingCompleted: 0,
+      personalizationEnabled: enabled ? 1 : 0,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: memberProfiles.authUserId,
+      set: { personalizationEnabled: enabled ? 1 : 0, updatedAt: now },
+    });
+}
+
+/** يمسح الإشارات المستنتجة ويُبقي الاهتمامات الصريحة. */
+export async function clearBehavioralData(memberId: string) {
+  const db = getDb();
+  if (!db) throw new Error("MEMBERSHIP_DATABASE_UNAVAILABLE");
+  await Promise.all([
+    db.delete(memberEvents).where(eq(memberEvents.memberId, memberId)),
+    db.delete(memberStoryStats).where(eq(memberStoryStats.memberId, memberId)),
+    db.delete(memberLikes).where(eq(memberLikes.memberId, memberId)),
+    clearInferredScores(memberId),
+  ]);
+}

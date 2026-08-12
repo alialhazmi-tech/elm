@@ -8,6 +8,7 @@ type Props = {
   pollId: string;
   question: string;
   options: Option[];
+  onVote?: (index: number, label: string) => void;
 };
 
 const POLL_EVENT = "alelm-poll-change";
@@ -31,7 +32,7 @@ function readVote(storageKey: string): number | null {
  * حالة التصويت عبر useSyncExternalStore: الخادم يعيد null دائمًا فلا انزياح ترطيب،
  * والعميل يقرأ تصويته المحفوظ بعد الترطيب مباشرة. تُربط بنقطة API لاحقًا.
  */
-export function EndingPoll({ pollId, question, options }: Props) {
+export function EndingPoll({ pollId, question, options, onVote }: Props) {
   const storageKey = `alelm-poll-${pollId}`;
   const voted = useSyncExternalStore(
     subscribe,
@@ -54,6 +55,7 @@ export function EndingPoll({ pollId, question, options }: Props) {
       /* بلا تخزين — يبقى التصويت للجلسة عبر bonus */
     }
     window.dispatchEvent(new Event(POLL_EVENT));
+    onVote?.(index, options[index]?.label ?? "");
   };
 
   const revealed = voted !== null || bonus !== null;

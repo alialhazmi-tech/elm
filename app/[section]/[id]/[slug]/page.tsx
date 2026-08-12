@@ -3,16 +3,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { EndingPoll } from "@/app/_components/poll";
 import { JakStory } from "@/app/_components/jak-slides";
 import { JakReport } from "@/app/_components/jak-report";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
+import {
+  ArticleClosingPoll,
+  ArticleToolbar,
+  ArticleTracker,
+  PersonalizedRelated,
+} from "@/app/_components/article-experience";
 import { brandDate, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
+import { toRelatedCard } from "@/lib/personalization/recommend";
 
 export const revalidate = 300;
 
@@ -47,14 +52,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     },
   };
 }
-
-const TOOLBAR = [
-  { label: "لخّص لي", primary: true, spark: true },
-  { label: "اشرحها أبسط" },
-  { label: "🎧 استمع" },
-  { label: "ناقش المادة" },
-  { label: "مشاركة" },
-];
 
 export default async function ArticlePage({ params }: Params) {
   const { id } = await params;
@@ -191,19 +188,12 @@ export default async function ArticlePage({ params }: Params) {
             </div>
           </header>
 
-          <div className="ai-surface ai-toolbar" aria-label="أدوات القارئ — تصل مع مرحلة خدمات الذكاء">
-            {TOOLBAR.map((tool) => (
-              <span
-                key={tool.label}
-                className={tool.primary ? "tool primary" : "tool"}
-                aria-disabled="true"
-                title="تصل مع مرحلة خدمات الذكاء"
-              >
-                {tool.spark ? <span className="spark">✦</span> : null}
-                {tool.label}
-              </span>
-            ))}
-          </div>
+          <ArticleToolbar
+            storyId={story.id}
+            joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
+            excerpt={story.excerpt}
+          />
+          <ArticleTracker storyId={story.id} />
 
           {story.image ? (
             <figure className="article-figure">
@@ -244,8 +234,8 @@ export default async function ArticlePage({ params }: Params) {
             ) : null}
           </div>
 
-          <EndingPoll
-            pollId={story.id}
+          <ArticleClosingPoll
+            storyId={story.id}
             question="هل غيّرت هذه المادة فهمك للموضوع؟"
             options={[
               { label: "نعم، أضافت لي سياقًا جديدًا", votes: 34 },
@@ -272,20 +262,7 @@ export default async function ArticlePage({ params }: Params) {
           ) : null}
         </article>
 
-        {related.length > 0 ? (
-          <section aria-labelledby="related-title">
-            <div className="section-head">
-              <div>
-                <h2 id="related-title">مواد ذات صلة</h2>
-              </div>
-            </div>
-            <div className="grid-3">
-              {related.map((item) => (
-                <MosaicCard key={item.id} story={item} />
-              ))}
-            </div>
-          </section>
-        ) : null}
+        <PersonalizedRelated storyId={story.id} fallback={related.map((item) => toRelatedCard(item))} />
       </main>
 
       <SiteFooter />
