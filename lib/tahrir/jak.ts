@@ -173,42 +173,49 @@ export async function replaceSlides(
 ): Promise<void> {
   const db = requireDb();
   const now = new Date().toISOString();
+  const sourceToSave = source?.trim();
+  const deleteSlides = () => db.delete(storySlides).where(eq(storySlides.storyId, storyId));
+  const updateStory = () => db
+    .update(stories)
+    .set({ body: projectSlides(slides), updatedAt: now })
+    .where(eq(stories.id, storyId));
+  const insertSlides = () => db.insert(storySlides).values(
+    slides.map((slide, position) => ({
+      id: slide.id || crypto.randomUUID(),
+      storyId,
+      position,
+      type: slide.type,
+      title: slide.title,
+      body: slide.body,
+      stat: slide.stat,
+      statLabel: slide.statLabel,
+      image: slide.image,
+      imageStyle: slide.imageStyle,
+      imagePrompt: slide.imagePrompt,
+      sourceContext: slide.sourceContext,
+      hidden: slide.hidden ? 1 : 0,
+      data: slide.data,
+    })),
+  );
+  const upsertSource = () => db
+    .insert(jakSources)
+    .values({ storyId, source: sourceToSave!, updatedAt: now })
+    .onConflictDoUpdate({
+      target: jakSources.storyId,
+      set: { source: sourceToSave!, updatedAt: now },
+    });
 
-  await db.transaction(async (tx) => {
-    await tx.delete(storySlides).where(eq(storySlides.storyId, storyId));
-    if (slides.length > 0) {
-      await tx.insert(storySlides).values(
-        slides.map((slide, position) => ({
-          id: slide.id || crypto.randomUUID(),
-          storyId,
-          position,
-          type: slide.type,
-          title: slide.title,
-          body: slide.body,
-          stat: slide.stat,
-          statLabel: slide.statLabel,
-          image: slide.image,
-          imageStyle: slide.imageStyle,
-          imagePrompt: slide.imagePrompt,
-          sourceContext: slide.sourceContext,
-          hidden: slide.hidden ? 1 : 0,
-          data: slide.data,
-        })),
-      );
-    }
-
-    await tx
-      .update(stories)
-      .set({ body: projectSlides(slides), updatedAt: now })
-      .where(eq(stories.id, storyId));
-
-    if (source !== undefined && source.trim()) {
-      await tx
-        .insert(jakSources)
-        .values({ storyId, source, updatedAt: now })
-        .onConflictDoUpdate({ target: jakSources.storyId, set: { source, updatedAt: now } });
-    }
-  });
+  // neon-http لا يدعم المعاملات التفاعلية، وbatch ينفذ الاستعلامات
+  // كمعاملة HTTP واحدة غير تفاعلية مع الحفاظ على ذرية الاستبدال.
+  if (slides.length > 0 && sourceToSave) {
+    await db.batch([deleteSlides(), insertSlides(), updateStory(), upsertSource()]);
+  } else if (slides.length > 0) {
+    await db.batch([deleteSlides(), insertSlides(), updateStory()]);
+  } else if (sourceToSave) {
+    await db.batch([deleteSlides(), updateStory(), upsertSource()]);
+  } else {
+    await db.batch([deleteSlides(), updateStory()]);
+  }
 
   const { audit } = await import("./service");
   await audit(actor, "jak:slides-save", storyId, `${slides.length} شريحة`);

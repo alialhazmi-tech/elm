@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { extractNumbers, unverifiedNumbers, normalizeSlide, validateJakPlan } from "../lib/ai/jak.ts";
@@ -134,4 +135,11 @@ test("السطح البصري يعفي من حد كلمات المتن ولا ي
   const asDesign = runPolicyGuard({ ...short, surface: "design" });
   assert.ok(asText.findings.some((finding) => finding.ruleId === "BODY-WORD-RANGE"));
   assert.ok(!asDesign.findings.some((finding) => finding.ruleId === "BODY-WORD-RANGE"));
+});
+
+test("حفظ شرائح جاك يستخدم batch المتوافق مع neon-http دون معاملة تفاعلية", async () => {
+  const source = await readFile(new URL("../lib/tahrir/jak.ts", import.meta.url), "utf8");
+  const replaceSlidesBody = source.slice(source.indexOf("export async function replaceSlides"));
+  assert.match(replaceSlidesBody, /await db\.batch\(/);
+  assert.doesNotMatch(replaceSlidesBody, /await db\.transaction\(/);
 });
