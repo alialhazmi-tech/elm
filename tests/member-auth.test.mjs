@@ -33,13 +33,17 @@ test("نموذج التسجيل يتحقق خادميًا ولا يكشف وجو
 });
 
 test("الواجهة العامة تقود إلى التسجيل الحقيقي والحساب محمي بالجلسة", async () => {
-  const [header, account, signup] = await Promise.all([
+  const [header, account, signup, form] = await Promise.all([
     read("app/_components/site-chrome.tsx"),
     read("app/account/page.tsx"),
     read("app/join/page.tsx"),
+    read("app/join/join-form.tsx"),
   ]);
   assert.match(header, /href="\/join"/);
   assert.match(account, /memberAuth\.getSession/);
   assert.match(account, /redirect\("\/join"\)/);
   assert.match(signup, /JoinForm/);
+  assert.match(form, /useActionState\(signUpMember, initialState\)/);
+  assert.match(form, /useActionState\(signInMember, initialState\)/);
+  assert.doesNotMatch(form, /const action = mode ===/);
 });
