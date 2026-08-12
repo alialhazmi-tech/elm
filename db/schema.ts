@@ -190,3 +190,13 @@ export const memberInterests = pgTable("member_interests", {
   index("member_interests_member_idx").on(table.memberId),
   index("member_interests_interest_idx").on(table.interestId),
 ]);
+
+/** قائمة انتظار النشرة البريدية — المزود الخارجي (MailerLite/…) يُربط لاحقًا في M3-T3. */
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  source: text("source").notNull().default("footer"),
+  createdAt: text("created_at").notNull(),
+}, (table) => [
+  index("newsletter_subscribers_created_idx").on(table.createdAt),
+]);

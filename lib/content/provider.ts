@@ -315,12 +315,12 @@ export const seedContentProvider: ContentProvider = {
 
   async listBySeries(slug) {
     const { stories } = await loadCorpus();
-    return stories.filter((story) => story.series === slug);
+    return stories.filter((story) => story.series === slug).sort(byDateDesc);
   },
 
   async listBySection(section) {
     const { stories } = await loadCorpus();
-    return stories.filter((story) => story.section === section);
+    return stories.filter((story) => story.section === section).sort(byDateDesc);
   },
 
   async listRelated(story, limit = 3) {
