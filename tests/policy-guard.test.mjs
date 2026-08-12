@@ -374,3 +374,28 @@ test("سجل التدقيق يحمل القواعد القاطعة ومعرف ا
   assert.equal(report.audit.draftId, "draft-1");
   assert.ok(report.audit.blockingRuleIds.includes("ROYAL-KING-FORBIDDEN"));
 });
+
+test("المطابقة تحترم بداية الكلمة — «العربية» ليست لقب «بيه»", () => {
+  // المطبّع يحوّل ة→ه فتصير «العربية» → «العربيه» وبداخلها «بيه» المحظورة.
+  for (const phrase of [
+    "المملكة العربية السعودية",
+    "الشركات الأجنبية الطبية",
+    "الضفة الغربية",
+    "المنطقة الشرقية والغربية",
+  ]) {
+    const report = runPolicyGuard({ title: "عنوان معرفي واضح", body: phrase, surface: "design" });
+    const honorific = report.findings.find((finding) => finding.ruleId === "OFFICIALS-HONORIFICS");
+    assert.equal(honorific, undefined, `حُجبت «${phrase}» بلا سبب`);
+  }
+});
+
+test("اللقب الحقيقي يبقى محجوبًا ولو التصق به حرف جر أو عطف", () => {
+  for (const phrase of ["سعادة السفير حضر", "وسعادة الوكيل افتتح", "معالي الوزير أعلن"]) {
+    const report = runPolicyGuard({ title: "عنوان معرفي واضح", body: phrase, surface: "design" });
+    const ids = report.findings.map((finding) => finding.ruleId);
+    assert.ok(
+      ids.includes("OFFICIALS-HONORIFICS"),
+      `لم تُلتقط الصفة في «${phrase}»`,
+    );
+  }
+});

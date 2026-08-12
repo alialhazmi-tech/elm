@@ -102,6 +102,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   const [imageProgress, setImageProgress] = useState<{ done: number; total: number } | null>(null);
   const [scheduleAt, setScheduleAt] = useState("");
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [blockers, setBlockers] = useState<Array<{ ruleId: string; message: string; excerpt?: string }>>([]);
 
   const canApprove = role === "approver" || role === "chief";
   const err = (text: string) => setMessage({ kind: "err", text });
@@ -352,9 +353,12 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
     const data = await response?.json().catch(() => null);
     setBusy(false);
     if (!response?.ok) {
+      // الحارس يعيد نص كل مخالفة ومقتطفها — تُعرض للمحرر ليعرف ما يصلح
+      setBlockers(Array.isArray(data?.findings) ? data.findings : []);
       err(data?.error ?? `تعذر ${label}.`);
       return;
     }
+    setBlockers([]);
     setStatus(route === "publish" ? "published" : "review");
     ok(route === "publish" ? "نُشر جاك العلم على الموقع." : "أُرسل للاعتماد — القرار بشري.");
     router.refresh();
@@ -376,9 +380,11 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
     const data = await response?.json().catch(() => null);
     setBusy(false);
     if (!response?.ok) {
+      setBlockers(Array.isArray(data?.findings) ? data.findings : []);
       err(data?.error ?? "تعذرت الجدولة.");
       return;
     }
+    setBlockers([]);
     setStatus("scheduled");
     ok("جُدول — الحارس يفحصه ثانية لحظة الموعد.");
   }
@@ -510,7 +516,18 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
             أسقط مدقق الأرقام {dropped.length} شريحة: {dropped.map((item) => `«${item.title}» (${item.reason})`).join(" · ")}
           </div>
         )}
-        {message && <div className={`th-msg ${message.kind}`} style={{ paddingBottom: 10 }}>{message.text}</div>}
+        {message && <div className={`th-msg ${message.kind}`} style={{ paddingBottom: blockers.length ? 4 : 10 }}>{message.text}</div>}
+        {blockers.length > 0 && (
+          <ul className="th-blockers">
+            {blockers.map((blocker, index) => (
+              <li key={`${blocker.ruleId}-${index}`}>
+                <b>{blocker.ruleId}</b>
+                <span>{blocker.message}</span>
+                {blocker.excerpt && <em>«{blocker.excerpt}»</em>}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="th-jak-grid">

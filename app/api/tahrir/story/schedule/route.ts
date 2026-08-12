@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
+import { blockingFindings } from "@/lib/policy/report";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { getStory, scheduleStory } from "@/lib/tahrir/service";
@@ -35,7 +36,11 @@ export async function POST(request: Request) {
   });
   if (!report.canRequestApproval) {
     return NextResponse.json(
-      { error: "ممنوعة الجدولة: مخالفات قاطعة لم تُعالج.", blocking: report.audit.blockingRuleIds },
+      {
+        error: "ممنوعة الجدولة: مخالفات قاطعة لم تُعالج.",
+        blocking: report.audit.blockingRuleIds,
+        findings: blockingFindings(report),
+      },
       { status: 422 },
     );
   }

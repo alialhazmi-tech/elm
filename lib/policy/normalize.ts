@@ -62,6 +62,32 @@ function excerptAround(text: string, index: number, length: number): string {
   return `${prefix}${text.slice(start, end).trim()}${suffix}`;
 }
 
+const LETTER = /\p{L}/u;
+/** سوابق ملتصقة تسبق الكلمة العربية ولا تكسر كونها بداية كلمة. */
+const CLITICS = ["وال", "فال", "بال", "كال", "ال", "لل", "و", "ف", "ب", "ل", "ك"];
+
+/**
+ * هل تبدأ المطابقة عند بداية كلمة فعلية؟
+ *
+ * ضرورية لا تجميلية: المطبّع يحوّل «ة» إلى «ه»، فتصير «العربية» → «العربيه»
+ * وبداخلها «بيه» — وهي صفة محظورة. بلا هذا الفحص تُحجب كل مادة تذكر
+ * «المملكة العربية السعودية» أو «الأجنبية» أو «الطبية».
+ */
+function atWordStart(text: string, index: number): boolean {
+  if (index === 0) return true;
+  const before = text[index - 1];
+  if (!LETTER.test(before)) return true;
+
+  // السوابق الملتصقة مقبولة إن كانت هي نفسها بداية الكلمة: «وسعاده» تُطابق «سعاده».
+  for (const clitic of CLITICS) {
+    const start = index - clitic.length;
+    if (start >= 0 && text.slice(start, index) === clitic) {
+      if (start === 0 || !LETTER.test(text[start - 1])) return true;
+    }
+  }
+  return false;
+}
+
 /**
  * يبحث عن عبارات محظورة داخل النص بعد تطبيع الطرفين.
  * يعيد مواضع المطابقة داخل النص المُطبَّع مع مقتطف قابل للعرض.
@@ -81,11 +107,13 @@ export function findPhrases(text: string, phrases: readonly string[]): PhraseMat
     for (;;) {
       const index = searchable.indexOf(needle, from);
       if (index === -1) break;
-      matches.push({
-        phrase,
-        index,
-        excerpt: excerptAround(haystack, index, needle.length),
-      });
+      if (atWordStart(searchable, index)) {
+        matches.push({
+          phrase,
+          index,
+          excerpt: excerptAround(haystack, index, needle.length),
+        });
+      }
       from = index + needle.length;
     }
   }

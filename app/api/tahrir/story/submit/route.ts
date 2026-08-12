@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
+import { blockingFindings } from "@/lib/policy/report";
 import { getSession } from "@/lib/tahrir/auth";
 import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
 
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
       {
         error: "ممنوع طلب الاعتماد حتى معالجة المخالفات القاطعة.",
         blocking: report.audit.blockingRuleIds,
+        findings: blockingFindings(report),
       },
       { status: 422 },
     );
