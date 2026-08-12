@@ -64,3 +64,32 @@ test("حزمة الويب تبقى منفصلة عن عقد الموبايل", a
   assert.match(web, /home-bundle\.v2/);
   assert.doesNotMatch(web, /mobile-home/);
 });
+
+test("رابط الوسائط يُشتق من أصل الطلب لا من نطاق ثابت", async () => {
+  const { absoluteMedia, requestOrigin } = await import("../lib/mobile/origin.ts");
+
+  const railway = new Request("https://elm-production-5035.up.railway.app/api/mobile/v1/home", {
+    headers: { host: "elm-production-5035.up.railway.app" },
+  });
+  assert.equal(requestOrigin(railway), "https://elm-production-5035.up.railway.app");
+  assert.equal(
+    absoluteMedia("/uploads/a.jpg", requestOrigin(railway)),
+    "https://elm-production-5035.up.railway.app/uploads/a.jpg",
+  );
+
+  // خلف بروكسي: الترويسات المعاد توجيهها هي الحقيقة
+  const proxied = new Request("http://internal/api", {
+    headers: { host: "internal", "x-forwarded-host": "alelm.net", "x-forwarded-proto": "https" },
+  });
+  assert.equal(requestOrigin(proxied), "https://alelm.net");
+
+  // محليًا http لا https
+  const local = new Request("http://127.0.0.1:3000/api", { headers: { host: "127.0.0.1:3000" } });
+  assert.equal(requestOrigin(local), "http://127.0.0.1:3000");
+
+  // الروابط الخارجية تمر كما هي (صور ووردبريس القديمة)
+  assert.equal(
+    absoluteMedia("https://dash.alelm.net/wp-content/x.webp", "https://any"),
+    "https://dash.alelm.net/wp-content/x.webp",
+  );
+});

@@ -64,24 +64,23 @@ struct HomeScreen: View {
                 }
 
                 DayStrip()
-                SeriesLensesRow(series: home.series)
+
+                // الهيرو أولًا: هو واجهة العدد وأول ما يقع عليه البصر — كان سادسًا
+                // فتفتح الرئيسية على قوائم نصية بلا صورة حتى تمرّر شاشتين.
+                HeroCard(story: home.hero)
 
                 if !home.brief.isEmpty {
                     BriefBlock(items: home.brief)
                 }
 
-                HeroCard(story: home.hero)
-
                 ForEach(home.minis) { story in
                     MiniStoryRow(story: story)
                 }
 
+                SeriesLensesRow(series: home.series)
+
                 if let data = home.dataStory {
                     DataStoryCard(story: data)
-                }
-
-                if !home.mostRead.isEmpty {
-                    MostReadList(stories: home.mostRead)
                 }
 
                 SectionHead(title: "وراء الخبر", subtitle: "السياق قبل السرعة")
@@ -97,6 +96,10 @@ struct HomeScreen: View {
 
                 if !home.numbers.isEmpty {
                     NumbersGrid(stats: home.numbers)
+                }
+
+                if !home.mostRead.isEmpty {
+                    MostReadList(stories: home.mostRead)
                 }
 
                 if !home.videos.isEmpty {

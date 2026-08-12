@@ -8,8 +8,10 @@ import {
 } from "@/lib/content/types";
 import type { BreakingItem } from "@/lib/content/provider";
 import { formatArticleDek } from "@/lib/format";
+import { absoluteMedia, FALLBACK_SITE as SITE, requestOrigin } from "./origin";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://alelm.net";
+export { absoluteMedia, requestOrigin };
+
 
 export const MOBILE_HOME_CONTRACT = "mobile-home.v1";
 
@@ -51,14 +53,8 @@ export type MobileHomePayload = {
   mostRead: MobileStoryCard[];
 };
 
-export function absoluteMedia(url: string | undefined): string | null {
-  if (!url) return null;
-  if (/^https?:\/\//i.test(url)) return url;
-  const path = url.startsWith("/") ? url : `/${url}`;
-  return `${SITE}${path}`;
-}
 
-export function toMobileCard(story: Story): MobileStoryCard {
+export function toMobileCard(story: Story, origin: string = SITE): MobileStoryCard {
   return {
     id: story.id,
     slug: story.slug,
@@ -70,7 +66,7 @@ export function toMobileCard(story: Story): MobileStoryCard {
     readingMinutes: story.readingMinutes,
     series: story.series ?? null,
     format: story.format ?? null,
-    image: absoluteMedia(story.image),
+    image: absoluteMedia(story.image, origin),
     publishedAt: story.publishedAt ?? null,
   };
 }
@@ -85,12 +81,12 @@ export function toMobileHome(
     generatedAt,
     breaking,
     brief: home.brief,
-    hero: toMobileCard(home.hero),
-    minis: home.minis.map(toMobileCard),
-    mosaic: home.mosaic.map(toMobileCard),
-    dataStory: home.dataStory ? toMobileCard(home.dataStory) : null,
+    hero: toMobileCard(home.hero, origin),
+    minis: home.minis.map((story) => toMobileCard(story, origin)),
+    mosaic: home.mosaic.map((story) => toMobileCard(story, origin)),
+    dataStory: home.dataStory ? toMobileCard(home.dataStory, origin) : null,
     question: home.question,
-    videos: home.videos.map(toMobileCard),
+    videos: home.videos.map((story) => toMobileCard(story, origin)),
     numbers: home.numbers,
     series: SERIES.map((item) => ({
       slug: item.slug,
@@ -98,6 +94,6 @@ export function toMobileHome(
       description: item.description,
       color: item.color,
     })),
-    mostRead: home.mostRead.map(toMobileCard),
+    mostRead: home.mostRead.map((story) => toMobileCard(story, origin)),
   };
 }

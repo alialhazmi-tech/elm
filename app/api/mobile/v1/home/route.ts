@@ -1,9 +1,9 @@
 import { contentSource, getBreaking, seedContentProvider } from "@/lib/content/provider";
-import { MOBILE_HOME_CONTRACT, toMobileHome } from "@/lib/mobile/home";
+import { MOBILE_HOME_CONTRACT, requestOrigin, toMobileHome } from "@/lib/mobile/home";
 
-export async function GET() {
+export async function GET(request: Request) {
   const [home, breaking] = await Promise.all([seedContentProvider.getHome(), getBreaking()]);
-  const payload = toMobileHome(home, breaking);
+  const payload = toMobileHome(home, breaking, requestOrigin(request));
 
   return Response.json(payload, {
     headers: {

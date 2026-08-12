@@ -67,7 +67,7 @@ function toChip(series: { slug: string; name: string; description: string; color
   };
 }
 
-export async function toMobileStory(id: string): Promise<MobileStoryPayload | null> {
+export async function toMobileStory(id: string, origin?: string): Promise<MobileStoryPayload | null> {
   const story = await seedContentProvider.getStory(id);
   if (!story) return null;
 
@@ -87,53 +87,54 @@ export async function toMobileStory(id: string): Promise<MobileStoryPayload | nu
           body: row.body,
           stat: row.stat || null,
           statLabel: row.statLabel || null,
-          image: absoluteMedia(row.image ?? undefined),
+          image: absoluteMedia(row.image ?? undefined, origin),
         }))
       : null;
 
   return {
     contract: MOBILE_STORY_CONTRACT,
     story: {
-      ...toMobileCard(story),
+      ...toMobileCard(story, origin),
       body: stripHtmlToText(story.body ?? story.excerpt),
       factCheck: story.factCheck ?? null,
     },
     series: series ? toChip(series) : null,
-    related: related.map(toMobileCard),
-    nextInSeries: nextInSeries ? toMobileCard(nextInSeries) : null,
+    related: related.map((item) => toMobileCard(item, origin)),
+    nextInSeries: nextInSeries ? toMobileCard(nextInSeries, origin) : null,
     slides,
   };
 }
 
 async function toEntry(
   series: { slug: string; name: string; description: string; color: string; archived?: boolean },
+  origin?: string,
 ): Promise<MobileSeriesEntry> {
   const stories = await seedContentProvider.listBySeries(series.slug);
   return {
     ...toChip(series),
     archived: Boolean(series.archived),
     count: stories.length,
-    latest: stories[0] ? toMobileCard(stories[0]) : null,
+    latest: stories[0] ? toMobileCard(stories[0], origin) : null,
   };
 }
 
-export async function toMobileSeriesIndex(): Promise<MobileSeriesIndexPayload> {
+export async function toMobileSeriesIndex(origin?: string): Promise<MobileSeriesIndexPayload> {
   const archived = await listVisibleArchivedSeries();
   return {
     contract: MOBILE_SERIES_INDEX_CONTRACT,
-    series: await Promise.all(SERIES.map(toEntry)),
-    archived: await Promise.all(archived.map(toEntry)),
+    series: await Promise.all(SERIES.map((item) => toEntry(item, origin))),
+    archived: await Promise.all(archived.map((item) => toEntry(item, origin))),
   };
 }
 
-export async function toMobileSeriesFeed(slug: string): Promise<MobileSeriesFeedPayload | null> {
+export async function toMobileSeriesFeed(slug: string, origin?: string): Promise<MobileSeriesFeedPayload | null> {
   const series = await seedContentProvider.getSeries(slug);
   if (!series) return null;
   const stories = await seedContentProvider.listBySeries(series.slug);
   return {
     contract: MOBILE_SERIES_FEED_CONTRACT,
     series: { ...toChip(series), archived: Boolean(series.archived) },
-    stories: stories.map(toMobileCard),
+    stories: stories.map((item) => toMobileCard(item, origin)),
     total: stories.length,
   };
 }
@@ -157,7 +158,7 @@ export type MobileSearchPayload = {
   total: number;
 };
 
-export async function toMobileSearch(query: string): Promise<MobileSearchPayload> {
+export async function toMobileSearch(query: string, origin?: string): Promise<MobileSearchPayload> {
   const trimmed = query.trim();
   const needle = foldSearchText(trimmed);
   if (!needle) {
@@ -175,7 +176,7 @@ export async function toMobileSearch(query: string): Promise<MobileSearchPayload
   return {
     contract: MOBILE_SEARCH_CONTRACT,
     query: trimmed,
-    results: stories.slice(0, 40).map(toMobileCard),
+    results: stories.slice(0, 40).map((item) => toMobileCard(item, origin)),
     total: stories.length,
   };
 }
@@ -187,7 +188,7 @@ export type MobileForYouPayload = {
   items: MobileForYouItem[];
 };
 
-export async function toMobileForYou(memberId: string, limit = 9): Promise<MobileForYouPayload> {
+export async function toMobileForYou(memberId: string, limit = 9, origin?: string): Promise<MobileForYouPayload> {
   const cards = await forYouForMember(memberId, limit);
   const all = await seedContentProvider.listAll();
   const byId = new Map(all.map((story) => [story.id, story]));
@@ -195,7 +196,7 @@ export async function toMobileForYou(memberId: string, limit = 9): Promise<Mobil
     .map((card) => {
       const story = byId.get(card.id);
       if (!story) return null;
-      return { ...toMobileCard(story), reason: card.reason?.text ?? null };
+      return { ...toMobileCard(story, origin), reason: card.reason?.text ?? null };
     })
     .filter((item): item is MobileForYouItem => Boolean(item));
 
