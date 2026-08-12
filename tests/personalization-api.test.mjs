@@ -66,6 +66,20 @@ test("التتبع النشط لا يرسل في كل ثانية ويحترم ا
   assert.doesNotMatch(client, /setInterval\([^,]+,\s*1000\)/);
 });
 
+test("أدوات التلخيص والتبسيط ليست في شريط المادة", async () => {
+  const client = await read("app/_components/article-experience.tsx");
+  assert.doesNotMatch(client, /لخّص لي|اشرحها أبسط/);
+  assert.match(client, /ناقش المادة/);
+  assert.match(client, /أعجبني/);
+});
+
+test("صور ذات الصلة تمر عبر next/image حتى لا يحجبها CSP", async () => {
+  const client = await read("app/_components/article-experience.tsx");
+  assert.match(client, /from "next\/image"/);
+  assert.match(client, /<Image className="c-img"/);
+  assert.doesNotMatch(client, /<img className="c-img"/);
+});
+
 test("الإعجاب للزائر يقود إلى مسار الدخول الحالي", async () => {
   const [client, article] = await Promise.all([
     read("app/_components/article-experience.tsx"),
@@ -76,15 +90,20 @@ test("الإعجاب للزائر يقود إلى مسار الدخول الحا
   assert.match(article, /\/join\?next=/);
 });
 
-test("سؤال الختام مربوط بملف العضو", async () => {
-  const [poll, client, route] = await Promise.all([
+test("سؤال الختام مربوط بملف العضو بلا أصوات وهمية", async () => {
+  const [poll, article, route, publicRoute] = await Promise.all([
     read("app/_components/poll.tsx"),
-    read("app/_components/article-experience.tsx"),
+    read("app/[section]/[id]/[slug]/page.tsx"),
     read("app/api/me/closing/route.ts"),
+    read("app/api/polls/closing/route.ts"),
   ]);
-  assert.match(poll, /onVote\?/);
-  assert.match(client, /\/api\/me\/closing/);
+  assert.match(poll, /\/api\/me\/closing/);
+  assert.match(poll, /\/api\/polls\/closing/);
+  assert.doesNotMatch(poll, /النتائج لحظية/);
+  assert.doesNotMatch(article, /votes:\s*34|votes:\s*12/);
   assert.match(route, /closing_answer/);
+  assert.match(route, /closingAnswerCounts/);
+  assert.match(publicRoute, /closingAnswerCounts/);
 });
 
 test("Haiku للتصنيف وأدوات القارئ لا في مسار فتح المقال", async () => {

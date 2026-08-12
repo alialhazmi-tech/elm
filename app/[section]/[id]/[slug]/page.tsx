@@ -12,7 +12,7 @@ import {
   ArticleTracker,
   PersonalizedRelated,
 } from "@/app/_components/article-experience";
-import { brandDate, toLatinDigits } from "@/lib/format";
+import { brandDate, formatArticleDek, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
@@ -175,7 +175,12 @@ export default async function ArticlePage({ params }: Params) {
               </Link>
             ) : null}
             <h1>{story.title}</h1>
-            <p className="article-deck">{story.excerpt}</p>
+            {story.excerpt ? (
+              <p className="article-deck">
+                <span className="article-deck-label">الموجز</span>
+                {formatArticleDek(story.excerpt)}
+              </p>
+            ) : null}
             <div className="article-meta">
               <span>{sectionName(story.section)}</span>
               {published && story.publishedAt ? (
@@ -238,8 +243,8 @@ export default async function ArticlePage({ params }: Params) {
             storyId={story.id}
             question="هل غيّرت هذه المادة فهمك للموضوع؟"
             options={[
-              { label: "نعم، أضافت لي سياقًا جديدًا", votes: 34 },
-              { label: "كنت أعرف أغلب ما فيها", votes: 12 },
+              { label: "نعم، أضافت لي سياقًا جديدًا" },
+              { label: "كنت أعرف أغلب ما فيها" },
             ]}
           />
 

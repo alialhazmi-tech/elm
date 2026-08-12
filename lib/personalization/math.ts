@@ -628,3 +628,12 @@ export function weaklySkippedIds(
   }
   return ids;
 }
+
+/** يجمع عدّ الخادم مع صوت محلي للزائر فقط — بلا بذور وهمية. */
+export function mergePollCounts(server: number[], chosen: number | null, includeLocal: boolean): number[] {
+  const next = server.map((value) => (Number.isFinite(value) && value > 0 ? Math.round(value) : 0));
+  if (includeLocal && chosen !== null && chosen >= 0 && chosen < next.length) {
+    next[chosen] += 1;
+  }
+  return next;
+}

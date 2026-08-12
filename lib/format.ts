@@ -33,3 +33,14 @@ export function brandDate(iso: string): { hijri: string; gregorian: string } {
     gregorian: toLatinDigits(GREGORIAN.format(date)),
   };
 }
+
+/** موجز المادة للعرض: يُنظَّف من حشو ووردبريس ويُقصّ إلى جملة مقروءة. */
+export function formatArticleDek(excerpt: string, maxChars = 168): string {
+  const text = excerpt.replace(/\s+/g, " ").replace(/[.\s…]+$/u, "").trim();
+  if (!text) return "";
+  if (text.length <= maxChars) return /[.؟!]$/.test(text) ? text : `${text}.`;
+  const slice = text.slice(0, maxChars);
+  const at = Math.max(slice.lastIndexOf("."), slice.lastIndexOf("،"), slice.lastIndexOf(" "));
+  const cut = (at > 72 ? slice.slice(0, at) : slice).trim();
+  return `${cut.replace(/[،,;:]$/u, "")}…`;
+}

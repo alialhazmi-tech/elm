@@ -13,6 +13,7 @@ import {
   emptyStats,
   ENGAGED_MS,
   isPubliclyRecommendable,
+  mergePollCounts,
   rankCandidates,
   recentlyReadIds,
   recommendationReason,
@@ -234,4 +235,11 @@ test("المسار الداخلي الآمن يرفض التحويل المفت�
   assert.equal(safeInternalPath("https://evil.test"), null);
   assert.equal(safeInternalPath("//evil.test"), null);
   assert.equal(safeInternalPath("/join"), null);
+});
+
+test("عدّ سؤال الختام لا يستخدم بذورًا وهمية", () => {
+  assert.deepEqual(mergePollCounts([0, 0], 0, true), [1, 0]);
+  assert.deepEqual(mergePollCounts([4, 1], 0, false), [4, 1]);
+  assert.deepEqual(mergePollCounts([4, 1], 0, true), [5, 1]);
+  assert.deepEqual(mergePollCounts([-3, Number.NaN], 1, false), [0, 0]);
 });

@@ -5,3 +5,4 @@ export { relatedForMember, relatedForVisitor, forYouForMember, toRelatedCard } f
 export { clearBehavioralData, setPersonalizationEnabled } from "./privacy";
 export { personalizationMetrics } from "./metrics";
 export { syncExplicitInterests } from "./interests";
+export { closingAnswerCounts } from "./poll";

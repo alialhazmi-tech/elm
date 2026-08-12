@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -13,23 +14,9 @@ export function ArticleClosingPoll({
 }: {
   storyId: string;
   question: string;
-  options: Array<{ label: string; votes: number }>;
+  options: Array<{ label: string }>;
 }) {
-  return (
-    <EndingPoll
-      pollId={storyId}
-      question={question}
-      options={options}
-      onVote={(index) => {
-        void fetch("/api/me/closing", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ storyId, answer: index }),
-        });
-      }}
-    />
-  );
+  return <EndingPoll pollId={storyId} question={question} options={options} />;
 }
 
 export type RelatedCard = {
@@ -95,7 +82,7 @@ export function ArticleToolbar({
     }
   };
 
-  const runTool = async (tool: "summary" | "simplify" | "discuss") => {
+  const runTool = async (tool: "discuss") => {
     if (!state.signedIn) return;
     setBusy(tool);
     setError(null);
@@ -103,7 +90,7 @@ export function ArticleToolbar({
       const response = await postJson("/api/me/ai", {
         tool,
         storyId,
-        question: tool === "discuss" ? question : undefined,
+        question: question,
       });
       const data = (await response.json()) as { text?: string; error?: string };
       if (!response.ok) {
@@ -111,7 +98,7 @@ export function ArticleToolbar({
         return;
       }
       setPanel({
-        title: tool === "summary" ? "الخلاصة" : tool === "simplify" ? "شرح أبسط" : "نقاش المادة",
+        title: "نقاش المادة",
         text: data.text ?? "",
       });
       setDiscussOpen(false);
@@ -162,34 +149,6 @@ export function ArticleToolbar({
           <Link className="tool" href={joinHref}>
             ♡ أعجبني
           </Link>
-        )}
-        {state.signedIn ? (
-          <button
-            type="button"
-            className="tool primary"
-            disabled={busy === "summary"}
-            onClick={() => void runTool("summary")}
-          >
-            <span className="spark">✦</span>
-            {busy === "summary" ? "يلخّص…" : "لخّص لي"}
-          </button>
-        ) : (
-          <Link className="tool primary" href={joinHref}>
-            <span className="spark">✦</span>
-            لخّص لي
-          </Link>
-        )}
-        {state.signedIn ? (
-          <button
-            type="button"
-            className="tool"
-            disabled={busy === "simplify"}
-            onClick={() => void runTool("simplify")}
-          >
-            {busy === "simplify" ? "يشرح…" : "اشرحها أبسط"}
-          </button>
-        ) : (
-          <Link className="tool" href={joinHref}>اشرحها أبسط</Link>
         )}
         <button type="button" className="tool" onClick={listen}>
           استمع
@@ -369,9 +328,7 @@ export function PersonalizedRelated({
         {items.map((item) => (
           <article key={item.id} className="m-card">
             {item.image ? (
-              // صور التوصيات شخصية بعد الترطيب — img أخف من next/image في جزيرة العميل
-              // eslint-disable-next-line @next/next/no-img-element
-              <img className="c-img" src={item.image} alt="" width={640} height={400} />
+              <Image className="c-img" src={item.image} alt="" width={640} height={400} />
             ) : null}
             <div className="m-body">
               <div className="m-kick">

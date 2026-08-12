@@ -238,6 +238,7 @@ export const memberStoryStats = pgTable("member_story_stats", {
 }, (table) => [
   primaryKey({ columns: [table.memberId, table.storyId] }),
   index("member_story_stats_member_idx").on(table.memberId),
+  index("member_story_stats_story_idx").on(table.storyId),
   index("member_story_stats_member_score_idx").on(table.memberId, table.interestScore),
 ]);
 
