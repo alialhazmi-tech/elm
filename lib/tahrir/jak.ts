@@ -100,7 +100,9 @@ export function imageGenerationPrompt(slide: JakSlide): string {
   if (!basePrompt || slide.data?.canvas !== "landscape") return basePrompt;
   const subjectSide = slide.data.focalPoint ?? "left";
   const quietSide = slide.data.textSafeArea ?? (subjectSide === "left" ? "right" : "left");
-  return `${basePrompt}. Premium editorial visual, 16:9 cinematic full-bleed scene filling the entire frame, atmospheric depth, primary subject on the ${subjectSide}, calm uncluttered negative space on the ${quietSide} third where Arabic headlines will be overlaid, deep navy and warm amber grade, no embedded text, no letters, no logos, no people faces in close-up.`;
+  // بلا فرض لوحة لونية: التدرج المفروض سابقًا كان يجعل كل الصور مشهدًا جويًا كحليًا
+  // ذهبيًا مهما اختلف الموضوع. تبقى القيود البنيوية وحدها.
+  return `${basePrompt}. Premium editorial photograph, 16:9 full-bleed composition filling the entire frame, primary subject on the ${subjectSide}, calm uncluttered negative space on the ${quietSide} third where Arabic headlines will be overlaid, no embedded text, no letters, no logos, no close-up faces of identifiable people.`;
 }
 
 /** ملاحظات حتمية تمنع ازدحام قوالب 16:9 قبل التصدير. */

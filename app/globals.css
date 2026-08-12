@@ -1366,6 +1366,9 @@ img { max-width: 100%; display: block; }
   background-image: linear-gradient(rgb(255 255 255 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .028) 1px, transparent 1px);
   background-size: 3.2cqw 3.2cqw;
 }
+/* صفحات البطاقات تحمل خلفية مولّدة خافتة: الصفحة تحيا والأرقام تبقى سيدة المشهد */
+.kind-data .jak-report-bg { opacity: .3; }
+.has-art.kind-data .jak-report-scrim { background: linear-gradient(180deg, rgb(8 14 26 / .74), rgb(8 14 26 / .9)); }
 .jak-report-dashboard-head { position: absolute; z-index: 3; top: 11cqw; inset-inline: 4.6cqw; }
 .jak-report-dashboard-head h2 { color: #fff; font: 900 3.1cqw/1.35 var(--font-display); margin: 0; text-wrap: balance; }
 .jak-report-dashboard-head p { font-size: 1.4cqw; color: rgb(255 255 255 / .7); margin: .8cqw 0 0; max-width: 60cqw; }

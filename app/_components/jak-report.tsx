@@ -53,7 +53,11 @@ function textSideOf(slide: JakSlide): "left" | "right" | "center" {
 /** شكل الصفحة: غلاف · اقتباس · صورة ساردة · لوح بيانات. */
 type PageKind = "cover" | "quote" | "photo" | "data";
 
+/** قوالب البيانات تبقى لوحًا مهما حملت صورة — الصورة فيها خلفية خافتة لا موضوعًا. */
+const DATA_TEMPLATES = new Set(["stats", "grid"]);
+
 const kindOf = (slide: JakSlide, index: number, hasArt: boolean): PageKind => {
+  if (slide.data?.template && DATA_TEMPLATES.has(slide.data.template)) return "data";
   if (!hasArt) return "data";
   if (index === 0 || slide.type === "hero") return "cover";
   if (slide.type === "quote") return "quote";

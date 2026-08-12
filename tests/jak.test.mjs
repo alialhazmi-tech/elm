@@ -160,8 +160,10 @@ test("صور التقرير تُولد كمشاهد غامرة تملأ الإط
     data: { canvas: "landscape", template: "cover", focalPoint: "left", textSafeArea: "right" },
   });
   assert.equal(imageGenerationSize(slide), "cover");
-  assert.match(imageGenerationPrompt(slide), /16:9 cinematic full-bleed/);
-  assert.match(imageGenerationPrompt(slide), /full-bleed scene filling the entire frame/);
+  assert.match(imageGenerationPrompt(slide), /16:9 full-bleed composition/);
+  assert.match(imageGenerationPrompt(slide), /filling the entire frame/);
+  // بلا فرض لوحة لونية — كانت تجعل كل الصور مشهدًا جويًا كحليًا ذهبيًا
+  assert.doesNotMatch(imageGenerationPrompt(slide), /deep navy and warm amber/);
   assert.match(imageGenerationPrompt(slide), /subject on the left/);
   // الصورة تصير الصفحة، فتُطلب مساحة هادئة في جهة النص لا لوح جانبي
   assert.match(imageGenerationPrompt(slide), /negative space on the right third/);
@@ -270,4 +272,24 @@ test("الجوال يكبّر خط التقرير ويطيل الصفحة بدل
   assert.match(mobile, /\.jak-report-page\.kind-data \{ aspect-ratio: auto/);
   // قواعد الجهات على الحاسوب أعلى أسبقية من قاعدة مفردة داخل @media
   assert.match(mobile, /\.kind-cover\.safe-center \.jak-report-copy \{\s*\n?\s*left: 5\.5cqw/);
+});
+
+test("صفحة الأرقام تبقى لوحًا ولو حملت صورة — الصورة خلفية خافتة لا موضوع", async () => {
+  const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+
+  assert.match(component, /const DATA_TEMPLATES = new Set\(\["stats", "grid"\]\)/);
+  assert.match(component, /if \(slide\.data\?\.template && DATA_TEMPLATES\.has\(slide\.data\.template\)\) return "data"/);
+  assert.match(styles, /\.kind-data \.jak-report-bg \{ opacity: \.3; \}/);
+  assert.match(styles, /\.has-art\.kind-data \.jak-report-scrim/);
+});
+
+test("موجّه التحليل يطلب مشهدًا من سياق الشريحة ولصفحات الأرقام أيضًا", async () => {
+  const planner = await readFile(new URL("../lib/ai/jak.ts", import.meta.url), "utf8");
+
+  assert.match(planner, /مشتقًا من sourceContext لهذه الشريحة/);
+  assert.match(planner, /لكل شريحة imagePrompt/);
+  // الوصفة الثابتة القديمة: مشهد جوي بلوحة كحلية ذهبية لكل شيء
+  assert.doesNotMatch(planner, /مشهد جوي atmospheric/);
+  assert.doesNotMatch(planner, /اتركه فارغًا لشرائح/);
 });
