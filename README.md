@@ -26,6 +26,7 @@ npm run dev
 
 ```bash
 curl -sI localhost:3000/api/content/home | grep -i x-content-source   # db أو seed
+curl -s localhost:3000/api/mobile/v1/home | head                      # عقد تطبيق iOS
 ```
 
 ## قاعدة البيانات
@@ -85,6 +86,7 @@ lib/policy/             محرك حارس السياسة وقواعده وقوا
 scripts/                db-seed، policy-check، ميزانية الأداء
 tests/                  عقد المنصة + اختبارات الحارس (29)
 docs/                   الدستور التحريري ووثائق التنفيذ
+ios/                    تطبيق العلم (SwiftUI) — M0 رموز وخطوط وتبويبات
 ```
 
 ## وثائق التنفيذ
@@ -94,5 +96,6 @@ docs/                   الدستور التحريري ووثائق التنف�
 - [`docs/critical-path.md`](docs/critical-path.md) — المسار الحرج
 - [`docs/risk-register.md`](docs/risk-register.md) — سجل المخاطر
 - [`docs/alelm-rebuild-progress.md`](docs/alelm-rebuild-progress.md) — سجل التقدم
+- [`docs/ios/HANDOFF.md`](docs/ios/HANDOFF.md) — حزمة تسليم تطبيق iOS (M0–M6)
 
 > لا تُنفذ الهجرة أو تهيئة Cloudflare أو أي ربط إنتاجي دون صلاحيات وبيانات معتمدة من المالك.
