@@ -56,11 +56,14 @@ function ReportPage({ slide, index, total, meta }: {
   total: number;
   meta: ReportMeta;
 }) {
-  // الصورة التي تفشل في التحميل تسقط الصفحة إلى لوح البيانات بدل ترك فراغ.
-  // الحالة تُصفَّر بتغير الصورة عبر مفتاح الصفحة في JakReport — لا حاجة لتأثير.
-  const [artReady, setArtReady] = useState(false);
+  /**
+   * شكل الصفحة يُحسم من وجود الصورة لا من اكتمال تحميلها — وإلا خرجت من الخادم
+   * لوح بيانات ثم قفزت إلى صورة بعد الترطيب (وميض محتوى مختلف كليًا).
+   * الفشل الفعلي وحده يُسقطها إلى لوح البيانات.
+   */
+  const [artFailed, setArtFailed] = useState(false);
 
-  const hasArt = Boolean(slide.image) && artReady;
+  const hasArt = Boolean(slide.image) && !artFailed;
   const kind = kindOf(slide, index, hasArt);
   const eyebrow = slide.data?.eyebrow || (kind === "data" ? "بالأرقام" : "جاك العلم");
   const safe = slide.data?.textSafeArea ?? (kind === "cover" ? "center" : "right");
@@ -82,8 +85,7 @@ function ReportPage({ slide, index, total, meta }: {
           unoptimized={slide.image.startsWith("/uploads/")}
           sizes="(max-width: 1100px) 100vw, 1280px"
           style={{ objectPosition: `${slide.data?.focalPoint ?? "center"} center` }}
-          onLoad={() => setArtReady(true)}
-          onError={() => setArtReady(false)}
+          onError={() => setArtFailed(true)}
           priority={index === 0}
         />
       )}

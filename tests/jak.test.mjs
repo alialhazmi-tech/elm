@@ -184,7 +184,10 @@ test("قالب التقرير يجعل الصورة خلفية الصفحة كا
 
   // الصفحة بلا صورة (أو بصورة فشل تحميلها) تسقط إلى لوح البيانات لا إلى فراغ
   assert.match(component, /hasArt \? "has-art" : "no-art"/);
-  assert.match(component, /onError=\{\(\) => setArtReady\(false\)\}/);
+  // الشكل يُحسم من وجود الصورة لا من اكتمال تحميلها — لا وميض لوح بيانات قبل الترطيب
+  assert.match(component, /Boolean\(slide\.image\) && !artFailed/);
+  assert.match(component, /onError=\{\(\) => setArtFailed\(true\)\}/);
+  assert.doesNotMatch(component, /onLoad=/);
   assert.match(styles, /\.jak-report-page\.kind-data \{/);
   assert.match(styles, /\.jak-report-page\.no-art \.jak-report-bg \{ visibility: hidden; \}/);
 });
