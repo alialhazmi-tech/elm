@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import "./tahrir.css";
+import "./mobile.css";
 
 export const metadata: Metadata = {
   title: { default: "تحرير العلم", template: "%s | تحرير العلم" },

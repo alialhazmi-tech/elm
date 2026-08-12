@@ -1,0 +1,66 @@
+/* طبقة الهاتف للوحة التحرير — ملف مستقل يُحمّل بعد الأساس لتجاوز الأنماط المضمّنة بأمان. */
+@media screen and (max-width: 700px) {
+  .th { font-size: 13px; }
+  .th-top { min-height: 58px; padding: 9px 12px; gap: 9px; }
+  .th-burger { width: 38px; height: 38px; border-radius: 10px; }
+  .th-crumb { min-width: 0; font-size: 13px; line-height: 1.35; }
+  .th-crumb small { max-width: 145px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .th-new { min-height: 38px; display: inline-flex; align-items: center; padding: 6px 11px; font-size: 11px; }
+  .th-screen { padding: 13px 12px 28px; }
+
+  .th-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .th-tile { min-height: 82px; padding: 11px 12px; border-radius: 11px; }
+  .th-tile .lb { font-size: 10.5px; }
+  .th-tile .v { font-size: 21px; }
+  .th-tile .tr { font-size: 9.5px; }
+
+  .th-cols, .th-ed, .th-imgen, .th-jak-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 8px !important; }
+  .th-panel { border-radius: 11px; box-shadow: 0 1px 2px rgb(16 30 48 / .04); }
+  .th-panel .hd { min-height: 42px; padding: 10px 12px; }
+  .th-qrow { min-height: 48px; padding: 9px 12px; }
+  .th-qrow .t { font-size: 12px; }
+
+  .th-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; margin-bottom: 9px; scrollbar-width: none; }
+  .th-fch { flex: none; padding: 5px 11px; font-size: 10.5px; }
+  .th-srow { margin-bottom: 6px; padding: 10px 11px; border-radius: 10px; box-shadow: none; }
+  .th-srow .t { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; font-size: 12px; line-height: 1.55; }
+  .th-srow .m { font-size: 9.5px; }
+  .th-srow .chips { gap: 5px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .th-pill, .th-serchip, .th-gchip, .th-draft-delete { flex: none; font-size: 9px; padding: 2px 8px; }
+
+  .th-ed-main { padding: 14px 12px 22px; border-radius: 11px; }
+  .th-ed-title { font-size: 18px; line-height: 1.55; }
+  .th-ed-sum { font-size: 12px; margin-bottom: 12px; }
+  .th-fullbar { gap: 7px; }
+  .th-fullbtn { width: 100%; min-height: 42px; }
+  .th-fullbar .hint { min-width: 0; font-size: 9.5px; }
+  .th-rt-bar { top: 58px; flex-wrap: nowrap; overflow-x: auto; padding-block: 6px; scrollbar-width: none; }
+  .th-rt-bar .tb { flex: none; min-height: 34px; padding: 5px 9px; }
+  .th-rt-box, .th-ed-body { min-height: 260px; font-size: 14px; }
+  .th-ed-side { gap: 8px; }
+  .th-actions { position: sticky; bottom: 0; z-index: 6; padding: 9px 11px 11px; background: var(--t-surface); box-shadow: 0 -10px 24px rgb(16 30 48 / .08); }
+  .th-send, .th-save { min-height: 42px; }
+
+  .th-media-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+  .th-mcard { border-radius: 10px; }
+  .th-mcard .thumb { height: 96px; }
+  .th-mcard .mi { padding: 7px 8px; }
+  .th-stylecards { grid-template-columns: 1fr !important; }
+  .th-gen-results { grid-template-columns: 1fr; padding: 10px; }
+  .th-sergrid { grid-template-columns: 1fr; gap: 7px; }
+  .th-sercard { padding: 11px 12px; }
+  .th-tlrow { grid-template-columns: 36px minmax(0, 1fr); gap: 8px; }
+  .th-audrow, .th-set-row { grid-template-columns: minmax(0, 1fr) auto !important; }
+
+  .th-login { padding: 14px; align-items: start; padding-top: max(36px, env(safe-area-inset-top)); }
+  .th-login-card { max-width: none; padding: 26px 20px; border-radius: 14px; }
+  .th-login-card input { min-height: 44px; font-size: 16px; }
+  .th-login-card .go { min-height: 46px; }
+}
+
+@media screen and (max-width: 380px) {
+  .th-crumb small { display: none; }
+  .th-new { font-size: 0; width: 38px; padding: 0; justify-content: center; }
+  .th-new::before { content: "+"; font-size: 20px; }
+  .th-screen { padding-inline: 10px; }
+}

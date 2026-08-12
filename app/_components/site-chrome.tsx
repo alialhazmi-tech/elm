@@ -71,6 +71,17 @@ export async function SiteHeader({ active }: { active?: string }) {
           <MemberEntry />
         </div>
       </div>
+      <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
+        {NAV.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={active === item.href ? "is-active" : undefined}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
       <BreakingBar />
     </header>
   );

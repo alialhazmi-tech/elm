@@ -1,5 +1,5 @@
 /** حجم صفحة القوائم العامة (أقسام / سلاسل). */
-export const LIST_PAGE_SIZE = 31;
+export const LIST_PAGE_SIZE = 18;
 
 export type PageSlice<T> = {
   items: T[];

@@ -4,6 +4,8 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { toLatinDigits } from "@/lib/format";
 import { MosaicCard } from "@/app/_components/story-card";
+import { Pagination } from "@/app/_components/pagination";
+import { paginate } from "@/lib/content/pagination";
 import { seedContentProvider } from "@/lib/content/provider";
 
 export const metadata: Metadata = {
@@ -12,12 +14,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
-type Props = { searchParams: Promise<{ q?: string }> };
+type Props = { searchParams: Promise<{ q?: string; p?: string }> };
 
 export default async function SearchPage({ searchParams }: Props) {
-  const { q } = await searchParams;
+  const { q, p } = await searchParams;
   const query = (q ?? "").trim();
-  const results = query ? await seedContentProvider.search(query) : [];
+  const allResults = query ? await seedContentProvider.search(query) : [];
+  const { items: results, page, pageCount, total, from, to } = paginate(allResults, p);
 
   return (
     <>
@@ -30,7 +33,9 @@ export default async function SearchPage({ searchParams }: Props) {
           <h1>{query ? `نتائج «${query}»` : "ابحث في العلم"}</h1>
           <p className="hub-count">
             {query
-              ? `${toLatinDigits(results.length)} نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات`
+              ? pageCount > 1
+                ? `${toLatinDigits(total)} نتيجة · عرض ${toLatinDigits(from)}–${toLatinDigits(to)} · صفحة ${toLatinDigits(page)} من ${toLatinDigits(pageCount)}`
+                : `${toLatinDigits(total)} نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات`
               : "اكتب سؤالك أو كلمتك — والإجابات الذكية بالإحالة للمصدر تصل مع مرحلة خدمات الذكاء"}
           </p>
         </section>
@@ -62,14 +67,17 @@ export default async function SearchPage({ searchParams }: Props) {
           </section>
 
           {results.length > 0 ? (
-            <div className="grid-3">
-              {results.map((story) => (
-                <MosaicCard key={story.id} story={story} />
-              ))}
-            </div>
+            <>
+              <div className="grid-3">
+                {results.map((story) => (
+                  <MosaicCard key={story.id} story={story} />
+                ))}
+              </div>
+              <Pagination basePath="/search" page={page} pageCount={pageCount} extra={{ q: query }} />
+            </>
           ) : null}
 
-          {query && results.length === 0 ? (
+          {query && total === 0 ? (
             <p className="empty-state">لا نتائج مطابقة. جرّب كلمة أعم أو تصفّح السلاسل.</p>
           ) : null}
         </div>
