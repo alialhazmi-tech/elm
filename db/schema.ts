@@ -3,7 +3,7 @@
  * يُدفع إلى Neon عبر `npm run db:push`، ويُزرع من البذرة عبر `npm run db:seed`.
  */
 
-import { index, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { index, integer, jsonb, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 
 export const series = pgTable("series", {
   slug: text("slug").primaryKey(),
@@ -158,3 +158,35 @@ export const auditLog = pgTable("audit_log", {
   storyId: text("story_id"),
   detail: text("detail").notNull().default(""),
 });
+
+/** ملف عضو الموقع العام — المعرّف يأتي من Neon Auth ولا يختلط بمستخدمي التحرير. */
+export const memberProfiles = pgTable("member_profiles", {
+  authUserId: text("auth_user_id").primaryKey(),
+  onboardingCompleted: integer("onboarding_completed").notNull().default(0),
+  personalizationEnabled: integer("personalization_enabled").notNull().default(1),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+/** قاموس اهتمامات مستقل عن أقسام الموقع وقابل للتوسع إلى موضوعات وكيانات لاحقًا. */
+export const interests = pgTable("interests", {
+  id: text("id").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  color: text("color").notNull(),
+  /** مفاتيح أقسام/مصطلحات تستخدمها خوارزمية الترتيب التفسيرية الخفيفة. */
+  contentKeys: jsonb("content_keys").notNull(),
+  position: integer("position").notNull().default(0),
+  active: integer("active").notNull().default(1),
+});
+
+/** اختيارات العضو الصريحة فقط — منفصلة عن أي إشارات مستنتجة مستقبلًا. */
+export const memberInterests = pgTable("member_interests", {
+  memberId: text("member_id").notNull(),
+  interestId: text("interest_id").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.memberId, table.interestId] }),
+  index("member_interests_member_idx").on(table.memberId),
+  index("member_interests_interest_idx").on(table.interestId),
+]);

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getBreaking } from "@/lib/content/provider";
 import { ThemeToggle } from "./theme-toggle";
+import { MemberEntry } from "./member-entry";
 
 const NAV = [
   { label: "الرئيسية", href: "/" },
@@ -64,7 +65,7 @@ export async function SiteHeader({ active }: { active?: string }) {
             <kbd>⌘K</kbd>
           </Link>
           <ThemeToggle />
-          <Link className="member-entry" href="/join">انضم</Link>
+          <MemberEntry />
         </div>
       </div>
       <BreakingBar />

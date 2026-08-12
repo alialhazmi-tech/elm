@@ -177,6 +177,7 @@ img { max-width: 100%; display: block; }
   min-height: 34px; padding: 6px 14px; border-radius: 999px;
   background: var(--navy-deep); color: #fff; font-size: 11.5px; font-weight: 700;
 }
+.member-entry.is-member { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-2); }
 
 /* ============ أسطح الذكاء ============ */
 .ai-surface {

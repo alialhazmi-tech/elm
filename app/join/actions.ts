@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { getMemberProfile } from "@/lib/membership/profile";
 
 export type AuthFormState = { error?: string };
 
@@ -33,7 +34,7 @@ export async function signUpMember(
     return { error: "تعذر الاتصال بخدمة العضوية. حاول مرة أخرى بعد قليل." };
   }
 
-  redirect("/account?welcome=1");
+  redirect("/welcome");
 }
 
 export async function signInMember(
@@ -45,12 +46,15 @@ export async function signInMember(
   const { email, password } = credentials(formData);
   if (!emailPattern.test(email) || !password) return { error: "أدخل البريد وكلمة المرور." };
 
+  let memberId = "";
   try {
     const result = await memberAuth.signIn.email({ email, password });
     if (result.error) return { error: "البريد أو كلمة المرور غير صحيحة." };
+    memberId = result.data?.user?.id ?? "";
   } catch {
     return { error: "تعذر الاتصال بخدمة العضوية. حاول مرة أخرى بعد قليل." };
   }
 
-  redirect("/account");
+  const profile = memberId ? await getMemberProfile(memberId) : null;
+  redirect(profile?.onboardingCompleted ? "/for-you" : "/welcome");
 }

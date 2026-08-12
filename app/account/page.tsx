@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { getMemberProfile } from "@/lib/membership/profile";
 import { signOutMember } from "./actions";
 import "../join/member-auth.css";
 
@@ -15,6 +16,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   if (!data?.user) redirect("/join");
   const { welcome } = await searchParams;
   const name = data.user.name || "عضو العلم";
+  const profile = await getMemberProfile(data.user.id);
 
-  return <><SiteHeader /><main className="member-account">{welcome === "1" && <p className="member-welcome">تم إنشاء حسابك وتسجيل دخولك بنجاح.</p>}<header className="member-account-head"><div className="member-account-avatar">{name.slice(0,1)}</div><div><h1>{name}</h1><p>عضو في العلم</p></div></header><div className="member-account-grid"><section className="member-account-card"><h2>بيانات الحساب</h2><p>البريد الإلكتروني</p><code>{data.user.email}</code></section><section className="member-account-card"><h2>تجربتك</h2><p>حفظ المواد والاهتمامات وصفحة «لك» ستُربط بهذا الحساب في الدفعة التالية.</p><Link href="/">العودة إلى العلم ←</Link></section></div><form action={signOutMember} style={{marginTop:18}}><button className="member-signout">تسجيل الخروج</button></form></main><SiteFooter /></>;
+  return <><SiteHeader /><main className="member-account">{welcome === "1" && <p className="member-welcome">تم إنشاء حسابك وتسجيل دخولك بنجاح.</p>}<header className="member-account-head"><div className="member-account-avatar">{name.slice(0,1)}</div><div><h1>{name}</h1><p>عضو في العلم</p></div><Link className="member-account-home" href="/for-you">افتح صفحتي ←</Link></header><div className="member-account-grid"><section className="member-account-card"><h2>بيانات الحساب</h2><p>البريد الإلكتروني</p><code>{data.user.email}</code></section><section className="member-account-card"><h2>اهتماماتي <span>{profile.interests.length}</span></h2><div className="member-interest-tags">{profile.interests.map((item) => <i key={item.id}>{item.label}</i>)}</div><Link href="/welcome">تعديل الاهتمامات ←</Link></section><section className="member-account-card"><h2>مكتبتي</h2><p>المواد التي تحفظها ستظهر هنا. ربط الحفظ بالمقالات هو الخطوة التالية.</p></section><section className="member-account-card"><h2>الخصوصية والتخصيص</h2><p>اهتماماتك المعلنة فقط مستخدمة الآن. لا توجد إشارات مستنتجة مخفية.</p></section></div><form action={signOutMember} style={{marginTop:18}}><button className="member-signout">تسجيل الخروج</button></form></main><SiteFooter /></>;
 }

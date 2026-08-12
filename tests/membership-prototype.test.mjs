@@ -39,10 +39,13 @@ test("بيانات النموذج محلية ولا تستخدم قاعدة ال
   assert.match(data, /prototypeStories/);
 });
 
-test("المخطط المقترح موثق فقط ولم تضاف جداول أعضاء للمخطط الحالي", async () => {
+test("مخطط العضوية المعتمد مستقل عن مستخدمي التحرير", async () => {
   const [schema, doc] = await Promise.all([readFile(schemaPath, "utf8"), readFile(docPath, "utf8")]);
-  assert.doesNotMatch(schema, /member_interests|member_identities|recommendation_impressions/);
-  assert.match(doc, /مخطط البيانات المقترح — غير مطبّق/);
+  assert.match(schema, /member_profiles/);
+  assert.match(schema, /member_interests/);
+  assert.doesNotMatch(schema, /memberProfiles[\s\S]*users\.id/);
+  assert.match(doc, /مخطط البيانات — تنفيذ مرحلي/);
+  assert.match(doc, /النواة التشغيلية مطبقة/);
   assert.match(doc, /MemberAuth/);
   assert.match(doc, /لا علاقة أو FK/);
 });

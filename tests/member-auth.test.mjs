@@ -39,11 +39,25 @@ test("الواجهة العامة تقود إلى التسجيل الحقيقي 
     read("app/join/page.tsx"),
     read("app/join/join-form.tsx"),
   ]);
-  assert.match(header, /href="\/join"/);
+  assert.match(header, /MemberEntry/);
   assert.match(account, /memberAuth\.getSession/);
   assert.match(account, /redirect\("\/join"\)/);
   assert.match(signup, /JoinForm/);
   assert.match(form, /useActionState\(signUpMember, initialState\)/);
   assert.match(form, /useActionState\(signInMember, initialState\)/);
   assert.doesNotMatch(form, /const action = mode ===/);
+});
+
+test("نجاح التسجيل يبدأ الترحيب والاهتمامات ثم صفحة لك", async () => {
+  const [actions, welcome, ready, feed, account, header] = await Promise.all([
+    read("app/join/actions.ts"), read("app/welcome/page.tsx"), read("app/welcome/ready/page.tsx"),
+    read("app/for-you/page.tsx"), read("app/account/page.tsx"), read("app/_components/member-entry.tsx"),
+  ]);
+  assert.match(actions, /redirect\("\/welcome"\)/);
+  assert.match(welcome, /InterestPicker/);
+  assert.match(ready, /جهّزنا العلم لك/);
+  assert.match(feed, /صباح المعرفة/);
+  assert.match(account, /getMemberProfile/);
+  assert.match(header, /\/api\/auth\/get-session/);
+  assert.match(header, /حسابي/);
 });
