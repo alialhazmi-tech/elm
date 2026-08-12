@@ -516,12 +516,16 @@ img { max-width: 100%; display: block; }
   margin: 0.9rem 0 0.55rem;
 }
 .article-deck {
-  font-size: 0.84rem; color: var(--ink-3); line-height: 1.7;
-  margin: 0 0 1rem; max-width: 38rem; font-weight: 500;
+  margin: 0 0 1rem;
 }
 .article-deck-label {
   display: block; font-size: 0.68rem; font-weight: 700;
   color: var(--ink-3); margin-bottom: 0.28rem;
+}
+.article-deck-text {
+  display: block;
+  font-size: 0.84rem; color: var(--ink-3); line-height: 1.7; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .article-meta {
   display: flex; gap: 1.1rem; flex-wrap: wrap;

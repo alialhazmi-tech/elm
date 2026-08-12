@@ -178,7 +178,7 @@ export default async function ArticlePage({ params }: Params) {
             {story.excerpt ? (
               <p className="article-deck">
                 <span className="article-deck-label">الموجز</span>
-                {formatArticleDek(story.excerpt)}
+                <span className="article-deck-text">{formatArticleDek(story.excerpt)}</span>
               </p>
             ) : null}
             <div className="article-meta">
