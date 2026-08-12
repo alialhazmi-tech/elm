@@ -37,6 +37,19 @@ function StatValue({ value }: { value: string }) {
   );
 }
 
+/**
+ * جهة النص = عكس موضوع الصورة دائمًا، فلا يجلس الكلام فوق ما تركّز عليه الصورة.
+ * تصنيف الذكاء يُحترم ما لم يناقض نفسه (نص وموضوع في الجهة ذاتها).
+ */
+const OPPOSITE = { left: "right", right: "left", center: "center" } as const;
+
+function textSideOf(slide: JakSlide): "left" | "right" | "center" {
+  const focal = (slide.data?.focalPoint ?? "center") as keyof typeof OPPOSITE;
+  const declared = slide.data?.textSafeArea as "left" | "right" | "center" | undefined;
+  if (declared && declared !== focal) return declared;
+  return OPPOSITE[focal] ?? "center";
+}
+
 /** شكل الصفحة: غلاف · اقتباس · صورة ساردة · لوح بيانات. */
 type PageKind = "cover" | "quote" | "photo" | "data";
 
@@ -85,7 +98,7 @@ function ReportPage({ slide, index, total, meta }: {
   const hasArt = Boolean(slide.image) && !artFailed;
   const kind = kindOf(slide, index, hasArt);
   const eyebrow = slide.data?.eyebrow || (kind === "data" ? "بالأرقام" : "جاك العلم");
-  const safe = slide.data?.textSafeArea ?? (kind === "cover" ? "center" : "right");
+  const safe = textSideOf(slide);
   const blocks = fallbackBlocks(slide);
   const listItems = slide.data?.items ?? [];
 

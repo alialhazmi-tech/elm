@@ -243,3 +243,29 @@ test("أرقام التقرير تصعد عند ظهور الصفحة والقي
   // السنة تصعد من نافذة قصيرة قبلها لا من الصفر
   assert.match(motion, /target >= 1900 && target <= 2100/);
 });
+
+test("النص يجلس في الجهة الفارغة من الصورة لا فوق موضوعها", async () => {
+  const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const block = styles.slice(styles.indexOf("جاك العلم — التقرير البصري الأفقي"));
+
+  // الجهة تُشتق عكس موضوع الصورة
+  assert.match(component, /const OPPOSITE = \{ left: "right", right: "left", center: "center" \}/);
+  assert.match(component, /const safe = textSideOf\(slide\)/);
+
+  // الوضع فيزيائي: المنطقي ينعكس في RTL بينما التدرج لا ينعكس، فيتباعدان
+  assert.match(block, /\.safe-right \.jak-report-copy \{ right: 4\.6cqw; \}/);
+  assert.match(block, /\.safe-left \.jak-report-copy \{ left: 4\.6cqw; \}/);
+  assert.doesNotMatch(block, /\.safe-(right|left) \.jak-report-copy \{ inset-inline/);
+});
+
+test("الجوال يكبّر خط التقرير ويطيل الصفحة بدل حشرها في 16:9", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const mobile = styles.slice(styles.indexOf("@media (max-width: 780px)"));
+
+  assert.match(mobile, /aspect-ratio: 4 \/ 5/);
+  assert.match(mobile, /\.jak-report-copy h1 \{ font-size: 8cqw/);
+  assert.match(mobile, /\.jak-report-copy > p \{ font-size: 3\.7cqw/);
+  // لوح البيانات ينمو بمحتواه على الشاشة الصغيرة
+  assert.match(mobile, /\.jak-report-page\.kind-data \{ aspect-ratio: auto/);
+});

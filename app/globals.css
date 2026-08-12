@@ -1338,10 +1338,13 @@ img { max-width: 100%; display: block; }
 }
 
 /* النص فوق الصورة */
+/* الوضع فيزيائي (left/right) لا منطقي: التدرجات لا تنعكس في RTL، فلو وُضع النص
+   منطقيًا لجلس فوق موضوع الصورة بينما تعتم الجهة الفارغة. */
 .jak-report-copy { position: absolute; z-index: 3; bottom: 8.5cqw; width: 47cqw; }
-.safe-right .jak-report-copy { inset-inline-end: 4.6cqw; }
-.safe-left .jak-report-copy { inset-inline-start: 4.6cqw; }
-.safe-center .jak-report-copy, .kind-cover .jak-report-copy { inset-inline-start: 4.6cqw; width: 62cqw; }
+.safe-right .jak-report-copy { right: 4.6cqw; }
+.safe-left .jak-report-copy { left: 4.6cqw; }
+.kind-cover .jak-report-copy { width: 54cqw; }
+.safe-center .jak-report-copy, .kind-cover.safe-center .jak-report-copy { left: 4.6cqw; right: 4.6cqw; width: auto; max-width: 64cqw; }
 .jak-report-copy h1 { color: #fff; font: 900 4.4cqw/1.32 var(--font-display); margin: 0 0 1.4cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
 .jak-report-copy h2 { color: #fff; font: 800 3.3cqw/1.38 var(--font-display); margin: 0 0 1.2cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
 .jak-report-copy > p { font-size: 1.5cqw; line-height: 1.95; margin: 0; color: rgb(255 255 255 / .9); max-width: 44cqw; }
@@ -1377,9 +1380,47 @@ img { max-width: 100%; display: block; }
 .jak-report-block h3 { color: #fff; font: 700 1.45cqw/1.35 var(--font-display); margin: .9cqw 0 0; }
 .jak-report-block p { font-size: 1.2cqw; line-height: 1.7; color: rgb(255 255 255 / .75); margin: .5cqw 0 0; }
 
-@media (max-width: 720px) {
-  .jak-report { padding: 0; gap: 8px; }
-  .jak-report-page { width: 100%; box-shadow: none; }
+@media (max-width: 780px) {
+  .jak-report { padding: 0; gap: 10px; }
+  /* 16:9 على شاشة 390px يعطي صفحة بارتفاع 219px — الخط فيها 5px. الصفحة تصير
+     طولية والنص أسفلها بمقاسات مضاعفة. */
+  .jak-report-page { width: 100%; box-shadow: none; aspect-ratio: 4 / 5; }
+  .has-art .jak-report-scrim {
+    background: linear-gradient(0deg, rgb(8 14 26 / .97) 8%, rgb(8 14 26 / .84) 36%, rgb(8 14 26 / .22) 64%, rgb(8 14 26 / .42) 100%);
+  }
+  .jak-report-brand { top: 6cqw; inset-inline: 5.5cqw; }
+  .jak-report-brand span { font-size: 5.2cqw; }
+  .jak-report-brand small { font-size: 2.9cqw; }
+  .jak-report-foot { bottom: 4.6cqw; inset-inline: 5.5cqw; font-size: 2.8cqw; }
+  .jak-report-eyebrow { font-size: 3cqw; border-inline-start-width: .7cqw; padding-inline-start: 2cqw; margin-bottom: 3.4cqw; }
+
+  .jak-report-copy { left: 5.5cqw; right: 5.5cqw; width: auto; max-width: none; bottom: 11cqw; }
+  .jak-report-copy h1 { font-size: 8cqw; line-height: 1.4; margin-bottom: 3cqw; }
+  .jak-report-copy h2 { font-size: 6.4cqw; line-height: 1.45; margin-bottom: 2.6cqw; }
+  .jak-report-copy > p { font-size: 3.7cqw; line-height: 1.9; max-width: none; }
+  .jak-report-list { margin-top: 3.4cqw; gap: 2cqw; }
+  .jak-report-list li { font-size: 3.6cqw; padding-inline-start: 5cqw; }
+  .jak-report-list li::before { width: 1.7cqw; height: 1.7cqw; top: 1.6cqw; }
+  .jak-report-inline-stat { margin-top: 3.6cqw; gap: 2.6cqw; }
+  .jak-report-inline-stat strong { font-size: 11cqw; }
+  .jak-report-inline-stat span { font-size: 3.3cqw; }
+  .kind-quote .jak-report-copy { width: auto; bottom: 12cqw; }
+  .kind-quote blockquote { font-size: 6.2cqw; line-height: 1.65; }
+  .kind-quote blockquote::before { font-size: 10cqw; }
+  .kind-quote cite { font-size: 3.1cqw; margin-top: 3cqw; }
+
+  /* لوح البيانات ينمو بمحتواه بدل حشره في نسبة ثابتة */
+  .jak-report-page.kind-data { aspect-ratio: auto; display: flex; flex-direction: column; gap: 5cqw; padding: 18cqw 5.5cqw 14cqw; }
+  .kind-data .jak-report-dashboard-head, .kind-data .jak-report-blocks { position: static; inset: auto; }
+  .jak-report-dashboard-head h2 { font-size: 6.4cqw; line-height: 1.45; }
+  .jak-report-dashboard-head p { font-size: 3.6cqw; max-width: none; margin-top: 2.4cqw; }
+  .jak-report-blocks, .jak-report-blocks.count-2, .jak-report-blocks.count-3,
+  .jak-report-blocks.count-4, .jak-report-blocks.count-5, .jak-report-blocks.count-6 { grid-template-columns: 1fr; gap: 3cqw; }
+  .jak-report-block { border-radius: 3cqw; padding: 4.5cqw 4cqw; border-top-width: .8cqw; }
+  .jak-report-block strong { font-size: 9cqw; }
+  .jak-report-block small { font-size: 2.9cqw; margin-top: 1.6cqw; }
+  .jak-report-block h3 { font-size: 4cqw; margin-top: 2.2cqw; }
+  .jak-report-block p { font-size: 3.3cqw; margin-top: 1.4cqw; }
 }
 
 @media print {
