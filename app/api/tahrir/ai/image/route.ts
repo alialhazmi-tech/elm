@@ -1,11 +1,9 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import { NextResponse } from "next/server";
 
 import { generateImages, IMAGE_STYLES } from "@/lib/ai/images";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, logUsage } from "@/lib/ai/usage";
+import { putStoredImage } from "@/lib/storage/images";
 import { getSession } from "@/lib/tahrir/auth";
 import { addMedia, audit } from "@/lib/tahrir/service";
 
@@ -45,15 +43,12 @@ export async function POST(request: Request) {
       count: input.count === 1 ? 1 : 2,
     });
 
-    const dir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(dir, { recursive: true });
-
     const saved = [];
     for (const image of images) {
       const id = crypto.randomUUID();
       const ext = image.mime.includes("jpeg") ? "jpg" : "png";
       const bytes = Buffer.from(image.base64, "base64");
-      await writeFile(path.join(dir, `${id}.${ext}`), bytes);
+      await putStoredImage({ filename: `${id}.${ext}`, body: bytes, contentType: image.mime });
 
       await addMedia(
         {

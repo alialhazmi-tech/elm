@@ -1,8 +1,6 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import { NextResponse } from "next/server";
 
+import { putStoredImage } from "@/lib/storage/images";
 import { getSession } from "@/lib/tahrir/auth";
 import { readImageMeta } from "@/lib/tahrir/imageMeta";
 import { addMedia } from "@/lib/tahrir/service";
@@ -15,8 +13,8 @@ const EXT: Record<string, string> = {
 };
 
 /**
- * رفع صورة إلى المكتبة — محليًا إلى public/uploads بمسار UUID قصير؛
- * مرحلة R2 لاحقًا تبدل التخزين دون تغيير هذا العقد. الحقوق تبدأ
+ * رفع صورة إلى المكتبة — تحفظ في مخزن S3 المتوافق بمسار UUID قصير.
+ * الحقوق تبدأ
  * غير موثقة دائمًا (الدستور §12) حتى يوثقها معتمد.
  */
 export async function POST(request: Request) {
@@ -39,10 +37,9 @@ export async function POST(request: Request) {
   }
 
   const id = crypto.randomUUID();
-  const url = `/uploads/${id}.${EXT[meta.mime]}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, `${id}.${EXT[meta.mime]}`), buffer);
+  const filename = `${id}.${EXT[meta.mime]}`;
+  const url = `/uploads/${filename}`;
+  await putStoredImage({ filename, body: buffer, contentType: meta.mime });
 
   await addMedia(
     {
