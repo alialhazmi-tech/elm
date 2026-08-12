@@ -11,7 +11,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
-import type { JakSlide, SlideData } from "@/lib/tahrir/jak";
+import { paletteOf, paletteVars, type JakSlide, type SlideData } from "@/lib/tahrir/jak";
 
 import { JakReportMotion } from "./jak-report-motion";
 
@@ -192,7 +192,12 @@ function ReportPage({ slide, index, total, meta }: {
 export function JakReport({ meta, slides }: { meta: ReportMeta; slides: JakSlide[] }) {
   const visible = slides.filter((slide) => !slide.hidden && (slide.type !== "end" || slide.image));
   return (
-    <div className="jak-report" data-jak-report>
+    <div
+      className="jak-report"
+      data-jak-report
+      data-palette={paletteOf(slides)}
+      style={paletteVars(paletteOf(slides)) as React.CSSProperties}
+    >
       {visible.map((slide, index) => (
         <ReportPage
           key={`${slide.id}-${slide.image ?? "none"}`}

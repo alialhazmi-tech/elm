@@ -9,12 +9,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { JakCanvas, JakSlide, ReportTemplate, SlideType } from "@/lib/tahrir/jak";
+import type { JakCanvas, JakSlide, ReportPalette, ReportTemplate, SlideType } from "@/lib/tahrir/jak";
 import {
   imageGenerationPrompt,
   imageGenerationSize,
   isLandscapeReport,
+  paletteOf,
   reportLayoutIssues,
+  REPORT_PALETTES,
   REPORT_TEMPLATE_NAMES,
   REPORT_TEMPLATES,
   SLIDE_TYPE_NAMES,
@@ -498,6 +500,22 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
             {status === "published" ? "منشور" : status === "review" ? "بانتظار الاعتماد" : status === "scheduled" ? "مجدول" : "مسودة"}
           </span>
           {isLandscapeReport(slides) && <span className="th-report-badge">▭ تقرير 16:9</span>}
+          {isLandscapeReport(slides) && (
+            <select
+              className="th-input"
+              style={{ width: "auto" }}
+              aria-label="طابع التقرير اللوني"
+              value={paletteOf(slides)}
+              onChange={(event) => {
+                const palette = event.target.value as ReportPalette;
+                setSlides(slides.map((slide) => ({ ...slide, data: { ...slide.data, palette } })));
+              }}
+            >
+              {Object.entries(REPORT_PALETTES).map(([key, item]) => (
+                <option key={key} value={key}>🎨 {item.name}</option>
+              ))}
+            </select>
+          )}
           {isLandscapeReport(slides) && (
             <button className="th-mini" onClick={generateReportImages} disabled={aiBusy !== null}>
               {aiBusy === "report-images" && imageProgress

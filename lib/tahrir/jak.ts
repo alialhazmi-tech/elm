@@ -67,6 +67,8 @@ export interface SlideData {
   textSafeArea?: "left" | "center" | "right";
   /** سطر تصنيفي قصير فوق العنوان. */
   eyebrow?: string;
+  /** طابع التقرير اللوني — قرار على مستوى المادة يُختم على كل شرائحها. */
+  palette?: ReportPalette;
 }
 
 export interface JakSlide {
@@ -82,6 +84,39 @@ export interface JakSlide {
   sourceContext: string;
   hidden: boolean;
   data: SlideData | null;
+}
+
+/**
+ * طابع بصري لكل تقرير: الهيكل والخطوط والمواضع ثابتة، وأربعة ألوان فقط تتغير.
+ * الافتراضي economy — فالتقارير القديمة تبقى على الذهبي بلا لمسها.
+ */
+export const REPORT_PALETTES = {
+  economy: { name: "اقتصاد ومال", base: "#0b1a33", base2: "#12284b", glow: "#f5b92e", glow2: "#ffd35e" },
+  health: { name: "صحة وطب", base: "#04201f", base2: "#0a3a37", glow: "#17c9b1", glow2: "#5fe8d5" },
+  sport: { name: "رياضة", base: "#06200f", base2: "#0c3a1c", glow: "#63d471", glow2: "#a6f0a0" },
+  tech: { name: "تقنية وعلوم", base: "#120a2e", base2: "#221452", glow: "#8b5cf6", glow2: "#c4a6ff" },
+  culture: { name: "ثقافة وتراث", base: "#2a1408", base2: "#432210", glow: "#d98b3a", glow2: "#f0b878" },
+  politics: { name: "سياسة وشؤون", base: "#0d1626", base2: "#1c2a44", glow: "#7ea8d9", glow2: "#b3ceec" },
+} as const;
+
+export type ReportPalette = keyof typeof REPORT_PALETTES;
+
+export const isReportPalette = (value: unknown): value is ReportPalette =>
+  typeof value === "string" && value in REPORT_PALETTES;
+
+/** طابع التقرير من أول شريحة تحمله — قرار واحد للمادة كلها. */
+export const paletteOf = (slides: JakSlide[]): ReportPalette =>
+  slides.find((slide) => isReportPalette(slide.data?.palette))?.data?.palette ?? "economy";
+
+/** متغيرات CSS الأربعة التي تقرأها صفحات التقرير ولا شيء غيرها. */
+export function paletteVars(key: ReportPalette): Record<string, string> {
+  const palette = REPORT_PALETTES[key] ?? REPORT_PALETTES.economy;
+  return {
+    "--jak-base": palette.base,
+    "--jak-base2": palette.base2,
+    "--jak-glow": palette.glow,
+    "--jak-glow2": palette.glow2,
+  };
 }
 
 export const isLandscapeReport = (slides: JakSlide[]) =>

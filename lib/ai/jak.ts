@@ -13,11 +13,14 @@ import Anthropic from "@anthropic-ai/sdk";
 
 import { runPolicyGuard } from "../policy/index.ts";
 import {
+  isReportPalette,
   JAK_CANVASES,
+  REPORT_PALETTES,
   REPORT_TEMPLATES,
   SLIDE_TYPES,
   type JakCanvas,
   type JakSlide,
+  type ReportPalette,
   type SlideData,
   type SlideType,
 } from "../tahrir/jak.ts";
@@ -78,6 +81,7 @@ export interface PlannedSlide extends JakSlide {
 export interface JakPlan {
   title: string;
   excerpt: string;
+  palette: ReportPalette;
   slides: PlannedSlide[];
   /** شرائح أسقطها مدقق الأرقام — تُعرض للمحرر بأسبابها ولا تدخل الخطة. */
   dropped: Array<{ title: string; reason: string }>;
@@ -204,7 +208,7 @@ export function normalizeSlide(raw: RawSlide): JakSlide | null {
  * دالة نقية قابلة للاختبار — لا شبكة ولا قاعدة.
  */
 export function validateJakPlan(
-  parsed: { title?: string; excerpt?: string; slides?: RawSlide[] },
+  parsed: { title?: string; excerpt?: string; palette?: string; slides?: RawSlide[] },
   source: string,
 ): JakPlan {
   const dropped: JakPlan["dropped"] = [];
@@ -241,9 +245,14 @@ export function validateJakPlan(
     throw new Error("لم تنتج الخطة أي شريحة صالحة — أعد المحاولة أو راجع المصدر.");
   }
 
+  // الطابع قرار على مستوى التقرير — يُختم على كل شريحة فتقرأه الواجهة من أيها
+  const palette: ReportPalette = isReportPalette(parsed.palette) ? parsed.palette : "economy";
+  for (const slide of slides) slide.data = { ...slide.data, palette };
+
   return {
     title: str(parsed.title, 140),
     excerpt: str(parsed.excerpt, 180),
+    palette,
     slides,
     dropped,
   };
@@ -286,8 +295,10 @@ const PLAN_PROMPT = (title: string, source: string, canvas: JakCanvas) =>
         ]
       : []),
     "",
+    `- palette: طابع التقرير اللوني، اختر الأنسب لموضوعه من: ${Object.entries(REPORT_PALETTES).map(([key, palette]) => `${key} (${palette.name})`).join(" · ")}.`,
+    "",
     "أعد JSON واحدًا فقط:",
-    '{"title":"عنوان التقرير ≤10 كلمات","excerpt":"موجز ≤25 كلمة",',
+    '{"title":"عنوان التقرير ≤10 كلمات","excerpt":"موجز ≤25 كلمة","palette":"economy",',
     ' "slides":[{"type":"...","title":"...","body":"...","stat":"","statLabel":"",',
     '  "quoteBy":"","items":[],"sides":[{"label":"","value":""}],',
     '  "points":[{"year":"","title":"","detail":""}],"canvas":"vertical|landscape",',

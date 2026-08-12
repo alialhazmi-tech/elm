@@ -293,3 +293,53 @@ test("موجّه التحليل يطلب مشهدًا من سياق الشريح
   assert.doesNotMatch(planner, /مشهد جوي atmospheric/);
   assert.doesNotMatch(planner, /اتركه فارغًا لشرائح/);
 });
+
+test("طابع التقرير: أربعة متغيرات فقط تتغير والافتراضي ذهبي", async () => {
+  const { REPORT_PALETTES, paletteOf, paletteVars, isReportPalette } =
+    await import("../lib/tahrir/jak.ts");
+
+  assert.equal(Object.keys(REPORT_PALETTES).length, 6);
+  assert.equal(paletteOf([]), "economy");
+  assert.equal(paletteOf([{ data: { palette: "sport" } }]), "sport");
+  assert.equal(paletteOf([{ data: {} }, { data: { palette: "tech" } }]), "tech");
+  assert.equal(paletteOf([{ data: { palette: "غير-معروف" } }]), "economy");
+  assert.equal(isReportPalette("health"), true);
+  assert.equal(isReportPalette("wrong"), false);
+
+  assert.deepEqual(Object.keys(paletteVars("health")), ["--jak-base", "--jak-base2", "--jak-glow", "--jak-glow2"]);
+  assert.equal(paletteVars("sport")["--jak-glow"], REPORT_PALETTES.sport.glow);
+});
+
+test("صفحات التقرير تقرأ الطابع ولا تحمل ألوانًا مثبتة", async () => {
+  const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const block = styles.slice(styles.indexOf("جاك العلم — التقرير البصري الأفقي"), styles.indexOf("@media print {"));
+
+  assert.match(component, /style=\{paletteVars\(paletteOf\(slides\)\) as React\.CSSProperties\}/);
+  // لا لون مثبت داخل كتلة التقرير: كله من متغيرات الطابع
+  assert.doesNotMatch(block, /var\(--gold\)/);
+  assert.doesNotMatch(block, /rgb\(8 14 26/);
+  assert.doesNotMatch(block, /#ffd35e/);
+  assert.match(block, /var\(--jak-base\)/);
+  assert.match(block, /var\(--jak-glow\)/);
+});
+
+test("التحليل يقترح الطابع ويختمه على كل الشرائح", () => {
+  const source = "ارتفع الإنفاق الرياضي إلى 12 مليار ريال في 2025 بنمو 30% عن 2019.";
+  const plan = validateJakPlan(
+    {
+      title: "الرياضة اقتصادًا",
+      palette: "sport",
+      slides: [
+        { type: "hero", title: "الرياضة اقتصادًا جديدًا", body: "الإنفاق بلغ 12 مليار ريال." },
+        { type: "fact", title: "نمو 30% منذ 2019" },
+      ],
+    },
+    source,
+  );
+  assert.equal(plan.palette, "sport");
+  assert.ok(plan.slides.every((slide) => slide.data.palette === "sport"));
+
+  const fallback = validateJakPlan({ slides: [{ type: "fact", title: "بلا طابع معروف" }] }, source);
+  assert.equal(fallback.palette, "economy");
+});

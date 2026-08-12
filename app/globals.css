@@ -1301,10 +1301,10 @@ img { max-width: 100%; display: block; }
 
 /* ============ جاك العلم — التقرير البصري الأفقي 16:9 ============ */
 /* المعالجة الغامرة: الصورة تصير الصفحة، والنص يعيش فوقها خلف سكريم اتجاهي. */
-.jak-report { background: #080b10; color: #fff; padding: clamp(14px, 2vw, 32px); display: grid; gap: clamp(14px, 2vw, 30px); }
+.jak-report { background: color-mix(in srgb, var(--jak-base) 45%, #04070b); color: #fff; padding: clamp(14px, 2vw, 32px); display: grid; gap: clamp(14px, 2vw, 30px); }
 .jak-report-page {
   width: min(100%, 1280px); aspect-ratio: 16 / 9; margin: 0 auto; position: relative;
-  isolation: isolate; overflow: hidden; color: #fff; background: var(--navy-deep);
+  isolation: isolate; overflow: hidden; color: #fff; background: var(--jak-base);
   box-shadow: 0 20px 70px rgb(0 0 0 / .48); container-type: inline-size;
 }
 .jak-report-bg { object-fit: cover; z-index: 0; }
@@ -1313,28 +1313,28 @@ img { max-width: 100%; display: block; }
 /* السكريم من جهة النص وحدها — التباين مضمون مهما كانت الصورة فاتحة */
 .jak-report-scrim { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
 .has-art.safe-right .jak-report-scrim {
-  background: linear-gradient(275deg, rgb(8 14 26 / .94) 0%, rgb(8 14 26 / .86) 30%, rgb(8 14 26 / .42) 56%, rgb(8 14 26 / .12) 78%),
-    linear-gradient(0deg, rgb(8 14 26 / .5), transparent 40%);
+  background: linear-gradient(275deg, color-mix(in srgb, var(--jak-base) 94%, transparent) 0%, color-mix(in srgb, var(--jak-base) 86%, transparent) 30%, color-mix(in srgb, var(--jak-base) 42%, transparent) 56%, color-mix(in srgb, var(--jak-base) 12%, transparent) 78%),
+    linear-gradient(0deg, color-mix(in srgb, var(--jak-base) 50%, transparent), transparent 40%);
 }
 .has-art.safe-left .jak-report-scrim {
-  background: linear-gradient(85deg, rgb(8 14 26 / .94) 0%, rgb(8 14 26 / .86) 30%, rgb(8 14 26 / .42) 56%, rgb(8 14 26 / .12) 78%),
-    linear-gradient(0deg, rgb(8 14 26 / .5), transparent 40%);
+  background: linear-gradient(85deg, color-mix(in srgb, var(--jak-base) 94%, transparent) 0%, color-mix(in srgb, var(--jak-base) 86%, transparent) 30%, color-mix(in srgb, var(--jak-base) 42%, transparent) 56%, color-mix(in srgb, var(--jak-base) 12%, transparent) 78%),
+    linear-gradient(0deg, color-mix(in srgb, var(--jak-base) 50%, transparent), transparent 40%);
 }
 .has-art.safe-center .jak-report-scrim, .has-art.kind-cover .jak-report-scrim {
-  background: linear-gradient(0deg, rgb(8 14 26 / .96) 4%, rgb(8 14 26 / .75) 34%, rgb(8 14 26 / .2) 68%, rgb(8 14 26 / .35) 100%);
+  background: linear-gradient(0deg, color-mix(in srgb, var(--jak-base) 96%, transparent) 4%, color-mix(in srgb, var(--jak-base) 75%, transparent) 34%, color-mix(in srgb, var(--jak-base) 20%, transparent) 68%, color-mix(in srgb, var(--jak-base) 35%, transparent) 100%);
 }
 
 .jak-report-brand { position: absolute; top: 4.4cqw; inset-inline: 4.6cqw; display: flex; justify-content: space-between; align-items: baseline; z-index: 3; }
 .jak-report-brand span { font-family: var(--f-logo, var(--font-display)); font-weight: 900; font-size: 2.2cqw; }
-.jak-report-brand i { color: var(--gold); font-style: normal; }
+.jak-report-brand i { color: var(--jak-glow); font-style: normal; }
 .jak-report-brand small { font: 700 1.15cqw/1 var(--font-display); color: rgb(255 255 255 / .66); }
 
 .jak-report-foot { position: absolute; bottom: 3.6cqw; inset-inline: 4.6cqw; display: flex; justify-content: space-between; align-items: center; z-index: 3; font: 700 1.05cqw/1 var(--font-display); color: rgb(255 255 255 / .5); }
-.jak-report-foot b { color: var(--gold); font-variant-numeric: tabular-nums; }
+.jak-report-foot b { color: var(--jak-glow); font-variant-numeric: tabular-nums; }
 
 .jak-report-eyebrow {
-  display: inline-block; font: 800 1.15cqw/1 var(--font-display); color: var(--gold);
-  border-inline-start: .28cqw solid var(--gold); padding-inline-start: .9cqw; margin-bottom: 1.6cqw;
+  display: inline-block; font: 800 1.15cqw/1 var(--font-display); color: var(--jak-glow);
+  border-inline-start: .28cqw solid var(--jak-glow); padding-inline-start: .9cqw; margin-bottom: 1.6cqw;
 }
 
 /* النص فوق الصورة */
@@ -1349,18 +1349,18 @@ img { max-width: 100%; display: block; }
 .jak-report-copy h2 { color: #fff; font: 800 3.3cqw/1.38 var(--font-display); margin: 0 0 1.2cqw; text-wrap: balance; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .5); }
 .jak-report-copy > p { font-size: 1.5cqw; line-height: 1.95; margin: 0; color: rgb(255 255 255 / .9); max-width: 44cqw; }
 .jak-report-inline-stat { display: flex; align-items: baseline; gap: 1.2cqw; margin-top: 1.8cqw; }
-.jak-report-inline-stat strong { font: 900 5cqw/1 var(--font-display); background: linear-gradient(180deg, #ffd35e, #b97d0a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.jak-report-inline-stat strong { font: 900 5cqw/1 var(--font-display); background: linear-gradient(180deg, var(--jak-glow2), var(--jak-glow)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .jak-report-inline-stat span { font-size: 1.35cqw; color: rgb(255 255 255 / .8); }
 .jak-report-list { list-style: none; margin: 1.8cqw 0 0; padding: 0; display: flex; flex-direction: column; gap: .9cqw; }
 .jak-report-list li { position: relative; padding-inline-start: 2.2cqw; font-size: 1.45cqw; line-height: 1.7; color: rgb(255 255 255 / .92); }
-.jak-report-list li::before { content: ""; position: absolute; inset-inline-start: 0; top: .62cqw; width: .75cqw; height: .75cqw; border-radius: 50%; background: var(--gold); }
+.jak-report-list li::before { content: ""; position: absolute; inset-inline-start: 0; top: .62cqw; width: .75cqw; height: .75cqw; border-radius: 50%; background: var(--jak-glow); }
 .kind-quote .jak-report-copy { width: 66cqw; bottom: 10cqw; }
 .kind-quote blockquote { color: #fff; font: 800 3.1cqw/1.6 var(--font-display); margin: 0; text-shadow: 0 .2cqw 2cqw rgb(0 0 0 / .55); }
-.kind-quote blockquote::before { content: "”"; color: var(--gold); font-family: Georgia, serif; font-size: 5cqw; line-height: 0; vertical-align: -.4cqw; margin-inline-end: .5cqw; }
+.kind-quote blockquote::before { content: "”"; color: var(--jak-glow); font-family: Georgia, serif; font-size: 5cqw; line-height: 0; vertical-align: -.4cqw; margin-inline-end: .5cqw; }
 .kind-quote cite { display: block; margin-top: 1.6cqw; font-size: 1.25cqw; font-style: normal; color: rgb(255 255 255 / .65); }
 
 /* لوح البيانات — الصفحات بلا صور */
-.jak-report-page.kind-data { background: radial-gradient(120% 90% at 88% 6%, #16304f 0%, transparent 55%), linear-gradient(140deg, #0c1626, #070c15 70%); }
+.jak-report-page.kind-data { background: radial-gradient(120% 90% at 88% 6%, var(--jak-base2) 0%, transparent 55%), var(--jak-base); }
 .jak-report-page.kind-data::before {
   content: ""; position: absolute; inset: 0; opacity: .3; z-index: 0; pointer-events: none;
   background-image: linear-gradient(rgb(255 255 255 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .028) 1px, transparent 1px);
@@ -1368,7 +1368,7 @@ img { max-width: 100%; display: block; }
 }
 /* صفحات البطاقات تحمل خلفية مولّدة خافتة: الصفحة تحيا والأرقام تبقى سيدة المشهد */
 .kind-data .jak-report-bg { opacity: .3; }
-.has-art.kind-data .jak-report-scrim { background: linear-gradient(180deg, rgb(8 14 26 / .74), rgb(8 14 26 / .9)); }
+.has-art.kind-data .jak-report-scrim { background: linear-gradient(180deg, color-mix(in srgb, var(--jak-base) 74%, transparent), color-mix(in srgb, var(--jak-base) 90%, transparent)); }
 .jak-report-dashboard-head { position: absolute; z-index: 3; top: 11cqw; inset-inline: 4.6cqw; }
 .jak-report-dashboard-head h2 { color: #fff; font: 900 3.1cqw/1.35 var(--font-display); margin: 0; text-wrap: balance; }
 .jak-report-dashboard-head p { font-size: 1.4cqw; color: rgb(255 255 255 / .7); margin: .8cqw 0 0; max-width: 60cqw; }
@@ -1376,9 +1376,9 @@ img { max-width: 100%; display: block; }
 .jak-report-blocks.count-1, .jak-report-blocks.count-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .jak-report-blocks.count-3, .jak-report-blocks.count-5, .jak-report-blocks.count-6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .jak-report-blocks.count-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.jak-report-block { background: rgb(255 255 255 / .045); border: 1px solid rgb(255 255 255 / .1); border-top: .25cqw solid var(--gold); border-radius: 1cqw; padding: 1.8cqw 1.6cqw; }
+.jak-report-block { background: rgb(255 255 255 / .045); border: 1px solid rgb(255 255 255 / .1); border-top: .25cqw solid var(--jak-glow); border-radius: 1cqw; padding: 1.8cqw 1.6cqw; }
 .jak-report-countup { font-variant-numeric: tabular-nums; }
-.jak-report-block strong { display: block; font: 900 3.6cqw/1 var(--font-display); background: linear-gradient(180deg, #ffd35e, #b97d0a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.jak-report-block strong { display: block; font: 900 3.6cqw/1 var(--font-display); background: linear-gradient(180deg, var(--jak-glow2), var(--jak-glow)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .jak-report-block small { display: block; font: 700 1.05cqw/1 var(--font-display); color: rgb(255 255 255 / .5); margin-top: .7cqw; }
 .jak-report-block h3 { color: #fff; font: 700 1.45cqw/1.35 var(--font-display); margin: .9cqw 0 0; }
 .jak-report-block p { font-size: 1.2cqw; line-height: 1.7; color: rgb(255 255 255 / .75); margin: .5cqw 0 0; }
@@ -1389,7 +1389,7 @@ img { max-width: 100%; display: block; }
      طولية والنص أسفلها بمقاسات مضاعفة. */
   .jak-report-page { width: 100%; box-shadow: none; aspect-ratio: 4 / 5; }
   .has-art .jak-report-scrim {
-    background: linear-gradient(0deg, rgb(8 14 26 / .97) 8%, rgb(8 14 26 / .84) 36%, rgb(8 14 26 / .22) 64%, rgb(8 14 26 / .42) 100%);
+    background: linear-gradient(0deg, color-mix(in srgb, var(--jak-base) 97%, transparent) 8%, color-mix(in srgb, var(--jak-base) 84%, transparent) 36%, color-mix(in srgb, var(--jak-base) 22%, transparent) 64%, color-mix(in srgb, var(--jak-base) 42%, transparent) 100%);
   }
   .jak-report-brand { top: 6cqw; inset-inline: 5.5cqw; }
   .jak-report-brand span { font-size: 5.2cqw; }
