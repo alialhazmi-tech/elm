@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { aiSettings } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { DEFAULT_IMAGE_MODEL, normalizeImageModel } from "@/lib/ai/image-model";
 
 export interface AiSettingsData {
   tools: {
@@ -37,7 +38,7 @@ export const DEFAULT_AI_SETTINGS: AiSettingsData = {
   models: {
     editorial: "claude-opus-5",
     light: "claude-haiku-4-5",
-    image: "imagen-3.0-generate-002",
+    image: DEFAULT_IMAGE_MODEL,
   },
   caps: { dailyUsd: 10, monthlyUsd: 150 },
   tone:
@@ -54,7 +55,11 @@ export async function loadAiSettings(): Promise<AiSettingsData> {
     const stored = (rows[0]?.data ?? {}) as Partial<AiSettingsData>;
     return {
       tools: { ...DEFAULT_AI_SETTINGS.tools, ...stored.tools },
-      models: { ...DEFAULT_AI_SETTINGS.models, ...stored.models },
+      models: {
+        ...DEFAULT_AI_SETTINGS.models,
+        ...stored.models,
+        image: normalizeImageModel(stored.models?.image),
+      },
       caps: { ...DEFAULT_AI_SETTINGS.caps, ...stored.caps },
       tone: stored.tone ?? DEFAULT_AI_SETTINGS.tone,
     };

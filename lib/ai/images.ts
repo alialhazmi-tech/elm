@@ -24,6 +24,37 @@ export interface GeneratedImage {
   mime: string;
 }
 
+interface InteractionImage {
+  data?: string;
+  mime_type?: string;
+  mimeType?: string;
+}
+
+interface InteractionResponse {
+  output_image?: InteractionImage;
+  steps?: Array<{
+    type?: string;
+    content?: Array<InteractionImage & { type?: string }>;
+  }>;
+}
+
+/** يدعم خاصية output_image المختصرة، مع fallback للمخرجات المتداخلة. */
+export function parseInteractionImages(data: InteractionResponse): GeneratedImage[] {
+  const candidates: InteractionImage[] = [];
+  if (data.output_image?.data) candidates.push(data.output_image);
+  for (const step of data.steps ?? []) {
+    if (step.type !== "model_output") continue;
+    for (const block of step.content ?? []) {
+      if (block.type === "image" && block.data) candidates.push(block);
+    }
+  }
+
+  const seen = new Set<string>();
+  return candidates
+    .filter((image) => image.data && !seen.has(image.data) && seen.add(image.data))
+    .map((image) => ({ base64: image.data!, mime: image.mime_type ?? image.mimeType ?? "image/png" }));
+}
+
 export async function generateImages(input: {
   prompt: string;
   style: string;
@@ -38,38 +69,32 @@ export async function generateImages(input: {
 
   const stylePrompt = STYLE_PROMPTS[input.style] ?? STYLE_PROMPTS.illustrative;
   const fullPrompt = `${input.prompt}\n\nStyle: ${stylePrompt}`;
+  const count = Math.min(2, Math.max(1, input.count ?? 2));
+  const images: GeneratedImage[] = [];
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${input.model}:predict`,
-    {
+  for (let index = 0; index < count; index += 1) {
+    const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
       body: JSON.stringify({
-        instances: [{ prompt: fullPrompt }],
-        parameters: {
-          sampleCount: input.count ?? 2,
-          aspectRatio: SIZE_RATIOS[input.size] ?? "16:9",
-          personGeneration: "dont_allow",
+        model: input.model,
+        input: fullPrompt,
+        store: false,
+        response_format: {
+          type: "image",
+          mime_type: "image/jpeg",
+          aspect_ratio: SIZE_RATIOS[input.size] ?? "16:9",
         },
       }),
-    },
-  );
+    });
 
-  if (!response.ok) {
-    const detail = await response.text().catch(() => "");
-    throw new Error(`مزود الصور رفض الطلب (${response.status}): ${detail.slice(0, 200)}`);
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      throw new Error(`مزود الصور رفض الطلب (${response.status}): ${detail.slice(0, 200)}`);
+    }
+
+    images.push(...parseInteractionImages((await response.json()) as InteractionResponse));
   }
-
-  const data = (await response.json()) as {
-    predictions?: Array<{ bytesBase64Encoded?: string; mimeType?: string }>;
-  };
-
-  const images = (data.predictions ?? [])
-    .filter((prediction) => prediction.bytesBase64Encoded)
-    .map((prediction) => ({
-      base64: prediction.bytesBase64Encoded!,
-      mime: prediction.mimeType ?? "image/png",
-    }));
 
   if (images.length === 0) throw new Error("لم يُعد المزود أي صورة — جرّب وصفًا مختلفًا.");
   return images;

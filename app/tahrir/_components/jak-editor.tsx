@@ -244,7 +244,10 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
         patch(slide.id, { image });
         generated += 1;
       } catch (error) {
-        failures.push(error instanceof Error ? error.message : "تعذر توليد صورة.");
+        const failure = error instanceof Error ? error.message : "تعذر توليد صورة.";
+        failures.push(failure);
+        // أخطاء النموذج/المفتاح لن تتغير بين الصفحات؛ أوقف الدفعة لتجنب تكرار طلب فاشل.
+        if (/\b(400|401|403|404)\b|not found|API key|النموذج|المفتاح/i.test(failure)) break;
       }
       setImageProgress({ done: generated + failures.length, total: pending.length });
     }

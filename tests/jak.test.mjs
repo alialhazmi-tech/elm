@@ -12,6 +12,8 @@ import {
 } from "../lib/tahrir/jak.ts";
 import { runPolicyGuard } from "../lib/policy/index.ts";
 import { editorHref } from "../lib/tahrir/routes.ts";
+import { parseInteractionImages } from "../lib/ai/images.ts";
+import { DEFAULT_IMAGE_MODEL, normalizeImageModel } from "../lib/ai/image-model.ts";
 
 const SOURCE =
   "ارتفعت مساهمة الاقتصاد الرقمي إلى 15% بنهاية 2025، وبلغت تغطية الجيل الخامس 73% من المدن، " +
@@ -166,4 +168,18 @@ test("صور التقرير تطلب 16:9 وتحترم موضع العنصر و�
 test("مادة جاك تفتح محرر جاك وبقية المواد تفتح المحرر العام", () => {
   assert.equal(editorHref({ id: "jak-1", format: "jakalelm" }), "/tahrir/jak/jak-1");
   assert.equal(editorHref({ id: "news-1", format: "news" }), "/tahrir/editor/news-1");
+});
+
+test("إعداد Imagen القديم يُهاجر إلى نموذج الصور الحالي", () => {
+  assert.equal(normalizeImageModel("imagen-3.0-generate-002"), DEFAULT_IMAGE_MODEL);
+  assert.equal(normalizeImageModel("imagen-4.0-generate-001"), DEFAULT_IMAGE_MODEL);
+  assert.equal(normalizeImageModel("gemini-3.1-flash-lite-image"), "gemini-3.1-flash-lite-image");
+});
+
+test("قارئ interactions يستخرج الصورة المختصرة دون تكرارها من الخطوات", () => {
+  const images = parseInteractionImages({
+    output_image: { data: "abc", mime_type: "image/jpeg" },
+    steps: [{ type: "model_output", content: [{ type: "image", data: "abc", mime_type: "image/jpeg" }] }],
+  });
+  assert.deepEqual(images, [{ base64: "abc", mime: "image/jpeg" }]);
 });
