@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import { extractNumbers, unverifiedNumbers, normalizeSlide, validateJakPlan } from "../lib/ai/jak.ts";
-import { projectSlides } from "../lib/tahrir/jak.ts";
+import { isLandscapeReport, projectSlides, reportLayoutIssues } from "../lib/tahrir/jak.ts";
 import { runPolicyGuard } from "../lib/policy/index.ts";
 
 const SOURCE =
@@ -59,6 +59,62 @@ test("التطبيع يقص الحقول ويحصر الأنماط ويرمم ب
   assert.equal(slide.title.length, 140);
   assert.equal(slide.imageStyle, "real");
   assert.equal(slide.data.sides.length, 2);
+});
+
+test("التطبيع يحفظ بيانات التقرير الأفقية المرسلة داخل data", () => {
+  const slide = normalizeSlide({
+    type: "stat",
+    title: "ثروة المؤسسة",
+    data: {
+      canvas: "landscape",
+      template: "stats",
+      focalPoint: "left",
+      textSafeArea: "right",
+      eyebrow: "بالأرقام",
+      blocks: [
+        { value: "15", label: "مليار دولار", title: "التوقعات", body: "خلال الدورة الحالية" },
+        { value: "13", label: "مليار دولار", title: "المستهدف", body: "إجمالي الإيرادات" },
+        { value: "2.69", label: "مليار دولار", title: "التسويق", body: "إيرادات متوقعة" },
+      ],
+    },
+  });
+  assert.equal(slide.data.canvas, "landscape");
+  assert.equal(slide.data.template, "stats");
+  assert.equal(slide.data.blocks.length, 3);
+  assert.ok(isLandscapeReport([slide]));
+  assert.deepEqual(reportLayoutIssues(slide), []);
+});
+
+test("مدقق التقرير يرفض رقمًا داخل وحدات القالب لم يرد في المصدر", () => {
+  const parsed = {
+    slides: [{
+      type: "stat",
+      title: "لوحة الأرقام",
+      canvas: "landscape",
+      template: "stats",
+      blocks: [
+        { value: "73", label: "%", title: "التغطية", body: "من المدن" },
+        { value: "999", label: "مليار", title: "رقم غير موثق", body: "غير موجود" },
+        { value: "15", label: "%", title: "المساهمة", body: "من الاقتصاد" },
+      ],
+    }],
+  };
+  assert.throws(() => validateJakPlan(parsed, SOURCE), /شريحة صالحة/);
+});
+
+test("فحص ازدحام التقرير يطلب ثلاث وحدات ويكشف النص الطويل", () => {
+  const slide = normalizeSlide({
+    type: "list",
+    title: "شبكة أفكار",
+    data: {
+      canvas: "landscape",
+      template: "grid",
+      blocks: [{ title: "فكرة", body: "ن".repeat(131) }],
+    },
+  });
+  const issues = reportLayoutIssues(slide);
+  assert.ok(issues.some((issue) => issue.includes("3 وحدات")));
+  assert.ok(issues.some((issue) => issue.includes("130")));
 });
 
 test("إسقاط الشرائح نصًا يتجاهل المخفية ويشمل بيانات الأنواع", () => {

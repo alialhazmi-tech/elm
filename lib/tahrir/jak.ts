@@ -20,6 +20,19 @@ export const SLIDE_TYPES = [
 ] as const;
 export type SlideType = (typeof SLIDE_TYPES)[number];
 
+export const JAK_CANVASES = ["vertical", "landscape"] as const;
+export type JakCanvas = (typeof JAK_CANVASES)[number];
+
+export const REPORT_TEMPLATES = ["cover", "image-text", "stats", "grid"] as const;
+export type ReportTemplate = (typeof REPORT_TEMPLATES)[number];
+
+export const REPORT_TEMPLATE_NAMES: Record<ReportTemplate, string> = {
+  cover: "غلاف سينمائي",
+  "image-text": "صورة مع نص",
+  stats: "لوحة أرقام",
+  grid: "شبكة أفكار",
+};
+
 export const SLIDE_TYPE_NAMES: Record<SlideType, string> = {
   hero: "افتتاحية",
   text: "نص وخلفية",
@@ -43,6 +56,17 @@ export interface SlideData {
   items?: string[];
   /** اقتباس: النسبة. */
   quoteBy?: string;
+  /** نمط العرض: العمودي الحالي، أو صفحة تقرير أفقية 16:9. */
+  canvas?: JakCanvas;
+  /** قالب الصفحة الأفقية — لا يُستخدم في العرض العمودي. */
+  template?: ReportTemplate;
+  /** وحدات المحتوى الموزعة داخل قوالب الأرقام والشبكات. */
+  blocks?: Array<{ title: string; body: string; value: string; label: string }>;
+  /** موضع العنصر البصري ومساحة النص الآمنة لتوجيه الصورة والتخطيط. */
+  focalPoint?: "left" | "center" | "right";
+  textSafeArea?: "left" | "center" | "right";
+  /** سطر تصنيفي قصير فوق العنوان. */
+  eyebrow?: string;
 }
 
 export interface JakSlide {
@@ -58,6 +82,29 @@ export interface JakSlide {
   sourceContext: string;
   hidden: boolean;
   data: SlideData | null;
+}
+
+export const isLandscapeReport = (slides: JakSlide[]) =>
+  slides.some((slide) => slide.data?.canvas === "landscape");
+
+/** ملاحظات حتمية تمنع ازدحام قوالب 16:9 قبل التصدير. */
+export function reportLayoutIssues(slide: JakSlide): string[] {
+  if (slide.data?.canvas !== "landscape") return [];
+  const template = slide.data.template ?? "image-text";
+  const issues: string[] = [];
+  const titleCap = template === "cover" ? 70 : 85;
+  const bodyCap = template === "cover" ? 170 : 260;
+  if (slide.title.length > titleCap) issues.push(`العنوان يتجاوز حد قالب ${titleCap} حرفًا.`);
+  if (slide.body.length > bodyCap) issues.push(`النص يتجاوز حد قالب ${bodyCap} حرفًا.`);
+  if (["stats", "grid"].includes(template)) {
+    const blocks = slide.data.blocks ?? [];
+    if (blocks.length < 3) issues.push("القالب يحتاج 3 وحدات محتوى على الأقل.");
+    if (blocks.length > 6) issues.push("القالب يقبل 6 وحدات محتوى كحد أقصى.");
+    if (blocks.some((block) => block.body.length > 130)) {
+      issues.push("نص إحدى الوحدات يتجاوز 130 حرفًا.");
+    }
+  }
+  return issues;
 }
 
 function requireDb() {
@@ -103,6 +150,9 @@ export function projectSlides(slides: JakSlide[]): string {
       slide.data?.items?.join("، "),
       slide.data?.sides?.map((side) => `${side.label}: ${side.value}`).join(" مقابل "),
       slide.data?.points?.map((point) => `${point.year} ${point.title} ${point.detail}`).join(". "),
+      slide.data?.blocks
+        ?.map((block) => `${block.value} ${block.label} ${block.title} ${block.body}`)
+        .join(". "),
     ]
       .filter(Boolean)
       .join("\n");
@@ -124,39 +174,41 @@ export async function replaceSlides(
   const db = requireDb();
   const now = new Date().toISOString();
 
-  await db.delete(storySlides).where(eq(storySlides.storyId, storyId));
-  if (slides.length > 0) {
-    await db.insert(storySlides).values(
-      slides.map((slide, position) => ({
-        id: slide.id || crypto.randomUUID(),
-        storyId,
-        position,
-        type: slide.type,
-        title: slide.title,
-        body: slide.body,
-        stat: slide.stat,
-        statLabel: slide.statLabel,
-        image: slide.image,
-        imageStyle: slide.imageStyle,
-        imagePrompt: slide.imagePrompt,
-        sourceContext: slide.sourceContext,
-        hidden: slide.hidden ? 1 : 0,
-        data: slide.data,
-      })),
-    );
-  }
+  await db.transaction(async (tx) => {
+    await tx.delete(storySlides).where(eq(storySlides.storyId, storyId));
+    if (slides.length > 0) {
+      await tx.insert(storySlides).values(
+        slides.map((slide, position) => ({
+          id: slide.id || crypto.randomUUID(),
+          storyId,
+          position,
+          type: slide.type,
+          title: slide.title,
+          body: slide.body,
+          stat: slide.stat,
+          statLabel: slide.statLabel,
+          image: slide.image,
+          imageStyle: slide.imageStyle,
+          imagePrompt: slide.imagePrompt,
+          sourceContext: slide.sourceContext,
+          hidden: slide.hidden ? 1 : 0,
+          data: slide.data,
+        })),
+      );
+    }
 
-  await db
-    .update(stories)
-    .set({ body: projectSlides(slides), updatedAt: now })
-    .where(eq(stories.id, storyId));
+    await tx
+      .update(stories)
+      .set({ body: projectSlides(slides), updatedAt: now })
+      .where(eq(stories.id, storyId));
 
-  if (source !== undefined && source.trim()) {
-    await db
-      .insert(jakSources)
-      .values({ storyId, source, updatedAt: now })
-      .onConflictDoUpdate({ target: jakSources.storyId, set: { source, updatedAt: now } });
-  }
+    if (source !== undefined && source.trim()) {
+      await tx
+        .insert(jakSources)
+        .values({ storyId, source, updatedAt: now })
+        .onConflictDoUpdate({ target: jakSources.storyId, set: { source, updatedAt: now } });
+    }
+  });
 
   const { audit } = await import("./service");
   await audit(actor, "jak:slides-save", storyId, `${slides.length} شريحة`);

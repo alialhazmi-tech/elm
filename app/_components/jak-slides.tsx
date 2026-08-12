@@ -165,7 +165,10 @@ function SlideBody({ slide }: { slide: JakSlide }) {
 
 export function JakStory({ meta, slides }: { meta: JakStoryMeta; slides: JakSlide[] }) {
   const visible = slides.filter((slide) => !slide.hidden);
-  const total = visible.length + 2;
+  const content = visible
+    .filter((slide, index) => !(index === 0 && slide.type === "hero"))
+    .filter((slide) => slide.type !== "end");
+  const total = content.length + 2;
 
   return (
     <div className="jak-stage" data-jak-root>
@@ -186,10 +189,7 @@ export function JakStory({ meta, slides }: { meta: JakStoryMeta; slides: JakSlid
           <span className="jak-cue" aria-hidden="true">مرر للأسفل ↓</span>
         </section>
 
-        {visible
-          .filter((slide, index) => !(index === 0 && slide.type === "hero"))
-          .filter((slide) => slide.type !== "end")
-          .map((slide, index) => (
+        {content.map((slide, index) => (
             <section className={`jak-slide jak-${slide.type}`} data-jak-slide key={slide.id}>
               <Art slide={slide} index={index + 1} priority={false} />
               {slide.type === "text" && (

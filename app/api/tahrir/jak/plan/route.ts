@@ -5,6 +5,7 @@ import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
 import { getSession } from "@/lib/tahrir/auth";
 import { audit } from "@/lib/tahrir/service";
+import type { JakCanvas } from "@/lib/tahrir/jak";
 
 /**
  * تحليل «جاك العلم»: نص خام → خطة شرائح منظمة.
@@ -17,6 +18,7 @@ export async function POST(request: Request) {
   const input = (await request.json().catch(() => null)) as {
     title?: string;
     source?: string;
+    canvas?: JakCanvas;
   } | null;
 
   const source = (input?.source ?? "").trim();
@@ -37,7 +39,11 @@ export async function POST(request: Request) {
 
   try {
     const { plan, usage } = await runJakPlan(
-      { title: (input?.title ?? "").slice(0, 200), source: source.slice(0, 60_000) },
+      {
+        title: (input?.title ?? "").slice(0, 200),
+        source: source.slice(0, 60_000),
+        canvas: input?.canvas === "landscape" ? "landscape" : "vertical",
+      },
       settings,
     );
 

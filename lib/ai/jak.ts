@@ -12,7 +12,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { runPolicyGuard } from "../policy/index.ts";
-import { SLIDE_TYPES, type JakSlide, type SlideData, type SlideType } from "../tahrir/jak.ts";
+import {
+  JAK_CANVASES,
+  REPORT_TEMPLATES,
+  SLIDE_TYPES,
+  type JakCanvas,
+  type JakSlide,
+  type SlideData,
+  type SlideType,
+} from "../tahrir/jak.ts";
 import type { AiSettingsData } from "./settings";
 
 function client(): Anthropic | null {
@@ -51,6 +59,7 @@ const slideText = (slide: JakSlide) =>
     slide.data?.items?.join(" "),
     slide.data?.sides?.map((side) => `${side.label} ${side.value}`).join(" "),
     slide.data?.points?.map((point) => `${point.year} ${point.title} ${point.detail}`).join(" "),
+    slide.data?.blocks?.map((block) => `${block.value} ${block.label} ${block.title} ${block.body}`).join(" "),
   ]
     .filter(Boolean)
     .join(" ");
@@ -96,6 +105,24 @@ interface RawSlide {
   items?: string[];
   sides?: Array<{ label?: string; value?: string }>;
   points?: Array<{ year?: string; title?: string; detail?: string }>;
+  canvas?: string;
+  template?: string;
+  blocks?: Array<{ title?: string; body?: string; value?: string; label?: string }>;
+  focalPoint?: string;
+  textSafeArea?: string;
+  eyebrow?: string;
+  data?: {
+    quoteBy?: string;
+    items?: string[];
+    sides?: Array<{ label?: string; value?: string }>;
+    points?: Array<{ year?: string; title?: string; detail?: string }>;
+    canvas?: string;
+    template?: string;
+    blocks?: Array<{ title?: string; body?: string; value?: string; label?: string }>;
+    focalPoint?: string;
+    textSafeArea?: string;
+    eyebrow?: string;
+  } | null;
 }
 
 const str = (value: unknown, cap: number) =>
@@ -105,20 +132,22 @@ const str = (value: unknown, cap: number) =>
 export function normalizeSlide(raw: RawSlide): JakSlide | null {
   if (!raw || !(SLIDE_TYPES as readonly string[]).includes(raw.type ?? "")) return null;
   const type = raw.type as SlideType;
+  // خرج النموذج يأتي بالحقول المتخصصة في الأعلى، والمحرر المحفوظ يعيدها داخل data.
+  const detail = raw.data ?? raw;
 
   const data: SlideData = {};
-  if (raw.quoteBy) data.quoteBy = str(raw.quoteBy, 120);
-  if (Array.isArray(raw.items)) {
-    data.items = raw.items.map((item) => str(item, 160)).filter(Boolean).slice(0, 6);
+  if (detail.quoteBy) data.quoteBy = str(detail.quoteBy, 120);
+  if (Array.isArray(detail.items)) {
+    data.items = detail.items.map((item) => str(item, 160)).filter(Boolean).slice(0, 6);
   }
-  if (Array.isArray(raw.sides)) {
-    data.sides = raw.sides
+  if (Array.isArray(detail.sides)) {
+    data.sides = detail.sides
       .map((side) => ({ label: str(side?.label, 60), value: str(side?.value, 40) }))
       .filter((side) => side.label && side.value)
       .slice(0, 2);
   }
-  if (Array.isArray(raw.points)) {
-    data.points = raw.points
+  if (Array.isArray(detail.points)) {
+    data.points = detail.points
       .map((point) => ({
         year: str(point?.year, 20),
         title: str(point?.title, 100),
@@ -127,6 +156,30 @@ export function normalizeSlide(raw: RawSlide): JakSlide | null {
       .filter((point) => point.title)
       .slice(0, 5);
   }
+  if ((JAK_CANVASES as readonly string[]).includes(detail.canvas ?? "")) {
+    data.canvas = detail.canvas as JakCanvas;
+  }
+  if ((REPORT_TEMPLATES as readonly string[]).includes(detail.template ?? "")) {
+    data.template = detail.template as SlideData["template"];
+  }
+  if (Array.isArray(detail.blocks)) {
+    data.blocks = detail.blocks
+      .map((block) => ({
+        title: str(block?.title, 70),
+        body: str(block?.body, 220),
+        value: str(block?.value, 24),
+        label: str(block?.label, 70),
+      }))
+      .filter((block) => block.title || block.body || block.value)
+      .slice(0, 6);
+  }
+  if (["left", "center", "right"].includes(detail.focalPoint ?? "")) {
+    data.focalPoint = detail.focalPoint as SlideData["focalPoint"];
+  }
+  if (["left", "center", "right"].includes(detail.textSafeArea ?? "")) {
+    data.textSafeArea = detail.textSafeArea as SlideData["textSafeArea"];
+  }
+  if (detail.eyebrow) data.eyebrow = str(detail.eyebrow, 50);
 
   return {
     id: crypto.randomUUID(),
@@ -174,12 +227,12 @@ export function validateJakPlan(
     }
 
     const titleGuard = slide.title ? guardSlide(slide.title, "title") : { ok: true, findings: [] };
-    const bodyGuard = slide.body ? guardSlide(slide.body, "fragment") : { ok: true, findings: [] };
+    const contentGuard = guardSlide(slideText(slide), "fragment");
     slides.push({
       ...slide,
       guard: {
-        ok: titleGuard.ok && bodyGuard.ok,
-        findings: [...titleGuard.findings, ...bodyGuard.findings],
+        ok: titleGuard.ok && contentGuard.ok,
+        findings: [...titleGuard.findings, ...contentGuard.findings],
       },
     });
   }
@@ -198,9 +251,11 @@ export function validateJakPlan(
 
 /* ============ استدعاء النموذج ============ */
 
-const PLAN_PROMPT = (title: string, source: string) =>
+const PLAN_PROMPT = (title: string, source: string, canvas: JakCanvas) =>
   [
-    "حوّل هذا التقرير إلى «جاك العلم»: قصة معرفية من شرائح عمودية متتابعة، كل شريحة فكرة واحدة.",
+    canvas === "landscape"
+      ? "حوّل هذا التقرير إلى تقرير بصري أفقي 16:9 من صفحات متتابعة، كل صفحة فكرة واحدة."
+      : "حوّل هذا التقرير إلى «جاك العلم»: قصة معرفية من شرائح عمودية متتابعة، كل شريحة فكرة واحدة.",
     "",
     "أنواع الشرائح: hero (افتتاحية واحدة أولًا)، text (فكرة بخلفية)، stat (رقم بارز)،",
     "comparison (طرفان sides)، timeline (نقاط points)، quote (اقتباس بنسبته quoteBy)،",
@@ -216,12 +271,24 @@ const PLAN_PROMPT = (title: string, source: string) =>
     "  stat/comparison/timeline/summary — تصميمها يحمل نفسه.",
     "- imageStyle: real أو illustrative أو graphic.",
     "- الأرقام لاتينية دائمًا (2026 لا ٢٠٢٦).",
+    ...(canvas === "landscape"
+      ? [
+          "- canvas في كل صفحة landscape.",
+          "- اختر template من: cover للغلاف فقط، image-text لصورة مع فقرة، stats للأرقام، grid للأفكار المتوازية.",
+          "- لقوالب stats وgrid أعد blocks من 3 إلى 6 وحدات. كل وحدة: title وbody وvalue وlabel حسب الحاجة.",
+          "- focalPoint موضع العنصر البصري وtextSafeArea موضع الفراغ المخصص للنص: left أو center أو right.",
+          "- eyebrow تصنيف قصير من كلمتين إلى أربع كلمات.",
+          "- الصورة بلا نص أو شعارات أو أشخاص معروفين، واترك مساحة داكنة واضحة في textSafeArea.",
+        ]
+      : []),
     "",
     "أعد JSON واحدًا فقط:",
     '{"title":"عنوان التقرير ≤10 كلمات","excerpt":"موجز ≤25 كلمة",',
     ' "slides":[{"type":"...","title":"...","body":"...","stat":"","statLabel":"",',
     '  "quoteBy":"","items":[],"sides":[{"label":"","value":""}],',
-    '  "points":[{"year":"","title":"","detail":""}],',
+    '  "points":[{"year":"","title":"","detail":""}],"canvas":"vertical|landscape",',
+    '  "template":"cover|image-text|stats|grid","eyebrow":"","blocks":[{"title":"","body":"","value":"","label":""}],',
+    '  "focalPoint":"left|center|right","textSafeArea":"left|center|right",',
     '  "imagePrompt":"","imageStyle":"real","sourceContext":"..."}]}',
     "أدرج فقط الحقول ذات المعنى لكل نوع.",
     "",
@@ -232,7 +299,7 @@ const PLAN_PROMPT = (title: string, source: string) =>
   ].join("\n");
 
 export async function runJakPlan(
-  input: { title: string; source: string },
+  input: { title: string; source: string; canvas?: JakCanvas },
   settings: AiSettingsData,
 ): Promise<{ plan: JakPlan; usage: { model: string; inputTokens: number; outputTokens: number } }> {
   const anthropic = client();
@@ -252,7 +319,7 @@ export async function runJakPlan(
       "الدستور التحريري الملزم نصًا:",
       constitution(),
     ].join("\n"),
-    messages: [{ role: "user", content: PLAN_PROMPT(input.title, input.source) }],
+    messages: [{ role: "user", content: PLAN_PROMPT(input.title, input.source, input.canvas ?? "vertical") }],
   });
 
   if (response.stop_reason === "max_tokens") {
@@ -268,8 +335,28 @@ export async function runJakPlan(
     throw new Error("تعذر قراءة مخرج النموذج — أعد المحاولة.");
   }
 
+  const plan = validateJakPlan(parsed, input.source);
+  if (input.canvas === "landscape") {
+    plan.slides = plan.slides.map((slide, index) => ({
+      ...slide,
+      data: {
+        ...slide.data,
+        canvas: "landscape",
+        template:
+          slide.data?.template ??
+          (index === 0
+            ? "cover"
+            : slide.type === "stat" || slide.type === "comparison"
+              ? "stats"
+              : slide.type === "list" || slide.type === "summary" || slide.type === "timeline"
+                ? "grid"
+                : "image-text"),
+      },
+    }));
+  }
+
   return {
-    plan: validateJakPlan(parsed, input.source),
+    plan,
     usage: {
       model,
       inputTokens: response.usage.input_tokens,

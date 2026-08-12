@@ -9,10 +9,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-import type { JakSlide, SlideType } from "@/lib/tahrir/jak";
-import { SLIDE_TYPE_NAMES, SLIDE_TYPES } from "@/lib/tahrir/jak";
+import type { JakCanvas, JakSlide, ReportTemplate, SlideType } from "@/lib/tahrir/jak";
+import {
+  isLandscapeReport,
+  reportLayoutIssues,
+  REPORT_TEMPLATE_NAMES,
+  REPORT_TEMPLATES,
+  SLIDE_TYPE_NAMES,
+  SLIDE_TYPES,
+} from "@/lib/tahrir/jak";
 
 import { JakStory } from "@/app/_components/jak-slides";
+import { JakReport } from "@/app/_components/jak-report";
 
 interface SlideGuard {
   ok: boolean;
@@ -50,7 +58,11 @@ const AI_OPS: Array<[string, string]> = [
   ["split", "✦ قسّمها"],
 ];
 
-const blankSlide = (type: SlideType = "text"): EditorSlide => ({
+const blankSlide = (
+  type: SlideType = "text",
+  canvas: JakCanvas = "vertical",
+  template: ReportTemplate = type === "hero" ? "cover" : "image-text",
+): EditorSlide => ({
   id: crypto.randomUUID(),
   type,
   title: "",
@@ -62,7 +74,7 @@ const blankSlide = (type: SlideType = "text"): EditorSlide => ({
   imagePrompt: "",
   sourceContext: "",
   hidden: false,
-  data: null,
+  data: canvas === "landscape" ? { canvas, template, focalPoint: "left", textSafeArea: "right" } : null,
 });
 
 export function JakEditor({ role, sections, recentMedia, initial }: Props) {
@@ -74,6 +86,9 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   const [status, setStatus] = useState(initial?.status ?? "draft");
   const [source, setSource] = useState(initial?.source ?? "");
   const [slides, setSlides] = useState<EditorSlide[]>(initial?.slides ?? []);
+  const [canvas, setCanvas] = useState<JakCanvas>(
+    initial && isLandscapeReport(initial.slides) ? "landscape" : "vertical",
+  );
   const [dropped, setDropped] = useState<Array<{ title: string; reason: string }>>([]);
   const [phase, setPhase] = useState<"source" | "analyzing" | "slides">(
     initial && initial.slides.length > 0 ? "slides" : "source",
@@ -91,13 +106,14 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
 
   /* ============ التحليل ============ */
 
-  async function analyze() {
+  async function analyze(targetCanvas: JakCanvas = canvas) {
+    setCanvas(targetCanvas);
     setPhase("analyzing");
     setMessage(null);
     const response = await fetch("/api/tahrir/jak/plan", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, source }),
+      body: JSON.stringify({ title, source, canvas: targetCanvas }),
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     if (!response?.ok || !data?.plan) {
@@ -128,7 +144,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
 
   const insertAfter = (index: number) => {
     const next = [...slides];
-    next.splice(index + 1, 0, blankSlide());
+    next.splice(index + 1, 0, blankSlide("text", canvas));
     setSlides(next);
     setOpenSlide(next[index + 1].id);
   };
@@ -155,7 +171,13 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
       return;
     }
     const next = [...slides];
-    next.splice(index, 1, ...(data.slides as EditorSlide[]).map((item) => ({ ...item, image: slide.image })));
+    next.splice(index, 1, ...(data.slides as EditorSlide[]).map((item) => ({
+      ...item,
+      image: slide.image,
+      data: slide.data?.canvas === "landscape"
+        ? { ...item.data, ...slide.data, blocks: item.data?.blocks ?? slide.data.blocks }
+        : item.data,
+    })));
     if (op === "split" && data.slides.length > 1) next[index + 1].image = null;
     setSlides(next);
     ok("طُبّق المقترح — القرار النهائي عند الحفظ.");
@@ -163,8 +185,11 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
 
   async function generateImage(index: number) {
     const slide = slides[index];
-    const prompt = slide.imagePrompt.trim();
-    if (!prompt) {
+    const basePrompt = slide.imagePrompt.trim();
+    const prompt = slide.data?.canvas === "landscape"
+      ? `${basePrompt}. Cinematic editorial background, 16:9 landscape, subject on the ${slide.data.focalPoint ?? "left"}, clear dark negative space on the ${slide.data.textSafeArea ?? "right"} for Arabic typography, no text, no letters, no logos.`
+      : basePrompt;
+    if (!basePrompt) {
       err("اكتب وصف الخلفية أولًا (imagePrompt).");
       return;
     }
@@ -278,6 +303,21 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
     ok("جُدول — الحارس يفحصه ثانية لحظة الموعد.");
   }
 
+  function exportReport() {
+    if (!isLandscapeReport(slides)) {
+      err("التصدير الأفقي متاح للتقرير البصري 16:9 فقط.");
+      return;
+    }
+    document.documentElement.classList.add("jak-print-report");
+    window.addEventListener(
+      "afterprint",
+      () => document.documentElement.classList.remove("jak-print-report"),
+      { once: true },
+    );
+    window.print();
+    window.setTimeout(() => document.documentElement.classList.remove("jak-print-report"), 1500);
+  }
+
   /* ============ العرض ============ */
 
   if (phase !== "slides") {
@@ -309,17 +349,36 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
             </div>
           ) : (
             <>
-              <button className="th-send ready" onClick={analyze} disabled={!source.trim()}>
+              <button className="th-send ready" onClick={() => analyze("vertical")} disabled={!source.trim()}>
                 ✦ حوّل إلى جاك العلم
+              </button>
+              <button className="th-send ready" onClick={() => analyze("landscape")} disabled={!source.trim()}>
+                ✦ أنشئ تقريرًا بصريًا 16:9
               </button>
               <button
                 className="th-save"
                 onClick={() => {
+                  setCanvas("vertical");
                   setSlides([blankSlide("hero"), blankSlide(), blankSlide("end")]);
                   setPhase("slides");
                 }}
               >
                 أو ابدأ بشرائح فارغة يدويًا
+              </button>
+              <button
+                className="th-save"
+                onClick={() => {
+                  setCanvas("landscape");
+                  setSlides([
+                    blankSlide("hero", "landscape", "cover"),
+                    blankSlide("text", "landscape", "image-text"),
+                    blankSlide("stat", "landscape", "stats"),
+                    blankSlide("list", "landscape", "grid"),
+                  ]);
+                  setPhase("slides");
+                }}
+              >
+                أو ابدأ بتقرير أفقي فارغ
               </button>
             </>
           )}
@@ -352,10 +411,12 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
           <span className={`th-pill ${status === "published" ? "pub" : status === "review" ? "rev" : status === "scheduled" ? "sch" : "dft"}`}>
             {status === "published" ? "منشور" : status === "review" ? "بانتظار الاعتماد" : status === "scheduled" ? "مجدول" : "مسودة"}
           </span>
+          {isLandscapeReport(slides) && <span className="th-report-badge">▭ تقرير 16:9</span>}
           <button className="th-mini" onClick={() => setPreview(!preview)}>
-            {preview ? "أغلق المعاينة" : "📱 معاينة جاك العلم"}
+            {preview ? "أغلق المعاينة" : isLandscapeReport(slides) ? "▭ معاينة التقرير" : "📱 معاينة جاك العلم"}
           </button>
           <button className="th-mini" onClick={() => setPhase("source")}>المصدر</button>
+          {isLandscapeReport(slides) && <button className="th-mini" onClick={exportReport}>تصدير PDF</button>}
         </div>
         {dropped.length > 0 && (
           <div className="th-msg err" style={{ padding: "6px 16px 10px" }}>
@@ -391,6 +452,47 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
 
               {openSlide === slide.id && (
                 <div className="th-jslide-bd">
+                  {slide.data?.canvas === "landscape" && (
+                    <>
+                      <div className="row2">
+                        <select
+                          className="th-input"
+                          value={slide.data.template ?? "image-text"}
+                          onChange={(event) => patch(slide.id, { data: { ...slide.data, template: event.target.value as ReportTemplate } })}
+                        >
+                          {REPORT_TEMPLATES.map((template) => (
+                            <option key={template} value={template}>{REPORT_TEMPLATE_NAMES[template]}</option>
+                          ))}
+                        </select>
+                        <input
+                          className="th-input"
+                          placeholder="التصنيف القصير: بالأرقام"
+                          value={slide.data.eyebrow ?? ""}
+                          onChange={(event) => patch(slide.id, { data: { ...slide.data, eyebrow: event.target.value } })}
+                        />
+                      </div>
+                      <div className="row2">
+                        <select
+                          className="th-input"
+                          value={slide.data.focalPoint ?? "left"}
+                          onChange={(event) => patch(slide.id, { data: { ...slide.data, focalPoint: event.target.value as "left" | "center" | "right" } })}
+                        >
+                          <option value="left">العنصر البصري يسار</option>
+                          <option value="center">العنصر البصري وسط</option>
+                          <option value="right">العنصر البصري يمين</option>
+                        </select>
+                        <select
+                          className="th-input"
+                          value={slide.data.textSafeArea ?? "right"}
+                          onChange={(event) => patch(slide.id, { data: { ...slide.data, textSafeArea: event.target.value as "left" | "center" | "right" } })}
+                        >
+                          <option value="right">مساحة النص يمين</option>
+                          <option value="center">مساحة النص وسط</option>
+                          <option value="left">مساحة النص يسار</option>
+                        </select>
+                      </div>
+                    </>
+                  )}
                   <input
                     className="th-input"
                     placeholder="عنوان الشريحة (≤10 كلمات)"
@@ -453,6 +555,28 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
                           data: { ...slide.data, items: event.target.value.split("\n").map((item) => item.trim()).filter(Boolean) },
                         })
                       }
+                    />
+                  )}
+
+                  {slide.data?.canvas === "landscape" && ["stats", "grid"].includes(slide.data.template ?? "") && (
+                    <textarea
+                      className="th-input"
+                      style={{ resize: "vertical", minHeight: 105, fontFamily: "inherit" }}
+                      placeholder="وحدة في كل سطر: القيمة | الوحدة | العنوان | النص"
+                      value={(slide.data.blocks ?? []).map((block) => `${block.value} | ${block.label} | ${block.title} | ${block.body}`).join("\n")}
+                      onChange={(event) => patch(slide.id, {
+                        data: {
+                          ...slide.data,
+                          blocks: event.target.value
+                            .split("\n")
+                            .map((line) => {
+                              const [value = "", label = "", blockTitle = "", body = ""] = line.split("|").map((part) => part.trim());
+                              return { value, label, title: blockTitle, body };
+                            })
+                            .filter((block) => block.value || block.title || block.body)
+                            .slice(0, 6),
+                        },
+                      })}
                     />
                   )}
 
@@ -542,6 +666,11 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
                       {slide.guard.findings.slice(0, 2).map((finding) => finding.message).join(" · ")}
                     </div>
                   )}
+                  {reportLayoutIssues(slide).length > 0 && (
+                    <div className="th-msg err" style={{ padding: 0 }}>
+                      {reportLayoutIssues(slide).join(" · ")}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -568,7 +697,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
               </div>
             </div>
           ))}
-          <button className="th-save" style={{ width: "100%" }} onClick={() => setSlides([...slides, blankSlide()])}>
+          <button className="th-save" style={{ width: "100%" }} onClick={() => setSlides([...slides, blankSlide("text", canvas)])}>
             + شريحة جديدة
           </button>
         </div>
@@ -577,16 +706,23 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
           {preview && (
             <div className="th-jakprev">
               <div className="th-jakprev-screen">
-                <JakStory
-                  meta={{
-                    title,
-                    sectionName: sections.find(([slug]) => slug === section)?.[1] ?? section,
-                    readingMinutes: Math.max(1, Math.round(slides.length / 3)),
-                    shareUrl: "https://alelm.net",
-                    next: null,
-                  }}
-                  slides={slides}
-                />
+                {isLandscapeReport(slides) ? (
+                  <JakReport
+                    meta={{ title, sectionName: sections.find(([slug]) => slug === section)?.[1] ?? section }}
+                    slides={slides}
+                  />
+                ) : (
+                  <JakStory
+                    meta={{
+                      title,
+                      sectionName: sections.find(([slug]) => slug === section)?.[1] ?? section,
+                      readingMinutes: Math.max(1, Math.round(slides.length / 3)),
+                      shareUrl: "https://alelm.net",
+                      next: null,
+                    }}
+                    slides={slides}
+                  />
+                )}
               </div>
               <div style={{ fontSize: 9.5, color: "var(--t-ink3)", textAlign: "center", marginTop: 6 }}>
                 معاينة بجلستك فقط — لا رابط عامًا للمسودة.

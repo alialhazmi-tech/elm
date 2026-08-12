@@ -5,12 +5,13 @@ import { notFound } from "next/navigation";
 
 import { EndingPoll } from "@/app/_components/poll";
 import { JakStory } from "@/app/_components/jak-slides";
+import { JakReport } from "@/app/_components/jak-report";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { brandDate, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
-import type { JakSlide, SlideData, SlideType } from "@/lib/tahrir/jak";
+import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
 
 export const revalidate = 300;
@@ -86,19 +87,28 @@ export default async function ArticlePage({ params }: Params) {
       <>
         <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
         <SiteHeader />
-        {/* الالتقاط المرن على تمرير الصفحة — proximity لا يحبس القارئ */}
-        <style>{`html{scroll-snap-type:y proximity}`}</style>
+        {!isLandscapeReport(slides) && (
+          /* الالتقاط المرن على تمرير الصفحة — proximity لا يحبس القارئ */
+          <style>{`html{scroll-snap-type:y proximity}`}</style>
+        )}
         <main id="main-content">
-          <JakStory
-            meta={{
-              title: story.title,
-              sectionName: sectionName(story.section),
-              readingMinutes: story.readingMinutes,
-              shareUrl: `https://alelm.net${storyHref(story)}`,
-              next: nextStory ? { title: nextStory.title, href: storyHref(nextStory) } : null,
-            }}
-            slides={slides}
-          />
+          {isLandscapeReport(slides) ? (
+            <JakReport
+              meta={{ title: story.title, sectionName: sectionName(story.section) }}
+              slides={slides}
+            />
+          ) : (
+            <JakStory
+              meta={{
+                title: story.title,
+                sectionName: sectionName(story.section),
+                readingMinutes: story.readingMinutes,
+                shareUrl: `https://alelm.net${storyHref(story)}`,
+                next: nextStory ? { title: nextStory.title, href: storyHref(nextStory) } : null,
+              }}
+              slides={slides}
+            />
+          )}
         </main>
         <SiteFooter />
         <script
