@@ -94,7 +94,7 @@ export const imageGenerationSize = (slide: JakSlide): "cover" | "portrait" =>
 export function imageGenerationPrompt(slide: JakSlide): string {
   const basePrompt = slide.imagePrompt.trim();
   if (!basePrompt || slide.data?.canvas !== "landscape") return basePrompt;
-  return `${basePrompt}. Cinematic editorial background, 16:9 landscape, subject on the ${slide.data.focalPoint ?? "left"}, clear dark negative space on the ${slide.data.textSafeArea ?? "right"} for Arabic typography, no text, no letters, no logos.`;
+  return `${basePrompt}. Premium editorial visual asset, 16:9 landscape, composed for a dedicated image panel alongside Arabic text, primary subject on the ${slide.data.focalPoint ?? "left"}, strong visual hierarchy, no embedded text, no letters, no logos, not a wallpaper or background texture.`;
 }
 
 /** ملاحظات حتمية تمنع ازدحام قوالب 16:9 قبل التصدير. */

@@ -1,6 +1,6 @@
 /**
  * صفحات «جاك العلم» الأفقية 16:9.
- * الصور طبقة مستقلة، والنص العربي يبقى HTML حيًا قابلًا للتحرير والطباعة.
+ * الصور عناصر تحريرية مستقلة داخل التخطيط، والنص العربي يبقى HTML حيًا قابلًا للتحرير والطباعة.
  */
 
 import Image from "next/image";
@@ -74,7 +74,6 @@ function ReportPage({ slide, index, total, meta }: {
       data-template={template}
     >
       <ReportArt slide={slide} />
-      <div className="jak-report-shade" />
       <header className="jak-report-brand">
         <span>الع<i>ل</i>م</span>
         <small>{meta.sectionName}</small>

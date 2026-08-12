@@ -1295,36 +1295,47 @@ img { max-width: 100%; display: block; }
 
 /* ============ جاك العلم — التقرير البصري الأفقي 16:9 ============ */
 .jak-report { background: #080b10; color: #fff; padding: clamp(14px, 2vw, 32px); display: grid; gap: clamp(14px, 2vw, 30px); }
-.jak-report-page { width: min(100%, 1280px); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; isolation: isolate; overflow: hidden; background: #07101b; box-shadow: 0 20px 70px rgb(0 0 0 / .48); container-type: inline-size; }
-.jak-report-art, .jak-report-shade { position: absolute; inset: 0; z-index: -2; }
-.jak-report-art img { object-fit: cover; filter: saturate(.78) contrast(1.07); }
-.jak-report-art-fallback { background: radial-gradient(circle at 28% 42%, #243958 0, #101c2d 28%, #060b13 66%), linear-gradient(135deg, #09121f, #030609); }
-.jak-report-shade { z-index: -1; background: linear-gradient(90deg, rgb(2 5 9 / .2), rgb(2 5 9 / .7) 58%, rgb(2 5 9 / .96)); }
-.jak-report-page.safe-left .jak-report-shade { background: linear-gradient(90deg, rgb(2 5 9 / .96), rgb(2 5 9 / .7) 42%, rgb(2 5 9 / .18)); }
-.jak-report-page.safe-center .jak-report-shade { background: radial-gradient(circle at center, rgb(2 5 9 / .58), rgb(2 5 9 / .9)); }
+.jak-report-page { width: min(100%, 1280px); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; isolation: isolate; overflow: hidden; background: radial-gradient(circle at 8% 100%, rgb(227 27 53 / .09), transparent 30%), linear-gradient(135deg, #090d13, #04070b 72%); box-shadow: 0 20px 70px rgb(0 0 0 / .48); container-type: inline-size; }
+.jak-report-page::before { content: ""; position: absolute; inset: 0; z-index: 0; opacity: .22; background-image: linear-gradient(rgb(255 255 255 / .035) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .025) 1px, transparent 1px); background-size: 3.2cqw 3.2cqw; pointer-events: none; }
+.jak-report-art { position: absolute; z-index: 1; overflow: hidden; background: #111923; box-shadow: 0 2.2cqw 6cqw rgb(0 0 0 / .42); }
+.jak-report-art img { object-fit: cover; filter: saturate(.86) contrast(1.08); }
+.jak-report-art::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 0 .12cqw rgb(255 255 255 / .12); pointer-events: none; }
+.jak-report-art-fallback { background: radial-gradient(circle at 32% 38%, #2a405f 0, #111c2a 34%, #080c12 72%), linear-gradient(135deg, #101a28, #05080c); }
+.jak-report-page.safe-right .jak-report-art { left: 0; }
+.jak-report-page.safe-left .jak-report-art { right: 0; }
+.jak-report-page.safe-center .jak-report-art { left: 24cqw; }
+.jak-report-cover .jak-report-art { top: 0; bottom: 0; width: 52cqw; }
+.jak-report-image-text .jak-report-art { top: 11cqw; bottom: 7cqw; width: 48cqw; }
+.jak-report-stats .jak-report-art, .jak-report-grid .jak-report-art { top: 13cqw; bottom: 7cqw; width: 31cqw; }
+.jak-report-page.safe-center.jak-report-cover .jak-report-art { top: 5cqw; bottom: auto; width: 52cqw; height: 28cqw; }
+.jak-report-page.safe-center.jak-report-image-text .jak-report-art { top: 11cqw; bottom: auto; width: 52cqw; height: 25cqw; }
+.jak-report-page.safe-center.jak-report-stats .jak-report-art, .jak-report-page.safe-center.jak-report-grid .jak-report-art { top: 13cqw; bottom: 7cqw; width: 31cqw; height: auto; left: 5cqw; }
 .jak-report-brand { position: absolute; top: 4.5cqw; inset-inline: 4.8cqw; display: flex; justify-content: space-between; align-items: baseline; font-family: var(--f-logo, var(--font-display)); font-weight: 900; z-index: 3; }
 .jak-report-brand span { font-size: 2.3cqw; }
 .jak-report-brand i { color: #e31b35; font-style: normal; }
 .jak-report-brand small { font: 700 1.15cqw/1 var(--font-display); color: rgb(255 255 255 / .62); }
 .jak-report-eyebrow { display: inline-flex; align-items: center; gap: .6em; color: #ff3048; font: 900 1.8cqw/1.2 var(--font-display); margin-bottom: 1.5cqw; }
 .jak-report-eyebrow::before { content: ""; width: 3.3cqw; height: .35cqw; background: currentColor; }
-.jak-report-cover-copy { position: absolute; bottom: 8cqw; width: 66cqw; }
-.safe-right .jak-report-cover-copy { right: 7cqw; }
-.safe-left .jak-report-cover-copy { left: 7cqw; }
-.safe-center .jak-report-cover-copy { left: 17cqw; text-align: center; }
-.jak-report-cover-copy h1 { margin: 0; font: 900 5.6cqw/1.12 var(--font-display); color: #fff; text-wrap: balance; }
-.jak-report-cover-copy p { max-width: 52cqw; margin: 1.5cqw 0 0; font-size: 1.55cqw; line-height: 1.7; color: #dce3ec; }
+.jak-report-cover-copy { position: absolute; z-index: 2; top: 18cqw; width: 39cqw; }
+.safe-right .jak-report-cover-copy { right: 6cqw; }
+.safe-left .jak-report-cover-copy { left: 6cqw; }
+.safe-center .jak-report-cover-copy { top: 36cqw; left: 17cqw; width: 66cqw; text-align: center; }
+.jak-report-cover-copy h1 { margin: 0; font: 900 5.1cqw/1.12 var(--font-display); color: #fff; text-wrap: balance; }
+.jak-report-cover-copy p { max-width: 38cqw; margin: 1.5cqw 0 0; font-size: 1.5cqw; line-height: 1.7; color: #dce3ec; }
 .safe-center .jak-report-cover-copy p { margin-inline: auto; }
-.jak-report-copy { position: absolute; top: 17cqw; width: 45cqw; }
-.safe-right .jak-report-copy { right: 7cqw; }
-.safe-left .jak-report-copy { left: 7cqw; }
-.safe-center .jak-report-copy { left: 27.5cqw; text-align: center; }
+.jak-report-copy { position: absolute; z-index: 2; top: 16cqw; width: 39cqw; }
+.safe-right .jak-report-copy { right: 6cqw; }
+.safe-left .jak-report-copy { left: 6cqw; }
+.safe-center .jak-report-copy { top: 38cqw; left: 21cqw; width: 58cqw; text-align: center; }
 .jak-report-copy h2, .jak-report-dashboard h2 { margin: 0; font: 900 3.75cqw/1.18 var(--font-display); color: #fff; text-wrap: balance; }
 .jak-report-copy > p { margin: 1.4cqw 0 0; font-size: 1.45cqw; line-height: 1.7; color: #e0e5ed; }
 .jak-report-inline-stat { display: flex; gap: 1.4cqw; align-items: baseline; margin-top: 2.4cqw; border-top: .25cqw solid #e31b35; padding-top: 1.2cqw; }
 .jak-report-inline-stat strong { color: #ef223c; font: 900 5cqw/1 var(--font-display); }
 .jak-report-inline-stat span { font-size: 1.45cqw; font-weight: 800; }
-.jak-report-dashboard { position: absolute; inset: 14cqw 6cqw 7cqw; display: grid; grid-template-columns: .82fr 1.55fr; gap: 5cqw; align-items: center; }
+.jak-report-dashboard { position: absolute; z-index: 2; top: 13cqw; bottom: 7cqw; width: 57cqw; display: grid; grid-template-rows: auto 1fr; gap: 2.2cqw; align-items: start; }
+.safe-right .jak-report-dashboard { right: 5cqw; }
+.safe-left .jak-report-dashboard { left: 5cqw; }
+.safe-center .jak-report-dashboard { left: 36cqw; }
 .jak-report-dashboard-head p { font-size: 1.55cqw; line-height: 1.7; color: #c9d2df; }
 .jak-report-blocks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2.1cqw 2.8cqw; }
 .jak-report-stats .jak-report-blocks { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1334,7 +1345,7 @@ img { max-width: 100%; display: block; }
 .jak-report-block h3 { margin: 0 0 .7cqw; color: #ef223c; font-size: 1.75cqw; line-height: 1.35; }
 .jak-report-block strong ~ h3, .jak-report-block small ~ h3 { margin-top: 1cqw; }
 .jak-report-block p { margin: 0; color: #e0e5ed; font-size: 1.15cqw; line-height: 1.65; }
-.jak-report-foot { position: absolute; bottom: 3.2cqw; inset-inline: 4.8cqw; display: flex; justify-content: space-between; color: rgb(255 255 255 / .65); font-size: 1.05cqw; }
+.jak-report-foot { position: absolute; z-index: 3; bottom: 3.2cqw; inset-inline: 4.8cqw; display: flex; justify-content: space-between; color: rgb(255 255 255 / .65); font-size: 1.05cqw; }
 
 @media (max-width: 720px) {
   .jak-report { padding: 0; gap: 8px; }

@@ -6,7 +6,7 @@
  * والنشر يمر بمسارات المواد الحالية نفسها (الحارس والأدوار كما هي).
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { JakCanvas, JakSlide, ReportTemplate, SlideType } from "@/lib/tahrir/jak";
@@ -107,6 +107,30 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   const err = (text: string) => setMessage({ kind: "err", text });
   const ok = (text: string) => setMessage({ kind: "ok", text });
 
+  // الروابط التي سُجلت قبل تفعيل المخزن لا تملك ملفات فعلية؛ أعدها تلقائيًا إلى قائمة التوليد.
+  useEffect(() => {
+    const candidates = (initial?.slides ?? []).filter((slide) => slide.image?.startsWith("/uploads/"));
+    if (candidates.length === 0) return;
+    let cancelled = false;
+
+    Promise.all(
+      candidates.map(async (slide) => {
+        const response = await fetch(slide.image!, { method: "HEAD", cache: "no-store" }).catch(() => null);
+        return response?.status === 404 ? slide.id : null;
+      }),
+    ).then((results) => {
+      if (cancelled) return;
+      const missing = new Set(results.filter((slideId): slideId is string => Boolean(slideId)));
+      if (missing.size === 0) return;
+      setSlides((current) => current.map((slide) => (missing.has(slide.id) ? { ...slide, image: null } : slide)));
+      setMessage({ kind: "err", text: `اكتُشف ${missing.size} رابط صورة قديم مفقود — أصبح جاهزًا لإعادة التوليد.` });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initial]);
+
   /* ============ التحليل ============ */
 
   async function analyze(targetCanvas: JakCanvas = canvas) {
@@ -199,7 +223,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     if (!response?.ok || !data?.images?.[0]?.url) {
-      throw new Error(data?.error ?? "تعذر توليد الخلفية.");
+      throw new Error(data?.error ?? "تعذر توليد الصورة التحريرية.");
     }
     return data.images[0].url as string;
   }
@@ -207,7 +231,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   async function generateImage(index: number) {
     const slide = slides[index];
     if (!slide.imagePrompt.trim()) {
-      err("اكتب وصف الخلفية أولًا (imagePrompt).");
+      err("اكتب وصف الصورة التحريرية أولًا (imagePrompt).");
       return;
     }
     setAiBusy(`${slide.id}:image`);
@@ -215,9 +239,9 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
     try {
       const image = await requestGeneratedImage(slide);
       patch(slide.id, { image });
-      ok("وُلّدت الخلفية ودخلت المكتبة موثقة الحقوق.");
+      ok("وُلّدت الصورة التحريرية ودخلت المكتبة موثقة الحقوق.");
     } catch (error) {
-      err(error instanceof Error ? error.message : "تعذر توليد الخلفية.");
+      err(error instanceof Error ? error.message : "تعذر توليد الصورة التحريرية.");
     } finally {
       setAiBusy(null);
     }
@@ -675,10 +699,18 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
                     />
                   )}
 
-                  <div className="lb" style={{ fontSize: 10.5, fontWeight: 700, color: "var(--t-ink2)" }}>الخلفية الجوية</div>
+                  <div className="lb" style={{ fontSize: 10.5, fontWeight: 700, color: "var(--t-ink2)" }}>الصورة التحريرية</div>
                   {slide.image && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={slide.image} alt="" style={{ width: "100%", height: 90, objectFit: "cover", borderRadius: 8 }} />
+                    <img
+                      src={slide.image}
+                      alt=""
+                      style={{ width: "100%", height: 90, objectFit: "cover", borderRadius: 8 }}
+                      onError={() => {
+                        patch(slide.id, { image: null });
+                        err("رابط الصورة القديمة مفقود من المخزن — أعد توليد الصورة لهذه الصفحة.");
+                      }}
+                    />
                   )}
                   <input
                     className="th-input ltr"
@@ -688,7 +720,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
                   />
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
                     <button className="th-mini" onClick={() => generateImage(index)} disabled={aiBusy !== null}>
-                      {aiBusy === `${slide.id}:image` ? "✦ يولّد…" : slide.image ? "✦ أعد التوليد" : "✦ ولّد الخلفية"}
+                      {aiBusy === `${slide.id}:image` ? "✦ يولّد…" : slide.image ? "✦ أعد التوليد" : "✦ ولّد الصورة"}
                     </button>
                     {IMAGE_STYLES.map(([styleKey, styleName]) => (
                       <button

@@ -153,7 +153,7 @@ test("حفظ شرائح جاك يستخدم batch المتوافق مع neon-htt
   assert.doesNotMatch(replaceSlidesBody, /await db\.transaction\(/);
 });
 
-test("صور التقرير تطلب 16:9 وتحترم موضع العنصر ومساحة النص", () => {
+test("صور التقرير تُولد كعناصر تحريرية مستقلة بجوار النص", () => {
   const slide = normalizeSlide({
     type: "hero",
     imagePrompt: "Saudi digital economy skyline",
@@ -161,8 +161,18 @@ test("صور التقرير تطلب 16:9 وتحترم موضع العنصر و�
   });
   assert.equal(imageGenerationSize(slide), "cover");
   assert.match(imageGenerationPrompt(slide), /16:9 landscape/);
+  assert.match(imageGenerationPrompt(slide), /dedicated image panel alongside Arabic text/);
   assert.match(imageGenerationPrompt(slide), /subject on the left/);
-  assert.match(imageGenerationPrompt(slide), /negative space on the right/);
+  assert.match(imageGenerationPrompt(slide), /not a wallpaper or background texture/);
+});
+
+test("قالب التقرير يضع الصورة في لوحة مستقلة لا في خلفية الصفحة", async () => {
+  const component = await readFile(new URL("../app/_components/jak-report.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.doesNotMatch(component, /jak-report-shade/);
+  assert.match(styles, /\.jak-report-image-text \.jak-report-art/);
+  assert.match(styles, /\.jak-report-stats \.jak-report-art/);
+  assert.doesNotMatch(styles, /\.jak-report-art, \.jak-report-shade/);
 });
 
 test("مادة جاك تفتح محرر جاك وبقية المواد تفتح المحرر العام", () => {

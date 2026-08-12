@@ -257,7 +257,7 @@ const PLAN_PROMPT = (title: string, source: string, canvas: JakCanvas) =>
       ? "حوّل هذا التقرير إلى تقرير بصري أفقي 16:9 من صفحات متتابعة، كل صفحة فكرة واحدة."
       : "حوّل هذا التقرير إلى «جاك العلم»: قصة معرفية من شرائح عمودية متتابعة، كل شريحة فكرة واحدة.",
     "",
-    "أنواع الشرائح: hero (افتتاحية واحدة أولًا)، text (فكرة بخلفية)، stat (رقم بارز)،",
+    "أنواع الشرائح: hero (افتتاحية واحدة أولًا)، text (فكرة مع عنصر بصري)، stat (رقم بارز)،",
     "comparison (طرفان sides)، timeline (نقاط points)، quote (اقتباس بنسبته quoteBy)،",
     "list (عناصر items)، fact (حقيقة سريعة)، summary (خلاصة items)، end (ختامية واحدة أخيرًا).",
     "",
@@ -276,9 +276,9 @@ const PLAN_PROMPT = (title: string, source: string, canvas: JakCanvas) =>
           "- canvas في كل صفحة landscape.",
           "- اختر template من: cover للغلاف فقط، image-text لصورة مع فقرة، stats للأرقام، grid للأفكار المتوازية.",
           "- لقوالب stats وgrid أعد blocks من 3 إلى 6 وحدات. كل وحدة: title وbody وvalue وlabel حسب الحاجة.",
-          "- focalPoint موضع العنصر البصري وtextSafeArea موضع الفراغ المخصص للنص: left أو center أو right.",
+          "- focalPoint موضع العنصر داخل الصورة وtextSafeArea موضع عمود النص المقابل: left أو center أو right.",
           "- eyebrow تصنيف قصير من كلمتين إلى أربع كلمات.",
-          "- الصورة بلا نص أو شعارات أو أشخاص معروفين، واترك مساحة داكنة واضحة في textSafeArea.",
+          "- الصورة عنصر تحريري مستقل داخل التخطيط وليست خلفية للصفحة؛ بلا نص أو شعارات أو أشخاص معروفين.",
         ]
       : []),
     "",
