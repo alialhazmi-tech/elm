@@ -11,6 +11,7 @@ import {
   reportLayoutIssues,
 } from "../lib/tahrir/jak.ts";
 import { runPolicyGuard } from "../lib/policy/index.ts";
+import { editorHref } from "../lib/tahrir/routes.ts";
 
 const SOURCE =
   "ارتفعت مساهمة الاقتصاد الرقمي إلى 15% بنهاية 2025، وبلغت تغطية الجيل الخامس 73% من المدن، " +
@@ -160,4 +161,9 @@ test("صور التقرير تطلب 16:9 وتحترم موضع العنصر و�
   assert.match(imageGenerationPrompt(slide), /16:9 landscape/);
   assert.match(imageGenerationPrompt(slide), /subject on the left/);
   assert.match(imageGenerationPrompt(slide), /negative space on the right/);
+});
+
+test("مادة جاك تفتح محرر جاك وبقية المواد تفتح المحرر العام", () => {
+  assert.equal(editorHref({ id: "jak-1", format: "jakalelm" }), "/tahrir/jak/jak-1");
+  assert.equal(editorHref({ id: "news-1", format: "news" }), "/tahrir/editor/news-1");
 });

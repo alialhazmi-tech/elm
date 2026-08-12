@@ -370,6 +370,17 @@ export async function listLatestByStatus(status: StoryStatus, limit: number): Pr
     .limit(limit);
 }
 
+/** أحدث مواد شكل تحريري معين — لقوائم الأقسام المتخصصة مثل جاك العلم. */
+export async function listLatestByFormat(format: string, limit: number): Promise<StoryLite[]> {
+  const db = requireDb();
+  return db
+    .select(LITE_COLUMNS)
+    .from(stories)
+    .where(eq(stories.format, format))
+    .orderBy(recencyOrder)
+    .limit(limit);
+}
+
 /** المتون لمعرفات محددة — لفحص الحارس على المعروض فقط. */
 export async function bodiesFor(ids: string[]): Promise<Map<string, { title: string; body: string }>> {
   if (ids.length === 0) return new Map();

@@ -4,6 +4,7 @@ import { SERIES } from "@/lib/content/series";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
+import { editorHref } from "@/lib/tahrir/routes";
 import {
   bodiesFor,
   listPage,
@@ -78,7 +79,12 @@ export default async function StoriesPage({
         const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
         const content = bodies.get(story.id);
         const report = content
-          ? runPolicyGuard({ id: story.id, title: content.title, body: stripHtmlToText(content.body) })
+          ? runPolicyGuard({
+              id: story.id,
+              title: content.title,
+              body: stripHtmlToText(content.body),
+              surface: story.format === "jakalelm" ? "design" : undefined,
+            })
           : null;
         const chip = !report
           ? { cls: "ok", label: "—" }
@@ -93,7 +99,7 @@ export default async function StoriesPage({
           <Link
             key={story.id}
             className="th-srow"
-            href={`/tahrir/editor/${story.id}`}
+            href={editorHref(story)}
             style={{ "--sc": series?.color ?? "var(--t-line2)" } as React.CSSProperties}
           >
             <span className="rail" aria-hidden="true" />
@@ -108,6 +114,7 @@ export default async function StoriesPage({
             </span>
             <span className="chips">
               {series ? <span className="th-serchip">{series.name}</span> : null}
+              {story.format === "jakalelm" ? <span className="th-report-badge">▦ جاك العلم</span> : null}
               <span className={`th-gchip ${chip.cls}`}>{chip.label}</span>
               <span className={`th-pill ${STATUS_PILLS[storyStatus] ?? "dft"}`}>
                 {STATUS_LABELS[storyStatus] ?? story.status}

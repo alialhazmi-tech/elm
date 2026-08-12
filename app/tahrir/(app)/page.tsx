@@ -4,6 +4,7 @@ import { SERIES } from "@/lib/content/series";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { getSession } from "@/lib/tahrir/auth";
+import { editorHref } from "@/lib/tahrir/routes";
 import {
   bodiesFor,
   listLatestByStatus,
@@ -101,7 +102,7 @@ export default async function OverviewPage() {
             const content = reviewBodies.get(story.id);
             const chip = content ? guardChip(content.title, content.body) : { cls: "ok", label: "—" };
             return (
-              <Link key={story.id} className="th-qrow" href={`/tahrir/editor/${story.id}`}>
+              <Link key={story.id} className="th-qrow" href={editorHref(story)}>
                 <span className={`th-gchip ${chip.cls}`}>{chip.label}</span>
                 <span className="t">{story.title}</span>
                 <span className="who">{story.authorName || "—"}</span>
@@ -112,7 +113,7 @@ export default async function OverviewPage() {
             <h2>آخر ما نُشر</h2>
           </div>
           {latestPublished.map((story) => (
-            <Link key={story.id} className="th-qrow" href={`/tahrir/editor/${story.id}`}>
+            <Link key={story.id} className="th-qrow" href={editorHref(story)}>
               <span className="th-gchip ok">منشور</span>
               <span className="t">{story.title}</span>
               <span className="who">{(story.publishedAt ?? "").slice(0, 10)}</span>

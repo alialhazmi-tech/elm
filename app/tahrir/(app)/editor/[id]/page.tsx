@@ -1,4 +1,5 @@
 import { SERIES } from "@/lib/content/series";
+import { redirect } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
 import { getStory, listMedia } from "@/lib/tahrir/service";
@@ -11,6 +12,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const { id } = await params;
   const session = await getSession();
   const story = id === "new" ? null : await getStory(id).catch(() => null);
+  if (story?.format === "jakalelm") redirect(`/tahrir/jak/${story.id}`);
   const mediaRows = await listMedia().catch(() => []);
   const recentMedia = mediaRows
     .filter((row) => row.rightsCleared === 1)

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { SERIES } from "@/lib/content/series";
+import { editorHref } from "@/lib/tahrir/routes";
 import { listLatestByStatus, promoteDueScheduled } from "@/lib/tahrir/service";
 
 export const metadata = { title: "جدولة النشر" };
@@ -72,7 +73,7 @@ export default async function SchedulePage() {
                 >
                   <span className="tm">{hourOf(at)}</span>
                   <div className="cell">
-                    <Link className="th-tlcard" href={`/tahrir/editor/${row.id}`}>
+                    <Link className="th-tlcard" href={editorHref(row)}>
                       <span className="t">{row.title}</span>
                       {series && (
                         <span
@@ -102,7 +103,7 @@ export default async function SchedulePage() {
             </div>
             {upcoming.length === 0 && <div className="th-empty">لا مواد مجدولة لاحقًا.</div>}
             {upcoming.slice(0, 8).map((row) => (
-              <Link className="th-qrow" key={row.id} href={`/tahrir/editor/${row.id}`}>
+              <Link className="th-qrow" key={row.id} href={editorHref(row)}>
                 <span className="th-pill sch">{dayOf(row.scheduledAt!)}</span>
                 <span className="t">{row.title}</span>
               </Link>

@@ -290,10 +290,16 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
       return null;
     }
 
+    // ثبّت هوية المادة فور نجاح الصف الأم. إذا تعثر حفظ الشرائح لاحقًا،
+    // تعيد المحاولة على السجل نفسه بدل إنشاء مسودة مكررة بمعرّف جديد.
+    const savedStoryId = storyData.id as string;
+    setId(savedStoryId);
+    if (!id) router.replace(`/tahrir/jak/${savedStoryId}`);
+
     const slidesResponse = await fetch("/api/tahrir/jak/slides", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storyId: storyData.id, source, slides }),
+      body: JSON.stringify({ storyId: savedStoryId, source, slides }),
     }).catch(() => null);
     const slidesData = await slidesResponse?.json().catch(() => null);
     setBusy(false);
@@ -302,11 +308,9 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
       return null;
     }
 
-    setId(storyData.id);
     if (!initial) setStatus("draft");
     ok("حُفظ جاك العلم بشرائحه.");
-    if (!initial?.id) router.replace(`/tahrir/jak/${storyData.id}`);
-    return storyData.id as string;
+    return savedStoryId;
   }
 
   async function workflow(route: "submit" | "publish", label: string) {
