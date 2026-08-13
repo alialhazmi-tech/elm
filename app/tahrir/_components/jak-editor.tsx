@@ -25,6 +25,7 @@ import {
 
 import { JakStory } from "@/app/_components/jak-slides";
 import { JakReport } from "@/app/_components/jak-report";
+import { ArchiveStoryButton, RestoreStoryButton } from "./archive-controls";
 
 interface SlideGuard {
   ok: boolean;
@@ -45,6 +46,7 @@ interface Props {
     status: string;
     slides: EditorSlide[];
     source: string;
+    archiveEvent?: { at: string; actor: string; reason: string } | null;
   } | null;
 }
 
@@ -88,6 +90,7 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [section, setSection] = useState(initial?.section ?? "current-events");
   const [status, setStatus] = useState(initial?.status ?? "draft");
+  const [archiveEvent, setArchiveEvent] = useState(initial?.archiveEvent ?? null);
   const [source, setSource] = useState(initial?.source ?? "");
   const [slides, setSlides] = useState<EditorSlide[]>(initial?.slides ?? []);
   const [canvas, setCanvas] = useState<JakCanvas>(
@@ -496,8 +499,8 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
               <option key={slug} value={slug}>{name}</option>
             ))}
           </select>
-          <span className={`th-pill ${status === "published" ? "pub" : status === "review" ? "rev" : status === "scheduled" ? "sch" : "dft"}`}>
-            {status === "published" ? "منشور" : status === "review" ? "بانتظار الاعتماد" : status === "scheduled" ? "مجدول" : "مسودة"}
+          <span className={`th-pill ${status === "published" ? "pub" : status === "review" ? "rev" : status === "scheduled" ? "sch" : status === "archived" ? "arc" : "dft"}`}>
+            {status === "published" ? "منشور" : status === "review" ? "بانتظار الاعتماد" : status === "scheduled" ? "مجدول" : status === "archived" ? "مؤرشفة" : "مسودة"}
           </span>
           {isLandscapeReport(slides) && <span className="th-report-badge">▭ تقرير 16:9</span>}
           {isLandscapeReport(slides) && (
@@ -863,17 +866,17 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
           <div className="th-panel">
             <div className="th-actions">
               <button className="th-save" onClick={save} disabled={busy}>حفظ جاك العلم</button>
-              {status !== "published" && (
+              {status !== "published" && status !== "archived" && (
                 <button className="th-send ready" onClick={() => workflow("submit", "الإرسال")} disabled={busy}>
                   إرسال للاعتماد
                 </button>
               )}
-              {canApprove && status !== "published" && (
+              {canApprove && status !== "published" && status !== "archived" && (
                 <button className="th-send ready" onClick={() => workflow("publish", "النشر")} disabled={busy}>
                   اعتماد ونشر الآن
                 </button>
               )}
-              {canApprove && status !== "published" && (
+              {canApprove && status !== "published" && status !== "archived" && (
                 <>
                   <input
                     className="th-input"
@@ -888,7 +891,32 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
               {status === "published" && (
                 <button className="th-send ready" onClick={save} disabled={busy}>تحديث المنشور</button>
               )}
+              {canApprove && status !== "draft" && status !== "archived" && initial?.id ? (
+                <ArchiveStoryButton
+                  id={initial.id}
+                  title={title || "جاك العلم"}
+                  onArchived={() => {
+                    setStatus("archived");
+                    setArchiveEvent({ at: new Date().toISOString(), actor: "", reason: "أُرشفت من المحرر" });
+                  }}
+                />
+              ) : null}
+              {canApprove && status === "archived" && initial?.id ? (
+                <RestoreStoryButton
+                  id={initial.id}
+                  title={title || "جاك العلم"}
+                  onRestored={() => {
+                    setStatus("draft");
+                    setArchiveEvent(null);
+                  }}
+                />
+              ) : null}
             </div>
+            {status === "archived" && archiveEvent ? (
+              <div className="th-archive-banner" style={{ marginTop: 12 }}>
+                <b>مؤرشف</b> — {archiveEvent.reason}
+              </div>
+            ) : null}
             <div className="th-ai-foot">
               النشر يمر بحارس السياسة (سطح بصري) وبنفس أدوار الاعتماد — لا مسار جانبيًا لجاك العلم.
             </div>

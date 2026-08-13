@@ -4,14 +4,18 @@ import { SERIES } from "@/lib/content/series";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
+import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
+  ACTIVE_STATUSES,
   bodiesFor,
+  latestArchiveEvents,
   listPage,
   statusCounts,
   STATUS_LABELS,
   type StoryStatus,
 } from "@/lib/tahrir/service";
+import { ArchiveStoryButton, RestoreStoryButton } from "../../_components/archive-controls";
 import { DeleteDraftButton } from "../../_components/delete-draft-button";
 
 export const metadata = { title: "المواد" };
@@ -23,12 +27,23 @@ const STATUS_PILLS: Record<StoryStatus, string> = {
   review: "rev",
   scheduled: "sch",
   draft: "dft",
+  archived: "arc",
 };
 const seriesBySlug = new Map<string, (typeof SERIES)[number]>(
   SERIES.map((series) => [series.slug, series]),
 );
 
-const VALID_STATUSES = new Set(["published", "review", "scheduled", "draft"]);
+const VALID_STATUSES = new Set<string>([...ACTIVE_STATUSES, "archived"]);
+
+const archiveWhen = (iso: string) =>
+  new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date(iso));
 
 export default async function StoriesPage({
   searchParams,
@@ -36,17 +51,24 @@ export default async function StoriesPage({
   searchParams: Promise<{ status?: string; p?: string }>;
 }) {
   const params = await searchParams;
+  const session = await getSession();
+  const canArchive = session ? APPROVER_ROLES.includes(session.role) : false;
   const status = VALID_STATUSES.has(params.status ?? "")
     ? (params.status as StoryStatus)
     : undefined;
   const page = Math.max(1, Number(params.p) || 1);
 
   const [counts, rows] = await Promise.all([statusCounts(), listPage(status, page, PER_PAGE)]);
-  const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-  const filteredTotal = status ? (counts[status] ?? 0) : total;
+  const archivedCount = counts.archived ?? 0;
+  const activeTotal = Object.entries(counts).reduce(
+    (sum, [key, count]) => (key === "archived" ? sum : sum + count),
+    0,
+  );
+  const filteredTotal = status ? (counts[status] ?? 0) : activeTotal;
   const totalPages = Math.max(1, Math.ceil(filteredTotal / PER_PAGE));
+  const archiveEvents =
+    status === "archived" ? await latestArchiveEvents(rows.map((row) => row.id)) : new Map();
 
-  // الحارس على المعروض فقط — لا على الأرشيف كله
   const bodies = await bodiesFor(rows.map((row) => row.id));
 
   const href = (targetStatus?: string, targetPage = 1) => {
@@ -61,13 +83,16 @@ export default async function StoriesPage({
     <main className="th-screen">
       <div className="th-filters">
         <Link className={`th-fch ${!status ? "on" : ""}`} href={href()}>
-          الكل <b>{total}</b>
+          الكل <b>{activeTotal}</b>
         </Link>
-        {(["published", "review", "scheduled", "draft"] as const).map((key) => (
+        {ACTIVE_STATUSES.map((key) => (
           <Link key={key} className={`th-fch ${status === key ? "on" : ""}`} href={href(key)}>
             {STATUS_LABELS[key]} <b>{counts[key] ?? 0}</b>
           </Link>
         ))}
+        <Link className={`th-fch ${status === "archived" ? "on" : ""}`} href={href("archived")}>
+          مؤرشفة <b>{archivedCount}</b>
+        </Link>
       </div>
 
       {rows.length === 0 && (
@@ -95,6 +120,7 @@ export default async function StoriesPage({
               ? { cls: "warn", label: `${report.counts.warning} تحذير` }
               : { cls: "ok", label: "سليم" };
         const storyStatus = story.status as StoryStatus;
+        const archived = archiveEvents.get(story.id);
 
         return (
           <div
@@ -108,8 +134,17 @@ export default async function StoriesPage({
                 {story.title}
               </span>
               <span className="m" style={{ display: "block" }}>
-                {story.authorName || SECTION_NAMES[story.section] || story.section} · حُدّثت{" "}
-                {(story.updatedAt ?? story.publishedAt ?? "").slice(0, 10) || "—"}
+                {storyStatus === "archived" && archived ? (
+                  <>
+                    أُرشفت {archiveWhen(archived.at)}
+                    {archived.actor ? ` · ${archived.actor}` : ""} — السبب: {archived.reason}
+                  </>
+                ) : (
+                  <>
+                    {story.authorName || SECTION_NAMES[story.section] || story.section} · حُدّثت{" "}
+                    {(story.updatedAt ?? story.publishedAt ?? "").slice(0, 10) || "—"}
+                  </>
+                )}
               </span>
             </Link>
             <span className="chips">
@@ -120,6 +155,12 @@ export default async function StoriesPage({
                 {STATUS_LABELS[storyStatus] ?? story.status}
               </span>
               {storyStatus === "draft" ? <DeleteDraftButton id={story.id} title={story.title} /> : null}
+              {canArchive && storyStatus !== "draft" && storyStatus !== "archived" ? (
+                <ArchiveStoryButton id={story.id} title={story.title} />
+              ) : null}
+              {canArchive && storyStatus === "archived" ? (
+                <RestoreStoryButton id={story.id} title={story.title} />
+              ) : null}
             </span>
           </div>
         );

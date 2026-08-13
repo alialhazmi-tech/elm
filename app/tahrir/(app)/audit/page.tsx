@@ -12,7 +12,9 @@ function actionMeta(action: string): { label: string; cls: string; group: string
   if (action === "status:review") return { label: "طلب اعتماد", cls: "rev", group: "rev" };
   if (action === "status:scheduled") return { label: "جدولة", cls: "rev", group: "rev" };
   if (action === "schedule:blocked") return { label: "أوقفه الحارس", cls: "blk", group: "blk" };
-  if (action.startsWith("media:rights")) return { label: "حقوق وسائط", cls: "rev", group: "rev" };
+  if (action === "story:archive") return { label: "أرشفة", cls: "blk", group: "blk" };
+  if (action === "story:restore") return { label: "استعادة", cls: "rev", group: "rev" };
+  if (action === "draft:delete") return { label: "حذف مسودة", cls: "blk", group: "blk" };
   if (action.startsWith("media:")) return { label: "وسائط", cls: "sav", group: "sav" };
   if (action.startsWith("series:")) return { label: "سلاسل", cls: "rev", group: "rev" };
   if (action === "login") return { label: "دخول", cls: "sav", group: "sav" };

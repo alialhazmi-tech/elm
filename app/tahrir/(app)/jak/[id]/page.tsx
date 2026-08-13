@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
 import { getJakSource, listSlides } from "@/lib/tahrir/jak";
-import { getStory, listMedia } from "@/lib/tahrir/service";
+import { getStory, latestArchiveEvents, listMedia } from "@/lib/tahrir/service";
 import { JakEditor } from "../../../_components/jak-editor";
 
 export const metadata = { title: "جاك العلم" };
@@ -20,6 +20,8 @@ export default async function JakEditPage({ params }: { params: Promise<{ id: st
     getJakSource(id).catch(() => ""),
     listMedia().catch(() => []),
   ]);
+  const archiveEvent =
+    story.status === "archived" ? (await latestArchiveEvents([story.id])).get(story.id) : undefined;
   const recentMedia = mediaRows
     .filter((row) => row.rightsCleared === 1)
     .slice(0, 8)
@@ -42,6 +44,7 @@ export default async function JakEditPage({ params }: { params: Promise<{ id: st
           status: story.status,
           slides,
           source,
+          archiveEvent: archiveEvent ?? null,
         }}
       />
     </main>

@@ -2,7 +2,7 @@ import { SERIES } from "@/lib/content/series";
 import { redirect } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
-import { getStory, listMedia } from "@/lib/tahrir/service";
+import { getStory, latestArchiveEvents, listMedia } from "@/lib/tahrir/service";
 import { EditorClient } from "../../../_components/editor-client";
 
 export const metadata = { title: "المحرر" };
@@ -13,6 +13,9 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const session = await getSession();
   const story = id === "new" ? null : await getStory(id).catch(() => null);
   if (story?.format === "jakalelm") redirect(`/tahrir/jak/${story.id}`);
+  const archiveEvent = story?.status === "archived"
+    ? (await latestArchiveEvents([story.id])).get(story.id)
+    : undefined;
   const mediaRows = await listMedia().catch(() => []);
   const recentMedia = mediaRows
     .filter((row) => row.rightsCleared === 1)
@@ -46,6 +49,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 seoTitle: story.seoTitle ?? "",
                 seoDescription: story.seoDescription ?? "",
                 keywords: Array.isArray(story.keywords) ? (story.keywords as string[]) : [],
+                archiveEvent: archiveEvent ?? null,
               }
             : null
         }

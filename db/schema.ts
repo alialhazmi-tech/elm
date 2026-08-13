@@ -28,7 +28,7 @@ export const stories = pgTable("stories", {
   publishedAt: text("published_at"),
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح»: { rumor, truth }. */
   factCheck: jsonb("fact_check"),
-  /** سير عمل «تحرير العلم»: draft → review → scheduled → published. البذرة القديمة كلها published. */
+  /** سير عمل «تحرير العلم»: draft → review → scheduled → published → archived. البذرة القديمة كلها published. */
   status: text("status").notNull().default("published"),
   body: text("body").notNull().default(""),
   authorName: text("author_name").notNull().default(""),

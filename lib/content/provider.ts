@@ -127,6 +127,11 @@ async function loadCorpus(): Promise<Corpus> {
   }
 }
 
+/** يُستدعى بعد أرشفة/نشر حتى لا تبقى المادة في كاش الدقيقة على الموقع العام. */
+export function invalidateCorpus() {
+  corpusCache = null;
+}
+
 export interface BreakingItem {
   title: string;
   href: string;

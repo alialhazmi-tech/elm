@@ -85,7 +85,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "المسودة غير موجودة." }, { status: 404 });
   }
   if (result === "not-draft") {
-    return NextResponse.json({ error: "الحذف متاح للمسودات فقط." }, { status: 409 });
+    return NextResponse.json({ error: "الحذف النهائي متاح للمسودات فقط. المادة المنشورة تُأرشف لتُخفى عن الموقع مع حفظ السبب." }, { status: 409 });
   }
   return NextResponse.json({ ok: true });
 }

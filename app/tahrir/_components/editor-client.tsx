@@ -7,6 +7,7 @@ import { stripHtmlToText } from "@/lib/content/html";
 import type { Finding, GuardReport } from "@/lib/policy/types";
 
 import { AiPanel } from "./ai-panel";
+import { ArchiveStoryButton, RestoreStoryButton } from "./archive-controls";
 import { RichBody, type RichBodyHandle } from "./rich-body";
 
 interface EditorInitial {
@@ -25,6 +26,7 @@ interface EditorInitial {
   seoTitle: string;
   seoDescription: string;
   keywords: string[];
+  archiveEvent?: { at: string; actor: string; reason: string } | null;
 }
 
 interface GuardVerdict {
@@ -83,6 +85,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
   const [breakingUntil, setBreakingUntil] = useState<string | null>(initial?.breakingUntil ?? null);
   const [scheduleAt, setScheduleAt] = useState("");
   const [status, setStatus] = useState(initial?.status ?? "draft");
+  const [archiveEvent, setArchiveEvent] = useState(initial?.archiveEvent ?? null);
   const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(initial?.seoDescription ?? "");
   const [keywords, setKeywords] = useState<string[]>(initial?.keywords ?? []);
@@ -564,11 +567,35 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
 
           {message && <div className={`th-msg ${message.kind}`}>{message.text}</div>}
 
+          {status === "archived" && (
+            <div className="th-archive-banner">
+              <b>هذه المادة مؤرشفة</b>
+              {archiveEvent ? (
+                <span>
+                  {" "}
+                  — أُرشفت{" "}
+                  {new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  }).format(new Date(archiveEvent.at))}
+                  {archiveEvent.actor ? ` بواسطة ${archiveEvent.actor}` : ""} — السبب:{" "}
+                  {archiveEvent.reason}
+                </span>
+              ) : (
+                <span> — مخفية عن الموقع. استعدها كمسودة ثم انشرها من جديد إن لزم.</span>
+              )}
+            </div>
+          )}
+
           <div className="th-actions">
             <button className="th-save" onClick={save} disabled={busy}>
               حفظ المسودة
             </button>
-            {status !== "published" && (
+            {status !== "published" && status !== "archived" && (
               <button
                 className={`th-send ${gateOpen && !busy ? "ready" : ""}`}
                 onClick={submitForReview}
@@ -577,7 +604,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
                 إرسال للاعتماد
               </button>
             )}
-            {canApprove && status !== "published" && (
+            {canApprove && status !== "published" && status !== "archived" && (
               <button
                 className={`th-send ${gateOpen && !busy ? "ready" : ""}`}
                 onClick={publish}
@@ -586,7 +613,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
                 اعتماد ونشر الآن
               </button>
             )}
-            {canApprove && status !== "published" && (
+            {canApprove && status !== "published" && status !== "archived" && (
               <>
                 <input
                   className="th-input"
@@ -605,10 +632,34 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
                 تحديث المادة المنشورة
               </button>
             )}
+            {canApprove && status !== "draft" && status !== "archived" && id ? (
+              <ArchiveStoryButton
+                id={id}
+                title={title || "هذه المادة"}
+                onArchived={() => {
+                  setStatus("archived");
+                  setArchiveEvent({
+                    at: new Date().toISOString(),
+                    actor: "",
+                    reason: "أُرشفت من المحرر",
+                  });
+                }}
+              />
+            ) : null}
+            {canApprove && status === "archived" && id ? (
+              <RestoreStoryButton
+                id={id}
+                title={title || "هذه المادة"}
+                onRestored={() => {
+                  setStatus("draft");
+                  setArchiveEvent(null);
+                }}
+              />
+            ) : null}
           </div>
         </div>
 
-        {canApprove && (
+        {canApprove && status !== "archived" && (
           <div className="th-panel">
             <div className="th-meta">
               <div className="lb">أدوات النشر — للمعتمدين</div>

@@ -1,6 +1,6 @@
 /** طبقة بيانات «تحرير العلم»: استعلامات اللوحة، حفظ المسودات، سير الاعتماد، وسجل التدقيق. */
 
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
 
 import { auditLog, stories, users } from "@/db/schema";
 import { stripHtmlToText } from "@/lib/content/html";
@@ -8,14 +8,19 @@ import { getDb } from "@/lib/db";
 
 export type StoryRow = typeof stories.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
-export type StoryStatus = "draft" | "review" | "scheduled" | "published";
+export type StoryStatus = "draft" | "review" | "scheduled" | "published" | "archived";
 
 export const STATUS_LABELS: Record<StoryStatus, string> = {
   draft: "مسودة",
   review: "بانتظار الاعتماد",
   scheduled: "مجدول",
   published: "منشور",
+  archived: "مؤرشفة",
 };
+
+export const ACTIVE_STATUSES = ["published", "review", "scheduled", "draft"] as const satisfies StoryStatus[];
+export const ARCHIVE_ACTION = "story:archive";
+export const RESTORE_ACTION = "story:restore";
 
 function requireDb() {
   const db = getDb();
@@ -176,6 +181,79 @@ export async function deleteDraft(id: string, actor: string): Promise<DeleteDraf
     returning story_id as "storyId"
   `);
   return result.rows.length > 0 ? "deleted" : "not-draft";
+}
+
+const MIN_ARCHIVE_REASON = 8;
+
+export type ArchiveResult = "archived" | "not-found" | "already-archived" | "is-draft" | "short-reason";
+export type RestoreResult = "restored" | "not-found" | "not-archived";
+
+export interface ArchiveEvent {
+  at: string;
+  actor: string;
+  reason: string;
+}
+
+/** إخفاء منطقي عن الموقع العام — المادة تبقى في تاب المؤرشفة مع السبب والتاريخ. */
+export async function archiveStory(
+  id: string,
+  actor: string,
+  reason: string,
+): Promise<ArchiveResult> {
+  const trimmed = reason.replace(/\s+/g, " ").trim();
+  if (trimmed.length < MIN_ARCHIVE_REASON) return "short-reason";
+
+  const db = requireDb();
+  const story = (await db.select().from(stories).where(eq(stories.id, id)).limit(1))[0];
+  if (!story) return "not-found";
+  if (story.status === "archived") return "already-archived";
+  if (story.status === "draft") return "is-draft";
+
+  const now = new Date().toISOString();
+  await db
+    .update(stories)
+    .set({
+      status: "archived",
+      updatedAt: now,
+      pinned: 0,
+      breakingUntil: null,
+    })
+    .where(eq(stories.id, id));
+  await audit(actor, ARCHIVE_ACTION, id, trimmed);
+  return "archived";
+}
+
+/** إعادة المادة المؤرشفة إلى مسودة — لا تظهر على الموقع حتى يُعاد نشرها. */
+export async function restoreArchived(id: string, actor: string): Promise<RestoreResult> {
+  const db = requireDb();
+  const story = (await db.select().from(stories).where(eq(stories.id, id)).limit(1))[0];
+  if (!story) return "not-found";
+  if (story.status !== "archived") return "not-archived";
+
+  const now = new Date().toISOString();
+  await db
+    .update(stories)
+    .set({ status: "draft", updatedAt: now })
+    .where(eq(stories.id, id));
+  await audit(actor, RESTORE_ACTION, id, "استعادة من الأرشيف إلى مسودة");
+  return "restored";
+}
+
+/** أحدث حدث أرشفة لكل مادة — لعرض التاريخ والسبب في تاب المؤرشفة. */
+export async function latestArchiveEvents(ids: string[]): Promise<Map<string, ArchiveEvent>> {
+  const map = new Map<string, ArchiveEvent>();
+  if (ids.length === 0) return map;
+  const db = requireDb();
+  const rows = await db
+    .select()
+    .from(auditLog)
+    .where(and(inArray(auditLog.storyId, ids), eq(auditLog.action, ARCHIVE_ACTION)))
+    .orderBy(desc(auditLog.at));
+  for (const row of rows) {
+    if (!row.storyId || map.has(row.storyId)) continue;
+    map.set(row.storyId, { at: row.at, actor: row.actor, reason: row.detail });
+  }
+  return map;
 }
 
 /* ============ المرحلة 2 ============ */
@@ -340,8 +418,6 @@ export async function listSeriesRows() {
 
 /* ============ استعلامات رشيقة — للقوائم بلا متون (الأداء مع آلاف المواد) ============ */
 
-import { and, inArray } from "drizzle-orm";
-
 const LITE_COLUMNS = {
   id: stories.id,
   slug: stories.slug,
@@ -385,7 +461,9 @@ export async function listPage(
     .orderBy(recencyOrder)
     .limit(perPage)
     .offset(Math.max(0, page - 1) * perPage);
-  return status ? query.where(eq(stories.status, status)) : query;
+  return status
+    ? query.where(eq(stories.status, status))
+    : query.where(ne(stories.status, "archived"));
 }
 
 /** أحدث مواد حالة معينة — للنظرة والجدولة، خفيفة. */
@@ -405,7 +483,7 @@ export async function listLatestByFormat(format: string, limit: number): Promise
   return db
     .select(LITE_COLUMNS)
     .from(stories)
-    .where(eq(stories.format, format))
+    .where(and(eq(stories.format, format), ne(stories.status, "archived")))
     .orderBy(recencyOrder)
     .limit(limit);
 }

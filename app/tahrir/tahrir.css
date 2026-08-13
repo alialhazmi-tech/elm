@@ -126,7 +126,7 @@
 .th-srow-main { min-width: 0; color: inherit; text-decoration: none; }
 .th-srow .rail { width: 4px; height: 34px; border-radius: 99px; background: var(--sc, var(--t-line2)); }
 .th-srow .t { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.th-srow .m { font-size: 11px; color: var(--t-ink3); margin-top: 1px; }
+.th-srow .m { font-size: 11px; color: var(--t-ink3); margin-top: 1px; white-space: normal; }
 .th-draft-delete { border: 1px solid color-mix(in srgb, var(--t-block) 38%, var(--t-line)); background: var(--t-block-bg); color: var(--t-block); border-radius: 999px; padding: 3px 11px; font: 700 10.5px/1.4 var(--f-display); cursor: pointer; }
 .th-draft-delete:hover { border-color: var(--t-block); }
 .th-draft-delete:disabled { cursor: wait; opacity: .65; }
@@ -292,6 +292,18 @@
 
 /* ============ المرحلة 2 ============ */
 .th-pill.sch { color: var(--t-sug); background: var(--t-sug-bg); }
+.th-pill.arc { color: var(--t-ink2); background: var(--t-surface2); border: 1px dashed var(--t-line2); }
+.th-archive-btn, .th-restore-btn { border: 1px solid var(--t-line2); background: var(--t-surface); color: var(--t-ink); border-radius: 999px; padding: 3px 11px; font: 700 10.5px/1.4 var(--f-display); cursor: pointer; }
+.th-archive-btn:hover { border-color: var(--t-warn); color: var(--t-warn); }
+.th-restore-btn:hover { border-color: var(--t-ok); color: var(--t-ok); }
+.th-archive-btn:disabled, .th-restore-btn:disabled { cursor: wait; opacity: .65; }
+.th-archive-banner { font-size: 12.5px; line-height: 1.7; color: var(--t-ink); background: var(--t-warn-bg); border: 1px solid color-mix(in srgb, var(--t-warn) 35%, var(--t-line)); border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; }
+.th-modal-back { position: fixed; inset: 0; z-index: 80; background: color-mix(in srgb, #0b1a33 46%, transparent); display: grid; place-items: center; padding: 20px; }
+.th-modal { width: min(480px, 100%); background: var(--t-surface); color: var(--t-ink); border: 1px solid var(--t-line); border-radius: 16px; box-shadow: var(--t-shadow); padding: 22px 22px 18px; }
+.th-modal h2 { font-family: var(--f-display); font-size: 18px; margin: 0 0 8px; }
+.th-modal p { font-size: 13px; line-height: 1.7; color: var(--t-ink2); margin: 0 0 14px; }
+.th-archive-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.th-archive-chips .th-mini.on { background: var(--t-midad); color: #fff; border-color: var(--t-midad); }
 
 /* الوسائط */
 .th-dropzone { border: 2px dashed var(--t-line2); border-radius: 14px; background: var(--t-surface); padding: 18px; text-align: center; color: var(--t-ink2); font-size: 12.5px; margin-bottom: 14px; cursor: pointer; transition: border-color .2s; }
