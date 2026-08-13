@@ -254,7 +254,7 @@ export const seedContentProvider: ContentProvider = {
     const mosaic = takeUniqueStories(
       articles.filter((story) => story.image && story.section !== "infographics"),
       seen,
-      2,
+      5,
     );
 
     const questionStory = articles.find(
@@ -272,9 +272,15 @@ export const seedContentProvider: ContentProvider = {
 
     const homeVideos = takeUniqueStories(videos, seen, 2);
 
-    const brief: BriefItem[] = [hero, ...minis, dataStory]
+    // الموجز يعرض ما ليس أمام القارئ: الهيرو مجاور له فلا يتكرر فيه.
+    const briefExtras = takeUniqueStories(
+      articles.filter((story) => story.section !== "infographics"),
+      seen,
+      3,
+    );
+    const brief: BriefItem[] = [...minis, dataStory, ...briefExtras]
       .filter((story): story is Story => story !== null)
-      .slice(0, 3)
+      .slice(0, 5)
       .map((story) => {
         const storySeries = seriesOf(story);
         return {
@@ -282,6 +288,7 @@ export const seedContentProvider: ContentProvider = {
           href: storyHref(story),
           color: storySeries?.color ?? "#3d7ef7",
           label: storySeries?.name ?? sectionName(story.section),
+          publishedAt: story.publishedAt,
         };
       });
 

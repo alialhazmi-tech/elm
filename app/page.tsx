@@ -4,8 +4,9 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { SeriesRail } from "@/app/_components/series-navigator";
+import { LeadMedia } from "@/app/_components/lead-media";
 import { ContextRowCard, VideoCard } from "@/app/_components/story-card";
-import { brandDate, toLatinDigits } from "@/lib/format";
+import { brandDate, formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
 
@@ -27,19 +28,11 @@ export default async function Home() {
   const heroKick = heroSeries?.name ?? (home.hero.eyebrow || null);
   const today = brandDate(new Date().toISOString());
 
-  // «وراء الخبر»: مرتكز + صفوف أفقية — بدل ثلاثة أعمدة متساوية.
-  // ما ظهر في «موجز العلم» لا يتكرر في الصفوف.
-  const briefHrefs = new Set(home.brief.map((item) => item.href));
+  // «وراء الخبر»: مرتكز + 4 صفوف أفقية متناسقة + سؤال تحليلي.
   const contextFeatured = home.mosaic[0];
   const featuredSeries = contextFeatured ? seriesOf(contextFeatured) : undefined;
   const featuredKick = featuredSeries?.name ?? (contextFeatured?.eyebrow || null);
-  const contextRows: Story[] = [
-    ...home.mosaic.slice(1),
-    ...home.minis,
-    ...(home.dataStory ? [home.dataStory] : []),
-  ]
-    .filter((story) => !briefHrefs.has(storyHref(story)))
-    .slice(0, 4);
+  const contextRows: Story[] = home.mosaic.slice(1, 5);
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -69,17 +62,7 @@ export default async function Home() {
         <section className="lead-region" aria-label="قصة الصدارة وموجز العلم">
           <article className="lead" data-story-id={home.hero.id}>
             {home.hero.image ? (
-              <figure>
-                <div className="lead-media">
-                  <Image
-                    src={home.hero.image}
-                    alt=""
-                    fill
-                    sizes="(max-width: 940px) 100vw, 760px"
-                    priority
-                  />
-                </div>
-              </figure>
+              <LeadMedia src={home.hero.image} href={storyHref(home.hero)} />
             ) : null}
             <span
               className="kicker"
@@ -96,10 +79,10 @@ export default async function Home() {
               </Link>
             </h1>
             {home.hero.excerpt ? (
-              <p className="dek">{trimExcerpt(home.hero.excerpt, 220)}</p>
+              <p className="dek">{trimExcerpt(home.hero.excerpt, 180)}</p>
             ) : null}
             <div className="story-meta">
-              <span><b>قراءة {toLatinDigits(home.hero.readingMinutes)} دقائق</b></span>
+              <span><b>قراءة {formatReadingMinutes(home.hero.readingMinutes)}</b></span>
               <span>تحرير: فريق العلم</span>
             </div>
           </article>
@@ -110,19 +93,23 @@ export default async function Home() {
               <span className="sub">يُحدّث على مدار اليوم</span>
             </header>
             <ol>
-              {home.brief.map((item) => (
-                <li key={item.href}>
-                  <span
-                    className="kicker"
-                    style={{ "--kc": item.color } as React.CSSProperties}
-                  >
-                    {item.label}
-                  </span>
-                  <h3>
-                    <Link className="story-link" href={item.href}>{item.title}</Link>
-                  </h3>
-                </li>
-              ))}
+              {home.brief.map((item) => {
+                const when = relativeTimeAr(item.publishedAt);
+                return (
+                  <li key={item.href}>
+                    <span
+                      className="kicker"
+                      style={{ "--kc": item.color } as React.CSSProperties}
+                    >
+                      {item.label}
+                      {when ? <time className="when">{when}</time> : null}
+                    </span>
+                    <h3>
+                      <Link className="story-link" href={item.href}>{item.title}</Link>
+                    </h3>
+                  </li>
+                );
+              })}
             </ol>
             <footer className="briefing-foot">
               مختار من مواد المحررين المنشورة
@@ -168,7 +155,7 @@ export default async function Home() {
                 <p>{trimExcerpt(contextFeatured.excerpt, 140)}</p>
               ) : null}
               <div className="story-meta">
-                <span><b>قراءة {toLatinDigits(contextFeatured.readingMinutes)} دقائق</b></span>
+                <span><b>قراءة {formatReadingMinutes(contextFeatured.readingMinutes)}</b></span>
               </div>
             </article>
           ) : null}
@@ -183,15 +170,24 @@ export default async function Home() {
 
           {home.question ? (
             <article className="why-panel">
-              <span className="kicker">{home.question.kick}</span>
-              <h3>
-                <Link className="story-link" href={home.question.href}>
-                  {home.question.title}
-                </Link>
-              </h3>
-              <p>{home.question.text}</p>
-              <Link className="answer" href={home.question.href}>
-                اقرأ الإجابة <span aria-hidden="true">←</span>
+              <div className="why-panel-head">
+                <span className="why-badge">
+                  <span className="why-dot" aria-hidden="true" />
+                  {home.question.kick || "لماذا"}
+                </span>
+                <span className="why-label">سؤال الأسبوع</span>
+              </div>
+              <div className="why-panel-body">
+                <h3>
+                  <Link className="story-link" href={home.question.href}>
+                    {home.question.title}
+                  </Link>
+                </h3>
+                <p>{home.question.text}</p>
+              </div>
+              <Link className="why-action" href={home.question.href}>
+                <span>اقرأ الإجابة والتحليل</span>
+                <span className="why-arrow" aria-hidden="true">←</span>
               </Link>
             </article>
           ) : null}
@@ -257,29 +253,36 @@ export default async function Home() {
 
         {/* اسأل العلم */}
         <section className="ask-band" aria-labelledby="ask-title">
-          <div>
+          <div className="ask-band-info">
+            <div className="ask-band-badge">
+              <span className="ask-spark" aria-hidden="true">✦</span>
+              <span>ذكاء العلم التحريري</span>
+            </div>
             <h2 id="ask-title">اسأل العلم</h2>
             <p className="ask-sub">
-              بحث يفهم سؤالك ويجيب من أرشيف محررينا — ويتجاهل التشكيل واختلاف الهمزات.
+              بحث ذكي يفهم سؤالك ويجيب مباشرة من أرشيف مواد محررينا — مع تجاهل التشكيل واختلاف الهمزات.
             </p>
           </div>
-          <form className="ask-band-form" action="/search" role="search">
-            <input
-              type="search"
-              name="q"
-              placeholder="لماذا ترتفع أسعار التنجستن؟"
-              aria-label="ابحث في العلم"
-              dir="rtl"
-            />
-            <button type="submit">ابحث</button>
-          </form>
-          <p className="ask-suggest">
-            جرّب: <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
-            <span aria-hidden="true"> · </span>
-            <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
-            <span aria-hidden="true"> · </span>
-            <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-          </p>
+          <div className="ask-band-interactive">
+            <form className="ask-band-form" action="/search" role="search">
+              <input
+                type="search"
+                name="q"
+                placeholder="لماذا ترتفع أسعار التنجستن؟"
+                aria-label="ابحث في العلم"
+                dir="rtl"
+              />
+              <button type="submit">ابحث</button>
+            </form>
+            <p className="ask-suggest">
+              <span className="suggest-lbl">جرّب:</span>
+              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
+            </p>
+          </div>
         </section>
 
         {/* مرئي وصوتي */}

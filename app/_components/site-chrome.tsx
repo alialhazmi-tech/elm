@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { getBreaking } from "@/lib/content/provider";
+import { SERIES } from "@/lib/content/series";
 import { NewsletterForm } from "./newsletter-form";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
@@ -110,7 +111,7 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <section className="footer-modules" aria-label="النشرة واسأل العلم">
+        <section className="footer-modules" aria-label="النشرة وسلاسل المعرفة">
           <div className="ft-module">
             <span className="ft-kicker">نشرة أسبوعية</span>
             <h2>ما وراء العناوين في بريدك</h2>
@@ -118,21 +119,26 @@ export function SiteFooter() {
             <NewsletterForm source="footer" />
           </div>
 
-          <div className="ft-module">
-            <span className="ft-kicker">أرشيف المحررين</span>
-            <h2>اسأل العلم</h2>
-            <p>ابحث كما تفكّر — يتجاهل التشكيل واختلاف الهمزات.</p>
-            <form className="ft-compose" action="/search" role="search">
-              <label className="sr-only" htmlFor="ft-ask">اسأل العلم</label>
-              <input
-                id="ft-ask"
-                type="search"
-                name="q"
-                placeholder="لماذا ترتفع أسعار التنجستن؟"
-                dir="rtl"
-              />
-              <button type="submit">ابحث في العلم</button>
-            </form>
+          <div className="ft-module ft-series-module">
+            <span className="ft-kicker">سلاسل المعرفة</span>
+            <h2>صحافة تفكك الخبر</h2>
+            <p>قوالب تفسيرية تربط الأحداث بسياقها — من التحليل إلى البيانات.</p>
+            <div className="ft-series-tags">
+              {SERIES.slice(0, 8).map((item) => (
+                <Link
+                  key={item.slug}
+                  href={`/series/${item.slug}`}
+                  className="ft-series-chip"
+                  style={{ "--sc": item.color } as React.CSSProperties}
+                >
+                  <span className="ft-series-dot" style={{ backgroundColor: item.color }} />
+                  <span>{item.name}</span>
+                </Link>
+              ))}
+            </div>
+            <Link className="ft-explore-link" href="/series">
+              استكشف كل السلاسل والأرشيف <span aria-hidden="true">←</span>
+            </Link>
           </div>
         </section>
 

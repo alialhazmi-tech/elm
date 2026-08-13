@@ -69,6 +69,7 @@ export type BriefItem = {
   href: string;
   color: string;
   label: string;
+  publishedAt?: string;
 };
 
 /** حزمة الرئيسية بتوزيع «المنشور»: بنتو + فسيفساء + أرقام + مرئي. */
