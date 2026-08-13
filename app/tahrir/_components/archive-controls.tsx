@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const REASON_CHIPS = [
@@ -24,6 +24,16 @@ export function ArchiveStoryButton({
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  // Escape يغلق النافذة أينما كان التركيز — لم يكن للنافذة أي مخرج بلوحة المفاتيح.
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && !busy) setOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, busy]);
 
   async function submit() {
     if (busy) return;
@@ -57,13 +67,18 @@ export function ArchiveStoryButton({
         أرشفة
       </button>
       {open ? (
-        <div className="th-modal-back" role="presentation" onClick={() => !busy && setOpen(false)}>
+        <div className="th-modal-back">
+          <button
+            type="button"
+            className="th-modal-scrim"
+            aria-label="إغلاق نافذة الأرشفة"
+            onClick={() => !busy && setOpen(false)}
+          />
           <div
             className="th-modal"
             role="dialog"
             aria-modal="true"
             aria-labelledby={`archive-title-${id}`}
-            onClick={(event) => event.stopPropagation()}
           >
             <h2 id={`archive-title-${id}`}>أرشفة المادة</h2>
             <p>
