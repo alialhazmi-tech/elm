@@ -180,8 +180,8 @@ struct BriefBlock: View {
                             Text(item.title)
                                 .font(ElmFonts.text(.footnote))
                                 .foregroundStyle(Color.white.opacity(0.92))
-                                .multilineTextAlignment(.trailing)
-                                .frame(maxWidth: .infinity, alignment: .trailing)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .buttonStyle(.plain)
@@ -222,13 +222,13 @@ struct HeroCard: View {
                         endPoint: .top
                     )
                 }
-                .overlay(alignment: .bottomTrailing) {
-                    VStack(alignment: .trailing, spacing: 8) {
+                .overlay(alignment: .bottomLeading) {
+                    VStack(alignment: .leading, spacing: 8) {
                         HeroKicker(text: story.eyebrow.isEmpty ? "قصة اليوم" : story.eyebrow)
                         Text(story.title)
                             .font(ElmFonts.display(.title2, weight: .heavy))
                             .foregroundStyle(.white)
-                            .multilineTextAlignment(.trailing)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(4)
                             .shadow(color: .black.opacity(0.35), radius: 12, y: 2)
                         HStack(spacing: 10) {
@@ -239,7 +239,7 @@ struct HeroCard: View {
                         .font(ElmFonts.text(.caption, weight: .medium))
                         .foregroundStyle(.white.opacity(0.75))
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -256,11 +256,11 @@ struct HeroKicker: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(text)
-                .font(ElmFonts.display(.caption2, weight: .heavy))
             RoundedRectangle(cornerRadius: 2, style: .continuous)
                 .fill(color)
                 .frame(width: 14, height: 2.5)
+            Text(text)
+                .font(ElmFonts.display(.caption2, weight: .heavy))
         }
         .foregroundStyle(color)
     }
@@ -278,7 +278,7 @@ struct MiniStoryRow: View {
                     .frame(width: 104, height: 78)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
-                VStack(alignment: .trailing, spacing: 5) {
+                VStack(alignment: .leading, spacing: 5) {
                     HeroKicker(
                         text: story.eyebrow.isEmpty ? ElmFormat.sectionName(story.section) : story.eyebrow,
                         color: story.series.map(SeriesPalette.color(for:)) ?? ElmTheme.accent
@@ -286,13 +286,13 @@ struct MiniStoryRow: View {
                     Text(story.title)
                         .font(ElmFonts.display(.subheadline, weight: .bold))
                         .foregroundStyle(ElmTheme.ink)
-                        .multilineTextAlignment(.trailing)
+                        .multilineTextAlignment(.leading)
                         .lineLimit(3)
                     Text(ElmFormat.readingLabel(story.readingMinutes))
                         .font(ElmFonts.text(.caption2))
                         .foregroundStyle(ElmTheme.ink3)
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(10)
             .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -392,17 +392,17 @@ struct MosaicStoryCard: View {
                         endPoint: .top
                     )
                 }
-                .overlay(alignment: .bottomTrailing) {
-                    VStack(alignment: .trailing, spacing: 6) {
+                .overlay(alignment: .bottomLeading) {
+                    VStack(alignment: .leading, spacing: 6) {
                         HeroKicker(text: story.eyebrow.isEmpty ? "وراء الخبر" : story.eyebrow)
                         Text(story.title)
                             .font(ElmFonts.display(.subheadline, weight: .bold))
                             .foregroundStyle(.white)
-                            .multilineTextAlignment(.trailing)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(3)
                             .shadow(color: .black.opacity(0.3), radius: 8, y: 1)
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -509,11 +509,11 @@ struct NumbersGrid: View {
 
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3),
-                alignment: .trailing,
+                alignment: .leading,
                 spacing: 12
             ) {
                 ForEach(stats.prefix(3)) { stat in
-                    VStack(alignment: .trailing, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 6) {
                         HStack(alignment: .firstTextBaseline, spacing: 1) {
                             Text(ElmFormat.latinDigits(stat.value))
                                 .font(ElmFonts.display(.title, weight: .heavy))
@@ -536,10 +536,10 @@ struct NumbersGrid: View {
                         Text(stat.label)
                             .font(ElmFonts.text(.caption2))
                             .foregroundStyle(Color.white.opacity(0.68))
-                            .multilineTextAlignment(.trailing)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(3)
                     }
-                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityElement(children: .combine)
                 }
             }

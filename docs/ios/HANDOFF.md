@@ -139,3 +139,28 @@ Dynamic Type إلزامي: كل `.custom` بـ `relativeTo:`.
 - الصور لا تلتقط اللمس؛ البطاقة تملك كامل مساحة الضغط أثناء تحميل الصورة وبعده.
 - اختُبرت على محاكي iPhone 17 Pro: الهيرو ← المادة، السلسلة ← تغذيتها، البحث المقترح ← النتائج ← المادة، الحساب ← الإعدادات ← الخصوصية، والحساب ← نموذج العضوية.
 - المشاركة تستخدم أصل Railway الحالي حتى انتقال `alelm.net` من الموقع القديم؛ وسياسة الخصوصية شاشة أصلية لأن `/privacy` على Railway يعيد 404.
+
+## فخاخ مثبتة بالتجربة
+
+1. **`.trailing` في RTL تعني اليسار.** التطبيق يفرض `layoutDirection = .rightToLeft`،
+   فـ`.multilineTextAlignment(.trailing)` و`VStack(alignment: .trailing)` و
+   `alignment: .bottomTrailing` كلها تصطف **يسارًا** — وهو ما يجعل الواجهة تبدو LTR.
+   الاصطفاف الطبيعي للعربية هو **`.leading`**، وهو ما يضبطه `elmRTL()` افتراضيًا.
+   لا تكتب `.trailing` إلا حين تقصد اليسار فعلًا.
+
+2. **`GeometryReader` يُسقط رسم `AsyncImage` داخله** رغم نجاح تحميل الصورة
+   (ثبت بتشخيص طبع نجاح كل الطلبات بينما البطاقة كحلية فارغة). النمط الآمن
+   لبطاقة صورة بنسبة ثابتة:
+   ```swift
+   Color.clear
+       .aspectRatio(1 / ratio, contentMode: .fit)
+       .overlay { RemoteImage(url: …) }
+       .overlay { scrim }
+       .overlay(alignment: .bottomLeading) { copy }
+       .clipShape(…)
+   ```
+
+3. **روابط الوسائط تُشتق من أصل الطلب** في `/api/mobile/v1/*` — لا من
+   `NEXT_PUBLIC_SITE_URL` الذي يشير إلى alelm.net (ووردبريس القديم) قبل الهجرة.
+
+4. **مسار `for-you` يرد 401 بلا جلسة** — وهذا سلوكه الصحيح، لا عطل.
