@@ -9,6 +9,9 @@ struct ElmApp: App {
     @State private var onboarding = OnboardingStore()
     @State private var connectivity = ConnectivityStore()
     @State private var narration = NarrationStore()
+    @State private var polls = PollStore()
+    @State private var notifPrefs = NotificationPrefs()
+    @State private var reading = ReadingStore()
 
     init() {
         FontRegistration.registerAll()
@@ -26,6 +29,9 @@ struct ElmApp: App {
                 .environment(onboarding)
                 .environment(connectivity)
                 .environment(narration)
+                .environment(polls)
+                .environment(notifPrefs)
+                .environment(reading)
                 .preferredColorScheme(appearance.colorScheme)
                 .task { await member.restore() }
         }

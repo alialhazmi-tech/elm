@@ -1,133 +1,171 @@
 import SwiftUI
 
+/// 1i — العضوية: خطتان، تجربة 7 أيام، والشراء عبر StoreKit 2 في مرحلة M4.
 struct MembershipScreen: View {
     @Environment(MemberSessionStore.self) private var member
-    @Environment(InterestStore.self) private var interests
-    @Environment(\.dismiss) private var dismiss
+    @State private var plan = "yearly"
+    @State private var note: String?
 
-    @State private var mode: MemberAuthMode = .signUp
-    @State private var name = ""
-    @State private var email = ""
-    @State private var password = ""
-    @FocusState private var focused: Field?
+    private struct Plan: Identifiable {
+        let id: String
+        let name: String
+        let price: String
+        let per: String
+        let note: String
+        let badge: String?
+    }
 
-    private enum Field { case name, email, password }
+    private let plans: [Plan] = [
+        .init(id: "monthly", name: "شهرية", price: "29", per: " ر.س/شهر",
+              note: "كل المزايا، بلا التزام — ألغِ متى شئت.", badge: nil),
+        .init(id: "yearly", name: "سنوية", price: "249", per: " ر.س/سنة",
+              note: "بسعر سبعة أشهر — وأرشيف العلم كاملًا.", badge: "الأوفر"),
+    ]
+
+    private let perks = [
+        "الأرشيف كاملًا — السلاسل الثماني والمواد الموسعة",
+        "«اسأل العلم» بلا حد يومي، مع مصادر من مواد المحررين",
+        "الاستماع للمواد والتنزيل للقراءة بلا اتصال",
+        "موجز صباحي مخصص من اهتماماتك",
+    ]
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 22) {
-                    brand
-                    Picker("نوع الدخول", selection: $mode) {
-                        ForEach(MemberAuthMode.allCases) { item in
-                            Text(item.label).tag(item)
+        ElmScreen(title: "العضوية", showBack: true) {
+            VStack(alignment: .leading, spacing: 0) {
+                hero
+
+                VStack(spacing: 10) {
+                    ForEach(plans) { item in
+                        planCard(item)
+                    }
+                }
+                .padding(.top, 14)
+
+                VStack(alignment: .leading, spacing: 9) {
+                    ForEach(perks, id: \.self) { perk in
+                        HStack(alignment: .top, spacing: 10) {
+                            Text("✓")
+                                .font(ElmFonts.text(.footnote, weight: .bold))
+                                .foregroundStyle(ElmTheme.teal)
+                            Text(perk)
+                                .font(ElmFonts.text(.footnote))
+                                .foregroundStyle(ElmTheme.ink2)
+                                .multilineTextAlignment(.leading)
+                                .lineSpacing(3)
+                            Spacer(minLength: 0)
                         }
                     }
-                    .pickerStyle(.segmented)
+                }
+                .padding(.top, 16)
 
-                    VStack(spacing: 14) {
-                        if mode == .signUp {
-                            field("الاسم", placeholder: "كيف نناديك؟", text: $name, field: .name)
-                        }
-                        field("البريد الإلكتروني", placeholder: "name@example.com", text: $email, field: .email, keyboard: .emailAddress)
-                        secureField
-                    }
-
-                    if let error = member.errorMessage {
-                        Label(error, systemImage: "exclamationmark.circle.fill")
-                            .font(ElmFonts.text(.footnote, weight: .medium))
-                            .foregroundStyle(Color(red: 0.72, green: 0.18, blue: 0.22))
-                            .padding(12)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color.red.opacity(0.07))
-                            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm))
-                            .accessibilityLabel("خطأ: \(error)")
-                    }
-
-                    Button {
-                        Task {
-                            if await member.authenticate(mode: mode, name: name, email: email, password: password) {
-                                dismiss()
-                            }
-                        }
-                    } label: {
-                        HStack {
-                            if member.loading { ProgressView().tint(.white) }
-                            Text(member.loading ? "لحظة…" : (mode == .signUp ? "إنشاء حسابي" : "دخول آمن"))
-                        }
-                        .font(ElmFonts.text(.headline, weight: .bold))
+                Button(action: subscribe) {
+                    Text(member.isSignedIn ? "اشترك الآن" : "أنشئ حسابك ثم اشترك")
+                        .font(ElmFonts.text(.subheadline, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(ElmTheme.navyDeep)
-                        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-                    }
-                    .disabled(member.loading)
+                        .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 18)
 
-                    Label("جلسة آمنة محفوظة في الجهاز. لا نخزن كلمة مرورك داخل التطبيق.", systemImage: "lock.shield")
-                        .font(ElmFonts.text(.caption))
+                if let note {
+                    Text(note)
+                        .font(ElmFonts.text(.caption2))
                         .foregroundStyle(ElmTheme.ink2)
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 10)
                 }
-                .padding(22)
+
+                Text("تجربة 7 أيام مجانًا · يمكنك الإلغاء متى شئت")
+                    .font(ElmFonts.text(.caption2))
+                    .foregroundStyle(ElmTheme.ink3)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 10)
             }
-            .background(ElmTheme.bg.ignoresSafeArea())
-            .navigationTitle("عضوية العلم")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("إغلاق") { dismiss() }
-                }
-            }
-            .onChange(of: mode) { _, _ in member.errorMessage = nil }
+            .padding(.horizontal, 18)
+            .padding(.top, 16)
         }
     }
 
-    private var brand: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 18).fill(ElmTheme.navyDeep).frame(width: 58, height: 58)
-                Text("ع").font(ElmFonts.logo(.title2)).foregroundStyle(ElmTheme.gold)
-            }
-            Text("معرفة أقرب إليك.")
-                .font(ElmFonts.display(.title, weight: .heavy))
-                .foregroundStyle(ElmTheme.ink)
-            Text("احفظ موادك وواصل من أي جهاز، ودع صفحة «لك» تتعلم اهتماماتك بوضوح وتحكم.")
-                .font(ElmFonts.text(.body))
-                .foregroundStyle(ElmTheme.ink2)
+    private var hero: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("عضوية العلم")
+                .font(ElmFonts.text(.caption2, weight: .bold))
+                .foregroundStyle(ElmTheme.gold)
+            Text("اقرأ أعمق، وبلا ضجيج.")
+                .font(ElmFonts.display(.title2, weight: .heavy))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.leading)
+                .padding(.top, 8)
+            Text("الأرشيف كاملًا، «اسأل العلم» بلا حد، الاستماع والتنزيل — ونشرة المحررين.")
+                .font(ElmFonts.text(.footnote))
+                .foregroundStyle(Color(red: 0.78, green: 0.82, blue: 0.89))
                 .lineSpacing(4)
+                .multilineTextAlignment(.leading)
+                .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
+        .background(ElmTheme.navyDeep)
+        .overlay(alignment: .top) {
+            Rectangle().fill(ElmTheme.spectrumGradient).frame(height: 4)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
-    private func field(_ title: String, placeholder: String, text: Binding<String>, field: Field, keyboard: UIKeyboardType = .default) -> some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text(title).font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink)
-            TextField(placeholder, text: text)
-                .font(ElmFonts.text(.body))
-                .textInputAutocapitalization(field == .name ? .words : .never)
-                .autocorrectionDisabled(field != .name)
-                .keyboardType(keyboard)
-                .textContentType(field == .name ? .givenName : .emailAddress)
-                .focused($focused, equals: field)
-                .padding(14)
-                .background(ElmTheme.surface2)
-                .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm))
-                .overlay(RoundedRectangle(cornerRadius: ElmTheme.radiusSm).stroke(focused == field ? ElmTheme.focus : ElmTheme.line2, lineWidth: focused == field ? 2 : 1))
-                .environment(\.layoutDirection, field == .email ? .leftToRight : .rightToLeft)
+    private func planCard(_ item: Plan) -> some View {
+        let selected = plan == item.id
+        return Button { plan = item.id } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 9) {
+                    Text(item.name)
+                        .font(ElmFonts.display(.headline, weight: .heavy))
+                        .foregroundStyle(ElmTheme.ink)
+                    if let badge = item.badge {
+                        Text(badge)
+                            .font(ElmFonts.text(.caption2, weight: .bold))
+                            .foregroundStyle(Color(red: 0.16, green: 0.11, blue: 0))
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 3)
+                            .background(ElmTheme.gold, in: Capsule())
+                    }
+                    Spacer(minLength: 0)
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
+                        Text(item.price)
+                            .font(ElmFonts.display(.title3, weight: .heavy))
+                            .foregroundStyle(ElmTheme.ink)
+                        Text(item.per)
+                            .font(ElmFonts.text(.caption2, weight: .medium))
+                            .foregroundStyle(ElmTheme.ink3)
+                    }
+                    .elmLatin()
+                }
+                Text(item.note)
+                    .font(ElmFonts.text(.caption))
+                    .foregroundStyle(ElmTheme.ink2)
+                    .multilineTextAlignment(.leading)
+                    .padding(.top, 6)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(15)
+            .background(selected ? ElmTheme.surface2 : ElmTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(selected ? ElmTheme.ink : ElmTheme.line, lineWidth: 1.5)
+            )
         }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 
-    private var secureField: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            Text("كلمة المرور").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink)
-            SecureField(mode == .signUp ? "8 أحرف على الأقل" : "كلمة المرور", text: $password)
-                .font(ElmFonts.text(.body))
-                .textContentType(mode == .signUp ? .newPassword : .password)
-                .focused($focused, equals: .password)
-                .padding(14)
-                .background(ElmTheme.surface2)
-                .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm))
-                .overlay(RoundedRectangle(cornerRadius: ElmTheme.radiusSm).stroke(focused == .password ? ElmTheme.focus : ElmTheme.line2, lineWidth: focused == .password ? 2 : 1))
-                .environment(\.layoutDirection, .leftToRight)
+    private func subscribe() {
+        guard member.isSignedIn else {
+            member.authPresented = true
+            return
         }
+        // لا شراء وهمي: الاشتراك يمر عبر StoreKit 2 في المرحلة M4.
+        note = "الشراء داخل التطبيق يُفعَّل مع StoreKit 2. حتى ذلك الحين تُدار العضوية من حسابك على الموقع."
     }
 }

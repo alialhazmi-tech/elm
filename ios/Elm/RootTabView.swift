@@ -1,11 +1,8 @@
 import SwiftUI
 
-enum RootTab: Hashable {
-    case home, series, forYou, search, account
-}
-
 struct RootTabView: View {
     @State private var tab: RootTab = .home
+    @Namespace private var tabIndicator
     @Environment(OnboardingStore.self) private var onboarding
     @Environment(MemberSessionStore.self) private var member
     @Environment(ConnectivityStore.self) private var connectivity
@@ -13,61 +10,31 @@ struct RootTabView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack {
-                HomeScreen()
+            ForEach(RootTab.allCases) { item in
+                NavigationStack {
+                    screen(for: item)
+                }
+                .toolbar(.hidden, for: .tabBar)
+                .tabItem { Text(item.label) }
+                .tag(item)
             }
-            .tabItem {
-                Label("الرئيسية", systemImage: "house.fill")
-            }
-            .tag(RootTab.home)
-            .accessibilityLabel("الرئيسية، النموذج 1أ")
-
-            NavigationStack {
-                SeriesScreen()
-            }
-            .tabItem {
-                Label("السلاسل", systemImage: "square.grid.2x2.fill")
-            }
-            .tag(RootTab.series)
-            .accessibilityLabel("السلاسل، النموذج 1ب")
-
-            NavigationStack {
-                ForYouScreen()
-            }
-            .tabItem {
-                Label("لك", systemImage: "sparkles")
-            }
-            .tag(RootTab.forYou)
-            .accessibilityLabel("لك، النموذج 1و")
-
-            NavigationStack {
-                SearchScreen()
-            }
-            .tabItem {
-                Label("بحث", systemImage: "magnifyingglass")
-            }
-            .tag(RootTab.search)
-            .accessibilityLabel("بحث، النموذج 1هـ")
-
-            NavigationStack {
-                AccountScreen()
-            }
-            .tabItem {
-                Label("حسابي", systemImage: "person.crop.circle")
-            }
-            .tag(RootTab.account)
-            .accessibilityLabel("حسابي، النموذج 1ز")
         }
-        .tint(ElmTheme.navy)
+        // شريط التبويب النظامي مخفي: الشرطة الذهبية فوق الأيقونة النشطة
+        // علامة العلم، ولا يمكن رسمها داخل الشريط النظامي.
+        .overlay(alignment: .bottom) {
+            ElmTabBar(selection: $tab, namespace: tabIndicator)
+        }
         .overlay(alignment: .top) {
             if connectivity.isOffline {
-                OfflinePill().padding(.top, 4).transition(.move(edge: .top).combined(with: .opacity))
+                OfflinePill()
+                    .padding(.top, 4)
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .overlay(alignment: .bottom) {
             if narration.state != .idle {
                 NarrationBar()
-                    .padding(.bottom, 62)
+                    .padding(.bottom, 78)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -81,9 +48,77 @@ struct RootTabView: View {
             get: { member.authPresented },
             set: { member.authPresented = $0 }
         )) {
-            MembershipScreen().elmRTL()
+            AuthSheet().elmRTL()
         }
         .animation(.snappy, value: connectivity.isOffline)
         .animation(.snappy, value: narration.state)
+        .modifier(LaunchArgumentsModifier(tab: $tab))
+    }
+
+    @ViewBuilder
+    private func screen(for tab: RootTab) -> some View {
+        switch tab {
+        case .home: HomeScreen()
+        case .series: SeriesScreen()
+        case .ask: AskScreen()
+        case .forYou: ForYouScreen()
+        case .account: AccountScreen()
+        }
     }
 }
+
+/// يطبّق وسائط الإطلاق في نسخة التطوير فقط، ولا أثر له في الإصدار.
+private struct LaunchArgumentsModifier: ViewModifier {
+    @Binding var tab: RootTab
+
+    #if DEBUG
+    @State private var screen: ElmLaunch.Screen?
+
+    func body(content: Content) -> some View {
+        content
+            .task {
+                if let requested = ElmLaunch.tab { tab = requested }
+                screen = ElmLaunch.screen
+            }
+            .fullScreenCover(item: $screen) { requested in
+                NavigationStack {
+                    switch requested {
+                    case .search: SearchScreen()
+                    case .notifications: NotificationsScreen()
+                    case .saved: SavedScreen()
+                    case .membership: MembershipScreen()
+                    case .privacy: PrivacyScreen()
+                    case .story: DebugStoryLoader(kind: .article)
+                    case .stories: DebugStoryLoader(kind: .stories)
+                    }
+                }
+                .elmRTL()
+            }
+    }
+    #else
+    func body(content: Content) -> some View { content }
+    #endif
+}
+
+#if DEBUG
+/// يجلب حزمة الرئيسية ثم يفتح المادة الرئيسية أو الموجز كقصص — للقطات فقط.
+private struct DebugStoryLoader: View {
+    enum Kind { case article, stories }
+    let kind: Kind
+    @State private var store = HomeStore()
+
+    var body: some View {
+        Group {
+            if let home = store.payload {
+                switch kind {
+                case .article: StoryDetailScreen(seed: home.hero)
+                case .stories: StoriesScreen(items: home.brief)
+                }
+            } else {
+                ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .task { await store.load() }
+    }
+}
+#endif

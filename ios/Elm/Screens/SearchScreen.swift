@@ -1,17 +1,5 @@
 import SwiftUI
 
-private struct SearchSuggestion: Identifiable {
-    var id: String { query }
-    let label: String
-    let query: String
-}
-
-private let suggestedQueries: [SearchSuggestion] = [
-    .init(label: "أسعار التنجستن", query: "التنجستن"),
-    .init(label: "أرقام غينيس القياسية", query: "غينيس"),
-    .init(label: "أحداث الرياض", query: "الرياض"),
-]
-
 @MainActor
 @Observable
 final class SearchStore {
@@ -53,36 +41,53 @@ final class SearchStore {
     }
 }
 
-/// 1e — البحث العربي مع تطبيع الهمزات والتشكيل و«الـ».
+/// 1g — البحث: يتجاهل التشكيل واختلاف الهمزات، ومرشّحات بالسلاسل.
 struct SearchScreen: View {
+    @Environment(\.dismiss) private var dismiss
     @State private var query = ""
+    @State private var filter = "الكل"
     @State private var store = SearchStore()
     @State private var searchTask: Task<Void, Never>?
+    @FocusState private var fieldFocused: Bool
+
+    private var filters: [String] { ["الكل"] + SeriesPalette.active.prefix(4).map(\.name) }
+
+    private var filtered: [StoryCard] {
+        guard filter != "الكل" else { return store.results }
+        return store.results.filter { card in
+            SeriesPalette.active.first { $0.id == card.series }?.name == filter
+        }
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("اسأل العلم")
-                        .font(ElmFonts.text(.caption, weight: .bold))
-                        .foregroundStyle(ElmTheme.ink2)
-                    Text(query.isEmpty ? "ابحث في العلم" : "نتائج «\(query)»")
-                        .font(ElmFonts.display(.title, weight: .heavy))
-                        .foregroundStyle(ElmTheme.ink)
-                    Text(statusLine)
-                        .font(ElmFonts.text(.footnote))
-                        .foregroundStyle(ElmTheme.ink2)
+        ElmScreen(title: "البحث", showBack: true) {
+            VStack(alignment: .leading, spacing: 0) {
+                field
+
+                Text(statusLine)
+                    .font(ElmFonts.text(.caption2))
+                    .foregroundStyle(ElmTheme.ink3)
+                    .padding(.top, 10)
+
+                if !store.results.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 7) {
+                            ForEach(filters, id: \.self) { item in
+                                ElmChip(label: item, selected: filter == item) { filter = item }
+                            }
+                        }
+                        .padding(.vertical, 3)
+                    }
+                    .scrollClipDisabled()
+                    .padding(.top, 12)
                 }
 
-                searchField
-
-                content
+                content.padding(.top, 14)
             }
-            .padding(14)
+            .padding(.horizontal, 18)
+            .padding(.top, 14)
         }
-        .background(ElmTheme.bg.ignoresSafeArea())
-        .navigationTitle("بحث")
-        .navigationBarTitleDisplayMode(.large)
+        .onAppear { fieldFocused = true }
         .onChange(of: query) { _, newValue in
             searchTask?.cancel()
             searchTask = Task {
@@ -91,95 +96,123 @@ struct SearchScreen: View {
                 await store.search(newValue)
             }
         }
-        .onSubmit(of: .text) {
-            searchTask?.cancel()
-            Task { await store.search(query) }
-        }
     }
 
-    private var trimmedQuery: String {
-        query.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var searchField: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(ElmTheme.ink2)
-                .accessibilityHidden(true)
-            TextField("لماذا ترتفع أسعار التنجستن؟", text: $query)
-                .font(ElmFonts.text(.body))
+    private var field: some View {
+        HStack(spacing: 9) {
+            Text("✦").foregroundStyle(SeriesPalette.color(for: "shakhsiat"))
+            TextField("ابحث في مواد العلم", text: $query)
+                .font(ElmFonts.text(.footnote))
                 .foregroundStyle(ElmTheme.ink)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .submitLabel(.search)
+                .focused($fieldFocused)
+                .onSubmit {
+                    searchTask?.cancel()
+                    Task { await store.search(query) }
+                }
+            Rectangle().fill(ElmTheme.line2).frame(width: 1, height: 16)
+            Button(query.isEmpty ? "إلغاء" : "مسح") {
+                if query.isEmpty { dismiss() } else { query = "" }
+            }
+            .font(ElmFonts.text(.caption2))
+            .foregroundStyle(ElmTheme.ink3)
         }
-        .padding(14)
-        .background(ElmTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 11)
+        .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous)
-                .stroke(ElmTheme.line, lineWidth: 1)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .strokeBorder(
+                    LinearGradient(
+                        colors: [ElmTheme.teal, ElmTheme.focus, SeriesPalette.color(for: "shakhsiat")],
+                        startPoint: .trailing,
+                        endPoint: .leading
+                    ),
+                    lineWidth: 1.5
+                )
         )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("ابحث في العلم")
     }
 
     @ViewBuilder
     private var content: some View {
-        if trimmedQuery.isEmpty {
-            queryChips
+        if query.trimmingCharacters(in: .whitespaces).isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("جرّب")
+                    .font(ElmFonts.text(.caption2, weight: .bold))
+                    .foregroundStyle(ElmTheme.ink3)
+                ElmFlow(spacing: 7) {
+                    ForEach(["مضيق هرمز", "غينيس", "الرياض", "الجاذبية"], id: \.self) { item in
+                        Button { query = item } label: {
+                            Text(item)
+                                .font(ElmFonts.text(.footnote))
+                                .foregroundStyle(ElmTheme.ink2)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(ElmTheme.surface, in: Capsule())
+                                .overlay(Capsule().stroke(ElmTheme.line, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         } else if store.loading && store.results.isEmpty {
-            ProgressView()
-                .tint(ElmTheme.navy)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 24)
-        } else if store.results.isEmpty {
-            Text(store.errorMessage ?? "لا نتائج مطابقة. جرّب كلمة أعم أو تصفّح السلاسل.")
-                .font(ElmFonts.text(.body))
+            ProgressView().tint(ElmTheme.navy).frame(maxWidth: .infinity).padding(.top, 24)
+        } else if filtered.isEmpty {
+            Text(store.errorMessage ?? "لا نتائج ضمن هذا المرشّح.")
+                .font(ElmFonts.text(.callout))
                 .foregroundStyle(ElmTheme.ink2)
                 .padding(.top, 8)
         } else {
-            LazyVStack(spacing: 10) {
-                ForEach(store.results) { story in
-                    MiniStoryRow(story: story)
+            LazyVStack(spacing: 0) {
+                ForEach(filtered) { story in
+                    NavigationLink {
+                        StoryDetailScreen(seed: story)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(kicker(story))
+                                .font(ElmFonts.text(.caption2, weight: .bold))
+                                .foregroundStyle(story.series.map(SeriesPalette.color(for:)) ?? ElmTheme.accent)
+                            Text(story.title)
+                                .font(ElmFonts.display(.subheadline, weight: .bold))
+                                .foregroundStyle(ElmTheme.ink)
+                                .multilineTextAlignment(.leading)
+                                .padding(.top, 4)
+                            if !story.excerpt.isEmpty {
+                                Text(story.excerpt)
+                                    .font(ElmFonts.text(.caption))
+                                    .foregroundStyle(ElmTheme.ink3)
+                                    .multilineTextAlignment(.leading)
+                                    .lineLimit(2)
+                                    .lineSpacing(3)
+                                    .padding(.top, 5)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 13)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    Divider().overlay(ElmTheme.line)
                 }
             }
         }
     }
 
-    private var queryChips: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("جرّب")
-                .font(ElmFonts.text(.caption, weight: .bold))
-                .foregroundStyle(ElmTheme.ink2)
-            ForEach(suggestedQueries) { item in
-                Button {
-                    query = item.query
-                } label: {
-                    Text(item.label)
-                        .font(ElmFonts.text(.subheadline, weight: .semibold))
-                        .foregroundStyle(ElmTheme.navy)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(ElmTheme.surface2)
-                        .clipShape(Capsule())
-                }
-                .accessibilityLabel("ابحث عن \(item.label)")
-            }
-        }
+    private func kicker(_ story: StoryCard) -> String {
+        let series = story.series.flatMap { slug in SeriesPalette.active.first { $0.id == slug }?.name }
+        let section = ElmFormat.sectionName(story.section)
+        if let series { return "\(series) · \(section)" }
+        return story.eyebrow.isEmpty ? section : story.eyebrow
     }
 
     private var statusLine: String {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.isEmpty {
-            return "اكتب سؤالك أو كلمتك — البحث يتجاهل التشكيل واختلاف الهمزات و«الـ»."
+        if query.trimmingCharacters(in: .whitespaces).isEmpty {
+            return "اكتب كلمتك — البحث يتجاهل التشكيل واختلاف الهمزات و«الـ»."
         }
-        if store.fromCache {
-            return "\(ElmFormat.latinDigits(String(store.total))) نتيجة من الكاش المحلي"
-        }
-        if store.total > 0 {
-            return "\(ElmFormat.latinDigits(String(store.total))) نتيجة"
-        }
-        return "البحث يتجاهل التشكيل واختلاف الهمزات"
+        let count = ElmFormat.latinDigits(String(filtered.count))
+        let source = store.fromCache ? " من الحزمة المحفوظة" : ""
+        return "\(count) نتائج\(source) · يتجاهل التشكيل واختلاف الهمزات"
     }
 }

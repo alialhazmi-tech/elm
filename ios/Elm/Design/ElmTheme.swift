@@ -55,7 +55,71 @@ enum ElmTheme {
     static let success = hex("2eb873")
     static let focus = hex("3d7ef7")
 
+    /// خلفية الأشرطة الزجاجية (رأس الشاشة وشريط التبويب).
+    static var glass: Color { dyn((1, 1, 1, 0.82), (0.063, 0.110, 0.188, 0.86)) }
+    /// كحلي مقروء فوق `surface2`: في الداكن يرتفع إلى #c7d6ee كما في `.day-strip-tag`.
+    static var navyInk: Color { dyn((0.071, 0.157, 0.294, 1), (0.780, 0.839, 0.933, 1)) }
+
+    static let danger = hex("ef476f")
+    static let teal = hex("12b5a0")
+    static let tealInk = hex("0e9083")
+
+    /// طيف السلاسل الثماني بترتيب `series.ts` — يبدأ من جهة القراءة (اليمين).
+    static let spectrum: [Color] = [
+        hex("12b5a0"), hex("ef476f"), hex("eda313"), hex("3d7ef7"),
+        hex("8b5cf6"), hex("14a8d6"), hex("f26a1b"), hex("c08a2e"),
+    ]
+
+    static var spectrumGradient: LinearGradient {
+        LinearGradient(colors: spectrum, startPoint: .trailing, endPoint: .leading)
+    }
+
+    /// سكريم الصور: شفاف من الأعلى إلى كحلي داكن في الأسفل.
+    static var scrim: LinearGradient {
+        LinearGradient(
+            // انحدار سريع: شريط أسفل داكن يكفي لقراءة العنوان، ثم تُترك الصورة ظاهرة.
+            stops: [
+                .init(color: navyDeep.opacity(0.92), location: 0.0),
+                .init(color: navyDeep.opacity(0.76), location: 0.18),
+                .init(color: navyDeep.opacity(0.28), location: 0.42),
+                .init(color: navyDeep.opacity(0.0), location: 0.66),
+            ],
+            startPoint: .bottom,
+            endPoint: .top
+        )
+    }
+
     static let radiusSm: CGFloat = 10
     static let radiusMd: CGFloat = 16
     static let radiusLg: CGFloat = 20
+}
+
+/// بطاقة «المنشور»: سطح + حدّ + ظل خفيف — تكرّرت في كل شاشة فاستُخرجت.
+struct ElmCardStyle: ViewModifier {
+    var radius: CGFloat = 16
+    var padded: CGFloat? = nil
+    var elevated: Bool = true
+
+    func body(content: Content) -> some View {
+        content
+            .padding(padded ?? 0)
+            .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .stroke(ElmTheme.line, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(elevated ? 0.06 : 0), radius: 14, y: 5)
+    }
+}
+
+extension View {
+    func elmCard(radius: CGFloat = 16, padded: CGFloat? = nil, elevated: Bool = true) -> some View {
+        modifier(ElmCardStyle(radius: radius, padded: padded, elevated: elevated))
+    }
+
+    /// أرقام لاتينية دائمًا داخل نص عربي — مقابل قاعدة `.latin-number`.
+    func elmLatin() -> some View {
+        environment(\.layoutDirection, .leftToRight)
+            .monospacedDigit()
+    }
 }

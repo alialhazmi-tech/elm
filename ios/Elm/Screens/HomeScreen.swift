@@ -1,112 +1,113 @@
 import SwiftUI
 
-/// 1a — الرئيسية: موجز، بنتوهيرو، فسيفساء، سلاسل، أرقام.
+/// 1a — الرئيسية: التاريخ ← العاجل ← حزام السلاسل ← الموجز ← المادة الرئيسية
+/// ← المصغّرات ← بالأرقام ← الأكثر قراءة. الترتيب جزء من المواصفة لا تفصيل تنفيذي.
 struct HomeScreen: View {
     @State private var store = HomeStore()
+    @State private var storiesPresented = false
 
     var body: some View {
-        Group {
+        ElmScreen(showBrand: true, onRefresh: { await store.refresh() }) {
             if let home = store.payload {
-                homeFeed(home)
+                feed(home)
             } else if store.loading {
                 ProgressView("جاري تحميل الرئيسية")
-                    .font(ElmFonts.text(.body))
+                    .font(ElmFonts.text(.footnote))
                     .foregroundStyle(ElmTheme.ink2)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 140)
             } else {
                 ContentUnavailableView {
                     Label("تعذر تحميل الرئيسية", systemImage: "wifi.slash")
                 } description: {
                     Text(store.errorMessage ?? "لا توجد حزمة محفوظة للعرض بلا اتصال.")
                 } actions: {
-                    Button("إعادة المحاولة") {
-                        Task { await store.refresh() }
-                    }
+                    Button("إعادة المحاولة") { Task { await store.refresh() } }
                 }
+                .padding(.top, 90)
             }
         }
-        .background(ElmTheme.bg.ignoresSafeArea())
-        // الهوية تعيش في المصطبة داخل التمرير — لا شريط تنقل رمادي فوقها
-        .toolbar(.hidden, for: .navigationBar)
         .task { await store.load() }
-        .refreshable { await store.refresh() }
+        .fullScreenCover(isPresented: $storiesPresented) {
+            StoriesScreen(items: store.payload?.brief ?? []).elmRTL()
+        }
     }
 
-    private func homeFeed(_ home: MobileHomePayload) -> some View {
-        GeometryReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HomeMasthead()
+    @ViewBuilder
+    private func feed(_ home: MobileHomePayload) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if store.fromCache {
+                Label("تُعرض آخر حزمة محفوظة — بلا اتصال أو الخادم لم يرد.", systemImage: "arrow.down.circle")
+                    .font(ElmFonts.text(.caption, weight: .medium))
+                    .foregroundStyle(ElmTheme.ink2)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .padding(.horizontal, 18)
+                    .padding(.top, 14)
+            }
 
-                VStack(alignment: .leading, spacing: 14) {
-                if store.fromCache {
-                    Text("تُعرض آخر حزمة محفوظة — بلا اتصال أو الخادم لم يرد.")
-                        .font(ElmFonts.text(.caption, weight: .medium))
-                        .foregroundStyle(ElmTheme.ink2)
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(ElmTheme.surface2)
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .accessibilityLabel("وضع بلا اتصال")
-                }
+            DayStrip()
+                .padding(.horizontal, 18)
+                .padding(.top, 14)
 
-                if let breaking = home.breaking {
-                    BreakingBanner(item: breaking)
-                }
+            if let breaking = home.breaking {
+                BreakingBanner(item: breaking)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 12)
+            }
 
-                // الهيرو أولًا: هو واجهة العدد وأول ما يقع عليه البصر — كان سادسًا
-                // فتفتح الرئيسية على قوائم نصية بلا صورة حتى تمرّر شاشتين.
-                HeroCard(story: home.hero)
+            SeriesBelt(series: home.series.isEmpty ? SeriesPalette.chips : home.series)
+                .padding(.top, 12)
 
-                if !home.brief.isEmpty {
-                    BriefBlock(items: home.brief)
-                }
+            if !home.brief.isEmpty {
+                BriefBlock(items: home.brief) { storiesPresented = true }
+                    .padding(.horizontal, 18)
+                    .padding(.top, 16)
+            }
 
-                if !home.minis.isEmpty {
-                    SectionHead(title: "أهم ما نُشر")
+            HeroCard(story: home.hero)
+                .padding(.horizontal, 18)
+                .padding(.top, 16)
+
+            if !home.minis.isEmpty {
+                VStack(spacing: 10) {
                     ForEach(home.minis) { story in
                         MiniStoryRow(story: story)
                     }
                 }
-
-                SeriesLensesRow(series: home.series)
-
-                if let data = home.dataStory {
-                    DataStoryCard(story: data)
-                }
-
-                SectionHead(title: "وراء الخبر", subtitle: "السياق قبل السرعة")
-                // بلاطتان متجاورتان: إيقاع مختلف عن الصفوف الأفقية قبلها
-                HStack(alignment: .top, spacing: 10) {
-                    ForEach(home.mosaic.prefix(2)) { story in
-                        MosaicStoryCard(story: story, tall: true)
-                    }
-                }
-                if let question = home.question {
-                    QuestionCard(item: question)
-                }
-
-                if !home.numbers.isEmpty {
-                    NumbersGrid(stats: home.numbers)
-                }
-
-                if !home.mostRead.isEmpty {
-                    MostReadList(stories: home.mostRead)
-                }
-
-                if !home.videos.isEmpty {
-                    SectionHead(title: "مرئي وصوتي", subtitle: "المعرفة بأكثر من شكل")
-                    ForEach(home.videos) { story in
-                        VideoStoryCard(story: story)
-                    }
-                }
-                }
-                .frame(width: max(0, proxy.size.width - 28), alignment: .leading)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 18)
                 .padding(.top, 14)
-                .padding(.bottom, 72)
+            }
+
+            if !home.numbers.isEmpty {
+                NumbersRail(stats: home.numbers)
+                    .padding(.top, 24)
+            }
+
+            if !home.mostRead.isEmpty {
+                MostReadList(stories: home.mostRead)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 24)
+            }
+
+            if !home.videos.isEmpty {
+                VStack(alignment: .leading, spacing: 11) {
+                    SectionHead(title: "مرئي ومسموع", subtitle: "المعرفة بأكثر من شكل")
+                    ForEach(home.videos.prefix(2)) { story in
+                        StoryTile(story: story)
+                    }
                 }
+                .padding(.horizontal, 18)
+                .padding(.top, 24)
             }
         }
+    }
+}
+
+extension SeriesPalette {
+    /// حزام احتياطي حين لا يرسل الخادم السلاسل — الطيف نفسه من `series.ts`.
+    static var chips: [SeriesChip] {
+        active.map { SeriesChip(slug: $0.id, name: $0.name, description: "", color: $0.colorHex) }
     }
 }

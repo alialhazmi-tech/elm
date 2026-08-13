@@ -1,304 +1,167 @@
 import SwiftUI
 
+/// 1k — الترحيب واختيار الاهتمامات: من 3 إلى 7، الاقتراحات لا تُضاف تلقائيًا،
+/// والزر معطّل قبل الثلاثة.
 struct OnboardingScreen: View {
-    @Environment(OnboardingStore.self) private var onboarding
     @Environment(InterestStore.self) private var interests
-    @State private var step = 0
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(OnboardingStore.self) private var onboarding
+    @Environment(MemberSessionStore.self) private var member
+
+    private let minimum = 3
+    private let maximum = 7
+
+    private var count: Int { interests.selected.count }
+    private var ready: Bool { count >= minimum }
+
+    private var suggestions: [InterestItem] {
+        guard count > 0, count < maximum else { return [] }
+        return InterestCatalog.all.filter { !interests.selected.contains($0.id) }.prefix(3).map { $0 }
+    }
 
     var body: some View {
-        ZStack {
-            ElmTheme.bg.ignoresSafeArea()
-            ambientBackground
-            VStack(spacing: 0) {
-                topBar
-                TabView(selection: $step) {
-                    welcome.tag(0)
-                    interestChoice.tag(1)
-                    ready.tag(2)
-                }
-                .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.snappy, value: step)
-                progress
-            }
-        }
-        .interactiveDismissDisabled()
-    }
+        VStack(spacing: 0) {
+            header
 
-    private var topBar: some View {
-        HStack {
-            Text("العلم")
-                .font(ElmFonts.logo(.title2))
-                .foregroundStyle(ElmTheme.ink)
-            Spacer()
-            if step < 2 {
-                Button("تخطي") { onboarding.complete() }
-                    .font(ElmFonts.text(.subheadline, weight: .semibold))
-                    .foregroundStyle(ElmTheme.ink2)
-            }
-        }
-        .padding(.horizontal, 22)
-        .padding(.top, 14)
-    }
-
-    private var welcome: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Spacer(minLength: 18)
-                ZStack {
-                    RoundedRectangle(cornerRadius: 34, style: .continuous)
-                        .fill(ElmTheme.navyDeep)
-                        .frame(width: 84, height: 84)
-                        .shadow(color: ElmTheme.navyDeep.opacity(0.22), radius: 24, y: 14)
-                    Text("ع")
-                        .font(ElmFonts.logo(.largeTitle))
-                        .foregroundStyle(ElmTheme.gold)
-                }
-                .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("المعرفة كما يجب أن تُروى.")
-                        .font(ElmFonts.display(.title2, weight: .heavy))
-                        .foregroundStyle(ElmTheme.ink)
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                    Text("سياق الخبر وأرقامه ولماذا يهمك.")
-                        .font(ElmFonts.text(.body, weight: .medium))
-                        .foregroundStyle(ElmTheme.ink2)
-                        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                }
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 10) {
-                        promise("نقرأ أقل", icon: "text.book.closed")
-                        promise("نفهم أكثر", icon: "sparkles")
-                        promise("نحفظ ما يهم", icon: "bookmark")
-                    }
-                    VStack(spacing: 8) {
-                        promiseRow("نقرأ أقل", icon: "text.book.closed")
-                        promiseRow("نفهم أكثر", icon: "sparkles")
-                        promiseRow("نحفظ ما يهم", icon: "bookmark")
-                    }
-                }
-
-                Button {
-                    step = 1
-                } label: {
-                    Label("ابنِ تجربتك", systemImage: "arrow.left")
-                        .font(ElmFonts.text(.headline, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(ElmTheme.navyDeep)
-                        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-                }
-                .accessibilityHint("ينقلك لاختيار الاهتمامات")
-            }
-            .padding(20)
-        }
-    }
-
-    private var interestChoice: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("خطوتك الأولى")
-                        .font(ElmFonts.text(.caption, weight: .bold))
-                        .foregroundStyle(ElmTheme.accent)
-                    Text("ما الذي يستحق وقتك؟")
-                        .font(ElmFonts.display(.title2, weight: .heavy))
-                        .foregroundStyle(ElmTheme.ink)
-                    Text("اختر ثلاثة على الأقل. تستطيع تعديلها متى شئت.")
-                        .font(ElmFonts.text(.body))
-                        .foregroundStyle(ElmTheme.ink2)
-                }
-
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 250 : 150), spacing: 10)], spacing: 10) {
-                    ForEach(InterestCatalog.all) { item in
-                        InterestChoiceCard(item: item, selected: interests.selected.contains(item.id)) {
-                            interests.toggle(item.id)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 9), GridItem(.flexible(), spacing: 9)], spacing: 9) {
+                        ForEach(InterestCatalog.all) { item in
+                            card(item)
                         }
                     }
-                }
 
-                Button {
-                    step = 2
-                } label: {
-                    HStack {
-                        Text("متابعة")
-                        Spacer()
-                        Text("\(ElmFormat.latinDigits(String(interests.items.count))) مختارة")
-                            .font(ElmFonts.text(.caption, weight: .bold))
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 4)
-                            .background(.white.opacity(0.14))
-                            .clipShape(Capsule())
+                    if !suggestions.isEmpty {
+                        suggestionBox.padding(.top, 16)
                     }
-                    .font(ElmFonts.text(.headline, weight: .bold))
-                    .foregroundStyle(.white)
-                    .padding(16)
-                    .background(interests.items.count >= 3 ? ElmTheme.navyDeep : ElmTheme.ink3)
-                    .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
                 }
-                .disabled(interests.items.count < 3)
+                .padding(.horizontal, 18)
+                .padding(.bottom, 20)
             }
-            .padding(18)
+
+            footer
         }
+        .background(ElmTheme.bg.ignoresSafeArea())
     }
 
-    private var ready: some View {
-        ScrollView {
-            VStack(spacing: 22) {
-                Spacer(minLength: 70)
-                ZStack {
-                    Circle().stroke(ElmTheme.line, lineWidth: 1).frame(width: 118, height: 118)
-                    Circle().fill(ElmTheme.navyDeep).frame(width: 94, height: 94)
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 34, weight: .bold))
-                        .foregroundStyle(ElmTheme.gold)
-                }
-                Text("صار العلم أقرب إليك.")
-                    .font(ElmFonts.display(.title2, weight: .heavy))
-                    .foregroundStyle(ElmTheme.ink)
-                    .multilineTextAlignment(.center)
-                Text("سنوازن بين اهتماماتك وما يستحق أن تعرفه، ولن نحول صفحتك إلى فقاعة مغلقة.")
-                    .font(ElmFonts.text(.body))
-                    .foregroundStyle(ElmTheme.ink2)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(5)
-
-                FlowTags(items: interests.items)
-
-                Button {
-                    onboarding.complete()
-                } label: {
-                    Text("افتح العلم")
-                        .font(ElmFonts.text(.headline, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(ElmTheme.navyDeep)
-                        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-                }
-            }
-            .padding(20)
-        }
-    }
-
-    private var progress: some View {
-        HStack(spacing: 7) {
-            ForEach(0..<3, id: \.self) { index in
-                Capsule()
-                    .fill(index == step ? ElmTheme.navy : ElmTheme.line2)
-                    .frame(width: index == step ? 30 : 8, height: 5)
-            }
-        }
-        .padding(.vertical, 14)
-        .animation(.snappy, value: step)
-        .accessibilityLabel("الخطوة \(step + 1) من 3")
-    }
-
-    private var ambientBackground: some View {
-        GeometryReader { proxy in
-            Circle()
-                .fill(SeriesPalette.color(for: "limatha").opacity(0.11))
-                .frame(width: proxy.size.width * 0.9)
-                .blur(radius: 45)
-                .offset(x: proxy.size.width * 0.35, y: -70)
-            Circle()
-                .fill(SeriesPalette.color(for: "shakhsiat").opacity(0.08))
-                .frame(width: proxy.size.width * 0.8)
-                .blur(radius: 55)
-                .offset(x: -proxy.size.width * 0.35, y: proxy.size.height * 0.58)
-        }
-        .ignoresSafeArea()
-        .accessibilityHidden(true)
-    }
-
-    private func promise(_ title: String, icon: String) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon).font(.headline).foregroundStyle(ElmTheme.accent)
-            Text(title)
-                .font(ElmFonts.text(.caption2, weight: .bold))
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(member.isSignedIn ? "أهلًا يا \(member.firstName)" : "أهلًا بك في العلم")
+                .font(ElmFonts.text(.caption))
+                .foregroundStyle(ElmTheme.ink3)
+            Text("وش تحب تعرف أكثر؟")
+                .font(ElmFonts.display(.title, weight: .heavy))
                 .foregroundStyle(ElmTheme.ink)
+                .padding(.top, 5)
+            Text("اختر من \(ElmFormat.latinDigits("3")) إلى \(ElmFormat.latinDigits("7")) اهتمامات. أنت تتحكم بما يعرفه العلم عن اهتماماتك، ويمكنك تعديلها متى شئت.")
+                .font(ElmFonts.text(.footnote))
+                .foregroundStyle(ElmTheme.ink2)
+                .lineSpacing(4)
+                .multilineTextAlignment(.leading)
+                .padding(.top, 7)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 14)
-        .background(ElmTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: ElmTheme.radiusSm).stroke(ElmTheme.line))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 18)
+        .padding(.top, 10)
+        .padding(.bottom, 16)
     }
 
-    private func promiseRow(_ title: String, icon: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon).font(.headline).foregroundStyle(ElmTheme.accent).frame(width: 28)
-            Text(title).font(ElmFonts.text(.body, weight: .bold)).foregroundStyle(ElmTheme.ink)
-            Spacer()
-        }
-        .padding(13)
-        .background(ElmTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm))
-        .overlay(RoundedRectangle(cornerRadius: ElmTheme.radiusSm).stroke(ElmTheme.line))
-    }
-}
-
-struct InterestChoiceCard: View {
-    let item: InterestItem
-    let selected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Circle().fill(ElmTheme.hex(item.color)).frame(width: 10, height: 10)
-                    Spacer()
-                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(selected ? ElmTheme.hex(item.color) : ElmTheme.ink3)
+    private func card(_ item: InterestItem) -> some View {
+        let on = interests.selected.contains(item.id)
+        return Button {
+            guard on || count < maximum else { return }
+            interests.toggle(item.id)
+        } label: {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 8) {
+                    Text(on ? "✓" : "+")
+                        .font(ElmFonts.text(.caption, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 22, height: 22)
+                        .background(ElmTheme.hex(item.color), in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                    Text(item.label)
+                        .font(ElmFonts.display(.subheadline, weight: .bold))
+                        .foregroundStyle(ElmTheme.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Spacer(minLength: 0)
                 }
-                Spacer(minLength: 6)
-                Text(item.label)
-                    .font(ElmFonts.display(.subheadline, weight: .bold))
-                    .foregroundStyle(ElmTheme.ink)
                 Text(item.description)
                     .font(ElmFonts.text(.caption2))
-                    .foregroundStyle(ElmTheme.ink2)
-                    .lineLimit(2)
+                    .foregroundStyle(ElmTheme.ink3)
+                    .multilineTextAlignment(.leading)
+                    .lineSpacing(2)
+                    .padding(.top, 6)
             }
+            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
             .padding(13)
-            .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
-            .background(selected ? ElmTheme.hex(item.color).opacity(0.10) : ElmTheme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: ElmTheme.radiusMd).stroke(selected ? ElmTheme.hex(item.color) : ElmTheme.line, lineWidth: selected ? 1.5 : 1))
+            .background(on ? ElmTheme.surface2 : ElmTheme.surface, in: RoundedRectangle(cornerRadius: 15, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    .stroke(on ? ElmTheme.ink : ElmTheme.line, lineWidth: 1.5)
+            )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(item.label)
-        .accessibilityValue(selected ? "مختار" : "غير مختار")
+        .opacity(!on && count >= maximum ? 0.5 : 1)
+        .accessibilityLabel("\(item.label)، \(item.description)")
+        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
-}
 
-private struct FlowTags: View {
-    let items: [InterestItem]
-    var body: some View {
-        VStack(spacing: 8) {
-            ForEach(Array(items.chunked(into: 3).enumerated()), id: \.offset) { _, row in
-                HStack(spacing: 7) {
-                    ForEach(row) { item in
-                        Text(item.label)
-                            .font(ElmFonts.text(.caption, weight: .bold))
-                            .foregroundStyle(ElmTheme.hex(item.color))
-                            .padding(.horizontal, 11)
+    private var suggestionBox: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("بناءً على اختياراتك، قد يعجبك أيضًا")
+                .font(ElmFonts.text(.footnote))
+                .foregroundStyle(ElmTheme.ink2)
+            ElmFlow(spacing: 7) {
+                ForEach(suggestions) { item in
+                    Button { interests.toggle(item.id) } label: {
+                        Text("+ \(item.label)")
+                            .font(ElmFonts.text(.footnote))
+                            .foregroundStyle(ElmTheme.ink)
+                            .padding(.horizontal, 12)
                             .padding(.vertical, 6)
-                            .background(ElmTheme.hex(item.color).opacity(0.10))
-                            .clipShape(Capsule())
+                            .background(ElmTheme.surface, in: Capsule())
+                            .overlay(Capsule().stroke(ElmTheme.line2, lineWidth: 1))
                     }
+                    .buttonStyle(.plain)
                 }
             }
+            .padding(.top, 8)
+            Text("اقتراحات آلية خفيفة، ولا نضيف شيئًا دون اختيارك.")
+                .font(ElmFonts.text(.caption2))
+                .foregroundStyle(ElmTheme.ink3)
+                .padding(.top, 8)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
     }
-}
 
-private extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map { Array(self[$0..<Swift.min($0 + size, count)]) }
+    private var footer: some View {
+        HStack(spacing: 12) {
+            Text("\(ElmFormat.latinDigits(String(count))) مختارة")
+                .font(ElmFonts.text(.caption))
+                .foregroundStyle(ready ? ElmTheme.ink2 : ElmTheme.ink3)
+                .fixedSize()
+            Button { onboarding.complete() } label: {
+                Text(ready ? "تأكيد اهتماماتي" : "اختر \(ElmFormat.latinDigits(String(minimum - count))) على الأقل")
+                    .font(ElmFonts.text(.subheadline, weight: .bold))
+                    .foregroundStyle(ready ? .white : ElmTheme.ink3)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(ready ? ElmTheme.navyDeep : ElmTheme.line2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(!ready)
+        }
+        .padding(.horizontal, 18)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background {
+            ElmTheme.glass
+                .background(.ultraThinMaterial)
+                .ignoresSafeArea(edges: .bottom)
+        }
+        .overlay(alignment: .top) { Rectangle().fill(ElmTheme.line).frame(height: 1) }
     }
 }

@@ -56,6 +56,16 @@ enum ElmFormat {
         }
     }
 
+    static func dayLabel(_ count: Int) -> String {
+        switch count {
+        case 0: "لم تبدأ بعد"
+        case 1: "يوم واحد"
+        case 2: "يومان"
+        case 3...10: "\(latinDigits(String(count))) أيام"
+        default: "\(latinDigits(String(count))) يومًا"
+        }
+    }
+
     static func materialLabel(_ count: Int) -> String {
         switch count {
         case 0: "لا مواد"
@@ -70,9 +80,20 @@ enum ElmFormat {
         guard let iso, let date = parseDate(iso) else { return nil }
         let hours = Int(Date().timeIntervalSince(date) / 3600)
         if hours < 1 { return "قبل قليل" }
-        if hours < 24 { return "منذ \(latinDigits(String(hours))) ساعات" }
+        if hours < 24 { return "منذ \(countedNoun(hours, one: "ساعة", two: "ساعتين", few: "ساعات", many: "ساعة"))" }
         let days = max(1, hours / 24)
-        return "منذ \(latinDigits(String(days))) أيام"
+        if days == 1 { return "أمس" }
+        return "منذ \(countedNoun(days, one: "يوم", two: "يومين", few: "أيام", many: "يومًا"))"
+    }
+
+    /// تمييز العدد العربي: مفرد، مثنى، جمع قلة (3–10)، ثم تمييز مفرد منصوب.
+    static func countedNoun(_ count: Int, one: String, two: String, few: String, many: String) -> String {
+        switch count {
+        case 1: one
+        case 2: two
+        case 3...10: "\(latinDigits(String(count))) \(few)"
+        default: "\(latinDigits(String(count))) \(many)"
+        }
     }
 
     static func todayStrip() -> String {
