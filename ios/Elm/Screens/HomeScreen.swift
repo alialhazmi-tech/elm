@@ -26,22 +26,8 @@ struct HomeScreen: View {
             }
         }
         .background(ElmTheme.bg.ignoresSafeArea())
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .principal) {
-                VStack(spacing: 1) {
-                    Text("العلم")
-                        .font(ElmFonts.logo(.title3))
-                        .foregroundStyle(ElmTheme.ink)
-                    Text("المعرفة بسلاسة")
-                        .font(ElmFonts.text(.caption2, weight: .medium))
-                        .foregroundStyle(ElmTheme.ink2)
-                }
-                .accessibilityElement(children: .combine)
-                .accessibilityAddTraits(.isHeader)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-            }
-        }
+        // الهوية تعيش في المصطبة داخل التمرير — لا شريط تنقل رمادي فوقها
+        .toolbar(.hidden, for: .navigationBar)
         .task { await store.load() }
         .refreshable { await store.refresh() }
     }
@@ -49,6 +35,9 @@ struct HomeScreen: View {
     private func homeFeed(_ home: MobileHomePayload) -> some View {
         GeometryReader { proxy in
             ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    HomeMasthead()
+
                 VStack(alignment: .leading, spacing: 14) {
                 if store.fromCache {
                     Text("تُعرض آخر حزمة محفوظة — بلا اتصال أو الخادم لم يرد.")
@@ -65,8 +54,6 @@ struct HomeScreen: View {
                     BreakingBanner(item: breaking)
                 }
 
-                DayStrip()
-
                 // الهيرو أولًا: هو واجهة العدد وأول ما يقع عليه البصر — كان سادسًا
                 // فتفتح الرئيسية على قوائم نصية بلا صورة حتى تمرّر شاشتين.
                 HeroCard(story: home.hero)
@@ -75,8 +62,11 @@ struct HomeScreen: View {
                     BriefBlock(items: home.brief)
                 }
 
-                ForEach(home.minis) { story in
-                    MiniStoryRow(story: story)
+                if !home.minis.isEmpty {
+                    SectionHead(title: "أهم ما نُشر")
+                    ForEach(home.minis) { story in
+                        MiniStoryRow(story: story)
+                    }
                 }
 
                 SeriesLensesRow(series: home.series)
@@ -86,11 +76,11 @@ struct HomeScreen: View {
                 }
 
                 SectionHead(title: "وراء الخبر", subtitle: "السياق قبل السرعة")
-                if let first = home.mosaic.first {
-                    MosaicStoryCard(story: first, tall: true)
-                }
-                if home.mosaic.count > 1 {
-                    MosaicStoryCard(story: home.mosaic[1])
+                // بلاطتان متجاورتان: إيقاع مختلف عن الصفوف الأفقية قبلها
+                HStack(alignment: .top, spacing: 10) {
+                    ForEach(home.mosaic.prefix(2)) { story in
+                        MosaicStoryCard(story: story, tall: true)
+                    }
                 }
                 if let question = home.question {
                     QuestionCard(item: question)
@@ -113,7 +103,9 @@ struct HomeScreen: View {
                 }
                 .frame(width: max(0, proxy.size.width - 28), alignment: .leading)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 10)
+                .padding(.top, 14)
+                .padding(.bottom, 72)
+                }
             }
         }
     }

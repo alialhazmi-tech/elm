@@ -5,26 +5,19 @@ struct SectionHead: View {
     var subtitle: String? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
             Text(title)
-                .font(ElmFonts.display(.title3, weight: .heavy))
+                .font(ElmFonts.display(.headline, weight: .heavy))
                 .foregroundStyle(ElmTheme.ink)
-            Rectangle()
-                .fill(ElmTheme.gold)
-                .frame(width: 36, height: 3)
-                .clipShape(Capsule())
-                .accessibilityHidden(true)
+            Spacer(minLength: 0)
             if let subtitle {
                 Text(subtitle)
-                    .font(ElmFonts.text(.footnote))
-                    .foregroundStyle(ElmTheme.ink2)
+                    .font(ElmFonts.text(.caption2))
+                    .foregroundStyle(ElmTheme.ink3)
+                    .lineLimit(1)
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 4)
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(ElmTheme.line).frame(height: 1)
-        }
+        .padding(.top, 6)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
@@ -104,59 +97,40 @@ struct SeriesLensesRow: View {
     let series: [SeriesChip]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("مسارات العلم")
-                .font(ElmFonts.text(.caption, weight: .bold))
-                .foregroundStyle(ElmTheme.ink2)
-            Text("اختر طريقتك في الفهم")
-                .font(ElmFonts.display(.title3, weight: .heavy))
+        VStack(alignment: .leading, spacing: 9) {
+            Text("اختر عدستك في الفهم")
+                .font(ElmFonts.display(.subheadline, weight: .heavy))
                 .foregroundStyle(ElmTheme.ink)
+                .padding(.horizontal, 2)
+
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(Array(series.enumerated()), id: \.element.id) { index, item in
+                    ForEach(series) { item in
                         NavigationLink {
                             SeriesFeedScreen(chip: item)
                         } label: {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(ElmFormat.twoDigit(index + 1))
-                                    .font(ElmFonts.text(.caption2, weight: .bold))
-                                    .foregroundStyle(ElmTheme.ink2)
-                                    .environment(\.layoutDirection, .leftToRight)
-                                Text(item.name)
-                                    .font(ElmFonts.display(.subheadline, weight: .bold))
-                                    .foregroundStyle(ElmTheme.ink)
-                                Text(item.description)
-                                    .font(ElmFonts.text(.caption2))
-                                    .foregroundStyle(ElmTheme.ink2)
-                                    .lineLimit(2)
-                            }
-                            .padding(12)
-                            .frame(width: 148, alignment: .leading)
-                            .background(
-                                LinearGradient(
-                                    colors: [ElmTheme.hex(item.color).opacity(0.16), ElmTheme.surface],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                            )
-                            .overlay(alignment: .top) {
-                                Rectangle()
+                            HStack(spacing: 7) {
+                                Circle()
                                     .fill(ElmTheme.hex(item.color))
-                                    .frame(height: 4)
+                                    .frame(width: 8, height: 8)
+                                Text(item.name)
+                                    .font(ElmFonts.text(.subheadline, weight: .medium))
+                                    .foregroundStyle(ElmTheme.ink)
+                                    .lineLimit(1)
                             }
-                            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: ElmTheme.radiusSm, style: .continuous)
-                                    .stroke(ElmTheme.line, lineWidth: 1)
-                            )
-                            .accessibilityElement(children: .combine)
-                            .accessibilityLabel("\(item.name)، \(item.description)")
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(ElmTheme.surface, in: Capsule())
+                            .overlay(Capsule().stroke(ElmTheme.line, lineWidth: 1))
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel("سلسلة \(item.name)")
                     }
                 }
+                .padding(.horizontal, 2)
                 .padding(.vertical, 2)
             }
+            .scrollClipDisabled()
         }
     }
 }
@@ -165,79 +139,59 @@ struct BriefBlock: View {
     let items: [BriefItem]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 11) {
+            HStack(spacing: 9) {
                 Text("✦")
-                    .font(.title3)
+                    .font(.system(size: 15))
                     .foregroundStyle(ElmTheme.gold)
-                    .frame(width: 38, height: 38)
-                    .background(ElmTheme.navyDeep)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
+                    .frame(width: 30, height: 30)
+                    .background(ElmTheme.gold.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                VStack(alignment: .leading, spacing: 0) {
                     Text("موجز العلم")
-                        .font(ElmFonts.display(.headline, weight: .heavy))
-                        .foregroundStyle(ElmTheme.ink)
-                    Text("يُحدّث على مدار اليوم")
+                        .font(ElmFonts.display(.subheadline, weight: .heavy))
+                        .foregroundStyle(.white)
+                    Text("المشهد اليوم في ثلاث نقاط")
                         .font(ElmFonts.text(.caption2))
-                        .foregroundStyle(ElmTheme.ink2)
+                        .foregroundStyle(Color.white.opacity(0.6))
                 }
+                Spacer(minLength: 0)
             }
-            .padding(14)
 
-            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                let story = StoryCard(
-                    id: item.href,
-                    slug: item.href,
-                    section: "news",
-                    title: item.title,
-                    excerpt: "",
-                    eyebrow: item.label,
-                    href: item.href
-                )
-                NavigationLink {
-                    StoryDetailScreen(seed: story)
-                } label: {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(item.label)
-                                .font(ElmFonts.text(.caption, weight: .bold))
-                                .foregroundStyle(ElmTheme.hex(item.color))
-                            Spacer()
-                            Text(ElmFormat.twoDigit(index + 1))
-                                .font(ElmFonts.text(.caption, weight: .bold))
-                                .foregroundStyle(ElmTheme.ink2)
-                                .environment(\.layoutDirection, .leftToRight)
+            VStack(alignment: .leading, spacing: 9) {
+                ForEach(items.prefix(3)) { item in
+                    // نفس بذرة المادة السابقة: المسار المقدس هو المعرّف
+                    let story = StoryCard(
+                        id: item.href,
+                        slug: item.href,
+                        section: "news",
+                        title: item.title,
+                        excerpt: "",
+                        eyebrow: item.label,
+                        href: item.href
+                    )
+                    NavigationLink {
+                        StoryDetailScreen(seed: story)
+                    } label: {
+                        HStack(alignment: .top, spacing: 9) {
+                            Circle()
+                                .fill(ElmTheme.hex(item.color))
+                                .frame(width: 7, height: 7)
+                                .padding(.top, 7)
+                            Text(item.title)
+                                .font(ElmFonts.text(.footnote))
+                                .foregroundStyle(Color.white.opacity(0.92))
+                                .multilineTextAlignment(.trailing)
+                                .frame(maxWidth: .infinity, alignment: .trailing)
                         }
-                        Text(item.title)
-                            .font(ElmFonts.display(.headline, weight: .bold))
-                            .foregroundStyle(ElmTheme.ink)
-                            .lineLimit(3)
-                            .multilineTextAlignment(.leading)
                     }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .overlay(alignment: .top) {
-                        Rectangle()
-                            .fill(ElmTheme.hex(item.color))
-                            .frame(height: 2)
-                            .padding(.horizontal, 16)
-                    }
-                }
-                .buttonStyle(.plain)
-                if index < items.count - 1 {
-                    Divider().background(ElmTheme.line)
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("\(item.label)، \(item.title)")
                 }
             }
         }
-        .background(ElmTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous)
-                .stroke(ElmTheme.line, lineWidth: 1)
-        )
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("موجز العلم")
+        .padding(15)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ElmTheme.navy, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
 
@@ -245,47 +199,70 @@ struct HeroCard: View {
     let story: StoryCard
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-    private var cardHeight: CGFloat { dynamicTypeSize.isAccessibilitySize ? 320 : 242 }
+    /// نسبة قريبة من 4:5؛ وفي أحجام الوصول يعلو الإطار ليتسع النص.
+    private var ratio: CGFloat { dynamicTypeSize.isAccessibilitySize ? 1.05 : 1.12 }
 
     var body: some View {
         NavigationLink {
             StoryDetailScreen(seed: story)
         } label: {
-            ZStack(alignment: .bottomLeading) {
-                RemoteImage(url: story.imageURL, height: cardHeight)
-                LinearGradient(
-                    colors: [.clear, ElmTheme.navyDeep.opacity(0.92)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                VStack(alignment: .trailing, spacing: 10) {
-                    if let series = story.series {
-                        SeriesChipLabel(name: SeriesPalette.active.first { $0.id == series }?.name ?? series,
-                                        color: SeriesPalette.color(for: series))
-                    }
-                    Text(story.title)
-                        .font(ElmFonts.display(.title3, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(3)
-                        .layoutPriority(1)
-                        .frame(maxWidth: .infinity, alignment: .trailing)
-                    HStack(spacing: 12) {
-                        Text(ElmFormat.sectionName(story.section))
-                        Text(ElmFormat.readingLabel(story.readingMinutes))
-                    }
-                    .font(ElmFonts.text(.caption, weight: .medium))
-                    .foregroundStyle(.white.opacity(0.78))
+            // الحاوية الشفافة تحمل النسبة، والصورة والسكريم والنص طبقات فوقها.
+            // GeometryReader هنا كان يُسقط رسم الصورة رغم نجاح تحميلها.
+            Color.clear
+                .aspectRatio(1 / ratio, contentMode: .fit)
+                .overlay { RemoteImage(url: story.imageURL) }
+                .overlay {
+                    LinearGradient(
+                        stops: [
+                            .init(color: ElmTheme.navyDeep.opacity(0.94), location: 0.06),
+                            .init(color: ElmTheme.navyDeep.opacity(0.55), location: 0.38),
+                            .init(color: ElmTheme.navyDeep.opacity(0.02), location: 0.72),
+                        ],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
                 }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .frame(maxWidth: .infinity, minHeight: cardHeight, maxHeight: cardHeight)
-            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous))
+                .overlay(alignment: .bottomTrailing) {
+                    VStack(alignment: .trailing, spacing: 8) {
+                        HeroKicker(text: story.eyebrow.isEmpty ? "قصة اليوم" : story.eyebrow)
+                        Text(story.title)
+                            .font(ElmFonts.display(.title2, weight: .heavy))
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(4)
+                            .shadow(color: .black.opacity(0.35), radius: 12, y: 2)
+                        HStack(spacing: 10) {
+                            Text(ElmFormat.readingLabel(story.readingMinutes))
+                            Text("·")
+                            Text(ElmFormat.sectionName(story.section))
+                        }
+                        .font(ElmFonts.text(.caption, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.75))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(16)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(story.title)، \(ElmFormat.sectionName(story.section))")
-        .contentShape(RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous))
+    }
+}
+
+/// سطر تصنيفي بخط ذهبي قصير — نفس لغة تقارير «جاك العلم».
+struct HeroKicker: View {
+    let text: String
+    var color: Color = ElmTheme.gold
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(text)
+                .font(ElmFonts.display(.caption2, weight: .heavy))
+            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                .fill(color)
+                .frame(width: 14, height: 2.5)
+        }
+        .foregroundStyle(color)
     }
 }
 
@@ -297,47 +274,32 @@ struct MiniStoryRow: View {
             StoryDetailScreen(seed: story)
         } label: {
             HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(kick)
-                        .font(ElmFonts.text(.caption, weight: .bold))
-                        .foregroundStyle(SeriesPalette.color(for: story.series ?? ""))
+                RemoteImage(url: story.imageURL, height: 78)
+                    .frame(width: 104, height: 78)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+
+                VStack(alignment: .trailing, spacing: 5) {
+                    HeroKicker(
+                        text: story.eyebrow.isEmpty ? ElmFormat.sectionName(story.section) : story.eyebrow,
+                        color: story.series.map(SeriesPalette.color(for:)) ?? ElmTheme.accent
+                    )
                     Text(story.title)
                         .font(ElmFonts.display(.subheadline, weight: .bold))
                         .foregroundStyle(ElmTheme.ink)
+                        .multilineTextAlignment(.trailing)
                         .lineLimit(3)
-                        .multilineTextAlignment(.leading)
-                    Text(meta)
+                    Text(ElmFormat.readingLabel(story.readingMinutes))
                         .font(ElmFonts.text(.caption2))
-                        .foregroundStyle(ElmTheme.ink2)
+                        .foregroundStyle(ElmTheme.ink3)
                 }
-                Spacer(minLength: 0)
-                RemoteImage(url: story.imageURL, height: 72)
-                    .frame(width: 92, height: 72)
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding(12)
-            .background(ElmTheme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous)
-                    .stroke(ElmTheme.line, lineWidth: 1)
-            )
+            .padding(10)
+            .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .shadow(color: Color.black.opacity(0.05), radius: 12, y: 4)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(story.title)
-        .contentShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-    }
-
-    private var kick: String {
-        SeriesPalette.active.first { $0.id == story.series }?.name
-            ?? (story.eyebrow.isEmpty ? ElmFormat.sectionName(story.section) : story.eyebrow)
-    }
-
-    private var meta: String {
-        let time = ElmFormat.relativeTime(story.publishedAt)
-        let read = ElmFormat.readingLabel(story.readingMinutes)
-        if let time { return "\(time) · \(read)" }
-        return read
+        .accessibilityLabel("\(story.title)، \(ElmFormat.sectionName(story.section))")
     }
 }
 
@@ -409,55 +371,44 @@ struct DataStoryCard: View {
 
 struct MosaicStoryCard: View {
     let story: StoryCard
-    var tall = false
+    var tall: Bool = false
+
+    private var ratio: CGFloat { tall ? 1.34 : 1.0 }
 
     var body: some View {
         NavigationLink {
             StoryDetailScreen(seed: story)
         } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                RemoteImage(url: story.imageURL, height: tall ? 176 : 120)
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text(kick)
-                            .font(ElmFonts.text(.caption, weight: .bold))
-                            .foregroundStyle(SeriesPalette.color(for: story.series ?? ""))
-                        Spacer()
-                        if let when = ElmFormat.relativeTime(story.publishedAt) {
-                            Text(when)
-                                .font(ElmFonts.text(.caption2))
-                                .foregroundStyle(ElmTheme.ink2)
-                        }
-                    }
-                    Text(story.title)
-                        .font(ElmFonts.display(tall ? .title3 : .headline, weight: .bold))
-                        .foregroundStyle(ElmTheme.ink)
-                        .multilineTextAlignment(.leading)
-                    if tall, !story.excerpt.isEmpty {
-                        Text(story.excerpt)
-                            .font(ElmFonts.text(.footnote))
-                            .foregroundStyle(ElmTheme.ink2)
-                            .lineLimit(3)
-                    }
+            Color.clear
+                .aspectRatio(1 / ratio, contentMode: .fit)
+                .overlay { RemoteImage(url: story.imageURL) }
+                .overlay {
+                    LinearGradient(
+                        stops: [
+                            .init(color: ElmTheme.navyDeep.opacity(0.92), location: 0.08),
+                            .init(color: ElmTheme.navyDeep.opacity(0.12), location: 0.62),
+                        ],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
                 }
-                .padding(12)
-            }
-            .background(ElmTheme.surface)
-            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous)
-                    .stroke(ElmTheme.line, lineWidth: 1)
-            )
+                .overlay(alignment: .bottomTrailing) {
+                    VStack(alignment: .trailing, spacing: 6) {
+                        HeroKicker(text: story.eyebrow.isEmpty ? "وراء الخبر" : story.eyebrow)
+                        Text(story.title)
+                            .font(ElmFonts.display(.subheadline, weight: .bold))
+                            .foregroundStyle(.white)
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(3)
+                            .shadow(color: .black.opacity(0.3), radius: 8, y: 1)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(12)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(story.title)
-    }
-
-    private var kick: String {
-        let series = SeriesPalette.active.first { $0.id == story.series }?.name
-        let section = ElmFormat.sectionName(story.section)
-        if let series { return "\(series) · \(section)" }
-        return section
+        .accessibilityLabel("\(story.title)، \(ElmFormat.sectionName(story.section))")
     }
 }
 
@@ -545,40 +496,64 @@ struct NumbersGrid: View {
     let stats: [NumberStat]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SectionHead(title: "بالأرقام", subtitle: "أرقام من المواد — وكل رقم يحيل لمصدره")
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                ForEach(stats) { stat in
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+        VStack(alignment: .leading, spacing: 13) {
+            HStack(spacing: 8) {
+                Text("بالأرقام")
+                    .font(ElmFonts.display(.subheadline, weight: .heavy))
+                    .foregroundStyle(.white)
+                Spacer(minLength: 0)
+                Text("كل رقم يحيل لمصدره")
+                    .font(ElmFonts.text(.caption2))
+                    .foregroundStyle(Color.white.opacity(0.55))
+            }
+
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3),
+                alignment: .trailing,
+                spacing: 12
+            ) {
+                ForEach(stats.prefix(3)) { stat in
+                    VStack(alignment: .trailing, spacing: 6) {
+                        HStack(alignment: .firstTextBaseline, spacing: 1) {
                             Text(ElmFormat.latinDigits(stat.value))
                                 .font(ElmFonts.display(.title, weight: .heavy))
                             if let suffix = stat.suffix {
                                 Text(ElmFormat.latinDigits(suffix))
-                                    .font(ElmFonts.display(.headline, weight: .bold))
-                                    .foregroundStyle(ElmTheme.accent)
+                                    .font(ElmFonts.display(.subheadline, weight: .heavy))
                             }
                         }
                         .environment(\.layoutDirection, .leftToRight)
-                        .foregroundStyle(ElmTheme.ink)
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [ElmTheme.hex("ffd35e"), ElmTheme.hex("c8901a")],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
+
                         Text(stat.label)
-                            .font(ElmFonts.text(.caption))
-                            .foregroundStyle(ElmTheme.ink2)
+                            .font(ElmFonts.text(.caption2))
+                            .foregroundStyle(Color.white.opacity(0.68))
+                            .multilineTextAlignment(.trailing)
                             .lineLimit(3)
-                            .multilineTextAlignment(.leading)
                     }
-                    .padding(14)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(ElmTheme.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous)
-                            .stroke(ElmTheme.line, lineWidth: 1)
-                    )
+                    .frame(maxWidth: .infinity, alignment: .trailing)
                     .accessibilityElement(children: .combine)
                 }
             }
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [ElmTheme.navyDeep, ElmTheme.hex("16304f")],
+                startPoint: .topTrailing,
+                endPoint: .bottomLeading
+            ),
+            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
+        )
     }
 }
 
