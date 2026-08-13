@@ -185,7 +185,7 @@ struct AskScreen: View {
 
             if let source = message.source {
                 NavigationLink {
-                    StoryDetailScreen(seed: source)
+                    StoryDestination(seed: source)
                 } label: {
                     HStack(spacing: 8) {
                         RoundedRectangle(cornerRadius: 2, style: .continuous)

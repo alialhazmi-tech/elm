@@ -36,7 +36,7 @@ struct BreakingBanner: View {
 
     var body: some View {
         NavigationLink {
-            StoryDetailScreen(seed: StoryCard(
+            StoryDestination(seed: StoryCard(
                 id: item.href, slug: item.href, section: "news",
                 title: item.title, excerpt: "", eyebrow: "عاجل", href: item.href
             ))
@@ -194,7 +194,7 @@ struct BriefBlock: View {
     private func briefRow(_ item: BriefItem, number: Int) -> some View {
         let color = ElmTheme.hex(item.color)
         return NavigationLink {
-            StoryDetailScreen(seed: StoryCard(
+            StoryDestination(seed: StoryCard(
                 id: item.href, slug: item.href, section: "news",
                 title: item.title, excerpt: "", eyebrow: item.label, href: item.href
             ))
@@ -269,7 +269,7 @@ struct HeroCard: View {
 
     var body: some View {
         NavigationLink {
-            StoryDetailScreen(seed: story)
+            StoryDestination(seed: story)
         } label: {
             // الحاوية الشفافة تحمل النسبة، والصورة والسكريم والنص طبقات فوقها.
             // GeometryReader هنا كان يُسقط رسم الصورة رغم نجاح تحميلها.
@@ -327,7 +327,7 @@ struct MiniStoryRow: View {
 
     var body: some View {
         NavigationLink {
-            StoryDetailScreen(seed: story)
+            StoryDestination(seed: story)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 0) {
@@ -387,7 +387,7 @@ struct StoryTile: View {
 
     var body: some View {
         NavigationLink {
-            StoryDetailScreen(seed: story)
+            StoryDestination(seed: story)
         } label: {
             Color.clear
                 .aspectRatio(1 / ratio, contentMode: .fit)
@@ -490,7 +490,7 @@ struct MostReadList: View {
                 ForEach(Array(stories.prefix(5).enumerated()), id: \.element.id) { index, story in
                     Divider().overlay(ElmTheme.line)
                     NavigationLink {
-                        StoryDetailScreen(seed: story)
+                        StoryDestination(seed: story)
                     } label: {
                         HStack(alignment: .top, spacing: 12) {
                             Text(ElmFormat.twoDigit(index + 1))

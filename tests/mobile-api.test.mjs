@@ -29,7 +29,7 @@ test("عقد المادة والسلاسل للموبايل يحافظ على ا
     read("app/api/mobile/v1/series/[slug]/route.ts"),
     read("docs/ios/API_MOBILE_V1.md"),
   ]);
-  assert.match(catalog, /mobile-story\.v1/);
+  assert.match(catalog, /mobile-story\.v2/);
   assert.match(catalog, /mobile-series-index\.v1/);
   assert.match(catalog, /mobile-series-feed\.v1/);
   assert.match(catalog, /stripHtmlToText/);
@@ -112,4 +112,25 @@ test("دوال العقد تعلن معامل الأصل صراحةً — لا �
       );
     }
   }
+});
+
+test("عقد المادة v2 ينقل بيانات صفحات جاك وطابعها اللوني", async () => {
+  const [catalog, docs] = await Promise.all([
+    read("lib/mobile/catalog.ts"),
+    read("docs/ios/API_MOBILE_V1.md"),
+  ]);
+
+  // صفحات المقارنة والمسار والقائمة والاقتباس بلا هذه الحقول تصل فارغة من مادتها.
+  for (const field of ["eyebrow", "focal", "textSide", "sides", "points", "items", "quoteBy"]) {
+    assert.match(catalog, new RegExp(`${field}:`), `الحقل ${field} مفقود من عقد الشريحة`);
+  }
+
+  // الطابع اللوني يصل مسطّحًا: التطبيق لا يعرف مفاتيح REPORT_PALETTES.
+  assert.match(catalog, /MobileJakReport/);
+  assert.match(catalog, /jakReportOf/);
+  assert.match(catalog, /glow2/);
+  assert.doesNotMatch(catalog, /REPORT_PALETTE_NAMES/);
+
+  assert.match(docs, /mobile-story\.v2/);
+  assert.match(docs, /"jak"/);
 });

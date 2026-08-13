@@ -8,7 +8,7 @@ import Foundation
 ///     xcrun simctl launch <sim> net.alelm.app -elmScreen saved
 enum ElmLaunch {
     enum Screen: String, Identifiable {
-        case search, notifications, saved, membership, privacy, story, stories
+        case search, notifications, saved, membership, privacy, story, article, stories
         var id: String { rawValue }
     }
 

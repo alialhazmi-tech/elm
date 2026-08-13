@@ -73,6 +73,19 @@ struct RemoteImage: View {
     }
 }
 
+/// صورة ملء الشاشة بحجم آمن: `RemoteImage` وحدها تُرجع مقاسًا أكبر من المقترح
+/// عند `scaledToFill`، فتضخّم الحاوية كلها. `Color.clear` يثبّت الحجم والصورة طبقة فوقه.
+struct FullBleedImage: View {
+    let url: URL?
+    var maxPixel: CGFloat = 2400
+
+    var body: some View {
+        Color.clear
+            .overlay { RemoteImage(url: url, maxPixel: maxPixel) }
+            .clipped()
+    }
+}
+
 /// كاش ذاكرة مشترك + فك ترميز مُصغَّر.
 final class ImageStore: @unchecked Sendable {
     static let shared = ImageStore()

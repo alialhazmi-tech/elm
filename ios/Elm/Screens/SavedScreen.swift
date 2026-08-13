@@ -93,7 +93,7 @@ struct SavedScreen: View {
     private func row(_ story: StoryCard) -> some View {
         let offline = AppCache.loadStory(id: story.apiId) != nil
         return NavigationLink {
-            StoryDetailScreen(seed: story)
+            StoryDestination(seed: story)
         } label: {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 0) {

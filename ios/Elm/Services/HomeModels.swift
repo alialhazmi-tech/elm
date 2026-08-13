@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct MobileHomePayload: Codable, Sendable {
     var contract: String
@@ -179,6 +180,18 @@ struct FactCheck: Codable, Hashable, Sendable {
     var truth: String
 }
 
+struct SlideSide: Codable, Hashable, Sendable {
+    var label: String
+    var value: String
+}
+
+struct SlidePoint: Codable, Hashable, Sendable, Identifiable {
+    var year: String
+    var title: String
+    var detail: String
+    var id: String { "\(year)-\(title)" }
+}
+
 struct StorySlide: Codable, Identifiable, Hashable, Sendable {
     var id: String
     var type: String
@@ -187,7 +200,55 @@ struct StorySlide: Codable, Identifiable, Hashable, Sendable {
     var stat: String?
     var statLabel: String?
     var image: String?
+    var eyebrow: String?
+    /// جهة العنصر البصري والمساحة الهادئة كما قررهما المحرر في «تحرير العلم».
+    var focal: String?
+    var textSide: String?
+    var sides: [SlideSide]?
+    var points: [SlidePoint]?
+    var items: [String]?
+    var quoteBy: String?
+
     var imageURL: URL? { ElmMedia.url(image) }
+
+    enum CodingKeys: String, CodingKey {
+        case id, type, title, body, stat, statLabel, image
+        case eyebrow, focal, textSide, sides, points, items, quoteBy
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        type = try c.decodeIfPresent(String.self, forKey: .type) ?? "text"
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+        body = try c.decodeIfPresent(String.self, forKey: .body) ?? ""
+        stat = try c.decodeIfPresent(String.self, forKey: .stat)
+        statLabel = try c.decodeIfPresent(String.self, forKey: .statLabel)
+        image = try c.decodeIfPresent(String.self, forKey: .image)
+        eyebrow = try c.decodeIfPresent(String.self, forKey: .eyebrow)
+        focal = try c.decodeIfPresent(String.self, forKey: .focal)
+        textSide = try c.decodeIfPresent(String.self, forKey: .textSide)
+        sides = try c.decodeIfPresent([SlideSide].self, forKey: .sides)
+        points = try c.decodeIfPresent([SlidePoint].self, forKey: .points)
+        items = try c.decodeIfPresent([String].self, forKey: .items)
+        quoteBy = try c.decodeIfPresent(String.self, forKey: .quoteBy)
+    }
+}
+
+/// الطابع اللوني للتقرير — أربعة ألوان يرسلها الخادم فيتلوّن بها القارئ كله.
+struct JakReport: Codable, Hashable, Sendable {
+    var palette: String
+    var base: String
+    var base2: String
+    var glow: String
+    var glow2: String
+
+    static let economy = JakReport(palette: "economy", base: "0b1a33", base2: "12284b", glow: "f5b92e", glow2: "ffd35e")
+
+    var baseColor: Color { ElmTheme.hex(base) }
+    var base2Color: Color { ElmTheme.hex(base2) }
+    var glowColor: Color { ElmTheme.hex(glow) }
+    var glow2Color: Color { ElmTheme.hex(glow2) }
 }
 
 struct StoryDetailPayload: Codable, Sendable {
@@ -197,10 +258,11 @@ struct StoryDetailPayload: Codable, Sendable {
     var related: [StoryCard]
     var nextInSeries: StoryCard?
     var slides: [StorySlide]?
+    var jak: JakReport?
     var factCheck: FactCheck?
 
     enum CodingKeys: String, CodingKey {
-        case contract, story, series, related, nextInSeries, slides
+        case contract, story, series, related, nextInSeries, slides, jak
     }
 
     init(from decoder: Decoder) throws {
@@ -211,6 +273,7 @@ struct StoryDetailPayload: Codable, Sendable {
         related = try c.decodeIfPresent([StoryCard].self, forKey: .related) ?? []
         nextInSeries = try c.decodeIfPresent(StoryCard.self, forKey: .nextInSeries)
         slides = try c.decodeIfPresent([StorySlide].self, forKey: .slides)
+        jak = try c.decodeIfPresent(JakReport.self, forKey: .jak)
         factCheck = story.factCheck
     }
 }

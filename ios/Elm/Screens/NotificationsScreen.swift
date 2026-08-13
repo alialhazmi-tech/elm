@@ -149,7 +149,7 @@ struct NotificationsScreen: View {
         .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
 
         if let story = item.story {
-            NavigationLink { StoryDetailScreen(seed: story) } label: { card }
+            NavigationLink { StoryDestination(seed: story) } label: { card }
                 .buttonStyle(.plain)
                 .accessibilityLabel("\(item.title): \(item.body)")
         } else {

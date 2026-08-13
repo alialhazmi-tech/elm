@@ -12,6 +12,7 @@ struct ElmApp: App {
     @State private var polls = PollStore()
     @State private var notifPrefs = NotificationPrefs()
     @State private var reading = ReadingStore()
+    @State private var chrome = ChromeState()
 
     init() {
         FontRegistration.registerAll()
@@ -32,6 +33,7 @@ struct ElmApp: App {
                 .environment(polls)
                 .environment(notifPrefs)
                 .environment(reading)
+                .environment(chrome)
                 .preferredColorScheme(appearance.colorScheme)
                 .task { await member.restore() }
         }

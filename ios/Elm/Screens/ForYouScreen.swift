@@ -224,7 +224,7 @@ struct ForYouScreen: View {
 
     private func leadCard(_ item: ForYouItem) -> some View {
         NavigationLink {
-            StoryDetailScreen(seed: item.story)
+            StoryDestination(seed: item.story)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 RemoteImage(url: item.story.imageURL, height: 172)
@@ -277,7 +277,7 @@ struct ForYouScreen: View {
 
     private func reasonCard(_ item: ForYouItem) -> some View {
         NavigationLink {
-            StoryDetailScreen(seed: item.story)
+            StoryDestination(seed: item.story)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 Text(kicker(item.story))

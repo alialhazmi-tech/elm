@@ -24,7 +24,7 @@ struct StoriesScreen: View {
             if let card = matchedCard, card.imageURL != nil {
                 // الصور الليلية تختفي عند 0.55 كما في نموذج الويب — والتدرّج وحده
                 // يكفي لقراءة النص، فتُرفع الشفافية حتى تبقى الصورة خلفية فعلية.
-                RemoteImage(url: card.imageURL, maxPixel: 2400)
+                FullBleedImage(url: card.imageURL)
                     .opacity(0.85)
                     .ignoresSafeArea()
                     .id(card.id)
@@ -218,7 +218,7 @@ private extension View {
     func navigationDestinationCompat(item: Binding<StoryCard?>) -> some View {
         fullScreenCover(item: item) { story in
             NavigationStack {
-                StoryDetailScreen(seed: story)
+                StoryDestination(seed: story)
             }
             .elmRTL()
         }

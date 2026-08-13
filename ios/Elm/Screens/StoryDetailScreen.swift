@@ -17,6 +17,7 @@ struct StoryDetailScreen: View {
     @State private var loading = false
     @State private var loadError: String?
     @State private var progress: Double = 0
+    @State private var reportPresented = false
 
     private var story: StoryCard { detail?.story ?? seed }
     private var series: SeriesChip? { detail?.series ?? seed.series.flatMap(Self.chip(for:)) }
@@ -59,6 +60,30 @@ struct StoryDetailScreen: View {
 
                     metaLine.padding(.top, 11)
 
+                    // الموجز والعاجل يصنعان بطاقة بلا حقل الشكل، فقد تصل المادة هنا
+                    // وهي تقرير — وهذا مدخله الغامر.
+                    if !slides.isEmpty {
+                        Button { reportPresented = true } label: {
+                            HStack(spacing: 9) {
+                                Image(systemName: "rectangle.stack.fill")
+                                    .font(.system(size: 13, weight: .semibold))
+                                Text("شاهد التقرير كقصص")
+                                    .font(ElmFonts.text(.footnote, weight: .bold))
+                                Spacer(minLength: 0)
+                                Text("\(ElmFormat.latinDigits(String(slides.count))) صفحة")
+                                    .font(ElmFonts.text(.caption2))
+                                    .opacity(0.75)
+                                Image(systemName: "arrow.left").font(.system(size: 11, weight: .bold))
+                            }
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 16)
+                    }
+
                     if let factCheck {
                         factBlock(factCheck).padding(.top, 18)
                     }
@@ -100,6 +125,9 @@ struct StoryDetailScreen: View {
         .task {
             reading.markRead()
             await load()
+        }
+        .fullScreenCover(isPresented: $reportPresented) {
+            JakReportScreen(seed: story).elmRTL()
         }
     }
 

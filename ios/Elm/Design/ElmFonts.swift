@@ -21,6 +21,25 @@ enum ElmFonts {
         scaled(name: logo, style: style, weight: .black)
     }
 
+    /// مقاس صريح بالنقاط مع بقاء Dynamic Type — لسطوح تصميمها يحدد الحجم لا نمط النص،
+    /// مثل صفحات تقارير «جاك العلم» حيث الرقم 113 نقطة والعنوان 34.
+    static func display(size: CGFloat, weight: Font.Weight = .heavy, relativeTo style: Font.TextStyle = .title) -> Font {
+        sized(name: display, size: size, weight: weight, style: style)
+    }
+
+    static func text(size: CGFloat, weight: Font.Weight = .regular, relativeTo style: Font.TextStyle = .body) -> Font {
+        sized(name: text, size: size, weight: weight, style: style)
+    }
+
+    private static func sized(name: String, size: CGFloat, weight: Font.Weight, style: Font.TextStyle) -> Font {
+        #if canImport(UIKit)
+        if let font = weightedUIFont(name: name, size: size, weight: uiWeight(weight)) {
+            return Font(UIFontMetrics(forTextStyle: uiTextStyle(style)).scaledFont(for: font))
+        }
+        #endif
+        return .custom(name, size: size, relativeTo: style)
+    }
+
     private static func scaled(name: String, style: Font.TextStyle, weight: Font.Weight) -> Font {
         #if canImport(UIKit)
         let uiStyle = uiTextStyle(style)

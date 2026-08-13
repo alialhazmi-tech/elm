@@ -168,7 +168,7 @@ struct SearchScreen: View {
             LazyVStack(spacing: 0) {
                 ForEach(filtered) { story in
                     NavigationLink {
-                        StoryDetailScreen(seed: story)
+                        StoryDestination(seed: story)
                     } label: {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(kicker(story))

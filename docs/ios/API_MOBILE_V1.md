@@ -51,7 +51,38 @@
 
 ## يُسلَّم — M2 المادة والسلاسل · M3 البحث ولك
 
-`GET /api/mobile/v1/story/:id` · `GET /api/mobile/v1/series` · `GET /api/mobile/v1/series/:slug` — انظر حزمة M2 في المستودع.
+### `GET /api/mobile/v1/story/:id`
+
+عام، قابل للكاش. `X-Content-Contract: mobile-story.v2`.
+
+الإصدار v2 ينقل بيانات صفحات «جاك العلم» كاملة، لا العنوان والنص والصورة فقط: القارئ
+الغامر في التطبيق يبني منها المقارنة والمسار الزمني والقائمة والاقتباس. بلا هذه الحقول
+تصل صفحات التقرير فارغة من مادتها.
+
+```json
+{
+  "contract": "mobile-story.v2",
+  "story": { "id": "…", "href": "/…/…/…", "title": "…", "body": "…", "factCheck": null },
+  "series": { "slug": "…", "name": "…", "color": "#…" },
+  "related": [],
+  "nextInSeries": null,
+  "jak": { "palette": "economy", "base": "#0b1a33", "base2": "#12284b", "glow": "#f5b92e", "glow2": "#ffd35e" },
+  "slides": [
+    {
+      "id": "…", "type": "comparison", "title": "…", "body": "…",
+      "stat": null, "statLabel": null, "image": null,
+      "eyebrow": "بنية السوق", "focal": "center", "textSide": "center",
+      "sides": [{ "label": "السياحة الداخلية", "value": "61%" }],
+      "points": null, "items": null, "quoteBy": null
+    }
+  ]
+}
+```
+
+`jak` و`slides` تكونان `null` لأي مادة ليست بشكل `jakalelm`. الطابع اللوني قرار على مستوى
+المادة يُقرأ من أول شريحة تحمله، والافتراضي `economy`.
+
+`GET /api/mobile/v1/series` · `GET /api/mobile/v1/series/:slug` — انظر حزمة M2 في المستودع.
 
 ### `GET /api/mobile/v1/search?q=`
 

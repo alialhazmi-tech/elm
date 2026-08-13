@@ -7,6 +7,7 @@ struct RootTabView: View {
     @Environment(MemberSessionStore.self) private var member
     @Environment(ConnectivityStore.self) private var connectivity
     @Environment(NarrationStore.self) private var narration
+    @Environment(ChromeState.self) private var chrome
 
     var body: some View {
         TabView(selection: $tab) {
@@ -22,8 +23,12 @@ struct RootTabView: View {
         // شريط التبويب النظامي مخفي: الشرطة الذهبية فوق الأيقونة النشطة
         // علامة العلم، ولا يمكن رسمها داخل الشريط النظامي.
         .overlay(alignment: .bottom) {
-            ElmTabBar(selection: $tab, namespace: tabIndicator)
+            if !chrome.immersive {
+                ElmTabBar(selection: $tab, namespace: tabIndicator)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.snappy(duration: 0.25), value: chrome.immersive)
         .overlay(alignment: .top) {
             if connectivity.isOffline {
                 OfflinePill()
@@ -32,7 +37,7 @@ struct RootTabView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            if narration.state != .idle {
+            if narration.state != .idle && !chrome.immersive {
                 NarrationBar()
                     .padding(.bottom, 78)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -88,7 +93,8 @@ private struct LaunchArgumentsModifier: ViewModifier {
                     case .saved: SavedScreen()
                     case .membership: MembershipScreen()
                     case .privacy: PrivacyScreen()
-                    case .story: DebugStoryLoader(kind: .article)
+                    case .story: DebugStoryLoader(kind: .report)
+                    case .article: DebugStoryLoader(kind: .article)
                     case .stories: DebugStoryLoader(kind: .stories)
                     }
                 }
@@ -103,7 +109,7 @@ private struct LaunchArgumentsModifier: ViewModifier {
 #if DEBUG
 /// يجلب حزمة الرئيسية ثم يفتح المادة الرئيسية أو الموجز كقصص — للقطات فقط.
 private struct DebugStoryLoader: View {
-    enum Kind { case article, stories }
+    enum Kind { case article, report, stories }
     let kind: Kind
     @State private var store = HomeStore()
 
@@ -112,6 +118,7 @@ private struct DebugStoryLoader: View {
             if let home = store.payload {
                 switch kind {
                 case .article: StoryDetailScreen(seed: home.hero)
+                case .report: StoryDestination(seed: firstReport(in: home))
                 case .stories: StoriesScreen(items: home.brief)
                 }
             } else {
@@ -119,6 +126,12 @@ private struct DebugStoryLoader: View {
             }
         }
         .task { await store.load() }
+    }
+
+    /// الرئيسية لا تضع تقريرًا في الهيرو دائمًا — نبحث عن أول مادة بشكل jakalelm.
+    private func firstReport(in home: MobileHomePayload) -> StoryCard {
+        let pool = [home.hero] + home.minis + home.mosaic + home.mostRead + home.videos
+        return pool.first { $0.format == JakFormat.slug } ?? home.hero
     }
 }
 #endif

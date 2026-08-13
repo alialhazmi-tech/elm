@@ -8,10 +8,13 @@ import {
 import { SERIES } from "@/lib/content/series";
 import { stripHtmlToText } from "@/lib/content/html";
 import { absoluteMedia, toMobileCard, type MobileSeriesChip, type MobileStoryCard } from "@/lib/mobile/home";
+import { isReportPalette, REPORT_PALETTES, type ReportPalette, type SlideData } from "@/lib/tahrir/jak";
 import { forYouForMember } from "@/lib/personalization/recommend";
 import { normalizeArabic } from "@/lib/policy/normalize";
 
-export const MOBILE_STORY_CONTRACT = "mobile-story.v1";
+// v2: الشرائح تحمل بيانات نوعها كاملة (المقارنة والمسار والقائمة والاقتباس)
+// وطابع التقرير اللوني — بلا ذلك يصل التقرير للتطبيق فارغًا من مادته.
+export const MOBILE_STORY_CONTRACT = "mobile-story.v2";
 export const MOBILE_SERIES_INDEX_CONTRACT = "mobile-series-index.v1";
 export const MOBILE_SERIES_FEED_CONTRACT = "mobile-series-feed.v1";
 export const MOBILE_SEARCH_CONTRACT = "mobile-search.v1";
@@ -25,6 +28,28 @@ export type MobileSlide = {
   stat: string | null;
   statLabel: string | null;
   image: string | null;
+  /** سطر تصنيفي قصير فوق العنوان. */
+  eyebrow: string | null;
+  /** جهة العنصر البصري والمساحة الهادئة — يوجّهان موضع النص فوق الصورة. */
+  focal: "left" | "center" | "right" | null;
+  textSide: "left" | "center" | "right" | null;
+  /** مقارنة: طرفان. */
+  sides: Array<{ label: string; value: string }> | null;
+  /** تسلسل زمني: محطات. */
+  points: Array<{ year: string; title: string; detail: string }> | null;
+  /** قائمة: عناصر. */
+  items: string[] | null;
+  /** اقتباس: النسبة. */
+  quoteBy: string | null;
+};
+
+/** طابع التقرير اللوني — أربعة ألوان تُلوّن القارئ الغامر كله. */
+export type MobileJakReport = {
+  palette: string;
+  base: string;
+  base2: string;
+  glow: string;
+  glow2: string;
 };
 
 export type MobileStoryPayload = {
@@ -37,6 +62,7 @@ export type MobileStoryPayload = {
   related: MobileStoryCard[];
   nextInSeries: MobileStoryCard | null;
   slides: MobileSlide[] | null;
+  jak: MobileJakReport | null;
 };
 
 export type MobileSeriesEntry = MobileSeriesChip & {
@@ -80,15 +106,29 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
   const slideRows = story.format === "jakalelm" ? await listPublicSlides(story.id) : [];
   const slides: MobileSlide[] | null =
     slideRows.length > 0
-      ? slideRows.map((row) => ({
-          id: row.id,
-          type: row.type,
-          title: row.title,
-          body: row.body,
-          stat: row.stat || null,
-          statLabel: row.statLabel || null,
-          image: absoluteMedia(row.image ?? undefined, origin),
-        }))
+      ? slideRows.map((row) => {
+          const data = (row.data ?? null) as SlideData | null;
+          return {
+            id: row.id,
+            type: row.type,
+            title: row.title,
+            body: row.body,
+            stat: row.stat || null,
+            statLabel: row.statLabel || null,
+            image: absoluteMedia(row.image ?? undefined, origin),
+            eyebrow: data?.eyebrow || null,
+            focal: data?.focalPoint ?? null,
+            textSide: data?.textSafeArea ?? null,
+            sides: data?.sides?.length ? data.sides : null,
+            points: data?.points?.length ? data.points : null,
+            items: data?.items?.length ? data.items : null,
+            quoteBy: data?.quoteBy || null,
+          };
+        })
+      : null;
+  const jak: MobileJakReport | null =
+    slideRows.length > 0
+      ? jakReportOf(slideRows.map((row) => (row.data ?? null) as SlideData | null))
       : null;
 
   return {
@@ -102,7 +142,16 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
     related: related.map((item) => toMobileCard(item, origin)),
     nextInSeries: nextInSeries ? toMobileCard(nextInSeries, origin) : null,
     slides,
+    jak,
   };
+}
+
+/** الطابع اللوني مسطّحًا: التطبيق لا يعرف مفاتيح REPORT_PALETTES ولا يجب أن يعرفها. */
+function jakReportOf(slideData: Array<SlideData | null>): MobileJakReport {
+  const found = slideData.find((data) => isReportPalette(data?.palette))?.palette;
+  const key: ReportPalette = isReportPalette(found) ? found : "economy";
+  const palette = REPORT_PALETTES[key];
+  return { palette: key, base: palette.base, base2: palette.base2, glow: palette.glow, glow2: palette.glow2 };
 }
 
 async function toEntry(

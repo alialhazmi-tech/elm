@@ -15,7 +15,7 @@ enum APIClient {
         #if DEBUG
         if let local = URLConstants.localAPI {
             do {
-                return try await fetchData(URLConstants.mobileHome(on: local), timeout: 0.8)
+                return try await fetchData(URLConstants.mobileHome(on: local), timeout: 3.0)
             } catch {
                 lastError = error
             }
@@ -74,7 +74,7 @@ enum APIClient {
         #if DEBUG
         if let local = URLConstants.localAPI {
             do {
-                return try await get(makeURL(local), timeout: 0.8)
+                return try await get(makeURL(local), timeout: 3.0)
             } catch {
                 lastError = error
             }
