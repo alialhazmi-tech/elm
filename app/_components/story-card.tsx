@@ -20,25 +20,26 @@ const relativeTime = (iso?: string): string | null => {
   return `منذ ${toLatinDigits(days)} أيام`;
 };
 
-/** بطاقة مصغرة — عمود البنتو الجانبي. */
-export function MiniCard({ story }: { story: Story }) {
+/** صف أفقي — قائمة «وراء الخبر» في الرئيسية: نص يمينًا وصورة مصغرة يسارًا. */
+export function ContextRowCard({ story }: { story: Story }) {
   const series = seriesOf(story);
-  const when = relativeTime(story.publishedAt);
 
   return (
-    <article className="mini" style={{ "--kc": series?.color } as React.CSSProperties} data-story-id={story.id}>
+    <article
+      className="ctx-row"
+      style={{ "--kc": series?.color } as React.CSSProperties}
+      data-story-id={story.id}
+    >
       <div>
-        <span className="kick">{series?.name ?? story.eyebrow}</span>
+        <span className="kicker">{series?.name ?? sectionName(story.section)}</span>
         <h3>
-          <Link className="stretched" href={storyHref(story)}>{story.title}</Link>
+          <Link className="story-link" href={storyHref(story)}>{story.title}</Link>
         </h3>
-        <time>
-          {when ? `${when} · ` : ""}
-          {toLatinDigits(story.readingMinutes)} دقائق
-        </time>
       </div>
       {story.image ? (
-        <Image className="m-img" src={story.image} alt="" width={236} height={172} />
+        <div className="ctx-thumb">
+          <Image src={story.image} alt="" fill sizes="112px" />
+        </div>
       ) : null}
     </article>
   );
@@ -86,19 +87,20 @@ export function MosaicCard({
   );
 }
 
-/** بطاقة فيديو — قسم مرئي وصوتي. */
+/** بطاقة وسائط — قسم مرئي وصوتي: صورة 16:9 وشارة مدة، والعنوان تحتها. */
 export function VideoCard({ story }: { story: Story }) {
   return (
-    <article className="video-card" data-story-id={story.id}>
-      <span className="play" aria-hidden="true">▶</span>
-      {story.image ? (
-        <Image className="v-img" src={story.image} alt="" width={640} height={400} />
-      ) : null}
-      <Link className="video-copy" href={storyHref(story)}>
-        <span className="kick">مرئي · فيديوجرافيك</span>
-        <h3>{story.title}</h3>
-        <time>{toLatinDigits(story.readingMinutes)} دقائق مشاهدة</time>
-      </Link>
+    <article className="media-card" data-story-id={story.id}>
+      <div className="media-thumb">
+        {story.image ? (
+          <Image src={story.image} alt="" fill sizes="(max-width: 940px) 100vw, 380px" />
+        ) : null}
+        <span className="dur">{toLatinDigits(story.readingMinutes)} دقائق</span>
+      </div>
+      <span className="kicker">مرئي · فيديوجرافيك</span>
+      <h3>
+        <Link className="story-link" href={storyHref(story)}>{story.title}</Link>
+      </h3>
     </article>
   );
 }

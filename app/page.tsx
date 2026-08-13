@@ -3,11 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { SeriesNavigator } from "@/app/_components/series-navigator";
-import { MiniCard, MosaicCard, VideoCard } from "@/app/_components/story-card";
+import { SeriesRail } from "@/app/_components/series-navigator";
+import { ContextRowCard, VideoCard } from "@/app/_components/story-card";
 import { brandDate, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
-import { storyHref } from "@/lib/content/types";
+import { storyHref, type Story } from "@/lib/content/types";
 
 export const revalidate = 120;
 
@@ -18,13 +18,28 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const BAR_HEIGHTS = [18, 24, 30, 42, 58, 79, 100];
+const trimExcerpt = (text: string, max: number): string =>
+  text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
 
 export default async function Home() {
   const home = await seedContentProvider.getHome();
   const heroSeries = seriesOf(home.hero);
-  const dataSeries = home.dataStory ? seriesOf(home.dataStory) : undefined;
+  const heroKick = heroSeries?.name ?? (home.hero.eyebrow || null);
   const today = brandDate(new Date().toISOString());
+
+  // «وراء الخبر»: مرتكز + صفوف أفقية — بدل ثلاثة أعمدة متساوية.
+  // ما ظهر في «موجز العلم» لا يتكرر في الصفوف.
+  const briefHrefs = new Set(home.brief.map((item) => item.href));
+  const contextFeatured = home.mosaic[0];
+  const featuredSeries = contextFeatured ? seriesOf(contextFeatured) : undefined;
+  const featuredKick = featuredSeries?.name ?? (contextFeatured?.eyebrow || null);
+  const contextRows: Story[] = [
+    ...home.mosaic.slice(1),
+    ...home.minis,
+    ...(home.dataStory ? [home.dataStory] : []),
+  ]
+    .filter((story) => !briefHrefs.has(storyHref(story)))
+    .slice(0, 4);
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -38,128 +53,183 @@ export default async function Home() {
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
       <SiteHeader active="/" />
+      <SeriesRail series={home.series} />
 
       <main id="main-content" className="wrap">
-        <div className="day-strip" aria-label="تاريخ اليوم">
+        <div className="day-line" aria-label="تاريخ اليوم">
           <time dateTime={new Date().toISOString().slice(0, 10)}>
             {toLatinDigits(today.hijri)}
             <span aria-hidden="true"> · </span>
             {toLatinDigits(today.gregorian)}
           </time>
-          <span className="day-strip-tag">تغطية مستمرة</span>
+          <span className="live">تغطية مستمرة</span>
         </div>
 
-        <SeriesNavigator series={home.series} />
-
-        {/* موجز العلم: مدخل تحريري سريع إلى أهم زوايا اليوم */}
-        <section className="brief" aria-labelledby="brief-title">
-          <header className="brief-head">
-            <div className="brief-brand">
-              <span className="brief-mark" aria-hidden="true">✦</span>
-              <div>
-                <span className="brief-kicker">موجز العلم</span>
-                <span className="brief-status">يُحدّث على مدار اليوم</span>
-              </div>
-            </div>
-            <div className="brief-intro">
-              <h2 id="brief-title">المشهد اليوم، بوضوح.</h2>
-              <p>ثلاث قصص مختارة تمنحك الصورة الأهم قبل التفاصيل.</p>
-            </div>
-          </header>
-
-          <ol className="brief-items">
-            {home.brief.map((item, index) => (
-              <li key={item.href} style={{ "--brief-accent": item.color } as React.CSSProperties}>
-                <Link href={item.href}>
-                  <span className="brief-item-top">
-                    <span className="brief-label">{item.label}</span>
-                    <span className="brief-no latin-number" dir="ltr" lang="en">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                  </span>
-                  <strong>{item.title}</strong>
-                  <span className="brief-action" aria-hidden="true">اقرأ القصة <b>←</b></span>
-                </Link>
-              </li>
-            ))}
-          </ol>
-
-          <footer className="brief-foot">
-            <span>مختار من مواد المحررين المنشورة</span>
-            <span>مختصر، موثوق، ومن دون ضجيج</span>
-          </footer>
-        </section>
-
-        {/* البنتو الرئيسي */}
-        <section className="bento" aria-label="أبرز المواد">
-          <article className="b-main" data-story-id={home.hero.id}>
+        {/* الصدارة: القصة القائدة + موجز العلم */}
+        <section className="lead-region" aria-label="قصة الصدارة وموجز العلم">
+          <article className="lead" data-story-id={home.hero.id}>
             {home.hero.image ? (
-              <Image
-                className="b-img"
-                src={home.hero.image}
-                alt=""
-                fill
-                sizes="(max-width: 940px) 100vw, 58vw"
-                priority
-              />
+              <figure>
+                <div className="lead-media">
+                  <Image
+                    src={home.hero.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 940px) 100vw, 760px"
+                    priority
+                  />
+                </div>
+              </figure>
             ) : null}
-            <div className="b-main-copy">
-              {heroSeries ? (
-                <Link
-                  className="series-chip"
-                  href={`/series/${heroSeries.slug}`}
-                  style={{ "--sc": heroSeries.color } as React.CSSProperties}
-                >
-                  {heroSeries.name}
-                </Link>
+            <span
+              className="kicker"
+              style={{ "--kc": heroSeries?.color } as React.CSSProperties}
+            >
+              {heroKick ?? sectionName(home.hero.section)}
+              {heroKick ? (
+                <span className="sect">· {sectionName(home.hero.section)}</span>
               ) : null}
-              <h1>
-                <Link className="stretched" href={storyHref(home.hero)}>
-                  {home.hero.title}
-                </Link>
-              </h1>
-              <div className="b-meta">
-                <span>{sectionName(home.hero.section)}</span>
-                <span>{toLatinDigits(home.hero.readingMinutes)} دقائق قراءة</span>
-              </div>
+            </span>
+            <h1>
+              <Link className="story-link" href={storyHref(home.hero)}>
+                {home.hero.title}
+              </Link>
+            </h1>
+            {home.hero.excerpt ? (
+              <p className="dek">{trimExcerpt(home.hero.excerpt, 220)}</p>
+            ) : null}
+            <div className="story-meta">
+              <span><b>قراءة {toLatinDigits(home.hero.readingMinutes)} دقائق</b></span>
+              <span>تحرير: فريق العلم</span>
             </div>
           </article>
 
-          <div className="b-side">
-            {home.minis.map((story) => (
-              <MiniCard key={story.id} story={story} />
-            ))}
-            {home.dataStory ? (
-              <article className="data-card" data-story-id={home.dataStory.id}>
-                <Link className="stretched data-card-link" href={storyHref(home.dataStory)}>
-                  <span className="kick">
-                    {dataSeries ? `${dataSeries.name} · ` : ""}أسواق واقتصاد
+          <aside className="briefing" aria-labelledby="briefing-title">
+            <header className="rubric">
+              <h2 id="briefing-title">موجز العلم</h2>
+              <span className="sub">يُحدّث على مدار اليوم</span>
+            </header>
+            <ol>
+              {home.brief.map((item) => (
+                <li key={item.href}>
+                  <span
+                    className="kicker"
+                    style={{ "--kc": item.color } as React.CSSProperties}
+                  >
+                    {item.label}
                   </span>
-                  <div className="data-num latin-number" dir="ltr" lang="en">
-                    {toLatinDigits((/(\d{2,4})\s*%/.exec(home.dataStory.title)?.[1]) ?? "—")}
-                    <small>٪</small>
-                  </div>
-                  <p>{home.dataStory.title}</p>
-                </Link>
-                <div className="bars" aria-hidden="true">
-                  {BAR_HEIGHTS.map((height, index) => (
-                    <i key={index} style={{ height: `${height}%` }} />
-                  ))}
-                </div>
-                <div className="data-foot">
-                  <span className="spark">✦</span> اللوحة مشتقة من أرقام المادة — والمصدر بنقرة
-                </div>
-              </article>
-            ) : null}
-          </div>
+                  <h3>
+                    <Link className="story-link" href={item.href}>{item.title}</Link>
+                  </h3>
+                </li>
+              ))}
+            </ol>
+            <footer className="briefing-foot">
+              مختار من مواد المحررين المنشورة
+            </footer>
+          </aside>
         </section>
+
+        {/* وراء الخبر — مرتكز + صفوف أفقية + سؤال */}
+        <div className="section-head">
+          <h2>وراء الخبر</h2>
+          <span className="sub">السياق قبل السرعة</span>
+          <Link className="more" href="/politics">الأرشيف ←</Link>
+        </div>
+        <section className="context-grid" aria-label="وراء الخبر">
+          {contextFeatured ? (
+            <article
+              className="ctx-featured"
+              style={{ "--kc": featuredSeries?.color } as React.CSSProperties}
+              data-story-id={contextFeatured.id}
+            >
+              {contextFeatured.image ? (
+                <div className="ctx-media">
+                  <Image
+                    src={contextFeatured.image}
+                    alt=""
+                    fill
+                    sizes="(max-width: 940px) 100vw, 470px"
+                  />
+                </div>
+              ) : null}
+              <span className="kicker">
+                {featuredKick ?? sectionName(contextFeatured.section)}
+                {featuredKick ? (
+                  <span className="sect">· {sectionName(contextFeatured.section)}</span>
+                ) : null}
+              </span>
+              <h3>
+                <Link className="story-link" href={storyHref(contextFeatured)}>
+                  {contextFeatured.title}
+                </Link>
+              </h3>
+              {contextFeatured.excerpt ? (
+                <p>{trimExcerpt(contextFeatured.excerpt, 140)}</p>
+              ) : null}
+              <div className="story-meta">
+                <span><b>قراءة {toLatinDigits(contextFeatured.readingMinutes)} دقائق</b></span>
+              </div>
+            </article>
+          ) : null}
+
+          {contextRows.length > 0 ? (
+            <div className="ctx-rows">
+              {contextRows.map((story) => (
+                <ContextRowCard key={story.id} story={story} />
+              ))}
+            </div>
+          ) : null}
+
+          {home.question ? (
+            <article className="why-panel">
+              <span className="kicker">{home.question.kick}</span>
+              <h3>
+                <Link className="story-link" href={home.question.href}>
+                  {home.question.title}
+                </Link>
+              </h3>
+              <p>{home.question.text}</p>
+              <Link className="answer" href={home.question.href}>
+                اقرأ الإجابة <span aria-hidden="true">←</span>
+              </Link>
+            </article>
+          ) : null}
+        </section>
+
+        {/* بالأرقام */}
+        {home.numbers.length > 0 ? (
+          <>
+            <div className="section-head">
+              <h2>بالأرقام</h2>
+              <span className="sub">كل رقم يحيل إلى مصدره</span>
+            </div>
+            <section className="figures" aria-label="بالأرقام">
+              {home.numbers.slice(0, 4).map((stat) => (
+                <div className="figure-cell" key={stat.label}>
+                  <div className="v latin-number" dir="ltr" lang="en">
+                    {toLatinDigits(stat.value)}
+                    {stat.suffix ? <small>{toLatinDigits(stat.suffix)}</small> : null}
+                  </div>
+                  <p>{stat.label}</p>
+                  <Link className="src" href={stat.href ?? "/infographics"}>
+                    المصدر <span aria-hidden="true">←</span>
+                  </Link>
+                </div>
+              ))}
+            </section>
+            <p className="figures-note">
+              الأرقام تُستخرج من المواد المنشورة وتحيل إليها مباشرة.
+            </p>
+          </>
+        ) : null}
 
         {/* الأكثر قراءة */}
         {home.mostRead.length > 0 ? (
           <section className="most-read" aria-label="الأكثر قراءة">
             <div className="section-head">
               <h2>الأكثر قراءة</h2>
-              <span className="sub">مواد أخرى تستحق الانتباه</span>
+              <span className="sub">خلال الساعات الماضية</span>
             </div>
             <ol className="most-read-list">
               {home.mostRead.map((story, index) => {
@@ -176,7 +246,7 @@ export default async function Home() {
                       >
                         {series?.name ?? sectionName(story.section)}
                       </span>
-                      <Link href={storyHref(story)}>{story.title}</Link>
+                      <Link className="story-link" href={storyHref(story)}>{story.title}</Link>
                     </div>
                   </li>
                 );
@@ -185,59 +255,15 @@ export default async function Home() {
           </section>
         ) : null}
 
-        {/* وراء الخبر — المحتوى قبل خريطة السلاسل */}
-        <div className="section-head">
-          <h2>وراء الخبر</h2>
-          <span className="sub">السياق قبل السرعة</span>
-          <Link className="more" href="/politics">الأرشيف ←</Link>
-        </div>
-        <section className="mosaic" aria-label="وراء الخبر">
-          {home.mosaic[0] ? <MosaicCard story={home.mosaic[0]} tall /> : null}
-          {home.mosaic[1] ? <MosaicCard story={home.mosaic[1]} className="m-wide" /> : null}
-          {home.question ? (
-            <article className="q-card">
-              <span className="q-mark" aria-hidden="true">؟</span>
-              <div className="m-kick"><span>لماذا</span></div>
-              <h3>
-                <Link href={home.question.href}>{home.question.title}</Link>
-              </h3>
-              <p>{home.question.text}</p>
-            </article>
-          ) : null}
-        </section>
-
-        {/* بالأرقام */}
-        {home.numbers.length > 0 ? (
-          <section className="numbers" aria-label="بالأرقام">
-            <div className="section-head">
-              <h2>بالأرقام</h2>
-              <span className="sub">أرقام من المواد — وكل رقم يحيل لمصدره</span>
-            </div>
-            <div className="num-grid">
-              {home.numbers.map((stat) => (
-                <Link key={stat.label} className="num-card" href={stat.href ?? "/infographics"}>
-                  <div className="v latin-number" dir="ltr" lang="en">
-                    {toLatinDigits(stat.value)}
-                    {stat.suffix ? <small>{toLatinDigits(stat.suffix)}</small> : null}
-                  </div>
-                  <p>{stat.label}</p>
-                </Link>
-              ))}
-            </div>
-            <div className="num-foot">
-              <span className="spark">✦</span> الأرقام تُستخرج من عناوين المواد المنشورة وتحيل إليها
-            </div>
-          </section>
-        ) : null}
-
         {/* اسأل العلم */}
-        <section className="ai-surface ask-block" aria-label="اسأل العلم">
-          <div className="section-head" style={{ margin: "0 0 16px" }}>
-            <h2>اسأل العلم — البحث الذي يجيب</h2>
-            <span className="sub">يبحث في أرشيف محررينا — ويتجاهل التشكيل واختلاف الهمزات</span>
+        <section className="ask-band" aria-labelledby="ask-title">
+          <div>
+            <h2 id="ask-title">اسأل العلم</h2>
+            <p className="ask-sub">
+              بحث يفهم سؤالك ويجيب من أرشيف محررينا — ويتجاهل التشكيل واختلاف الهمزات.
+            </p>
           </div>
-          <form className="ask-form" action="/search" role="search">
-            <span className="spark" aria-hidden="true">✦</span>
+          <form className="ask-band-form" action="/search" role="search">
             <input
               type="search"
               name="q"
@@ -247,17 +273,16 @@ export default async function Home() {
             />
             <button type="submit">ابحث</button>
           </form>
-          <div className="ask-foot">
-            <span>الإجابات الذكية بالإحالة إلى المصدر تصل مع مرحلة خدمات الذكاء.</span>
-            <div className="sugg">
-              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
-              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
-              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-            </div>
-          </div>
+          <p className="ask-suggest">
+            جرّب: <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
+            <span aria-hidden="true"> · </span>
+            <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
+            <span aria-hidden="true"> · </span>
+            <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
+          </p>
         </section>
 
-        {/* مرئي */}
+        {/* مرئي وصوتي */}
         {home.videos.length > 0 ? (
           <>
             <div className="section-head">
@@ -265,7 +290,7 @@ export default async function Home() {
               <span className="sub">المعرفة بأكثر من شكل</span>
               <Link className="more" href="/videos">كل الوسائط ←</Link>
             </div>
-            <section className="media-row" aria-label="مرئي وصوتي">
+            <section className="media-grid" aria-label="مرئي وصوتي">
               {home.videos.map((story) => (
                 <VideoCard key={story.id} story={story} />
               ))}
