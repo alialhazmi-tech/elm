@@ -1,9 +1,12 @@
 import SwiftUI
+import CoreText
 #if canImport(UIKit)
 import UIKit
 #endif
 
 /// Alexandria للعناوين، Readex Pro للمتن، Noto Kufi للوجوتايب — مع Dynamic Type.
+/// الملفات المضمّنة خطوط متغيرة؛ الوزن يُضبط عبر محور `wght` لا عبر Trait على Regular،
+/// لأن Trait يُبقي الوجه Regular في العربية فيظهر النص رفيعًا رغم طلب Bold/Heavy.
 enum ElmFonts {
     static let display = "Alexandria-Regular"
     static let text = "ReadexPro-Regular"
@@ -31,6 +34,12 @@ enum ElmFonts {
         sized(name: text, size: size, weight: weight, style: style)
     }
 
+    #if canImport(UIKit)
+    static func uiFont(named name: String, size: CGFloat, weight: Font.Weight) -> UIFont? {
+        weightedUIFont(name: name, size: size, weight: uiWeight(weight))
+    }
+    #endif
+
     private static func sized(name: String, size: CGFloat, weight: Font.Weight, style: Font.TextStyle) -> Font {
         #if canImport(UIKit)
         if let font = weightedUIFont(name: name, size: size, weight: uiWeight(weight)) {
@@ -55,12 +64,50 @@ enum ElmFonts {
     }
 
     #if canImport(UIKit)
+    /// محور الوزن في ملفات Google المتغيرة — 'wght' كعدد كبير-endian.
+    private static let wghtAxisTag: Int = 0x77676874
+    private static let variationAttribute = UIFontDescriptor.AttributeName(
+        rawValue: kCTFontVariationAttribute as String
+    )
+
     private static func weightedUIFont(name: String, size: CGFloat, weight: UIFont.Weight) -> UIFont? {
         guard let base = UIFont(name: name, size: size) else { return nil }
-        let descriptor = base.fontDescriptor.addingAttributes([
-            .traits: [UIFontDescriptor.TraitKey.weight: weight],
+        let wght = axisWeight(weight, fontName: name, base: base)
+        // ابنِ واصفًا من العائلة لا من PostScript Regular؛ إضافة Trait على Regular
+        // لا تحرّك محور wght في خطوط Google العربية المتغيرة.
+        let descriptor = UIFontDescriptor(fontAttributes: [
+            .family: base.familyName,
+            .size: size,
+            variationAttribute: [NSNumber(value: wghtAxisTag): NSNumber(value: Double(wght))],
         ])
         return UIFont(descriptor: descriptor, size: size)
+    }
+
+    private static func axisWeight(_ weight: UIFont.Weight, fontName: String, base: UIFont) -> CGFloat {
+        var requested: CGFloat
+        switch weight {
+        case .ultraLight: requested = 200
+        case .thin: requested = 100
+        case .light: requested = 300
+        case .regular: requested = 400
+        case .medium: requested = 500
+        case .semibold: requested = 600
+        case .bold: requested = 700
+        case .heavy: requested = 800
+        case .black: requested = 900
+        default: requested = 400 + weight.rawValue * 500
+        }
+
+        let ctFont = base as CTFont
+        guard let axes = CTFontCopyVariationAxes(ctFont) as? [[String: Any]] else {
+            return fontName.contains("Readex") ? min(requested, 700) : requested
+        }
+        let axis = axes.first { item in
+            (item[kCTFontVariationAxisIdentifierKey as String] as? NSNumber)?.intValue == wghtAxisTag
+        } ?? axes.first
+        let minW = (axis?[kCTFontVariationAxisMinimumValueKey as String] as? NSNumber)?.doubleValue ?? 100
+        let maxW = (axis?[kCTFontVariationAxisMaximumValueKey as String] as? NSNumber)?.doubleValue ?? 900
+        return CGFloat(min(max(Double(requested), minW), maxW))
     }
 
     private static func uiTextStyle(_ style: Font.TextStyle) -> UIFont.TextStyle {

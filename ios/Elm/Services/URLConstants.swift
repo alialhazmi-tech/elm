@@ -44,9 +44,20 @@ enum ElmMedia {
     }
 
     private static func parse(_ raw: String) -> URL? {
-        if let url = URL(string: raw) { return url }
+        if let url = URL(string: raw) { return encoded(url) }
         var allowed = CharacterSet.urlFragmentAllowed
         allowed.insert(charactersIn: "%")
-        return raw.addingPercentEncoding(withAllowedCharacters: allowed).flatMap(URL.init(string:))
+        return raw.addingPercentEncoding(withAllowedCharacters: allowed)
+            .flatMap(URL.init(string:))
+            .map(encoded)
+    }
+
+    /// مسارات ووردبريس العربية تُكسر إن بقيت بلا ترميز في URLSession.
+    private static func encoded(_ url: URL) -> URL {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
+        let allowed = CharacterSet.urlPathAllowed
+        components.percentEncodedPath = components.path.addingPercentEncoding(withAllowedCharacters: allowed)
+            ?? components.percentEncodedPath
+        return components.url ?? url
     }
 }

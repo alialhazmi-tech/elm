@@ -17,11 +17,13 @@ final class ForYouStore {
             items = payload.items
             signedIn = true
             guest = false
+            ImageStore.shared.prefetch(items.compactMap(\.story.imageURL))
         } catch {
             signedIn = false
             guest = true
             await hydrateHomeIfNeeded()
             items = Self.guestFeed(interests: interests, personalization: personalization)
+            ImageStore.shared.prefetch(items.compactMap(\.story.imageURL))
         }
     }
 

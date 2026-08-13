@@ -13,6 +13,7 @@ final class HomeStore {
         if payload == nil, let cached = HomeCache.load() {
             payload = try? JSONDecoder().decode(MobileHomePayload.self, from: cached)
             fromCache = payload != nil
+            if let payload { ImageStore.shared.prefetch(payload.prefetchURLs) }
         }
         await refresh()
     }
@@ -25,6 +26,7 @@ final class HomeStore {
             payload = fresh
             fromCache = false
             HomeCache.save(data)
+            ImageStore.shared.prefetch(fresh.prefetchURLs)
         } catch {
             if payload == nil {
                 errorMessage = "تعذر تحميل الرئيسية. تحقق من الاتصال ثم أعد المحاولة."

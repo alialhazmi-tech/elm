@@ -61,7 +61,10 @@ struct HomeScreen: View {
                 .padding(.top, 12)
 
             if !home.brief.isEmpty {
-                BriefBlock(items: home.brief) { storiesPresented = true }
+                BriefBlock(
+                    items: home.brief,
+                    related: [home.hero] + home.minis + [home.dataStory].compactMap { $0 }
+                ) { storiesPresented = true }
                     .padding(.horizontal, 18)
                     .padding(.top, 16)
             }

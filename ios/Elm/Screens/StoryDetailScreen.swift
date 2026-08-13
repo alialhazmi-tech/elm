@@ -339,6 +339,10 @@ struct StoryDetailScreen: View {
             let fresh = try await APIClient.fetchStory(id: seed.apiId)
             detail = fresh
             AppCache.saveStory(fresh)
+            var urls = [fresh.story.imageURL].compactMap { $0 }
+            urls.append(contentsOf: (fresh.slides ?? []).compactMap(\.imageURL))
+            urls.append(contentsOf: fresh.related.compactMap(\.imageURL))
+            ImageStore.shared.prefetch(urls)
         } catch {
             if let cached = AppCache.loadStory(id: seed.apiId) {
                 detail = cached

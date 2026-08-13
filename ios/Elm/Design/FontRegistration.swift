@@ -21,7 +21,7 @@ enum FontRegistration {
             UITabBarItem.appearance().setTitleTextAttributes([.font: tabFont], for: .selected)
         }
         if let navFont = weighted(name: ElmFonts.display, size: 17, weight: .bold),
-           let largeFont = weighted(name: ElmFonts.display, size: 30, weight: .heavy) {
+           let largeFont = weighted(name: ElmFonts.display, size: 30, weight: .black) {
             UINavigationBar.appearance().titleTextAttributes = [.font: navFont]
             UINavigationBar.appearance().largeTitleTextAttributes = [.font: largeFont]
         }
@@ -36,12 +36,8 @@ enum FontRegistration {
     }
 
     #if canImport(UIKit)
-    private static func weighted(name: String, size: CGFloat, weight: UIFont.Weight) -> UIFont? {
-        guard let base = UIFont(name: name, size: size) else { return nil }
-        let descriptor = base.fontDescriptor.addingAttributes([
-            .traits: [UIFontDescriptor.TraitKey.weight: weight],
-        ])
-        return UIFont(descriptor: descriptor, size: size)
+    private static func weighted(name: String, size: CGFloat, weight: Font.Weight) -> UIFont? {
+        ElmFonts.uiFont(named: name, size: size, weight: weight)
     }
     #endif
 

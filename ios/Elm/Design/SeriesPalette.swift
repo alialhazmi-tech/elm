@@ -23,4 +23,8 @@ enum SeriesPalette {
     static func color(for slug: String) -> Color {
         active.first { $0.id == slug }?.color ?? ElmTheme.accent
     }
+
+    static func matching(label: String) -> SeriesSwatch? {
+        active.first { $0.name == label }
+    }
 }

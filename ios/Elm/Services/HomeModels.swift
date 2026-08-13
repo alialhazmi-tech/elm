@@ -38,6 +38,12 @@ struct MobileHomePayload: Codable, Sendable {
         series = try c.decodeIfPresent([SeriesChip].self, forKey: .series) ?? []
         mostRead = try c.decodeIfPresent([StoryCard].self, forKey: .mostRead) ?? []
     }
+
+    var prefetchURLs: [URL] {
+        var cards: [StoryCard] = [hero] + minis + mosaic + videos + mostRead
+        if let dataStory { cards.append(dataStory) }
+        return cards.compactMap(\.imageURL)
+    }
 }
 
 struct BreakingItem: Codable, Sendable {

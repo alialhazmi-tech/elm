@@ -114,6 +114,8 @@ struct SeriesBelt: View {
 /// بطاقة الموجز: ترويسة متدرجة، ثم ثلاث قصص مرقّمة بلون سلسلتها، ثم شريط منشأ.
 struct BriefBlock: View {
     let items: [BriefItem]
+    /// مواد الرئيسية المرتبطة — لاستعادة لون/اسم السلسلة إن سقطت من عقد الموجز.
+    var related: [StoryCard] = []
     var onStories: () -> Void
 
     var body: some View {
@@ -145,10 +147,10 @@ struct BriefBlock: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("موجز العلم")
-                        .font(ElmFonts.display(.subheadline, weight: .heavy))
+                        .font(ElmFonts.display(.subheadline, weight: .black))
                         .foregroundStyle(ElmTheme.ink)
                     Text("يُحدّث على مدار اليوم")
-                        .font(ElmFonts.text(.caption2))
+                        .font(ElmFonts.text(.caption2, weight: .medium))
                         .foregroundStyle(ElmTheme.ink3)
                 }
                 Spacer(minLength: 6)
@@ -170,11 +172,12 @@ struct BriefBlock: View {
             }
 
             Text("المشهد اليوم، بوضوح.")
-                .font(ElmFonts.display(.title2, weight: .heavy))
+                .font(ElmFonts.display(size: 26, weight: .black, relativeTo: .title2))
                 .foregroundStyle(ElmTheme.ink)
+                .tracking(-0.6)
                 .padding(.top, 14)
             Text("ثلاث قصص مختارة تمنحك الصورة الأهم قبل التفاصيل.")
-                .font(ElmFonts.text(.footnote))
+                .font(ElmFonts.text(.footnote, weight: .medium))
                 .foregroundStyle(ElmTheme.ink2)
                 .padding(.top, 6)
         }
@@ -192,55 +195,82 @@ struct BriefBlock: View {
     }
 
     private func briefRow(_ item: BriefItem, number: Int) -> some View {
-        let color = ElmTheme.hex(item.color)
+        let color = accent(for: item)
+        let label = seriesLabel(for: item)
         return NavigationLink {
             StoryDestination(seed: StoryCard(
                 id: item.href, slug: item.href, section: "news",
-                title: item.title, excerpt: "", eyebrow: item.label, href: item.href
+                title: item.title, excerpt: "", eyebrow: label, href: item.href
             ))
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 Rectangle()
                     .fill(color)
                     .frame(height: 2)
-                    .padding(.bottom, 13)
+                    .padding(.horizontal, 2)
                     .accessibilityHidden(true)
 
-                HStack(spacing: 10) {
-                    Text(item.label)
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(label)
                         .font(ElmFonts.text(.caption2, weight: .bold))
                         .foregroundStyle(color)
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 8)
                     Text(ElmFormat.twoDigit(number))
                         .font(ElmFonts.text(.caption2, weight: .bold))
                         .foregroundStyle(ElmTheme.ink3)
                         .tracking(1)
                         .elmLatin()
                 }
+                .padding(.top, 12)
 
                 Text(item.title)
-                    .font(ElmFonts.display(.subheadline, weight: .bold))
+                    .font(ElmFonts.display(.headline, weight: .heavy))
                     .foregroundStyle(ElmTheme.ink)
                     .multilineTextAlignment(.leading)
+                    .lineSpacing(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, 9)
+                    .padding(.top, 8)
 
-                HStack(spacing: 7) {
+                HStack(spacing: 6) {
                     Text("اقرأ القصة")
                         .font(ElmFonts.text(.caption2, weight: .semibold))
-                        .foregroundStyle(ElmTheme.ink3)
+                        .foregroundStyle(ElmTheme.ink2)
                     Image(systemName: "arrow.left")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(color)
                 }
                 .padding(.top, 10)
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 16)
             .padding(.bottom, 14)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(item.label)، \(item.title)")
+        .accessibilityLabel("\(label)، \(item.title)")
+    }
+
+    private func relatedStory(for item: BriefItem) -> StoryCard? {
+        related.first { card in
+            card.path == item.href || card.href == item.href
+        }
+    }
+
+    private func seriesLabel(for item: BriefItem) -> String {
+        if let slug = relatedStory(for: item)?.series,
+           let name = SeriesPalette.active.first(where: { $0.id == slug })?.name {
+            return name
+        }
+        return item.label
+    }
+
+    private func accent(for item: BriefItem) -> Color {
+        if let slug = relatedStory(for: item)?.series {
+            return SeriesPalette.color(for: slug)
+        }
+        if let swatch = SeriesPalette.matching(label: item.label) {
+            return swatch.color
+        }
+        return ElmTheme.hex(item.color)
     }
 
     private var footer: some View {

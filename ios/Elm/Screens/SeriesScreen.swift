@@ -249,6 +249,7 @@ struct SeriesFeedScreen: View {
         defer { loading = false }
         do {
             feed = try await APIClient.fetchSeriesFeed(slug: chip.slug)
+            ImageStore.shared.prefetch((feed?.stories ?? []).compactMap(\.imageURL))
         } catch {
             errorMessage = "تعذر تحميل تغذية السلسلة."
         }
