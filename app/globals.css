@@ -228,8 +228,10 @@ img { max-width: 100%; display: block; }
   display: flex; flex-direction: column; gap: 13px;
 }
 .lead figure { margin: 0; position: relative; }
+/* نسبة مسطّحة بلا max-height: حد الارتفاع مع aspect-ratio ينتقل إلى حد عرض
+   فيضيق الإطار عن عمود العنوان — النسبة وحدها تضبط الارتفاع بكامل العرض. */
 .lead .lead-media {
-  display: block; position: relative; aspect-ratio: 21/10; max-height: 290px; overflow: hidden;
+  display: block; position: relative; aspect-ratio: 21/8; overflow: hidden;
   border-radius: var(--r-ui); background: var(--surface-2); border: 1px solid var(--line);
 }
 .lead .lead-media img { object-fit: cover; }
@@ -629,7 +631,8 @@ a.story-link:hover { color: var(--link); }
   border-radius: 999px; padding: 3.5px 11px; margin-top: 2px;
 }
 /* ============ بالأرقام — أعمدة مسطّرة ============ */
-.figures { display: grid; grid-template-columns: repeat(4, 1fr); }
+/* auto-fit: الأعمدة بعدد الأرقام الفعلي — لا عمود رابع فارغ حين تكون ثلاثة. */
+.figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .figure-cell { padding: 6px 0 4px; padding-inline-end: 26px; min-width: 0; }
 .figure-cell + .figure-cell { border-inline-start: 1px solid var(--line); padding-inline-start: 26px; padding-inline-end: 26px; }
 .figure-cell:last-child { padding-inline-end: 0; }
@@ -933,6 +936,7 @@ a.story-link:hover { color: var(--link); }
 
   .lead-region { margin-top: 10px; }
   .lead { padding: 16px 0 20px; gap: 12px; }
+  .lead .lead-media { aspect-ratio: 16/9; }
   .lead h1 { font-size: 21px; line-height: 1.5; }
   .lead .dek { font-size: 13.5px; }
   .story-meta { font-size: 10.5px; gap: 12px; }

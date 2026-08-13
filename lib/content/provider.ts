@@ -216,10 +216,18 @@ function extractNumbers(from: Story[]): NumberStat[] {
       if (found.some((stat) => stat.href === storyHref(story))) break;
 
       const isPercent = match[0].includes("%");
+      // الرقم الكبير فوق التسمية — «بنسبة 93%» داخلها تكرار يُحذف.
+      const escaped = match[1].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const label = isPercent
+        ? story.title
+            .replace(new RegExp(`\\s*بنسبة\\s*[%٪]?${escaped}\\s*[%٪]?`), "")
+            .replace(/\s{2,}/g, " ")
+            .trim()
+        : story.title;
       found.push({
         value: match[1],
         suffix: isPercent ? "%" : undefined,
-        label: story.title,
+        label: label || story.title,
         href: storyHref(story),
       });
       break;

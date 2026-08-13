@@ -13,17 +13,25 @@ export function toLatinDigits(input: string | number): string {
     .replace(/٪/g, "%");
 }
 
+// timeZone صريح: الخادم يعمل بـUTC فبعد منتصف الليل بتوقيت الرياض يعرض تاريخ الأمس بدونه.
 const HIJRI = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", {
   day: "numeric",
   month: "long",
   year: "numeric",
+  timeZone: "Asia/Riyadh",
 });
 
 const GREGORIAN = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
   day: "numeric",
   month: "long",
   year: "numeric",
+  timeZone: "Asia/Riyadh",
 });
+
+/** تاريخ اليوم بتوقيت الرياض بصيغة YYYY-MM-DD — لسمات dateTime الآلية. */
+export function riyadhDateISO(date = new Date()): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(date);
+}
 
 /** «هجري ثم ميلادي» بأسماء أشهر عربية وأرقام لاتينية. */
 export function brandDate(iso: string): { hijri: string; gregorian: string } {

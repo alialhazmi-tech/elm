@@ -6,7 +6,7 @@ import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { SeriesRail } from "@/app/_components/series-navigator";
 import { LeadMedia } from "@/app/_components/lead-media";
 import { ContextRowCard, VideoCard } from "@/app/_components/story-card";
-import { brandDate, formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
+import { brandDate, formatReadingMinutes, relativeTimeAr, riyadhDateISO, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
 
@@ -50,7 +50,7 @@ export default async function Home() {
 
       <main id="main-content" className="wrap">
         <div className="day-line" aria-label="تاريخ اليوم">
-          <time dateTime={new Date().toISOString().slice(0, 10)}>
+          <time dateTime={riyadhDateISO()}>
             {toLatinDigits(today.hijri)}
             <span aria-hidden="true"> · </span>
             {toLatinDigits(today.gregorian)}
