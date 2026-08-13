@@ -47,25 +47,30 @@ struct SeriesChipLabel: View {
 
 struct DayStrip: View {
     var body: some View {
-        HStack {
-            Text(ElmFormat.todayStrip())
-                .font(ElmFonts.text(.caption, weight: .medium))
-                .foregroundStyle(ElmTheme.ink2)
-                .environment(\.layoutDirection, .leftToRight)
-            Spacer()
-            Text("تغطية مستمرة")
-                .font(ElmFonts.text(.caption2, weight: .bold))
-                .foregroundStyle(ElmTheme.navy)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(ElmTheme.surface2)
-                .overlay(
-                    Capsule().stroke(ElmTheme.line, lineWidth: 1)
-                )
-                .clipShape(Capsule())
+        ViewThatFits(in: .horizontal) {
+            HStack { date; Spacer(); status }
+            VStack(alignment: .leading, spacing: 7) { date; status }
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("تاريخ اليوم، تغطية مستمرة")
+    }
+
+    private var date: some View {
+        Text(ElmFormat.todayStrip())
+            .font(ElmFonts.text(.caption, weight: .medium))
+            .foregroundStyle(ElmTheme.ink2)
+            .environment(\.layoutDirection, .leftToRight)
+    }
+
+    private var status: some View {
+        Text("تغطية مستمرة")
+            .font(ElmFonts.text(.caption2, weight: .bold))
+            .foregroundStyle(ElmTheme.navy)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(ElmTheme.surface2)
+            .overlay(Capsule().stroke(ElmTheme.line, lineWidth: 1))
+            .clipShape(Capsule())
     }
 }
 
@@ -109,7 +114,9 @@ struct SeriesLensesRow: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(Array(series.enumerated()), id: \.element.id) { index, item in
-                        NavigationLink(value: item) {
+                        NavigationLink {
+                            SeriesFeedScreen(chip: item)
+                        } label: {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(ElmFormat.twoDigit(index + 1))
                                     .font(ElmFonts.text(.caption2, weight: .bold))
@@ -163,7 +170,7 @@ struct BriefBlock: View {
                 Text("✦")
                     .font(.title3)
                     .foregroundStyle(ElmTheme.gold)
-                    .frame(width: 42, height: 42)
+                    .frame(width: 38, height: 38)
                     .background(ElmTheme.navyDeep)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .accessibilityHidden(true)
@@ -176,16 +183,10 @@ struct BriefBlock: View {
                         .foregroundStyle(ElmTheme.ink2)
                 }
             }
-            .padding(16)
-
-            Text("المشهد اليوم، بوضوح.")
-                .font(ElmFonts.display(.title2, weight: .heavy))
-                .foregroundStyle(ElmTheme.ink)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 12)
+            .padding(14)
 
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                NavigationLink(value: StoryCard(
+                let story = StoryCard(
                     id: item.href,
                     slug: item.href,
                     section: "news",
@@ -193,7 +194,10 @@ struct BriefBlock: View {
                     excerpt: "",
                     eyebrow: item.label,
                     href: item.href
-                )) {
+                )
+                NavigationLink {
+                    StoryDetailScreen(seed: story)
+                } label: {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text(item.label)
@@ -239,25 +243,33 @@ struct BriefBlock: View {
 
 struct HeroCard: View {
     let story: StoryCard
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var cardHeight: CGFloat { dynamicTypeSize.isAccessibilitySize ? 320 : 242 }
 
     var body: some View {
-        NavigationLink(value: story) {
+        NavigationLink {
+            StoryDetailScreen(seed: story)
+        } label: {
             ZStack(alignment: .bottomLeading) {
-                RemoteImage(url: story.imageURL, minHeight: 320)
+                RemoteImage(url: story.imageURL, height: cardHeight)
                 LinearGradient(
                     colors: [.clear, ElmTheme.navyDeep.opacity(0.92)],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .trailing, spacing: 10) {
                     if let series = story.series {
                         SeriesChipLabel(name: SeriesPalette.active.first { $0.id == series }?.name ?? series,
                                         color: SeriesPalette.color(for: series))
                     }
                     Text(story.title)
-                        .font(ElmFonts.display(.title2, weight: .heavy))
+                        .font(ElmFonts.display(.title3, weight: .heavy))
                         .foregroundStyle(.white)
-                        .multilineTextAlignment(.leading)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(3)
+                        .layoutPriority(1)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
                     HStack(spacing: 12) {
                         Text(ElmFormat.sectionName(story.section))
                         Text(ElmFormat.readingLabel(story.readingMinutes))
@@ -265,12 +277,15 @@ struct HeroCard: View {
                     .font(ElmFonts.text(.caption, weight: .medium))
                     .foregroundStyle(.white.opacity(0.78))
                 }
-                .padding(20)
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
+            .frame(maxWidth: .infinity, minHeight: cardHeight, maxHeight: cardHeight)
             .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(story.title)، \(ElmFormat.sectionName(story.section))")
+        .contentShape(RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous))
     }
 }
 
@@ -278,7 +293,9 @@ struct MiniStoryRow: View {
     let story: StoryCard
 
     var body: some View {
-        NavigationLink(value: story) {
+        NavigationLink {
+            StoryDetailScreen(seed: story)
+        } label: {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(kick)
@@ -308,6 +325,7 @@ struct MiniStoryRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(story.title)
+        .contentShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
     }
 
     private var kick: String {
@@ -327,7 +345,9 @@ struct DataStoryCard: View {
     let story: StoryCard
 
     var body: some View {
-        NavigationLink(value: story) {
+        NavigationLink {
+            StoryDetailScreen(seed: story)
+        } label: {
             VStack(alignment: .leading, spacing: 8) {
                 Text(kick)
                     .font(ElmFonts.text(.caption, weight: .bold))
@@ -377,6 +397,7 @@ struct DataStoryCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(story.title)
+        .contentShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
     }
 
     private var kick: String {
@@ -391,9 +412,11 @@ struct MosaicStoryCard: View {
     var tall = false
 
     var body: some View {
-        NavigationLink(value: story) {
+        NavigationLink {
+            StoryDetailScreen(seed: story)
+        } label: {
             VStack(alignment: .leading, spacing: 0) {
-                RemoteImage(url: story.imageURL, height: tall ? 210 : 160)
+                RemoteImage(url: story.imageURL, height: tall ? 176 : 120)
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text(kick)
@@ -417,7 +440,7 @@ struct MosaicStoryCard: View {
                             .lineLimit(3)
                     }
                 }
-                .padding(14)
+                .padding(12)
             }
             .background(ElmTheme.surface)
             .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
@@ -442,7 +465,9 @@ struct QuestionCard: View {
     let item: QuestionItem
 
     var body: some View {
-        NavigationLink(value: item.asCard) {
+        NavigationLink {
+            StoryDetailScreen(seed: item.asCard)
+        } label: {
             VStack(alignment: .leading, spacing: 10) {
                 Text("؟")
                     .font(ElmFonts.display(.largeTitle, weight: .heavy))
@@ -480,7 +505,9 @@ struct MostReadList: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHead(title: "الأكثر قراءة", subtitle: "مواد أخرى تستحق الانتباه")
             ForEach(Array(stories.enumerated()), id: \.element.id) { index, story in
-                NavigationLink(value: story) {
+                NavigationLink {
+                    StoryDetailScreen(seed: story)
+                } label: {
                     HStack(alignment: .top, spacing: 12) {
                         Text(ElmFormat.twoDigit(index + 1))
                             .font(ElmFonts.display(.title3, weight: .heavy))
@@ -559,9 +586,11 @@ struct VideoStoryCard: View {
     let story: StoryCard
 
     var body: some View {
-        NavigationLink(value: story) {
+        NavigationLink {
+            StoryDetailScreen(seed: story)
+        } label: {
             ZStack(alignment: .bottomLeading) {
-                RemoteImage(url: story.imageURL, height: 200)
+                RemoteImage(url: story.imageURL, height: 180)
                 LinearGradient(colors: [.clear, ElmTheme.navyDeep.opacity(0.88)], startPoint: .center, endPoint: .bottom)
                 Image(systemName: "play.fill")
                     .font(.title3)
@@ -578,11 +607,12 @@ struct VideoStoryCard: View {
                     Text(story.title)
                         .font(ElmFonts.display(.headline, weight: .bold))
                         .foregroundStyle(.white)
-                    Text("\(ElmFormat.latinDigits(String(story.readingMinutes))) دقائق مشاهدة")
+                    Text(ElmFormat.watchingLabel(story.readingMinutes))
                         .font(ElmFonts.text(.caption2))
                         .foregroundStyle(.white.opacity(0.75))
                 }
                 .padding(14)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
         }

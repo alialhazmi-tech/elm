@@ -38,44 +38,22 @@ final class SeriesIndexStore {
 /// 1b — دليل السلاسل الثماني.
 struct SeriesScreen: View {
     @State private var store = SeriesIndexStore()
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("سلاسل العلم")
                         .font(ElmFonts.text(.caption, weight: .bold))
                         .foregroundStyle(ElmTheme.ink2)
-                    Text("ثماني طرق لرؤية الخبر كاملًا.")
-                        .font(ElmFonts.display(.title, weight: .heavy))
+                    Text("اختر زاوية الفهم")
+                        .font(ElmFonts.display(.title2, weight: .heavy))
                         .foregroundStyle(ElmTheme.ink)
                     Text("لا نكتفي بتصنيف ما يحدث. نختار لكل قصة الطريقة الأنسب لفهمها.")
                         .font(ElmFonts.text(.body))
                         .foregroundStyle(ElmTheme.ink2)
                 }
-
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(ElmFormat.latinDigits(String(max(store.active.count, 8))))
-                        .font(ElmFonts.display(.largeTitle, weight: .heavy))
-                        .foregroundStyle(ElmTheme.navy)
-                        .environment(\.layoutDirection, .leftToRight)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("سلاسل معرفية")
-                            .font(ElmFonts.display(.headline, weight: .bold))
-                            .foregroundStyle(ElmTheme.ink)
-                        Text("هوية واحدة، زوايا متعددة")
-                            .font(ElmFonts.text(.caption))
-                            .foregroundStyle(ElmTheme.ink2)
-                    }
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(ElmTheme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous)
-                        .stroke(ElmTheme.line, lineWidth: 1)
-                )
 
                 if let error = store.errorMessage {
                     Text(error)
@@ -83,8 +61,10 @@ struct SeriesScreen: View {
                         .foregroundStyle(ElmTheme.ink2)
                 }
 
-                ForEach(Array(store.active.enumerated()), id: \.element.id) { index, entry in
-                    seriesCard(entry, index: index)
+                LazyVGrid(columns: seriesColumns, spacing: 10) {
+                    ForEach(Array(store.active.enumerated()), id: \.element.id) { index, entry in
+                        seriesCard(entry, index: index)
+                    }
                 }
 
                 if !store.archived.isEmpty {
@@ -98,7 +78,9 @@ struct SeriesScreen: View {
                     }
                     .padding(.top, 8)
                     ForEach(store.archived) { entry in
-                        NavigationLink(value: entry.asChip) {
+                        NavigationLink {
+                            SeriesFeedScreen(chip: entry.asChip)
+                        } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(entry.name)
@@ -118,7 +100,7 @@ struct SeriesScreen: View {
                     }
                 }
             }
-            .padding(16)
+            .padding(14)
         }
         .background(ElmTheme.bg.ignoresSafeArea())
         .navigationTitle("السلاسل")
@@ -132,43 +114,41 @@ struct SeriesScreen: View {
         }
     }
 
+    private var seriesColumns: [GridItem] {
+        [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 260 : 155), spacing: 10)]
+    }
+
     private func seriesCard(_ entry: SeriesEntry, index: Int) -> some View {
-        NavigationLink(value: entry.asChip) {
-            VStack(alignment: .leading, spacing: 10) {
+        NavigationLink {
+            SeriesFeedScreen(chip: entry.asChip)
+        } label: {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(ElmFormat.twoDigit(index + 1))
                         .font(ElmFonts.text(.caption, weight: .bold))
                         .foregroundStyle(ElmTheme.ink2)
                         .environment(\.layoutDirection, .leftToRight)
                     Spacer()
-                    Text("\(ElmFormat.latinDigits(String(entry.count))) مادة")
-                        .font(ElmFonts.text(.caption, weight: .bold))
-                        .foregroundStyle(ElmTheme.hex(entry.color))
+                    Circle().fill(ElmTheme.hex(entry.color)).frame(width: 9, height: 9)
                 }
                 Text(entry.name)
-                    .font(ElmFonts.display(.title2, weight: .heavy))
+                    .font(ElmFonts.display(.title3, weight: .heavy))
                     .foregroundStyle(ElmTheme.ink)
                 Text(entry.description)
-                    .font(ElmFonts.text(.footnote))
+                    .font(ElmFonts.text(.caption))
                     .foregroundStyle(ElmTheme.ink2)
-                if let latest = entry.latest {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("أحدث مادة")
-                            .font(ElmFonts.text(.caption2, weight: .bold))
-                            .foregroundStyle(ElmTheme.ink2)
-                        Text(latest.title)
-                            .font(ElmFonts.display(.subheadline, weight: .bold))
-                            .foregroundStyle(ElmTheme.ink)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
-                    }
+                    .lineLimit(3)
+                Spacer(minLength: 2)
+                HStack {
+                    Text(ElmFormat.materialLabel(entry.count))
+                    Spacer()
+                    Image(systemName: "arrow.left")
                 }
-                Text("ادخل السلسلة ←")
-                    .font(ElmFonts.text(.subheadline, weight: .bold))
-                    .foregroundStyle(ElmTheme.accent)
+                .font(ElmFonts.text(.caption, weight: .bold))
+                .foregroundStyle(ElmTheme.hex(entry.color))
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: dynamicTypeSize.isAccessibilitySize ? 0 : 174, alignment: .leading)
             .background(ElmTheme.surface)
             .overlay(alignment: .top) {
                 Rectangle()
@@ -237,8 +217,14 @@ struct SeriesFeedScreen: View {
                 }
 
                 if let stories = feed?.stories, !stories.isEmpty {
-                    ForEach(Array(stories.enumerated()), id: \.element.id) { index, story in
-                        MosaicStoryCard(story: story, tall: index == 0)
+                    LazyVStack(spacing: 12) {
+                        ForEach(Array(stories.enumerated()), id: \.element.id) { index, story in
+                            if index == 0 {
+                                MosaicStoryCard(story: story, tall: true)
+                            } else {
+                                MiniStoryRow(story: story)
+                            }
+                        }
                     }
                 } else if !loading {
                     Text("مواد هذه السلسلة في الطريق.")
@@ -264,7 +250,7 @@ struct SeriesFeedScreen: View {
     private var countLabel: String {
         let total = feed?.total ?? header.count
         if total == 0 { return "لا مواد منشورة بعد" }
-        return "\(ElmFormat.latinDigits(String(total))) مادة منشورة"
+        return "\(ElmFormat.materialLabel(total)) منشورة"
     }
 
     private func load() async {

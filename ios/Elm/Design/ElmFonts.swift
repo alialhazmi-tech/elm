@@ -24,7 +24,9 @@ enum ElmFonts {
     private static func scaled(name: String, style: Font.TextStyle, weight: Font.Weight) -> Font {
         #if canImport(UIKit)
         let uiStyle = uiTextStyle(style)
-        let size = UIFont.preferredFont(forTextStyle: uiStyle).pointSize
+        // لا تستخدم preferredFont.pointSize هنا: هو مكبّر أصلًا حسب Dynamic Type،
+        // وتمريره إلى UIFontMetrics يكرر التكبير مرتين في أحجام الوصول.
+        let size = basePointSize(style)
         if let font = weightedUIFont(name: name, size: size, weight: uiWeight(weight)) {
             let scaled = UIFontMetrics(forTextStyle: uiStyle).scaledFont(for: font)
             return Font(scaled)
@@ -56,6 +58,23 @@ enum ElmFonts {
         case .caption: return .caption1
         case .caption2: return .caption2
         default: return .body
+        }
+    }
+
+    private static func basePointSize(_ style: Font.TextStyle) -> CGFloat {
+        switch style {
+        case .largeTitle: return 34
+        case .title: return 28
+        case .title2: return 22
+        case .title3: return 20
+        case .headline: return 17
+        case .subheadline: return 15
+        case .body: return 17
+        case .callout: return 16
+        case .footnote: return 13
+        case .caption: return 12
+        case .caption2: return 11
+        default: return 17
         }
     }
 

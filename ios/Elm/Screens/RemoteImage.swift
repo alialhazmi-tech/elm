@@ -29,6 +29,10 @@ struct RemoteImage: View {
         .frame(minHeight: minHeight)
         .clipped()
         .background(ElmTheme.navyDeep)
+        // The image is presentation only. Keeping it outside hit testing makes the
+        // enclosing card own the entire tap target, including while AsyncImage loads.
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 
     private var placeholder: some View {

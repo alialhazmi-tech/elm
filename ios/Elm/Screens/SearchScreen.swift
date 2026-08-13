@@ -61,7 +61,7 @@ struct SearchScreen: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("اسأل العلم")
                         .font(ElmFonts.text(.caption, weight: .bold))
@@ -78,7 +78,7 @@ struct SearchScreen: View {
 
                 content
             }
-            .padding(16)
+            .padding(14)
         }
         .background(ElmTheme.bg.ignoresSafeArea())
         .navigationTitle("بحث")
@@ -139,8 +139,10 @@ struct SearchScreen: View {
                 .foregroundStyle(ElmTheme.ink2)
                 .padding(.top, 8)
         } else {
-            ForEach(store.results) { story in
-                MosaicStoryCard(story: story)
+            LazyVStack(spacing: 10) {
+                ForEach(store.results) { story in
+                    MiniStoryRow(story: story)
+                }
             }
         }
     }

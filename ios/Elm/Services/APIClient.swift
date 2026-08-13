@@ -99,7 +99,10 @@ enum APIClient {
     }
 
     private static func data(_ url: URL, timeout: TimeInterval) async throws -> Data {
-        let config = URLSessionConfiguration.ephemeral
+        // الجلسة الافتراضية تحفظ كوكي Neon Auth، حتى تعمل «لك» بعد الدخول الأصلي.
+        let config = URLSessionConfiguration.default
+        config.httpCookieAcceptPolicy = .always
+        config.httpShouldSetCookies = true
         config.timeoutIntervalForRequest = timeout
         config.timeoutIntervalForResource = timeout
         config.waitsForConnectivity = false

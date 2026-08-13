@@ -52,4 +52,9 @@ final class InterestStore {
         selected = next
         UserDefaults.standard.set(Array(selected), forKey: key)
     }
+
+    func clear() {
+        selected = []
+        UserDefaults.standard.set([], forKey: key)
+    }
 }

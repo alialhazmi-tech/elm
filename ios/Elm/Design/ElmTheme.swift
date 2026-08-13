@@ -55,7 +55,7 @@ enum ElmTheme {
     static let success = hex("2eb873")
     static let focus = hex("3d7ef7")
 
-    static let radiusSm: CGFloat = 12
-    static let radiusMd: CGFloat = 18
-    static let radiusLg: CGFloat = 26
+    static let radiusSm: CGFloat = 10
+    static let radiusMd: CGFloat = 16
+    static let radiusLg: CGFloat = 20
 }

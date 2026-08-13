@@ -39,7 +39,31 @@ enum ElmFormat {
     }
 
     static func readingLabel(_ minutes: Int) -> String {
-        "\(latinDigits(String(minutes))) دقائق قراءة"
+        switch minutes {
+        case ...1: "دقيقة قراءة"
+        case 2: "دقيقتا قراءة"
+        case 3...10: "\(latinDigits(String(minutes))) دقائق قراءة"
+        default: "\(latinDigits(String(minutes))) دقيقة قراءة"
+        }
+    }
+
+    static func watchingLabel(_ minutes: Int) -> String {
+        switch minutes {
+        case ...1: "دقيقة مشاهدة"
+        case 2: "دقيقتا مشاهدة"
+        case 3...10: "\(latinDigits(String(minutes))) دقائق مشاهدة"
+        default: "\(latinDigits(String(minutes))) دقيقة مشاهدة"
+        }
+    }
+
+    static func materialLabel(_ count: Int) -> String {
+        switch count {
+        case 0: "لا مواد"
+        case 1: "مادة واحدة"
+        case 2: "مادتان"
+        case 3...10: "\(latinDigits(String(count))) مواد"
+        default: "\(latinDigits(String(count))) مادة"
+        }
     }
 
     static func relativeTime(_ iso: String?) -> String? {

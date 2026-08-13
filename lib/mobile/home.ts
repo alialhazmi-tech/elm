@@ -74,6 +74,7 @@ export function toMobileCard(story: Story, origin: string = SITE): MobileStoryCa
 export function toMobileHome(
   home: HomeData,
   breaking: BreakingItem | null,
+  origin: string = SITE,
   generatedAt = new Date().toISOString(),
 ): MobileHomePayload {
   return {

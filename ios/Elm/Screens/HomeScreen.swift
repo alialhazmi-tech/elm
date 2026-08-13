@@ -39,6 +39,7 @@ struct HomeScreen: View {
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityAddTraits(.isHeader)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
         }
         .task { await store.load() }
@@ -46,8 +47,9 @@ struct HomeScreen: View {
     }
 
     private func homeFeed(_ home: MobileHomePayload) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
                 if store.fromCache {
                     Text("تُعرض آخر حزمة محفوظة — بلا اتصال أو الخادم لم يرد.")
                         .font(ElmFonts.text(.caption, weight: .medium))
@@ -108,9 +110,11 @@ struct HomeScreen: View {
                         VideoStoryCard(story: story)
                     }
                 }
+                }
+                .frame(width: max(0, proxy.size.width - 28), alignment: .leading)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
         }
     }
 }

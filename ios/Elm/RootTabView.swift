@@ -6,13 +6,16 @@ enum RootTab: Hashable {
 
 struct RootTabView: View {
     @State private var tab: RootTab = .home
+    @Environment(OnboardingStore.self) private var onboarding
+    @Environment(MemberSessionStore.self) private var member
+    @Environment(ConnectivityStore.self) private var connectivity
+    @Environment(NarrationStore.self) private var narration
 
     var body: some View {
         TabView(selection: $tab) {
             NavigationStack {
                 HomeScreen()
             }
-            .elmDestinations()
             .tabItem {
                 Label("الرئيسية", systemImage: "house.fill")
             }
@@ -22,7 +25,6 @@ struct RootTabView: View {
             NavigationStack {
                 SeriesScreen()
             }
-            .elmDestinations()
             .tabItem {
                 Label("السلاسل", systemImage: "square.grid.2x2.fill")
             }
@@ -32,7 +34,6 @@ struct RootTabView: View {
             NavigationStack {
                 ForYouScreen()
             }
-            .elmDestinations()
             .tabItem {
                 Label("لك", systemImage: "sparkles")
             }
@@ -42,7 +43,6 @@ struct RootTabView: View {
             NavigationStack {
                 SearchScreen()
             }
-            .elmDestinations()
             .tabItem {
                 Label("بحث", systemImage: "magnifyingglass")
             }
@@ -52,7 +52,6 @@ struct RootTabView: View {
             NavigationStack {
                 AccountScreen()
             }
-            .elmDestinations()
             .tabItem {
                 Label("حسابي", systemImage: "person.crop.circle")
             }
@@ -60,5 +59,31 @@ struct RootTabView: View {
             .accessibilityLabel("حسابي، النموذج 1ز")
         }
         .tint(ElmTheme.navy)
+        .overlay(alignment: .top) {
+            if connectivity.isOffline {
+                OfflinePill().padding(.top, 4).transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if narration.state != .idle {
+                NarrationBar()
+                    .padding(.bottom, 62)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .fullScreenCover(isPresented: Binding(
+            get: { onboarding.isPresented },
+            set: { onboarding.isPresented = $0 }
+        )) {
+            OnboardingScreen().elmRTL()
+        }
+        .sheet(isPresented: Binding(
+            get: { member.authPresented },
+            set: { member.authPresented = $0 }
+        )) {
+            MembershipScreen().elmRTL()
+        }
+        .animation(.snappy, value: connectivity.isOffline)
+        .animation(.snappy, value: narration.state)
     }
 }

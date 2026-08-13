@@ -4,8 +4,11 @@ import SwiftUI
 struct StoryDetailScreen: View {
     let seed: StoryCard
     @Environment(LibraryStore.self) private var library
+    @Environment(NarrationStore.self) private var narration
+    @Environment(ConnectivityStore.self) private var connectivity
     @State private var detail: StoryDetailPayload?
     @State private var loading = false
+    @State private var loadError: String?
 
     private var story: StoryCard { detail?.story ?? seed }
     private var series: SeriesChip? { detail?.series ?? seed.series.flatMap(chip(for:)) }
@@ -16,17 +19,24 @@ struct StoryDetailScreen: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 if let series {
-                    NavigationLink(value: series) {
+                    NavigationLink {
+                        SeriesFeedScreen(chip: series)
+                    } label: {
                         SeriesChipLabel(name: series.name, color: ElmTheme.hex(series.color))
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("سلسلة \(series.name)")
                 }
 
-                Text(story.title)
-                    .font(ElmFonts.display(.title, weight: .heavy))
-                    .foregroundStyle(ElmTheme.ink)
-                    .accessibilityAddTraits(.isHeader)
+                VStack(alignment: .leading, spacing: 11) {
+                    Text(story.eyebrow.isEmpty ? ElmFormat.sectionName(story.section) : story.eyebrow)
+                        .font(ElmFonts.text(.caption, weight: .bold))
+                        .foregroundStyle(series.map { ElmTheme.hex($0.color) } ?? ElmTheme.accent)
+                    Text(story.title)
+                        .font(ElmFonts.display(.title2, weight: .heavy))
+                        .foregroundStyle(ElmTheme.ink)
+                        .accessibilityAddTraits(.isHeader)
+                }
 
                 if !story.excerpt.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
@@ -36,13 +46,13 @@ struct StoryDetailScreen: View {
                         Text(story.excerpt)
                             .font(ElmFonts.text(.body, weight: .medium))
                             .foregroundStyle(ElmTheme.ink)
-                            .lineLimit(1)
+                            .lineSpacing(5)
                     }
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("الموجز: \(story.excerpt)")
                 }
 
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     Text(ElmFormat.sectionName(story.section))
                     if let date = ElmFormat.brandDate(story.publishedAt) {
                         Text(date)
@@ -55,6 +65,18 @@ struct StoryDetailScreen: View {
                 RemoteImage(url: story.imageURL, height: 220)
                     .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusMd, style: .continuous))
 
+                readerTools
+
+                if let loadError {
+                    Label(loadError, systemImage: connectivity.isOffline ? "wifi.slash" : "exclamationmark.triangle")
+                        .font(ElmFonts.text(.footnote, weight: .medium))
+                        .foregroundStyle(ElmTheme.ink2)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(ElmTheme.surface2)
+                        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm))
+                }
+
                 if !slides.isEmpty {
                     ForEach(slides) { slide in
                         slideCard(slide)
@@ -64,7 +86,8 @@ struct StoryDetailScreen: View {
                         Text(para)
                             .font(ElmFonts.text(.body))
                             .foregroundStyle(ElmTheme.ink)
-                            .lineSpacing(7)
+                            .lineSpacing(8)
+                            .padding(.bottom, 4)
                     }
                 }
 
@@ -83,18 +106,9 @@ struct StoryDetailScreen: View {
                     }
                 }
 
-                ShareLink(item: URLConstants.publicURL(path: story.path)) {
-                    Label("مشاركة المادة", systemImage: "square.and.arrow.up")
-                        .font(ElmFonts.text(.headline, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(ElmTheme.navy)
-                        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm, style: .continuous))
-                }
-                .accessibilityHint("يحافظ على رابط \(story.path)")
+                closingCard
             }
-            .padding(16)
+            .padding(14)
         }
         .background(ElmTheme.bg.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
@@ -120,7 +134,79 @@ struct StoryDetailScreen: View {
     private func load() async {
         loading = true
         defer { loading = false }
-        detail = try? await APIClient.fetchStory(id: seed.apiId)
+        loadError = nil
+        do {
+            let fresh = try await APIClient.fetchStory(id: seed.apiId)
+            detail = fresh
+            AppCache.saveStory(fresh)
+        } catch {
+            if let cached = AppCache.loadStory(id: seed.apiId) {
+                detail = cached
+                loadError = "أنت تقرأ نسخة محفوظة من هذه المادة."
+            } else if (seed.body ?? "").isEmpty {
+                loadError = "تعذر تحميل متن المادة. جرّب مجددًا عند عودة الاتصال."
+            }
+        }
+    }
+
+    private var readerTools: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { readerToolButtons }
+            VStack(spacing: 8) { readerToolButtons }
+        }
+    }
+
+    @ViewBuilder
+    private var readerToolButtons: some View {
+            Button {
+                let paragraphs = ElmFormat.bodyParagraphs(story.body ?? "")
+                if narration.storyId == story.apiId {
+                    narration.toggle()
+                } else {
+                    narration.start(story: story, paragraphs: paragraphs)
+                }
+            } label: {
+                Label(narration.storyId == story.apiId && narration.state == .playing ? "إيقاف مؤقت" : "استمع", systemImage: narration.storyId == story.apiId && narration.state == .playing ? "pause.fill" : "headphones")
+            }
+            .readerToolStyle()
+
+            Button { library.toggle(story) } label: {
+                Label(library.contains(story) ? "محفوظة" : "احفظ", systemImage: library.contains(story) ? "bookmark.fill" : "bookmark")
+            }
+            .readerToolStyle(active: library.contains(story))
+
+            ShareLink(item: URLConstants.publicURL(path: story.path)) {
+                Label("شارك", systemImage: "square.and.arrow.up")
+            }
+            .readerToolStyle()
+            .labelStyle(.titleAndIcon)
+    }
+
+    private var closingCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("خرجت بصورة أوضح؟")
+                .font(ElmFonts.display(.title3, weight: .heavy))
+                .foregroundStyle(.white)
+            Text("احفظ المادة للعودة إليها، أو شاركها مع من يهمه السياق لا العنوان فقط.")
+                .font(ElmFonts.text(.footnote))
+                .foregroundStyle(.white.opacity(0.74))
+            HStack {
+                Button { library.toggle(story) } label: {
+                    Label(library.contains(story) ? "في مكتبتك" : "احفظها", systemImage: library.contains(story) ? "checkmark" : "bookmark")
+                }
+                ShareLink(item: URLConstants.publicURL(path: story.path)) {
+                    Label("شاركها", systemImage: "square.and.arrow.up")
+                }
+            }
+            .font(ElmFonts.text(.subheadline, weight: .bold))
+            .foregroundStyle(ElmTheme.navyDeep)
+            .buttonStyle(.borderedProminent)
+            .tint(.white)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ElmTheme.navyDeep)
+        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusLg, style: .continuous))
     }
 
     private func chip(for slug: String) -> SeriesChip? {
@@ -171,13 +257,17 @@ struct StoryDetailScreen: View {
             Text(series.description)
                 .font(ElmFonts.text(.footnote))
                 .foregroundStyle(ElmTheme.ink2)
-            NavigationLink(value: series) {
+            NavigationLink {
+                SeriesFeedScreen(chip: series)
+            } label: {
                 Text("تصفح السلسلة كاملة ←")
                     .font(ElmFonts.text(.subheadline, weight: .bold))
                     .foregroundStyle(ElmTheme.accent)
             }
             if let next = detail?.nextInSeries {
-                NavigationLink(value: next) {
+                NavigationLink {
+                    StoryDetailScreen(seed: next)
+                } label: {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("أكمل الفهم")
                             .font(ElmFonts.text(.caption, weight: .bold))
@@ -240,5 +330,18 @@ struct StoryDetailScreen: View {
         }
         .padding(.bottom, 8)
         .accessibilityElement(children: .combine)
+    }
+}
+
+private extension View {
+    func readerToolStyle(active: Bool = false) -> some View {
+        self
+            .font(ElmFonts.text(.caption, weight: .bold))
+            .foregroundStyle(active ? Color.white : ElmTheme.ink)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 11)
+            .background(active ? ElmTheme.navy : ElmTheme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: ElmTheme.radiusSm).stroke(active ? Color.clear : ElmTheme.line))
     }
 }

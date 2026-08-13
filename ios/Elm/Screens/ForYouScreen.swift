@@ -77,15 +77,16 @@ struct ForYouScreen: View {
     @Environment(InterestStore.self) private var interests
     @Environment(AppearanceStore.self) private var appearance
     @State private var store = ForYouStore()
+    @Environment(MemberSessionStore.self) private var member
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("صفحتك في العلم")
                         .font(ElmFonts.text(.caption, weight: .bold))
                         .foregroundStyle(ElmTheme.ink2)
-                    Text(store.signedIn ? "صباح المعرفة" : "مواد أقرب إليك")
+                    Text(member.isSignedIn ? greeting : "مواد أقرب إليك")
                         .font(ElmFonts.display(.title, weight: .heavy))
                         .foregroundStyle(ElmTheme.ink)
                     Text(store.signedIn
@@ -97,6 +98,16 @@ struct ForYouScreen: View {
 
                 if store.guest {
                     guestBanner
+                }
+
+                if !appearance.personalizationEnabled {
+                    Label("التخصيص متوقف — نعرض اختيارات المحررين.", systemImage: "eye.slash")
+                        .font(ElmFonts.text(.footnote, weight: .medium))
+                        .foregroundStyle(ElmTheme.ink2)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(ElmTheme.surface2)
+                        .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm))
                 }
 
                 if !interests.items.isEmpty {
@@ -129,19 +140,22 @@ struct ForYouScreen: View {
                     if let lead = store.items.first {
                         leadCard(lead)
                     }
-                    ForEach(Array(store.items.dropFirst())) { item in
-                        VStack(alignment: .leading, spacing: 8) {
-                            MosaicStoryCard(story: item.story)
-                            if let reason = item.reason, !reason.isEmpty {
-                                Text("لماذا ظهر لك؟ \(reason)")
-                                    .font(ElmFonts.text(.caption))
-                                    .foregroundStyle(ElmTheme.ink2)
+                    LazyVStack(spacing: 10) {
+                        ForEach(Array(store.items.dropFirst())) { item in
+                            VStack(alignment: .leading, spacing: 7) {
+                                MiniStoryRow(story: item.story)
+                                if let reason = item.reason, !reason.isEmpty {
+                                    Text(reason)
+                                        .font(ElmFonts.text(.caption2))
+                                        .foregroundStyle(ElmTheme.ink2)
+                                        .padding(.horizontal, 4)
+                                }
                             }
                         }
                     }
                 }
             }
-            .padding(16)
+            .padding(14)
         }
         .background(ElmTheme.bg.ignoresSafeArea())
         .navigationTitle("لك")
@@ -159,13 +173,11 @@ struct ForYouScreen: View {
             Text("انضم ليظهر العلم حسب قراءتك")
                 .font(ElmFonts.display(.headline, weight: .bold))
                 .foregroundStyle(ElmTheme.ink)
-            Text("العضوية على الموقع. الاهتمامات هنا تبقى على جهازك حتى نربط الجلسة.")
+            Text("يمكنك الدخول داخل التطبيق. واهتمامات هذا الجهاز تبقى معك حتى قبل إنشاء الحساب.")
                 .font(ElmFonts.text(.footnote))
                 .foregroundStyle(ElmTheme.ink2)
             Button {
-                #if canImport(UIKit)
-                UIApplication.shared.open(URLConstants.joinURL)
-                #endif
+                member.authPresented = true
             } label: {
                 Text("انضم إلى العلم")
                     .font(ElmFonts.text(.headline, weight: .bold))
@@ -175,7 +187,7 @@ struct ForYouScreen: View {
                     .background(ElmTheme.navy)
                     .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusSm, style: .continuous))
             }
-            .accessibilityHint("يفتح صفحة الانضمام في المتصفح")
+            .accessibilityHint("يفتح العضوية داخل التطبيق")
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -196,5 +208,11 @@ struct ForYouScreen: View {
                     .foregroundStyle(ElmTheme.ink2)
             }
         }
+    }
+
+    private var greeting: String {
+        let hour = Calendar.current.component(.hour, from: .now)
+        let salutation = hour < 12 ? "صباح المعرفة" : (hour < 18 ? "مساء المعرفة" : "مساء هادئ")
+        return "\(salutation)، \(member.firstName)"
     }
 }

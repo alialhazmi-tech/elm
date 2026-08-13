@@ -93,3 +93,23 @@ test("رابط الوسائط يُشتق من أصل الطلب لا من نطا
     "https://dash.alelm.net/wp-content/x.webp",
   );
 });
+
+test("دوال العقد تعلن معامل الأصل صراحةً — لا تتكئ على متغير DOM العام", async () => {
+  // فخ صامت: `origin` متغير عام في lib.dom فيرضيه TypeScript ويمر البناء،
+  // ثم ينفجر ReferenceError في Node. الحارس على المصدر لا على النوع.
+  const home = await readFile(new URL("../lib/mobile/home.ts", import.meta.url), "utf8");
+  const catalog = await readFile(new URL("../lib/mobile/catalog.ts", import.meta.url), "utf8");
+
+  for (const [name, source] of [["home.ts", home], ["catalog.ts", catalog]]) {
+    for (const match of source.matchAll(/export (?:async )?function (\w+)\(([\s\S]*?)\)[:\s]/g)) {
+      const [, fn, params] = match;
+      const body = source.slice(match.index, source.indexOf("\n}", match.index));
+      if (!/\borigin\b/.test(body)) continue;
+      assert.match(
+        params,
+        /origin\??:\s*string/,
+        `${name}: الدالة ${fn} تستخدم origin بلا إعلانه معاملًا`,
+      );
+    }
+  }
+});

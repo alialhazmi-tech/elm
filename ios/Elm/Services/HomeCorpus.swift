@@ -1,7 +1,12 @@
 import Foundation
 
+@MainActor
 enum HomeCorpus {
-    static func cards(from data: Data? = HomeCache.load()) -> [StoryCard] {
+    static func cards() -> [StoryCard] {
+        cards(from: HomeCache.load())
+    }
+
+    static func cards(from data: Data?) -> [StoryCard] {
         guard let data, let home = try? JSONDecoder().decode(MobileHomePayload.self, from: data) else {
             return []
         }

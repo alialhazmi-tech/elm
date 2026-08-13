@@ -2,7 +2,9 @@ import Foundation
 
 enum URLConstants {
     static let productionAPI = URL(string: "https://elm-production-5035.up.railway.app")!
-    static let publicSite = URL(string: "https://alelm.net")!
+    // Railway is the serving origin until alelm.net is cut over from the legacy site.
+    // Sharing an article on the legacy origin produces links that do not exist there.
+    static let publicSite = productionAPI
 
     #if DEBUG
     static let localAPI = URL(string: "http://127.0.0.1:3000")
@@ -25,6 +27,10 @@ enum URLConstants {
 
     static let joinURL = publicURL(path: "/join")
     static let accountURL = publicURL(path: "/account")
+
+    static func authURL(_ path: String) -> URL {
+        productionAPI.appending(path: "api/auth").appending(path: path)
+    }
 }
 
 enum ElmMedia {
