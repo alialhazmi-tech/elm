@@ -98,17 +98,22 @@ enum APIClient {
         return try decoder.decode(T.self, from: data)
     }
 
-    private static func data(_ url: URL, timeout: TimeInterval) async throws -> Data {
-        // الجلسة الافتراضية تحفظ كوكي Neon Auth، حتى تعمل «لك» بعد الدخول الأصلي.
+    private static let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
-        config.timeoutIntervalForRequest = timeout
-        config.timeoutIntervalForResource = timeout
+        config.timeoutIntervalForRequest = 12
+        config.timeoutIntervalForResource = 12
         config.waitsForConnectivity = false
+        config.httpMaximumConnectionsPerHost = 6
+        return URLSession(configuration: config)
+    }()
+
+    private static func data(_ url: URL, timeout: TimeInterval) async throws -> Data {
         var request = URLRequest(url: url)
+        request.timeoutInterval = timeout
         request.setValue("application/json", forHTTPHeaderField: "Accept")
-        let (data, response) = try await URLSession(configuration: config).data(for: request)
+        let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         if status == 401 { throw APIClientError.unauthorized }
         guard (200..<300).contains(status) else { throw APIClientError.badStatus(status) }

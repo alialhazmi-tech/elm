@@ -94,57 +94,80 @@ export function SiteFooter() {
   return (
     <footer className="footer">
       <div className="footer-shell">
-        <div className="footer-top">
-          <div className="footer-identity">
-            <Link href="/" className="brand-word" aria-label="العلم - الصفحة الرئيسية">
+        <div className="footer-grid">
+          {/* العمود الأول: الهوية والرسالة */}
+          <div className="ft-col ft-col-brand">
+            <Link href="/" className="brand-word ft-brand-word" aria-label="العلم - الصفحة الرئيسية">
               العلم
             </Link>
-            <p>
-              منصة إعلام ومعرفة سعودية تضع الخبر في سياقه —
-              عبر السلاسل والبيانات والمرئي.
+            <p className="ft-tagline">
+              منصة إعلام ومعرفة سعودية تضع الخبر في سياقه، وتفكك الأحداث عبر السلاسل التفسيرية وصحافة البيانات والتحليل المعمّق.
             </p>
-          </div>
-          <nav className="footer-nav" aria-label="أقسام الموقع">
-            {FOOTER_LINKS.map((item) => (
-              <Link key={item.href} href={item.href}>{item.label}</Link>
-            ))}
-          </nav>
-        </div>
-
-        <section className="footer-modules" aria-label="النشرة وسلاسل المعرفة">
-          <div className="ft-module">
-            <span className="ft-kicker">نشرة أسبوعية</span>
-            <h2>ما وراء العناوين في بريدك</h2>
-            <p>موجز يختصر أهم ما نشره محررونا — بلا ضوضاء إعلانية.</p>
-            <NewsletterForm source="footer" />
-          </div>
-
-          <div className="ft-module ft-series-module">
-            <span className="ft-kicker">سلاسل المعرفة</span>
-            <h2>صحافة تفكك الخبر</h2>
-            <p>قوالب تفسيرية تربط الأحداث بسياقها — من التحليل إلى البيانات.</p>
-            <div className="ft-series-tags">
-              {SERIES.slice(0, 8).map((item) => (
-                <Link
-                  key={item.slug}
-                  href={`/series/${item.slug}`}
-                  className="ft-series-chip"
-                  style={{ "--sc": item.color } as React.CSSProperties}
-                >
-                  <span className="ft-series-dot" style={{ backgroundColor: item.color }} />
-                  <span>{item.name}</span>
-                </Link>
-              ))}
+            <div className="ft-pills">
+              <span className="ft-pill-item">صحافة سياق</span>
+              <span className="ft-pill-item">بيانات موثقة</span>
+              <span className="ft-pill-item">بلا ضوضاء</span>
             </div>
-            <Link className="ft-explore-link" href="/series">
+          </div>
+
+          {/* العمود الثاني: سلاسل المعرفة */}
+          <div className="ft-col">
+            <h3 className="ft-head">سلاسل المعرفة</h3>
+            <ul className="ft-nav-list ft-series-list">
+              {SERIES.slice(0, 8).map((item) => (
+                <li key={item.slug}>
+                  <Link href={`/series/${item.slug}`} className="ft-series-link">
+                    <span className="ft-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                    <span className="ft-series-name">{item.name}</span>
+                    <small className="ft-series-sub">{item.description}</small>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link className="ft-all-series" href="/series">
               استكشف كل السلاسل والأرشيف <span aria-hidden="true">←</span>
             </Link>
           </div>
-        </section>
+
+          {/* العمود الثالث: الأقسام والتغطيات */}
+          <div className="ft-col">
+            <h3 className="ft-head">التغطيات والأقسام</h3>
+            <ul className="ft-nav-list">
+              {FOOTER_LINKS.map((item) => (
+                <li key={item.href}>
+                  <Link href={item.href}>{item.label}</Link>
+                </li>
+              ))}
+              <li>
+                <Link href="/series">سلاسل المعرفة</Link>
+              </li>
+              <li>
+                <Link href="/search">البحث التحريري</Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* العمود الرابع: النشرة البريدية */}
+          <div className="ft-col ft-col-newsletter">
+            <h3 className="ft-head">ما وراء العناوين</h3>
+            <p className="ft-newsletter-sub">
+              موجز أسبوعي يختصر أهم ما نشره محررونا في بريدك — بقراءة هادئة بلا إعلانات.
+            </p>
+            <NewsletterForm source="footer" />
+          </div>
+        </div>
 
         <div className="footer-legal">
-          <span>© {year} العلم — جميع الحقوق محفوظة</span>
-          <span>المحتوى من مواد منشورة · المصدر النهائي «تحرير العلم»</span>
+          <div className="ft-legal-right">
+            <span>© {year} العلم — جميع الحقوق محفوظة</span>
+            <span className="ft-sep" aria-hidden="true">·</span>
+            <span>المحتوى من مواد منشورة · المصدر النهائي «تحرير العلم»</span>
+          </div>
+          <div className="ft-legal-left">
+            <Link href="/robots.txt">سياسة النشر</Link>
+            <span className="ft-sep" aria-hidden="true">·</span>
+            <Link href="/sitemap.xml">خريطة المنصة</Link>
+          </div>
         </div>
       </div>
     </footer>

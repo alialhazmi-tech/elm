@@ -592,6 +592,13 @@ struct JakReportScreen: View {
             dismiss()
             return
         }
+        // إحماء الصور للشرائح القادمة والسابقة لتظهر بدون أي تأخير
+        let upcomingIndices = [next, next + 1, next + 2, next - 1]
+        let upcomingURLs = upcomingIndices
+            .compactMap { slides.indices.contains($0) ? slides[$0].imageURL : nil }
+        if !upcomingURLs.isEmpty {
+            ImageStore.shared.prefetch(upcomingURLs, maxPixel: 1400)
+        }
         withAnimation(.easeInOut(duration: 0.22)) { index = next }
     }
 
@@ -645,22 +652,43 @@ struct JakReportScreen: View {
     }
 
     private func load() async {
-        loading = true
-        defer { loading = false }
+        // استحضار فوري من الكاش أولاً (0ms) لعرض التقرير بدون انتظار الشبكة
+        if detail == nil, let cached = AppCache.loadStory(id: seed.apiId) {
+            detail = cached
+            loading = false
+            prefetchSlideImages(for: cached)
+        } else {
+            loading = detail == nil
+        }
+
         do {
             let fresh = try await APIClient.fetchStory(id: seed.apiId)
             detail = fresh
             AppCache.saveStory(fresh)
+            prefetchSlideImages(for: fresh)
             if fresh.slides?.isEmpty != false {
                 loadError = "هذه المادة ليست تقريرًا مصوّرًا."
             }
         } catch {
-            if let cached = AppCache.loadStory(id: seed.apiId) {
-                detail = cached
-            } else {
-                loadError = "تعذر تحميل التقرير. جرّب عند عودة الاتصال."
+            if detail == nil {
+                if let cached = AppCache.loadStory(id: seed.apiId) {
+                    detail = cached
+                    prefetchSlideImages(for: cached)
+                } else {
+                    loadError = "تعذر تحميل التقرير. جرّب عند عودة الاتصال."
+                }
             }
         }
+        loading = false
+    }
+
+    /// تنزيل وفك ترميز كافة صور شرائح التقرير فوراً في الذاكرة لتكون جاهزة عند التقليب
+    private func prefetchSlideImages(for payload: StoryDetailPayload) {
+        var urls = [payload.story.imageURL].compactMap { $0 }
+        if let slideURLs = payload.slides?.compactMap(\.imageURL) {
+            urls.append(contentsOf: slideURLs)
+        }
+        ImageStore.shared.prefetch(urls, maxPixel: 1400)
     }
 }
 

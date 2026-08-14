@@ -43,16 +43,20 @@ export async function POST(request: Request) {
       settings,
     );
 
-    const cents = costCents(result.usage.model, result.usage.inputTokens, result.usage.outputTokens);
+    const parts = result.usages ?? [result.usage];
+    const cents = parts.reduce(
+      (sum, part) => sum + costCents(part.model, part.inputTokens, part.outputTokens),
+      0,
+    );
     await logUsage({
       tool,
-      model: result.usage.model,
+      model: parts.map((part) => part.model).join("+"),
       inputTokens: result.usage.inputTokens,
       outputTokens: result.usage.outputTokens,
       costCents: cents,
       actor: session.username,
     });
-    await audit(session.username, `ai:${tool}`, undefined, `${result.usage.model} · ${cents}¢`);
+    await audit(session.username, `ai:${tool}`, undefined, `${parts.map((part) => part.model).join("+")} · ${cents}¢`);
 
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {

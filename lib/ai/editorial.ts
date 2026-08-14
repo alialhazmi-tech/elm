@@ -38,17 +38,26 @@ function client(): Anthropic | null {
   return apiKey ? new Anthropic({ apiKey }) : null;
 }
 
-function systemPrompt(tone: string): string {
+type Usage = { model: string; inputTokens: number; outputTokens: number };
+
+function systemBlocks(tone: string): Anthropic.TextBlockParam[] {
   return [
-    "أنت «محرر العلم» — مساعد تحرير داخلي لمنصة العلم الإخبارية المعرفية السعودية.",
-    "تقترح ولا تنشر: مخرجاتك تُعرض على محرر بشري يقرر، ويفحصها حارس السياسة قبل العرض.",
-    "",
-    "نبرة العلم (قرار رئيس التحرير):",
-    tone,
-    "",
-    "الدستور التحريري الملزم نصًا:",
-    constitution(),
-  ].join("\n");
+    {
+      type: "text",
+      text: [
+        "أنت «محرر العلم» — مساعد تحرير داخلي لمنصة العلم الإخبارية المعرفية السعودية.",
+        "تقترح ولا تنشر: مخرجاتك تُعرض على محرر بشري يقرر، ويفحصها حارس السياسة قبل العرض.",
+        "",
+        "نبرة العلم (قرار رئيس التحرير):",
+        tone,
+      ].join("\n"),
+    },
+    {
+      type: "text",
+      text: `الدستور التحريري الملزم نصًا:\n${constitution()}`,
+      cache_control: { type: "ephemeral" },
+    },
+  ];
 }
 
 export interface AiSuggestion {
@@ -77,7 +86,8 @@ export interface AiResult {
   classify?: { seriesSlug: string | null; section: string; format: string };
   seo?: SeoResult;
   fullEdit?: FullEditResult;
-  usage: { model: string; inputTokens: number; outputTokens: number };
+  usage: Usage;
+  usages?: Usage[];
 }
 
 /**
@@ -111,30 +121,149 @@ const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; select
   seo: ({ title, body }) =>
     `ولّد حزمة SEO لهذه المادة: عنوان بحث حتى 60 حرفًا يحمل الكلمة المفتاحية الأهم، ووصف بحث حتى 155 حرفًا يلخص القيمة بلا حشو، و5-8 كلمات مفتاحية عربية يبحث بها الناس فعلًا (بلا وسوم #). أعد JSON فقط: {"seoTitle": "...", "seoDescription": "...", "keywords": ["...", "..."]}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
   full_edit: ({ title, body }) =>
-    [
-      "نفّذ «تحريرًا شاملًا» لهذه المادة وفق أسلوب العلم والدستور أعلاه، وأعد JSON واحدًا فقط بهذه الحقول كلها:",
-      "{",
-      '  "title": "عنوان حتى 10 كلمات بلا تهويل",',
-      '  "excerpt": "«قبل القراءة» — خلاصة جملة واحدة حتى 25 كلمة",',
-      '  "body": "المتن كاملًا بعد التحرير: فقرات مفصولة بسطرين فارغين، تحرير صحفي يزيل الركاكة والحشو ويحفظ كل الحقائق والأرقام والمصادر كما هي — ممنوع إضافة أي معلومة",',
-      '  "seoTitle": "عنوان بحث حتى 60 حرفًا",',
-      '  "seoDescription": "وصف بحث حتى 155 حرفًا",',
-      '  "keywords": ["5-8 كلمات مفتاحية عربية"],',
-      '  "seriesSlug": "absat|aghrab|efhamha-sah|bel-arqam|shakhsiat|limatha|matha-law|bel-tarikh أو null",',
-      '  "section": "politics|economy|world|ksa|current-events|health|technology|sciences|sport|business|art|culture|varieties|news",',
-      '  "format": "news|infographics|videos|reports|podcasts"',
-      "}",
-      "",
-      `العنوان الحالي: ${title}`,
-      "",
-      "المتن الحالي:",
-      body,
-    ].join("\n"),
+    `حرّر المتن بأسلوب العلم. أعد المتن المحرَّر فقط — بلا عنوان وبلا JSON وبلا تعليق وبلا Markdown. فقرات مفصولة بسطر فارغ. أزل الركاكة والحشو واحفظ كل الحقائق والأرقام والمصادر كما هي. ممنوع إضافة أي معلومة.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
 };
+
+const FULL_EDIT_PACK_PROMPT = ({ title, body }: { title: string; body: string }) =>
+  [
+    "من المادة التالية ولّد الحقول المساعدة فقط. أعد JSON واحدًا:",
+    '{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة جملة واحدة حتى 25 كلمة","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"absat|aghrab|efhamha-sah|bel-arqam|shakhsiat|limatha|matha-law|bel-tarikh أو null","section":"politics|economy|world|ksa|current-events|health|technology|sciences|sport|business|art|culture|varieties|news","format":"news|infographics|videos|reports|podcasts"}',
+    "",
+    `العنوان الحالي: ${title}`,
+    "",
+    "المتن:",
+    body,
+  ].join("\n");
 
 export type AiTool = keyof typeof TOOL_PROMPTS;
 
 export const AI_TOOLS = Object.keys(TOOL_PROMPTS) as AiTool[];
+
+const FULL_EDIT_BODY_LIMIT = 12_000;
+
+function stripFences(text: string): string {
+  return text.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").trim();
+}
+
+function parseJsonObject(raw: string): Record<string, unknown> {
+  const jsonText = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
+  return JSON.parse(jsonText) as Record<string, unknown>;
+}
+
+async function complete(
+  anthropic: Anthropic,
+  opts: { model: string; maxTokens: number; tone: string; user: string },
+): Promise<{ text: string; usage: Usage; stopReason: string | null }> {
+  const response = await anthropic.messages.create({
+    model: opts.model,
+    max_tokens: opts.maxTokens,
+    system: systemBlocks(opts.tone),
+    messages: [{ role: "user", content: opts.user }],
+  });
+  const text = response.content.find((block) => block.type === "text")?.text ?? "";
+  return {
+    text,
+    stopReason: response.stop_reason,
+    usage: {
+      model: opts.model,
+      inputTokens: response.usage.input_tokens,
+      outputTokens: response.usage.output_tokens,
+    },
+  };
+}
+
+function modelFor(tool: AiTool, settings: AiSettingsData): string {
+  if (tool === "classify") return settings.models.light;
+  if (tool === "full_edit") return settings.models.fast;
+  return settings.models.editorial;
+}
+
+async function runFullEdit(
+  anthropic: Anthropic,
+  input: { title: string; body: string },
+  settings: AiSettingsData,
+): Promise<AiResult> {
+  const clipped = {
+    title: input.title,
+    body: input.body.slice(0, FULL_EDIT_BODY_LIMIT),
+  };
+  const bodyModel = modelFor("full_edit", settings);
+  const packModel = settings.models.light;
+
+  const [bodyResult, packResult] = await Promise.all([
+    complete(anthropic, {
+      model: bodyModel,
+      maxTokens: 8192,
+      tone: settings.tone,
+      user: TOOL_PROMPTS.full_edit(clipped),
+    }),
+    complete(anthropic, {
+      model: packModel,
+      maxTokens: 1024,
+      tone: settings.tone,
+      user: FULL_EDIT_PACK_PROMPT(clipped),
+    }),
+  ]);
+
+  if (bodyResult.stopReason === "max_tokens") {
+    throw new Error("مخرج النموذج انقطع قبل الاكتمال — قصّر المادة أو أعد المحاولة.");
+  }
+
+  const bodyText = stripFences(bodyResult.text);
+  if (!bodyText) throw new Error("مخرج التحرير الشامل ناقص — أعد المحاولة.");
+
+  let pack: {
+    title?: string;
+    excerpt?: string;
+    seoTitle?: string;
+    seoDescription?: string;
+    keywords?: string[];
+    seriesSlug?: string | null;
+    section?: string;
+    format?: string;
+  } = {};
+  try {
+    pack = parseJsonObject(packResult.text) as typeof pack;
+  } catch {
+    pack = {};
+  }
+
+  const title = (pack.title ?? clipped.title).trim() || clipped.title;
+  const excerpt = (pack.excerpt ?? "").trim();
+  const seoTitle = (pack.seoTitle ?? "").trim();
+  const seoDescription = (pack.seoDescription ?? "").trim();
+  const keywords = (pack.keywords ?? [])
+    .filter((keyword): keyword is string => typeof keyword === "string")
+    .map((keyword) => keyword.replace(/^#/, "").trim())
+    .filter(Boolean)
+    .slice(0, 8);
+
+  return {
+    suggestions: [],
+    fullEdit: {
+      title: { text: title, guard: guardCheck(title, "title") },
+      excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment") },
+      body: { text: bodyText, guard: guardCheck(bodyText, "body") },
+      seo: {
+        seoTitle,
+        seoDescription,
+        keywords,
+        guard: guardCheck(`${seoTitle} ${seoDescription} ${keywords.join(" ")}`, "fragment"),
+      },
+      classify: {
+        seriesSlug: pack.seriesSlug ?? null,
+        section: pack.section ?? "news",
+        format: pack.format ?? "news",
+      },
+    },
+    usage: {
+      model: bodyModel,
+      inputTokens: bodyResult.usage.inputTokens + packResult.usage.inputTokens,
+      outputTokens: bodyResult.usage.outputTokens + packResult.usage.outputTokens,
+    },
+    usages: [bodyResult.usage, packResult.usage],
+  };
+}
 
 export async function runEditorialTool(
   tool: AiTool,
@@ -146,26 +275,22 @@ export async function runEditorialTool(
     throw new Error("مفتاح Anthropic غير مضبوط — أضف ANTHROPIC_API_KEY ثم أعد التشغيل.");
   }
 
-  const model = tool === "classify" ? settings.models.light : settings.models.editorial;
-  const response = await anthropic.messages.create({
+  if (tool === "full_edit") {
+    return runFullEdit(anthropic, input, settings);
+  }
+
+  const model = modelFor(tool, settings);
+  const { text: raw, usage, stopReason } = await complete(anthropic, {
     model,
-    max_tokens: tool === "full_edit" ? 16_384 : tool === "proofread" ? 8192 : 2048,
-    system: systemPrompt(settings.tone),
-    messages: [{ role: "user", content: TOOL_PROMPTS[tool](input) }],
+    maxTokens: tool === "proofread" ? 8192 : 2048,
+    tone: settings.tone,
+    user: TOOL_PROMPTS[tool](input),
   });
 
-  if (response.stop_reason === "max_tokens") {
+  if (stopReason === "max_tokens") {
     throw new Error("مخرج النموذج انقطع قبل الاكتمال — قصّر المادة أو أعد المحاولة.");
   }
 
-  const usage = {
-    model,
-    inputTokens: response.usage.input_tokens,
-    outputTokens: response.usage.output_tokens,
-  };
-
-  const raw = response.content.find((block) => block.type === "text")?.text ?? "";
-  const jsonText = raw.slice(raw.indexOf("{"), raw.lastIndexOf("}") + 1);
   let parsed: {
     suggestions?: string[];
     seriesSlug?: string | null;
@@ -179,7 +304,7 @@ export async function runEditorialTool(
     keywords?: string[];
   };
   try {
-    parsed = JSON.parse(jsonText);
+    parsed = parseJsonObject(raw) as typeof parsed;
   } catch {
     throw new Error("تعذر قراءة مخرج النموذج — أعد المحاولة.");
   }
@@ -212,35 +337,6 @@ export async function runEditorialTool(
         seoDescription,
         keywords: cleanKeywords,
         guard: guardCheck(`${seoTitle} ${seoDescription} ${cleanKeywords.join(" ")}`, "fragment"),
-      },
-      usage,
-    };
-  }
-
-  if (tool === "full_edit") {
-    const title = (parsed.title ?? "").trim();
-    const excerpt = (parsed.excerpt ?? "").trim();
-    const bodyText = (parsed.body ?? "").trim();
-    const seoTitle = (parsed.seoTitle ?? "").trim();
-    const seoDescription = (parsed.seoDescription ?? "").trim();
-    if (!title || !bodyText) throw new Error("مخرج التحرير الشامل ناقص — أعد المحاولة.");
-    return {
-      suggestions: [],
-      fullEdit: {
-        title: { text: title, guard: guardCheck(title, "title") },
-        excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment") },
-        body: { text: bodyText, guard: guardCheck(bodyText, "body") },
-        seo: {
-          seoTitle,
-          seoDescription,
-          keywords: cleanKeywords,
-          guard: guardCheck(`${seoTitle} ${seoDescription} ${cleanKeywords.join(" ")}`, "fragment"),
-        },
-        classify: {
-          seriesSlug: parsed.seriesSlug ?? null,
-          section: parsed.section ?? "news",
-          format: parsed.format ?? "news",
-        },
       },
       usage,
     };

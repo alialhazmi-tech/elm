@@ -43,6 +43,16 @@ export default async function AiSettingsPage() {
             </div>
             <div className="th-set-row">
               <div>
+                <div className="sn">التحرير الشامل — Claude Sonnet</div>
+                <div className="sd">أسرع من Opus لإعادة تحرير المتن، مع Haiku للحقول المساعدة</div>
+              </div>
+              <span className="th-set-model">{settings.models.fast}</span>
+              <span className={`th-keychip ${keys.anthropic ? "ok" : "miss"}`}>
+                {keys.anthropic ? "المفتاح نفسه" : "المفتاح نفسه"}
+              </span>
+            </div>
+            <div className="th-set-row">
+              <div>
                 <div className="sn">الصور — مزود التوليد</div>
                 <div className="sd">الأنماط الثلاثة: حقيقي/توضيحي/رسومي</div>
               </div>

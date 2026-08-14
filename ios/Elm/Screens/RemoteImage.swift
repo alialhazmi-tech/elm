@@ -66,7 +66,7 @@ struct RemoteImage: View {
 /// عند `scaledToFill`، فتضخّم الحاوية كلها. `Color.clear` يثبّت الحجم والصورة طبقة فوقه.
 struct FullBleedImage: View {
     let url: URL?
-    var maxPixel: CGFloat = 2400
+    var maxPixel: CGFloat = 1400
 
     var body: some View {
         Color.clear

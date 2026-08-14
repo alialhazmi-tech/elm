@@ -18,7 +18,7 @@ export interface AiSettingsData {
     jak: boolean;
     images: boolean;
   };
-  models: { editorial: string; light: string; image: string };
+  models: { editorial: string; light: string; image: string; fast: string };
   caps: { dailyUsd: number; monthlyUsd: number };
   tone: string;
 }
@@ -38,6 +38,7 @@ export const DEFAULT_AI_SETTINGS: AiSettingsData = {
   models: {
     editorial: "claude-opus-5",
     light: "claude-haiku-4-5",
+    fast: "claude-sonnet-5",
     image: DEFAULT_IMAGE_MODEL,
   },
   caps: { dailyUsd: 10, monthlyUsd: 150 },
@@ -58,6 +59,7 @@ export async function loadAiSettings(): Promise<AiSettingsData> {
       models: {
         ...DEFAULT_AI_SETTINGS.models,
         ...stored.models,
+        fast: stored.models?.fast ?? DEFAULT_AI_SETTINGS.models.fast,
         image: normalizeImageModel(stored.models?.image),
       },
       caps: { ...DEFAULT_AI_SETTINGS.caps, ...stored.caps },

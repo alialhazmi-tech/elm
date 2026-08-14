@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db";
 /** أسعار المليون توكن بالسنت (مرجع Anthropic الرسمي 2026). */
 const PRICES_CENTS: Record<string, { input: number; output: number }> = {
   "claude-opus-5": { input: 500, output: 2500 },
+  "claude-sonnet-5": { input: 300, output: 1500 },
   "claude-haiku-4-5": { input: 100, output: 500 },
 };
 

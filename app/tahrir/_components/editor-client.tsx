@@ -95,6 +95,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
   const [imageUploadMessage, setImageUploadMessage] = useState("");
   const [fullEdit, setFullEdit] = useState<FullEditData | null>(null);
   const [fullBusy, setFullBusy] = useState(false);
+  const [fullElapsed, setFullElapsed] = useState(0);
   const [report, setReport] = useState<GuardReport | null>(null);
   const [guardBusy, setGuardBusy] = useState(true);
   const [message, setMessage] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
@@ -140,6 +141,18 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
     // الفحص الأول يعكس القيم المحمّلة لحظة فتح المحرر؛ التعديلات اللاحقة تمر عبر scheduleGuard.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [runGuard]);
+
+  useEffect(() => {
+    if (!fullBusy) return;
+    const started = Date.now();
+    const tick = window.setInterval(() => {
+      setFullElapsed(Math.floor((Date.now() - started) / 1000));
+    }, 250);
+    return () => {
+      window.clearInterval(tick);
+      setFullElapsed(0);
+    };
+  }, [fullBusy]);
 
   function onTitle(value: string) {
     setTitle(value);
@@ -389,7 +402,7 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
             onClick={runFullEdit}
             disabled={fullBusy}
           >
-            {fullBusy ? "✦ يحرر شاملًا…" : "✦ تحرير ذكي شامل"}
+            {fullBusy ? `✦ يحرر المتن… ${fullElapsed} ث` : "✦ تحرير ذكي شامل"}
           </button>
           <span className="hint">
             يعيد تحرير المتن بأسلوب العلم ويولّد العنوان والموجز وSEO والكلمات ويصنّف — ثم يعرض عليك قبل التطبيق.

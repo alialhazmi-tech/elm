@@ -5,19 +5,19 @@ import { useRouter } from "next/navigation";
 
 interface SettingsShape {
   tools: Record<string, boolean>;
-  models: { editorial: string; light: string; image: string };
+  models: { editorial: string; light: string; image: string; fast: string };
   caps: { dailyUsd: number; monthlyUsd: number };
   tone: string;
 }
 
-const TOOL_META: Array<[string, string, string, "editorial" | "light" | "image"]> = [
+const TOOL_META: Array<[string, string, string, "editorial" | "light" | "fast" | "image"]> = [
   ["headlines", "اقتراح العناوين", "3 بدائل تُفحص بالحارس قبل العرض", "editorial"],
   ["excerpt", "توليد «قبل القراءة»", "خلاصة سطر واحد من المتن", "editorial"],
   ["improve", "تحسين الفقرات", "بفرق ظاهر — الاعتماد بنقرة منك", "editorial"],
   ["proofread", "التدقيق اللغوي", "تصحيح بلا إعادة صياغة", "editorial"],
   ["classify", "التصنيف الآلي", "سلسلة/قسم/شكل — اقتراح يطبَّق بنقرة", "light"],
   ["seo", "توليد SEO والكلمات المفتاحية", "عنوان ووصف بحث + كلمات مفتاحية من المتن", "editorial"],
-  ["full_edit", "التحرير الذكي الشامل", "إعادة تحرير كاملة بأسلوب العلم + عنوان وSEO وتصنيف — التطبيق بنقرة", "editorial"],
+  ["full_edit", "التحرير الذكي الشامل", "Sonnet يحرر المتن وHaiku يولّد العنوان وSEO والتصنيف بالتوازي", "fast"],
   ["jak", "جاك العلم", "تحليل التقرير إلى خطة شرائح + عمليات الشريحة الواحدة — بمدقق أرقام صارم", "editorial"],
   ["images", "توليد الصور", "الأنماط الثلاثة: حقيقي/توضيحي/رسومي", "image"],
 ];
