@@ -8,9 +8,9 @@ import {
 } from "@/lib/content/types";
 import type { BreakingItem } from "@/lib/content/provider";
 import { formatArticleDek } from "@/lib/format";
-import { absoluteMedia, FALLBACK_SITE as SITE, requestOrigin } from "./origin";
+import { absoluteMedia, FALLBACK_SITE as SITE, MEDIA_WIDTH, optimizedMedia, requestOrigin } from "./origin";
 
-export { absoluteMedia, requestOrigin };
+export { absoluteMedia, MEDIA_WIDTH, optimizedMedia, requestOrigin };
 
 
 export const MOBILE_HOME_CONTRACT = "mobile-home.v1";
@@ -54,7 +54,11 @@ export type MobileHomePayload = {
 };
 
 
-export function toMobileCard(story: Story, origin: string = SITE): MobileStoryCard {
+export function toMobileCard(
+  story: Story,
+  origin: string = SITE,
+  imageWidth: number = MEDIA_WIDTH.card,
+): MobileStoryCard {
   return {
     id: story.id,
     slug: story.slug,
@@ -66,7 +70,7 @@ export function toMobileCard(story: Story, origin: string = SITE): MobileStoryCa
     readingMinutes: story.readingMinutes,
     series: story.series ?? null,
     format: story.format ?? null,
-    image: absoluteMedia(story.image, origin),
+    image: optimizedMedia(story.image, origin, imageWidth),
     publishedAt: story.publishedAt ?? null,
   };
 }
@@ -82,7 +86,7 @@ export function toMobileHome(
     generatedAt,
     breaking,
     brief: home.brief,
-    hero: toMobileCard(home.hero, origin),
+    hero: toMobileCard(home.hero, origin, MEDIA_WIDTH.full),
     minis: home.minis.map((story) => toMobileCard(story, origin)),
     mosaic: home.mosaic.map((story) => toMobileCard(story, origin)),
     dataStory: home.dataStory ? toMobileCard(home.dataStory, origin) : null,

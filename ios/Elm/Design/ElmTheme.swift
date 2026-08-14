@@ -45,12 +45,14 @@ enum ElmTheme {
     static var ink2: Color { dyn((0.306, 0.373, 0.471, 1), (0.655, 0.714, 0.796, 1)) }         // #4e5f78 / #a7b6cb
     /// ميتا فقط — لا تستخدم لنص فقرة في الوضع الفاتح (تباين ~3.1:1).
     static var ink3: Color { dyn((0.518, 0.580, 0.671, 1), (0.443, 0.510, 0.608, 1)) }         // #8494ab / #71829b
-    static var line: Color { dyn((0.886, 0.910, 0.945, 1), (0.125, 0.188, 0.290, 1)) }         // #e2e8f1 / #20304a
-    static var line2: Color { dyn((0.827, 0.863, 0.914, 1), (0.165, 0.235, 0.345, 1)) }        // #d3dce9 / #2a3c58
+    /// خطوط التفاصيل (صفوف داخل بلوك) — «الورقة المسطّرة» تفرّق بينها وبين حدود البلوكات.
+    static var line: Color { dyn((0.906, 0.925, 0.957, 1), (0.118, 0.176, 0.275, 1)) }         // #e7ecf4 / #1e2d46
+    /// خطوط البنية (حدود البلوكات والأقسام) — أثقل درجة من line عمدًا.
+    static var line2: Color { dyn((0.780, 0.824, 0.886, 1), (0.208, 0.286, 0.424, 1)) }        // #c7d2e2 / #35496c
     static var navy: Color { dyn((0.071, 0.157, 0.294, 1), (0.086, 0.161, 0.290, 1)) }         // #12284b / #16294a
     static let navyDeep = hex("0b1a33")
-    /// تمييز فقط — ممنوع نصًا على أبيض (تباين ~1.8:1).
-    static let gold = hex("f5b92e")
+    /// ذهب الطبعة التحريرية — عُمّق عن #f5b92e القديم ليصير مقروءًا AA فوق السطح.
+    static var gold: Color { dyn((0.812, 0.604, 0.086, 1), (0.878, 0.678, 0.169, 1)) }         // #cf9a16 / #e0ad2b
     static let accent = hex("2B5C9E")
     static let success = hex("2eb873")
     static let focus = hex("3d7ef7")
@@ -89,9 +91,11 @@ enum ElmTheme {
         )
     }
 
-    static let radiusSm: CGFloat = 10
-    static let radiusMd: CGFloat = 16
-    static let radiusLg: CGFloat = 20
+    /// زوايا الوسائط في الطبعة التحريرية — شبه قائمة كما في `--r-ui: 4px`.
+    static let radiusUI: CGFloat = 4
+    static let radiusSm: CGFloat = 12
+    static let radiusMd: CGFloat = 18
+    static let radiusLg: CGFloat = 26
 }
 
 /// بطاقة «المنشور»: سطح + حدّ + ظل خفيف — تكرّرت في كل شاشة فاستُخرجت.

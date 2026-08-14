@@ -7,7 +7,7 @@ export async function GET(request: Request) {
 
   return Response.json(payload, {
     headers: {
-      "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+      "Cache-Control": "public, max-age=60, s-maxage=120, stale-while-revalidate=600",
       "X-Content-Contract": MOBILE_HOME_CONTRACT,
       "X-Content-Source": await contentSource(),
     },

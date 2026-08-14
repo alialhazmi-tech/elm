@@ -25,6 +25,8 @@ export async function GET(
       return new Response("Not found", { status: 404 });
     }
     if (isMissingStoredImage(error)) return new Response("Not found", { status: 404 });
+    // كانت 502 المتقطعة (33 بايت) تمضي بصمت — بلا أثر في السجلات يُعرف منه السبب.
+    console.error("[uploads] فشل جلب الصورة من المخزن:", error);
     return new Response("تعذر تحميل الصورة.", { status: 502 });
   }
 }

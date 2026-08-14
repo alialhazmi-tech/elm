@@ -40,9 +40,16 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   compress: true,
   images: {
-    formats: ["image/avif", "image/webp"],
-    deviceSizes: [360, 640, 768, 1024, 1280, 1920],
+    // webp فقط: ترميز AVIF أبطأ بمرات على حاوية Railway المشتركة مع الـ API،
+    // وwebp مقروء في التطبيق والمتصفحات كلها.
+    formats: ["image/webp"],
+    deviceSizes: [360, 640, 768, 1080, 1280, 1920],
     imageSizes: [320, 480, 640],
+    // إلزامي في Next 16 — بدونه يرفض المحسّن كل طلب (كما حدث في الإنتاج).
+    qualities: [60, 75],
+    // صور ووردبريس القديمة بلا Cache-Control؛ بدون حد أدنى يعاد جلبها كل دقيقة.
+    minimumCacheTTL: 2678400,
+    localPatterns: [{ pathname: "/uploads/**", search: "" }],
     dangerouslyAllowSVG: false,
     // أصل الوسائط الحالي؛ ينتقل إلى media.alelm.net على R2 ضمن M4.
     remotePatterns: [{ protocol: "https", hostname: "dash.alelm.net", pathname: "/wp-content/**" }],

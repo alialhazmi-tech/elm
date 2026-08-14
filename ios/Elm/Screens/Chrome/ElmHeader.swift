@@ -84,8 +84,9 @@ struct ElmHeader: View {
 
     private var brand: some View {
         HStack(spacing: 9) {
+            // كلمة الهوية في الويب تُرسم بخط العناوين 800 — لا بالكوفي (ذلك لتقارير جاك).
             Text("العلم")
-                .font(ElmFonts.logo(.title3))
+                .font(ElmFonts.display(.title3, weight: .heavy))
                 .foregroundStyle(ElmTheme.ink)
             Rectangle()
                 .fill(ElmTheme.line2)

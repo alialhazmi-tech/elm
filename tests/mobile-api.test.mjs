@@ -94,6 +94,34 @@ test("رابط الوسائط يُشتق من أصل الطلب لا من نطا
   );
 });
 
+test("عقد الموبايل يعيد روابط عبر محسّن الصور لا الأصول الكاملة", async () => {
+  const { optimizedMedia, MEDIA_WIDTH } = await import("../lib/mobile/origin.ts");
+  const origin = "https://elm-production-5035.up.railway.app";
+
+  // المحلية: نسبية داخل url= حتى تطابق localPatterns، بمقاس البطاقة الافتراضي
+  assert.equal(
+    optimizedMedia("/uploads/a.jpg", origin),
+    `${origin}/_next/image?url=%2Fuploads%2Fa.jpg&w=${MEDIA_WIDTH.card}&q=75`,
+  );
+
+  // ووردبريس المسموحة في remotePatterns: تُغلّف كاملة بالمقاس المطلوب
+  assert.equal(
+    optimizedMedia("https://dash.alelm.net/wp-content/x.webp", origin, MEDIA_WIDTH.full),
+    `${origin}/_next/image?url=${encodeURIComponent("https://dash.alelm.net/wp-content/x.webp")}&w=${MEDIA_WIDTH.full}&q=75`,
+  );
+
+  // خارج القائمة المسموحة: يمرّ كما هو بدل رابط محسّن سيرد 400
+  assert.equal(optimizedMedia("https://example.com/x.jpg", origin), "https://example.com/x.jpg");
+  assert.equal(optimizedMedia(undefined, origin), null);
+
+  // المقاسات ضمن deviceSizes/imageSizes في next.config.ts — خارجها يرفض المحسّن الطلب
+  const config = await read("next.config.ts");
+  for (const width of Object.values(MEDIA_WIDTH)) {
+    assert.match(config, new RegExp(`deviceSizes: \\[[^\\]]*\\b${width}\\b`) , `العرض ${width} خارج deviceSizes`);
+  }
+  assert.match(config, /qualities: \[[^\]]*\b75\b/);
+});
+
 test("دوال العقد تعلن معامل الأصل صراحةً — لا تتكئ على متغير DOM العام", async () => {
   // فخ صامت: `origin` متغير عام في lib.dom فيرضيه TypeScript ويمر البناء،
   // ثم ينفجر ReferenceError في Node. الحارس على المصدر لا على النوع.

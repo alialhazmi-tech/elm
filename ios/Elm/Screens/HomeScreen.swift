@@ -1,13 +1,14 @@
 import SwiftUI
 
-/// 1a — الرئيسية: التاريخ ← العاجل ← حزام السلاسل ← الموجز ← المادة الرئيسية
-/// ← المصغّرات ← بالأرقام ← الأكثر قراءة. الترتيب جزء من المواصفة لا تفصيل تنفيذي.
+/// 1a — الرئيسية بلغة «الطبعة التحريرية»: التاريخ ← العاجل ← سكة السلاسل
+/// ← منطقة الصدارة (الصدارة ثم الموجز كما تتراص أعمدة الويب على الهاتف)
+/// ← صفوف السياق ← سؤال الأسبوع ← بالأرقام ← الأكثر قراءة ← مرئي ← الختام.
 struct HomeScreen: View {
     @State private var store = HomeStore()
     @State private var storiesPresented = false
 
     var body: some View {
-        ElmScreen(showBrand: true, onRefresh: { await store.refresh() }) {
+        ElmScreen(showBrand: true, bottomInset: 76, onRefresh: { await store.refresh() }) {
             if let home = store.payload {
                 feed(home)
             } else if store.loading {
@@ -42,9 +43,8 @@ struct HomeScreen: View {
                     .foregroundStyle(ElmTheme.ink2)
                     .padding(10)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .padding(.horizontal, 18)
-                    .padding(.top, 14)
+                    .background(ElmTheme.surface2)
+                    .overlay(alignment: .bottom) { Rectangle().fill(ElmTheme.line).frame(height: 1) }
             }
 
             DayStrip()
@@ -53,63 +53,69 @@ struct HomeScreen: View {
 
             if let breaking = home.breaking {
                 BreakingBanner(item: breaking)
-                    .padding(.horizontal, 18)
                     .padding(.top, 12)
             }
 
             SeriesBelt(series: home.series.isEmpty ? SeriesPalette.chips : home.series)
-                .padding(.top, 12)
+                .padding(.top, home.breaking == nil ? 12 : 0)
 
-            if !home.brief.isEmpty {
-                BriefBlock(
-                    items: home.brief,
-                    related: [home.hero] + home.minis + [home.dataStory].compactMap { $0 }
-                ) { storiesPresented = true }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 16)
-            }
-
-            HeroCard(story: home.hero)
-                .padding(.horizontal, 18)
-                .padding(.top, 16)
+            LeadRegion(
+                hero: home.hero,
+                brief: home.brief,
+                related: [home.hero] + home.minis + [home.dataStory].compactMap { $0 }
+            ) { storiesPresented = true }
+                .padding(.top, 14)
 
             if !home.minis.isEmpty {
-                VStack(spacing: 10) {
-                    ForEach(home.minis) { story in
-                        MiniStoryRow(story: story)
+                VStack(spacing: 0) {
+                    ForEach(Array(home.minis.enumerated()), id: \.element.id) { index, story in
+                        MiniStoryRow(story: story, first: index == 0)
                     }
                 }
                 .padding(.horizontal, 18)
-                .padding(.top, 14)
+                .padding(.top, 6)
+            }
+
+            if let question = home.question {
+                WhyPanel(question: question)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 30)
             }
 
             if !home.numbers.isEmpty {
                 NumbersRail(stats: home.numbers)
-                    .padding(.top, 24)
+                    .padding(.horizontal, 18)
+                    .padding(.top, 30)
             }
 
             if !home.mostRead.isEmpty {
                 MostReadList(stories: home.mostRead)
                     .padding(.horizontal, 18)
-                    .padding(.top, 24)
+                    .padding(.top, 30)
             }
 
             if !home.videos.isEmpty {
-                VStack(alignment: .leading, spacing: 11) {
+                VStack(alignment: .leading, spacing: 0) {
                     SectionHead(title: "مرئي ومسموع", subtitle: "المعرفة بأكثر من شكل")
-                    ForEach(home.videos.prefix(2)) { story in
-                        StoryTile(story: story)
+                    VStack(alignment: .leading, spacing: 22) {
+                        ForEach(home.videos.prefix(2)) { story in
+                            StoryTile(story: story)
+                        }
                     }
+                    .padding(.top, 16)
                 }
                 .padding(.horizontal, 18)
-                .padding(.top, 24)
+                .padding(.top, 30)
             }
+
+            HomeFooter()
+                .padding(.top, 40)
         }
     }
 }
 
 extension SeriesPalette {
-    /// حزام احتياطي حين لا يرسل الخادم السلاسل — الطيف نفسه من `series.ts`.
+    /// سكة احتياطية حين لا يرسل الخادم السلاسل — الطيف نفسه من `series.ts`.
     static var chips: [SeriesChip] {
         active.map { SeriesChip(slug: $0.id, name: $0.name, description: "", color: $0.colorHex) }
     }

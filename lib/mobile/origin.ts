@@ -26,3 +26,34 @@ export function absoluteMedia(url: string | undefined, origin: string = FALLBACK
   const path = url.startsWith("/") ? url : `/${url}`;
   return `${origin}${path}`;
 }
+
+/**
+ * مقاسات العقد الجوّال — من deviceSizes/imageSizes في next.config.ts حصرًا،
+ * فالمحسّن يرفض أي عرض خارجها بـ 400.
+ */
+export const MEDIA_WIDTH = {
+  /** بطاقات القوائم والمصغّرات. */
+  card: 640,
+  /** الصدارة وصفحة المادة وشرائح تقارير جاك — ملء عرض الشاشة على 3x. */
+  full: 1080,
+} as const;
+
+/**
+ * رابط عبر محسّن صور Next بدل الأصل الكامل: أصل `/uploads` كان يمرّ من S3
+ * بـ 0.7–1MB للصورة، والمحسّن يصغّرها إلى webp بعشرات الكيلوبايتات ويكيّشها.
+ * الروابط المحلية تُمرَّر نسبية (localPatterns)، والخارجية كاملة (remotePatterns).
+ */
+export function optimizedMedia(
+  url: string | undefined,
+  origin: string = FALLBACK_SITE,
+  width: number = MEDIA_WIDTH.card,
+): string | null {
+  if (!url) return null;
+  const external = /^https?:\/\//i.test(url);
+  if (external && !url.startsWith("https://dash.alelm.net/wp-content/")) {
+    // خارج قائمة remotePatterns المسموحة — يمرّ كما هو بدل رابط محسّن سيرد 400.
+    return url;
+  }
+  const target = external ? url : url.startsWith("/") ? url : `/${url}`;
+  return `${origin}/_next/image?url=${encodeURIComponent(target)}&w=${width}&q=75`;
+}

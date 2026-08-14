@@ -7,7 +7,7 @@ import {
 } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
 import { stripHtmlToText } from "@/lib/content/html";
-import { absoluteMedia, toMobileCard, type MobileSeriesChip, type MobileStoryCard } from "@/lib/mobile/home";
+import { MEDIA_WIDTH, optimizedMedia, toMobileCard, type MobileSeriesChip, type MobileStoryCard } from "@/lib/mobile/home";
 import { isReportPalette, REPORT_PALETTES, type ReportPalette, type SlideData } from "@/lib/tahrir/jak";
 import { forYouForMember } from "@/lib/personalization/recommend";
 import { normalizeArabic } from "@/lib/policy/normalize";
@@ -115,7 +115,7 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
             body: row.body,
             stat: row.stat || null,
             statLabel: row.statLabel || null,
-            image: absoluteMedia(row.image ?? undefined, origin),
+            image: optimizedMedia(row.image ?? undefined, origin, MEDIA_WIDTH.full),
             eyebrow: data?.eyebrow || null,
             focal: data?.focalPoint ?? null,
             textSide: data?.textSafeArea ?? null,
@@ -134,7 +134,7 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
   return {
     contract: MOBILE_STORY_CONTRACT,
     story: {
-      ...toMobileCard(story, origin),
+      ...toMobileCard(story, origin, MEDIA_WIDTH.full),
       body: stripHtmlToText(story.body ?? story.excerpt),
       factCheck: story.factCheck ?? null,
     },
@@ -254,7 +254,9 @@ export async function toMobileForYou(memberId: string, limit = 9, origin?: strin
 
 export async function mobileHeaders(contract: string) {
   return {
-    "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+    // max-age يخاطب كاش URLSession في التطبيق مباشرة — لا CDN أمام Railway
+    // فقيمة s-maxage وحدها كانت حبرًا على ورق وكل دخول شاشة رحلة كاملة للأصل.
+    "Cache-Control": "public, max-age=60, s-maxage=120, stale-while-revalidate=600",
     "X-Content-Contract": contract,
     "X-Content-Source": await contentSource(),
   };

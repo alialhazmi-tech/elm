@@ -63,6 +63,8 @@ const SEED_CORPUS: Corpus = {
 
 const DB_CACHE_MS = 60_000;
 let corpusCache: { at: number; value: Corpus } | null = null;
+/** طلبات متزامنة على كاش بارد كانت تطلق استعلامًا كاملًا لكل واحد (٨ مرات في /series). */
+let corpusInflight: Promise<Corpus> | null = null;
 let dbWarned = false;
 const supportedSeriesSlugs = new Set<string>(ALL_SERIES.map((series) => series.slug));
 
@@ -76,7 +78,14 @@ async function loadCorpus(): Promise<Corpus> {
   const db = getDb();
   if (!db) return SEED_CORPUS;
   if (corpusCache && Date.now() - corpusCache.at < DB_CACHE_MS) return corpusCache.value;
+  if (corpusInflight) return corpusInflight;
+  corpusInflight = fetchCorpus(db).finally(() => {
+    corpusInflight = null;
+  });
+  return corpusInflight;
+}
 
+async function fetchCorpus(db: NonNullable<ReturnType<typeof getDb>>): Promise<Corpus> {
   try {
     // الموقع العام يرى المنشور فقط — مسودات «تحرير العلم» لا تتسرب هنا.
     const rows = await db

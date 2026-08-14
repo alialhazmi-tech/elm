@@ -101,24 +101,37 @@ extension View {
     }
 }
 
-/// عنوان قسم داخل الشاشة: اسم عريض وسطر شارح خافت بجواره.
+/// افتتاحية القسم الثلاثية من الويب: شرطة ذهبية 22×4، اسم عريض، سطر شارح خافت —
+/// ثم خط بنية سفلي يفصل الرأس عن مادته.
 struct SectionHead: View {
     let title: String
     var subtitle: String? = nil
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(title)
-                .font(ElmFonts.display(.title3, weight: .heavy))
-                .foregroundStyle(ElmTheme.ink)
-            if let subtitle {
-                Text(subtitle)
-                    .font(ElmFonts.text(.caption2))
-                    .foregroundStyle(ElmTheme.ink3)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 1.5, style: .continuous)
+                        .fill(ElmTheme.gold)
+                        .frame(width: 22, height: 4)
+                        .accessibilityHidden(true)
+                    Text(title)
+                        .font(ElmFonts.display(size: 18, weight: .heavy, relativeTo: .title3))
+                        .foregroundStyle(ElmTheme.ink)
+                }
+                if let subtitle {
+                    Text(subtitle)
+                        .font(ElmFonts.text(size: 11.5, relativeTo: .caption2))
+                        .foregroundStyle(ElmTheme.ink3)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
+                Spacer(minLength: 0)
             }
-            Spacer(minLength: 0)
+            Rectangle()
+                .fill(ElmTheme.line2)
+                .frame(height: 1)
+                .padding(.top, 10)
         }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
