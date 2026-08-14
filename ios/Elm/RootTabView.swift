@@ -29,8 +29,9 @@ struct RootTabView: View {
             }
         }
         .animation(.snappy(duration: 0.25), value: chrome.immersive)
+        // لا لافتة فوق القارئ الغامر: تغطي شريط تقدم التقرير، والمحتوى محفوظ أصلًا.
         .overlay(alignment: .top) {
-            if connectivity.isOffline {
+            if connectivity.isOffline && !chrome.immersive {
                 OfflinePill()
                     .padding(.top, 4)
                     .transition(.move(edge: .top).combined(with: .opacity))
