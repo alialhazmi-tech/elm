@@ -14,6 +14,7 @@ import {
   type InfographicThemeId,
 } from "@/lib/ai/infographic-types";
 
+import { TransparentCutout } from "./transparent-cutout";
 import "./infographic-motion.css";
 
 // أصوات المحيط التخليقية عبر Web Audio API
@@ -154,15 +155,11 @@ function AnimatedCounter({
 function AssetVisual({ item, accentColor }: { item: InfographicShowcaseItem; accentColor: string }) {
   if (item.imageUrl) {
     return (
-      <div className="info-cutout-container">
-        <div className="info-cutout-glow" style={{ background: accentColor }} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={item.imageUrl}
-          alt={item.name}
-          className="info-cutout-asset"
-        />
-      </div>
+      <TransparentCutout
+        src={item.imageUrl}
+        alt={item.name}
+        glowColor={accentColor}
+      />
     );
   }
 
@@ -458,30 +455,41 @@ export function InteractiveInfographic({
         {/* 3. الإنتاج متنوع (Showcase Section with 3D Floating Assets) */}
         <section id="showcase" className="space-y-8">
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-black mb-2 flex items-center justify-center gap-3">
+            <h2
+              className="text-2xl sm:text-3xl font-black mb-2 flex items-center justify-center gap-3 text-white"
+              style={{ color: "#ffffff", textShadow: "0 2px 10px rgba(0,0,0,0.8)" }}
+            >
               <span className="w-8 h-0.5" style={{ background: theme.accentColor }} />
               {data.showcaseSection?.title || "الإنتاج متنوّع"}
               <span className="w-8 h-0.5" style={{ background: theme.accentColor }} />
             </h2>
-            <p className="text-sm text-white/70 max-w-xl mx-auto">{data.showcaseSection?.subtitle}</p>
+            <p className="text-sm max-w-xl mx-auto" style={{ color: "rgba(240, 253, 250, 0.85)" }}>
+              {data.showcaseSection?.subtitle}
+            </p>
           </div>
 
           {/* فلاتر التصنيف */}
           {categories.length > 2 && (
             <div className="flex flex-wrap items-center justify-center gap-2 my-6">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                    selectedCategory === cat
-                      ? "bg-white text-slate-900 shadow-lg font-bold"
-                      : "bg-white/5 text-white/70 hover:bg-white/10"
-                  }`}
-                >
-                  {cat === "all" ? "جميع الأنواع" : cat}
-                </button>
-              ))}
+              {categories.map((cat) => {
+                const isActive = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    type="button"
+                    className="px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer"
+                    style={{
+                      background: isActive ? theme.accentColor : "rgba(255,255,255,0.08)",
+                      color: isActive ? "#021224" : "#ffffff",
+                      border: isActive ? "none" : "1px solid rgba(255,255,255,0.15)",
+                      boxShadow: isActive ? `0 0 16px ${theme.accentColor}88` : "none",
+                    }}
+                  >
+                    {cat === "all" ? "جميع الأنواع" : cat}
+                  </button>
+                );
+              })}
             </div>
           )}
 
@@ -589,24 +597,32 @@ export function InteractiveInfographic({
             <div className="inline-block px-4 py-1 rounded-full text-xs font-black mb-3 bg-amber-400/20 text-amber-300 border border-amber-400/30">
               رؤية VISION 2030
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black mb-3">{data.visionSection?.title || "الرؤية تقود النمو"}</h2>
+            <h2 className="text-3xl sm:text-4xl font-black mb-3 text-white">{data.visionSection?.title || "الرؤية تقود النمو"}</h2>
             <p className="text-sm text-white/80 leading-relaxed">{data.visionSection?.subtitle}</p>
 
             {/* مبدل الرؤية التفاعلي */}
             <div className="inline-flex items-center bg-white/10 rounded-full p-1 border border-white/20 mt-6 shadow-inner">
               <button
+                type="button"
                 onClick={() => setVisionMode("current")}
-                className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  visionMode === "current" ? "bg-white text-slate-900 shadow-md" : "text-white/70 hover:text-white"
-                }`}
+                className="px-5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer"
+                style={{
+                  background: visionMode === "current" ? "#ffffff" : "transparent",
+                  color: visionMode === "current" ? "#021224" : "rgba(255,255,255,0.8)",
+                  boxShadow: visionMode === "current" ? "0 2px 8px rgba(0,0,0,0.4)" : "none",
+                }}
               >
                 الإنتاج الحالي (2024)
               </button>
               <button
+                type="button"
                 onClick={() => setVisionMode("2030")}
-                className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all ${
-                  visionMode === "2030" ? "bg-emerald-400 text-slate-950 shadow-md font-black" : "text-white/70 hover:text-white"
-                }`}
+                className="px-5 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer"
+                style={{
+                  background: visionMode === "2030" ? "#10b981" : "transparent",
+                  color: visionMode === "2030" ? "#021224" : "rgba(255,255,255,0.8)",
+                  boxShadow: visionMode === "2030" ? "0 0 16px rgba(16,185,129,0.6)" : "none",
+                }}
               >
                 مستهدفات 2030 🚀
               </button>
