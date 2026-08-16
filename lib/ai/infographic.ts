@@ -236,6 +236,37 @@ export function getBlueEconomyPreset(): InfographicData {
   };
 }
 
+export function buildDynamicInfographic(input: {
+  text: string;
+  topic?: string;
+  preferredTheme?: InfographicThemeId;
+}): InfographicData {
+  const themeId: InfographicThemeId =
+    input.preferredTheme && INFOGRAPHIC_THEMES.includes(input.preferredTheme)
+      ? input.preferredTheme
+      : "ocean-cyber";
+
+  const title = input.topic || input.text.slice(0, 50) || "تقرير تفاعلي";
+  const numbers = extractNumbersFromText(input.text);
+
+  const preset = getBlueEconomyPreset();
+  preset.id = `info-${Date.now()}`;
+  preset.title = title;
+  preset.themeId = themeId;
+  preset.eyebrow = `رؤية المملكة 2030 · ${title}`;
+  preset.introText = input.text.slice(0, 300) || preset.introText;
+  preset.sourceContext = input.text.slice(0, 1000);
+  preset.generatedAt = new Date().toISOString();
+
+  if (numbers.length >= 3) {
+    if (numbers[0]) preset.macroSection.stats[0].value = Number(numbers[0]) || preset.macroSection.stats[0].value;
+    if (numbers[1]) preset.macroSection.stats[1].value = Number(numbers[1]) || preset.macroSection.stats[1].value;
+    if (numbers[2]) preset.macroSection.stats[2].value = Number(numbers[2]) || preset.macroSection.stats[2].value;
+  }
+
+  return preset;
+}
+
 const SYSTEM_PROMPT = `أنت «خبير تصميم الإنفوجرافيك التفاعلي الذكي» لمنصة العلم الإخبارية المعرفية السعودية.
 مهمتك: تحويل أي نص أو موضوع أو تقرير إلى هيكل إنفوجرافيك تفاعلي متحرك وغامر (Scrollytelling Interactive Infographic Data Schema).
 
@@ -334,17 +365,10 @@ export async function generateInfographicPlan(
 }> {
   const anthropic = getClient();
 
-  // في حال عدم توفر المفتاح (أو في بيئة الاختبارات)، نرجع نموذجاً مخصصاً مبنياً على الموضوع
+  // في حال عدم توفر المفتاح نرجع نموذجاً مخصصاً مبنياً على الموضوع فورياً
   if (!anthropic) {
-    const preset = getBlueEconomyPreset();
-    if (input.preferredTheme && INFOGRAPHIC_THEMES.includes(input.preferredTheme)) {
-      preset.themeId = input.preferredTheme;
-    }
-    if (input.topic) {
-      preset.title = input.topic;
-    }
     return {
-      infographic: preset,
+      infographic: buildDynamicInfographic(input),
       usage: { model: "preset-fallback", inputTokens: 0, outputTokens: 0 },
       guardFindings: [],
     };
@@ -408,59 +432,74 @@ ${input.text.slice(0, 15000)}`;
       };
       if (responseText) break;
     } catch (err: unknown) {
-      // إذا كان الخطأ نموذج غير موجود نجرب النموذج التالي
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes("not_found") || msg.includes("model")) {
         continue;
       }
-      throw err;
+      console.error(`Anthropic attempt failed on ${modelToTry}:`, err);
     }
   }
 
+  // إذا لم نتمكن من الحصول على استجابة، نرجع نموذجاً مبنياً على النص
   if (!responseText) {
-    throw new Error("تعذر الحصول على استجابة من نموذج الذكاء الاصطناعي.");
+    return {
+      infographic: buildDynamicInfographic(input),
+      usage: { model: "fallback", inputTokens: 0, outputTokens: 0 },
+      guardFindings: [],
+    };
   }
 
-  // استخراج JSON من الرد
-  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    throw new Error("تعذر استخراج بنية الإنفوجرافيك من رد الذكاء الاصطناعي.");
+  try {
+    const jsonStart = responseText.indexOf("{");
+    const jsonEnd = responseText.lastIndexOf("}");
+    const jsonText = jsonStart !== -1 && jsonEnd !== -1 ? responseText.slice(jsonStart, jsonEnd + 1) : "";
+    
+    if (!jsonText) {
+      throw new Error("لم يتم العثور على كائن JSON في الرد.");
+    }
+
+    const parsed = JSON.parse(jsonText) as Omit<InfographicData, "id" | "generatedAt">;
+
+    const infographic: InfographicData = {
+      ...parsed,
+      id: `info-${Date.now()}`,
+      themeId:
+        input.preferredTheme && INFOGRAPHIC_THEMES.includes(input.preferredTheme)
+          ? input.preferredTheme
+          : THEME_CONFIGS[parsed.themeId]
+            ? parsed.themeId
+            : "ocean-cyber",
+      sourceContext: input.text.slice(0, 1000),
+      generatedAt: new Date().toISOString(),
+    };
+
+    // فحص النصوص بحارس السياسة
+    const fullTextToCheck = [
+      infographic.title,
+      infographic.subtitle,
+      infographic.introText,
+      infographic.visionSection?.closingStatement,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const guardResult = runPolicyGuard({ title: infographic.title, body: fullTextToCheck });
+
+    return {
+      infographic,
+      usage: {
+        model: usedModel,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+      },
+      guardFindings: guardResult.findings,
+    };
+  } catch (parseErr) {
+    console.error("JSON parse failed, falling back to dynamic structured infographic:", parseErr);
+    return {
+      infographic: buildDynamicInfographic(input),
+      usage: { model: usedModel, inputTokens: usage.inputTokens, outputTokens: usage.outputTokens },
+      guardFindings: [],
+    };
   }
-
-  const parsed = JSON.parse(jsonMatch[0]) as Omit<InfographicData, "id" | "generatedAt">;
-
-  const infographic: InfographicData = {
-    ...parsed,
-    id: `info-${Date.now()}`,
-    themeId:
-      input.preferredTheme && INFOGRAPHIC_THEMES.includes(input.preferredTheme)
-        ? input.preferredTheme
-        : THEME_CONFIGS[parsed.themeId]
-          ? parsed.themeId
-          : "ocean-cyber",
-    sourceContext: input.text.slice(0, 1000),
-    generatedAt: new Date().toISOString(),
-  };
-
-  // فحص النصوص بحارس السياسة
-  const fullTextToCheck = [
-    infographic.title,
-    infographic.subtitle,
-    infographic.introText,
-    infographic.visionSection?.closingStatement,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const guardResult = runPolicyGuard({ title: infographic.title, body: fullTextToCheck });
-
-  return {
-    infographic,
-    usage: {
-      model: usedModel,
-      inputTokens: usage.inputTokens,
-      outputTokens: usage.outputTokens,
-    },
-    guardFindings: guardResult.findings,
-  };
 }

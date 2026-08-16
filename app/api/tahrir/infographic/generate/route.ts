@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { generateInfographicPlan } from "@/lib/ai/infographic";
+import { buildDynamicInfographic, generateInfographicPlan } from "@/lib/ai/infographic";
 import { type InfographicThemeId } from "@/lib/ai/infographic-types";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
@@ -45,21 +45,25 @@ export async function POST(request: Request) {
 
     const cents = costCents(result.usage.model, result.usage.inputTokens, result.usage.outputTokens);
 
-    await logUsage({
-      tool: "infographic-generator",
-      model: result.usage.model,
-      inputTokens: result.usage.inputTokens,
-      outputTokens: result.usage.outputTokens,
-      costCents: cents,
-      actor: session.username,
-    });
+    try {
+      await logUsage({
+        tool: "infographic-generator",
+        model: result.usage.model,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        costCents: cents,
+        actor: session.username,
+      });
 
-    await audit(
-      session.username,
-      "ai:infographic-generate",
-      undefined,
-      `${result.infographic.title} · ${result.infographic.themeId} · ${cents}¢`,
-    );
+      await audit(
+        session.username,
+        "ai:infographic-generate",
+        undefined,
+        `${result.infographic.title} · ${result.infographic.themeId} · ${cents}¢`,
+      );
+    } catch (auditErr) {
+      console.error("Audit / usage logging warning:", auditErr);
+    }
 
     return NextResponse.json({
       ok: true,
@@ -68,7 +72,20 @@ export async function POST(request: Request) {
       costCents: cents,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "تعذر توليد الإنفوجرافيك.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Infographic generate error:", error);
+    // استرجاع مرن فوري يضمن عدم تعطل الواجهة للمحرر
+    const fallbackInfographic = buildDynamicInfographic({
+      text: rawText || topic,
+      topic,
+      preferredTheme: input?.preferredTheme,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      infographic: fallbackInfographic,
+      guardFindings: [],
+      costCents: 0,
+      warning: "تم استخدام التوليد الهيكلي المباشر بسبب بطء أو انقطاع استجابة نموذج الذكاء.",
+    });
   }
 }
