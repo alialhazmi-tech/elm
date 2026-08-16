@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * استوديو الإنفوجرافيك التفاعلي الذكي — لوحة التحكم والتحرير المباشر.
+ * استوديو الإنفوجرافيك التفاعلي الذكي — لوحة التحكم والتحرير المباشر وتوليد الصور الحقيقية.
  */
 
 import { useState } from "react";
@@ -43,15 +43,19 @@ export function InfographicStudio() {
   const [text, setText] = useState("");
   const [theme, setTheme] = useState<InfographicThemeId>("ocean-cyber");
   const [busy, setBusy] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [imageProvider, setImageProvider] = useState<"auto" | "gemini" | "openai">("auto");
   const [error, setError] = useState("");
+  const [statusMsg, setStatusMsg] = useState("");
   const [infographic, setInfographic] = useState<InfographicData>(getBlueEconomyPreset());
   const [activeTab, setActiveTab] = useState<"preview" | "editor" | "prompts" | "export">("preview");
 
-  // توليد عبر API
+  // توليد هيكل ونصوص الإنفوجرافيك عبر AI
   const handleGenerate = async () => {
     if (busy) return;
     setBusy(true);
     setError("");
+    setStatusMsg("جارٍ تحليل النص وهيكلة الإنفوجرافيك...");
 
     try {
       const res = await fetch("/api/tahrir/infographic/generate", {
@@ -70,11 +74,44 @@ export function InfographicStudio() {
       }
 
       setInfographic(data.infographic);
+      setStatusMsg("تم توليد الهيكل بنجاح!");
       setActiveTab("preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ أثناء التوليد");
     } finally {
       setBusy(false);
+    }
+  };
+
+  // توليد الصور الحقيقية للإنفوجرافيك عبر Nano Banana (Gemini) أو GPT DALL-E
+  const handleGenerateRealImages = async () => {
+    if (imageBusy) return;
+    setImageBusy(true);
+    setError("");
+    setStatusMsg("جارٍ توليد الصور الحقيقية بالذكاء الاصطناعي (قد يستغرق 10-20 ثانية)...");
+
+    try {
+      const res = await fetch("/api/tahrir/infographic/generate-images", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          infographic,
+          provider: imageProvider,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "فشل توليد الصور");
+      }
+
+      setInfographic(data.infographic);
+      setStatusMsg("تم توليد وربط الصور الحقيقية بنجاح! تفقد المعاينة الحية.");
+      setActiveTab("preview");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر توليد الصور");
+    } finally {
+      setImageBusy(false);
     }
   };
 
@@ -92,7 +129,7 @@ export function InfographicStudio() {
           <div>
             <h2 style={{ fontSize: 18, fontWeight: 800 }}>استوديو الإنفوجرافيك التفاعلي الذكي</h2>
             <p style={{ fontSize: 13, color: "var(--t-ink2)", marginTop: 4 }}>
-              أدخل أي تقرير أو بيانات خام لتوليد تجربة بصرية متحركة ومتكاملة تشمل الأرقام، العناصر العائمة 3D، ومطالبات الصور.
+              أدخل أي تقرير لتوليد تجربة بصرية متحركة ومتكاملة، مع خيار توليد صور حقيقية عالية الدقة بنقرة واحدة.
             </p>
           </div>
           <span className="th-ai-tag">✦ مولّد بالذكاء</span>
@@ -166,13 +203,56 @@ export function InfographicStudio() {
             <span>نص التقرير أو البيانات التفصيلية (اختياري، يترك فارغاً للتوليد من الموضوع مباشرة):</span>
             <textarea
               className="th-imgen-prompt"
-              style={{ width: "100%", minHeight: 90, borderRadius: 8, padding: "10px 14px", fontSize: 13, marginTop: 4, display: "block" }}
+              style={{ width: "100%", minHeight: 80, borderRadius: 8, padding: "10px 14px", fontSize: 13, marginTop: 4, display: "block" }}
               placeholder="الصق هنا أي نص خبري أو أرقام وإحصائيات لترجمتها تلقائيًا إلى بطاقات تفاعلية وعناصر عائمة..."
               value={text}
               onChange={(e) => setText(e.target.value)}
             />
           </label>
         </div>
+
+        {/* اختيار مزود الصور */}
+        <div style={{ marginTop: 16, padding: "12px 16px", borderRadius: 10, background: "var(--bg-subtle, #f8fafc)", border: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "between", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700 }}>محرك توليد الصور:</span>
+            <select
+              className="th-select"
+              style={{ padding: "6px 10px", fontSize: 12, borderRadius: 6 }}
+              value={imageProvider}
+              onChange={(e) => setImageProvider(e.target.value as "auto" | "gemini" | "openai")}
+            >
+              <option value="auto">تلقائي (الأسرع والأدق)</option>
+              <option value="gemini">Google Gemini / Imagen (Nano Banana Pro)</option>
+              <option value="openai">OpenAI DALL-E 3 (GPT Images)</option>
+            </select>
+          </div>
+
+          <div style={{ display: "flex", gap: 8, marginRight: "auto" }}>
+            <button
+              type="button"
+              className="th-btn"
+              disabled={imageBusy}
+              onClick={handleGenerateRealImages}
+              style={{
+                padding: "8px 16px",
+                background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 12,
+                borderRadius: 8,
+                cursor: imageBusy ? "not-allowed" : "pointer",
+              }}
+            >
+              {imageBusy ? "⏳ جارٍ توليد الصور الحقيقية..." : "🎨 توليد صور حقيقية بالذكاء الاصطناعي"}
+            </button>
+          </div>
+        </div>
+
+        {statusMsg && !error && (
+          <div style={{ marginTop: 12, padding: "8px 12px", borderRadius: 8, background: "#f0fdf4", color: "#166534", fontSize: 12, fontWeight: 600 }}>
+            ✨ {statusMsg}
+          </div>
+        )}
 
         {error && (
           <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 8, background: "#fef2f2", color: "#b91c1c", fontSize: 13 }}>
@@ -195,7 +275,7 @@ export function InfographicStudio() {
               cursor: busy ? "not-allowed" : "pointer",
             }}
           >
-            {busy ? "جارٍ التحليل والتوليد بالذكاء..." : "✦ توليد الإنفوجرافيك التفاعلي"}
+            {busy ? "جارٍ التحليل والتوليد بالذكاء..." : "✦ توليد وهيكلة الإنفوجرافيك"}
           </button>
         </div>
       </section>
@@ -205,7 +285,7 @@ export function InfographicStudio() {
         {[
           { key: "preview", label: "👁️ المعاينة التفاعلية الحية" },
           { key: "editor", label: "✎ محرر المحتوى والأرقام" },
-          { key: "prompts", label: "🖼️ مطالبات توليد الصور AI" },
+          { key: "prompts", label: "🖼️ مطالبات وتوليد الصور AI" },
           { key: "export", label: "⤓ التصدير والتضمين" },
         ].map((tab) => (
           <button
@@ -319,10 +399,30 @@ export function InfographicStudio() {
 
       {activeTab === "prompts" && (
         <div className="th-panel" style={{ padding: 20 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 14 }}>مطالبات توليد الصور AI (Prompts)</h3>
-          <p style={{ fontSize: 13, color: "var(--t-ink2)", marginBottom: 16 }}>
-            تمت صياغة هذه المطالبات باللغة الإنجليزية لتوليد صور سينمائية عالية الجودة خالية من النصوص ومتوافقة مع الذكاء الاصطناعي (Gemini / Imagen).
-          </p>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div>
+              <h3 style={{ fontSize: 16, fontWeight: 700 }}>مطالبات وتوليد الصور بالذكاء الاصطناعي (AI Prompts)</h3>
+              <p style={{ fontSize: 13, color: "var(--t-ink2)", marginTop: 2 }}>
+                مطالبات مصممة بدقة لتوليد صور سينمائية فائقة الوضوح عبر Gemini (Nano Banana) و OpenAI DALL-E 3.
+              </p>
+            </div>
+            <button
+              type="button"
+              disabled={imageBusy}
+              onClick={handleGenerateRealImages}
+              style={{
+                padding: "8px 16px",
+                background: "linear-gradient(135deg, #8b5cf6, #6366f1)",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 12,
+                borderRadius: 8,
+                cursor: imageBusy ? "not-allowed" : "pointer",
+              }}
+            >
+              {imageBusy ? "⏳ جارٍ التوليد..." : "🎨 توليد كافة الصور الآن"}
+            </button>
+          </div>
 
           <div className="space-y-4">
             <div style={{ padding: 14, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
@@ -330,6 +430,11 @@ export function InfographicStudio() {
               <code style={{ display: "block", fontSize: 12, background: "#0f172a", color: "#38bdf8", padding: 10, borderRadius: 6, direction: "ltr", textAlign: "left" }}>
                 {infographic.hero.bgPrompt}
               </code>
+              {infographic.hero.bgImageUrl && (
+                <div style={{ marginTop: 8, fontSize: 12, color: "#16a34a", fontWeight: "bold" }}>
+                  ✓ تم توليد الصورة: {infographic.hero.bgImageUrl}
+                </div>
+              )}
             </div>
 
             <div style={{ padding: 14, borderRadius: 8, background: "#f8fafc", border: "1px solid #e2e8f0" }}>
@@ -348,6 +453,11 @@ export function InfographicStudio() {
                     <code style={{ display: "block", fontSize: 11, background: "#0f172a", color: "#a5f3fc", padding: 6, borderRadius: 4, direction: "ltr", textAlign: "left", marginTop: 4 }}>
                       {item.imagePrompt}
                     </code>
+                    {item.imageUrl && (
+                      <span style={{ fontSize: 11, color: "#16a34a", fontWeight: "bold" }}>
+                        ✓ الصورة جاهزة ومربوطة
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>
