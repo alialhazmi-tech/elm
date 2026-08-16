@@ -55,15 +55,22 @@ export function InfographicStudio() {
     if (busy) return;
     setBusy(true);
     setError("");
-    setStatusMsg("جارٍ تحليل النص وهيكلة الإنفوجرافيك...");
+    setStatusMsg("جارٍ تحليل النص واستخراج الأرقام وصياغة الإنفوجرافيك بالذكاء الاصطناعي...");
 
     try {
+      const topicToSend =
+        topic && topic !== "اقتصاد المدّ الأزرق"
+          ? topic
+          : text.trim()
+            ? ""
+            : topic;
+
       const res = await fetch("/api/tahrir/infographic/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topic,
-          text: text.trim() || topic,
+          topic: topicToSend,
+          text: text.trim() || topicToSend,
           preferredTheme: theme,
         }),
       });
@@ -74,8 +81,18 @@ export function InfographicStudio() {
       }
 
       setInfographic(data.infographic);
-      setStatusMsg("تم توليد الهيكل بنجاح!");
+      if (data.infographic.title) {
+        setTopic(data.infographic.title);
+      }
+      if (data.infographic.themeId) {
+        setTheme(data.infographic.themeId);
+      }
+      setStatusMsg("تم توليد الهيكل الجديد بنجاح من النص! تفقد المعاينة الحية بالأسفل.");
       setActiveTab("preview");
+
+      setTimeout(() => {
+        document.getElementById("studio-preview-section")?.scrollIntoView({ behavior: "smooth" });
+      }, 150);
     } catch (err) {
       setError(err instanceof Error ? err.message : "حدث خطأ أثناء التوليد");
     } finally {
@@ -309,11 +326,17 @@ export function InfographicStudio() {
       </div>
 
       {/* محتوى التبويب */}
-      {activeTab === "preview" && (
-        <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
-          <InteractiveInfographic data={infographic} enableControls={true} />
-        </div>
-      )}
+      <div id="studio-preview-section">
+        {activeTab === "preview" && (
+          <div style={{ borderRadius: 24, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            <InteractiveInfographic
+              key={infographic.id + "-" + (infographic.generatedAt || "")}
+              data={infographic}
+              enableControls={true}
+            />
+          </div>
+        )}
+      </div>
 
       {activeTab === "editor" && (
         <div className="th-panel" style={{ padding: 20 }}>
