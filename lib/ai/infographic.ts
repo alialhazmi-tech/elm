@@ -349,7 +349,6 @@ export async function generateInfographicPlan(
     };
   }
 
-  const model = "claude-3-5-sonnet-latest";
   const userMessage = `يرجى تحليل النص التالي وصياغة إنفوجرافيك تفاعلي متكامل ومبهر:
 الموضوع: ${input.topic || "تحليل تقرير"}
 السمة المفضلة (إن وجدت): ${input.preferredTheme || "تلقائي حسب الموضوع"}
@@ -357,20 +356,69 @@ export async function generateInfographicPlan(
 نص التقرير / البيانات:
 ${input.text.slice(0, 15000)}`;
 
+  const candidateModels = [
+    settings?.models?.editorial,
+    settings?.models?.fast,
+    "claude-3-7-sonnet-latest",
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-haiku-latest",
+    "claude-3-haiku-20240307",
+  ].filter(Boolean) as string[];
+
+  // تنظيف الأسماء غير المعتمدة
+  const resolvedModels = Array.from(
+    new Set(
+      candidateModels.map((m) => {
+        if (m === "claude-3-5-sonnet-latest" || m === "claude-sonnet-5" || m === "claude-opus-5") {
+          return "claude-3-7-sonnet-latest";
+        }
+        if (m === "claude-haiku-4-5") {
+          return "claude-3-5-haiku-latest";
+        }
+        return m;
+      }),
+    ),
+  );
+
   const systemPrompt = settings?.tone
     ? `${SYSTEM_PROMPT}\n\nنبرة التحرير المعتمدة:\n${settings.tone}`
     : SYSTEM_PROMPT;
 
-  const response = await anthropic.messages.create({
-    model,
-    max_tokens: 4000,
-    temperature: 0.2,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userMessage }],
-  });
+  let responseText = "";
+  let usedModel = resolvedModels[0] || "claude-3-7-sonnet-latest";
+  let usage = { inputTokens: 0, outputTokens: 0 };
 
-  const contentBlock = response.content[0];
-  const responseText = contentBlock.type === "text" ? contentBlock.text : "";
+  for (const modelToTry of resolvedModels) {
+    try {
+      const response = await anthropic.messages.create({
+        model: modelToTry,
+        max_tokens: 4000,
+        temperature: 0.2,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+      });
+
+      const contentBlock = response.content[0];
+      responseText = contentBlock.type === "text" ? contentBlock.text : "";
+      usedModel = modelToTry;
+      usage = {
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+      };
+      if (responseText) break;
+    } catch (err: unknown) {
+      // إذا كان الخطأ نموذج غير موجود نجرب النموذج التالي
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes("not_found") || msg.includes("model")) {
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  if (!responseText) {
+    throw new Error("تعذر الحصول على استجابة من نموذج الذكاء الاصطناعي.");
+  }
 
   // استخراج JSON من الرد
   const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -408,9 +456,9 @@ ${input.text.slice(0, 15000)}`;
   return {
     infographic,
     usage: {
-      model,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      model: usedModel,
+      inputTokens: usage.inputTokens,
+      outputTokens: usage.outputTokens,
     },
     guardFindings: guardResult.findings,
   };
