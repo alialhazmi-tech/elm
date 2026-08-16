@@ -60,6 +60,9 @@ export function SideNav({ reviewCount, total }: { reviewCount: number; total: nu
         <span className="ic">▤</span> الوسائط
       </Link>
       <div className="sec">الذكاء الاصطناعي</div>
+      <Link href="/tahrir/infographics" className={active("/tahrir/infographics")}>
+        <span className="ic">📊</span> استوديو الإنفوجرافيك
+      </Link>
       <Link href="/tahrir/ai-images" className={active("/tahrir/ai-images")}>
         <span className="ic">◪</span> توليد الصور
       </Link>
