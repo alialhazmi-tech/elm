@@ -86,7 +86,7 @@ export function getBlueEconomyPreset(): InfographicData {
           statSuffix: "ألف طن",
           description: "أكبر مساهم في صادرات الاستزراع المائي إلى الأسواق العالمية.",
           imagePrompt:
-            "Isolated realistic single large white tiger prawn shrimp on dark transparent background, studio underwater soft rim lighting, ultra sharp details.",
+            "Single centered white tiger prawn shrimp on solid pitch black background (#000000), intense studio rim lighting, pure black void, no shadows, no floor, no checkerboard, ultra sharp 8k detail.",
           floatSpeedSeconds: 4,
           tags: ["صادرات", "مياه مالحة"],
         },
@@ -98,7 +98,7 @@ export function getBlueEconomyPreset(): InfographicData {
           statSuffix: "ألف طن",
           description: "إنتاج الأقفاص العائمة في البحر الأحمر بجودة غذائية فائقة.",
           imagePrompt:
-            "Isolated photorealistic European seabass fish swimming sideways on dark transparent background, iridescent scales, underwater cinematic rim light.",
+            "Single European seabass fish swimming sideways on solid pitch black background (#000000), iridescent scales, cinematic underwater rim light, no shadows, 8k.",
           floatSpeedSeconds: 5,
           tags: ["أقفاص عائمة", "أمن غذائي"],
         },
@@ -110,7 +110,7 @@ export function getBlueEconomyPreset(): InfographicData {
           statSuffix: "ألف طن",
           description: "نمو متسارع في مشاريع الساحل الغربي.",
           imagePrompt:
-            "Isolated photorealistic silver sea bass fish on dark background, side profile, clear fins, vibrant details.",
+            "Single silver sea bass fish on solid pitch black background (#000000), side profile, clear fins, vibrant details, pure black background, 8k.",
           floatSpeedSeconds: 4.5,
         },
         {
@@ -121,7 +121,7 @@ export function getBlueEconomyPreset(): InfographicData {
           statSuffix: "ألف طن",
           description: "الأسماك الأكثر طلباً في السوق المحلي الخليجي.",
           imagePrompt:
-            "Isolated photorealistic spotted brown grouper hamour fish on transparent background, detailed marine textures, studio lighting.",
+            "Single spotted brown grouper hamour fish on solid pitch black background (#000000), detailed marine textures, studio rim lighting, pure black background, 8k.",
           floatSpeedSeconds: 6,
         },
         {
@@ -132,7 +132,7 @@ export function getBlueEconomyPreset(): InfographicData {
           statSuffix: "ألف طن",
           description: "إنتاج المزارع الداخلية في مختلف مناطق المملكة.",
           imagePrompt:
-            "Isolated realistic freshwater tilapia fish on transparent background, sharp side view, natural coloration.",
+            "Single freshwater tilapia fish on solid pitch black background (#000000), sharp side view, natural coloration, pure black background, 8k.",
           floatSpeedSeconds: 5.5,
         },
       ],
@@ -249,7 +249,8 @@ const SYSTEM_PROMPT = `أنت «خبير تصميم الإنفوجرافيك ا�
    - royal-sapphire: للإدارة، الطيران، والصناعة
    - crimson-energy: للنفط، الطاقة، واللوجستيات
 3) صياغة مطالبات صور سينمائية (Prompts):
-   - صغ مطالبات بالإنجليزية عالية الجودة بدون نصوص داخل الصور (No text, photorealistic, 8k, volumetric lighting, isolated transparent elements).
+   - للعناصر العائمة في showcaseSection: اطلب دائماً وضع العنصر منفرداً في المنتصف على خلفية سوداء نقية تماماً دون أي أرضية أو مربعات وبإضاءة حواف استوديو (Single centered subject on solid pitch black background #000000, intense studio rim lighting, no floor, no shadows, no checkerboard pattern, ultra sharp 8k).
+   - لخلفية الرأس hero.bgPrompt والفواصل: اطلب مشاهد بانورامية سينمائية فائقة الدقة خالية تماماً من النصوص (No text, cinematic lighting, 8k).
 4) التقسيم القصصي الخماسي:
    - hero: العنوان والشعار والخلفية
    - macroSection: 3 مؤشرات رقمية رئيسية

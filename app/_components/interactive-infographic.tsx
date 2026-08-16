@@ -154,22 +154,22 @@ function AnimatedCounter({
 function AssetVisual({ item, accentColor }: { item: InfographicShowcaseItem; accentColor: string }) {
   if (item.imageUrl) {
     return (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img
-        src={item.imageUrl}
-        alt={item.name}
-        className="w-full max-h-44 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.7)] transition-transform duration-500 group-hover:scale-110"
-      />
+      <div className="info-cutout-container">
+        <div className="info-cutout-glow" style={{ background: accentColor }} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={item.imageUrl}
+          alt={item.name}
+          className="info-cutout-asset"
+        />
+      </div>
     );
   }
 
   // رسم فني متجهي مضيء متوافق مع النمط
   return (
-    <div className="w-full h-36 flex items-center justify-center relative">
-      <div
-        className="absolute inset-4 rounded-full blur-2xl opacity-40 info-anim-pulse"
-        style={{ background: accentColor }}
-      />
+    <div className="info-cutout-container">
+      <div className="info-cutout-glow" style={{ background: accentColor }} />
       <svg
         viewBox="0 0 120 80"
         className="w-36 h-28 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] transition-transform duration-500 group-hover:scale-110"
@@ -505,10 +505,10 @@ export function InteractiveInfographic({
                     <AssetVisual item={item} accentColor={theme.accentColor} />
                   </div>
 
-                  <h3 className="text-lg font-bold mt-3 text-white group-hover:text-cyan-300 transition-colors">
+                  <h3 className="text-lg font-black mt-3 text-white transition-colors" style={{ color: "#ffffff" }}>
                     {item.name}
                   </h3>
-                  <p className="text-xs text-white/70 mt-1 line-clamp-2 leading-relaxed font-normal">
+                  <p className="text-xs mt-1 line-clamp-2 leading-relaxed font-normal" style={{ color: "rgba(240, 253, 250, 0.85)" }}>
                     {item.description}
                   </p>
                 </div>

@@ -14,7 +14,7 @@ const STYLE_PROMPTS: Record<string, string> = {
     "Flat vector infographic style, minimal geometric shapes, brand palette of deep navy, gold and " +
     "spectrum accents, clean negative space. No text, no watermark.",
   isolated_3d:
-    "Isolated high-end 3D render on transparent or pure black background, underwater or cinematic studio rim lighting, ultra sharp 8k detail, zero background clutter.",
+    "Single centered subject isolated on solid pitch black background (#000000), intense cinematic studio rim lighting, pure black void background, zero background clutter, no floor, no shadows, no checkerboard pattern, ultra sharp 8k detail.",
 };
 
 export const IMAGE_STYLES = Object.keys(STYLE_PROMPTS);

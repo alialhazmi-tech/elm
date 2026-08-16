@@ -16,13 +16,32 @@
   transition: background 0.6s ease;
 }
 
+/* فرض تباين النصوص العالي داخل البطاقات والأزرار لمنع تداخل ألوان لوحة التحكم */
+.info-container button {
+  color: #ffffff;
+}
+
+.info-glass h1,
+.info-glass h2,
+.info-glass h3,
+.info-glass h4 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.info-glass p {
+  color: rgba(240, 253, 250, 0.85) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
 /* تأثير التوهج الزجاجي (Glassmorphism & Neon) */
 .info-glass {
   background: var(--info-card-bg, rgba(3, 33, 58, 0.45));
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--info-card-border, rgba(6, 182, 212, 0.25));
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   border-radius: 18px;
   position: relative;
   overflow: hidden;
@@ -31,7 +50,7 @@
 
 .info-glass:hover {
   border-color: var(--info-accent, #22d3ee);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.5), 0 0 20px 0 var(--info-glow, rgba(6, 182, 212, 0.3));
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 24px 0 var(--info-glow, rgba(6, 182, 212, 0.35));
 }
 
 /* الزوايا التقنية المتوهجة (Corner Brackets) */
@@ -56,6 +75,54 @@
   left: 6px;
   border-bottom: 2px solid;
   border-left: 2px solid;
+}
+
+/* ==========================================================================
+   معالجة العزل التام للصور والكائنات العائمة (Zero-Background Cutouts)
+   ========================================================================== */
+.info-cutout-container {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+  overflow: visible;
+}
+
+.info-cutout-glow {
+  position: absolute;
+  width: 130px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--info-accent, #22d3ee);
+  filter: blur(32px);
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.info-glass:hover .info-cutout-glow {
+  opacity: 0.65;
+  transform: scale(1.25);
+}
+
+/* دمج الصورة وعزل الخلفية بنمط screen + mask */
+.info-cutout-asset {
+  max-width: 88%;
+  max-height: 130px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  filter: contrast(1.18) brightness(1.08) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.9));
+  mask-image: radial-gradient(circle at center, black 65%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, black 65%, transparent 100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+}
+
+.info-glass:hover .info-cutout-asset {
+  transform: scale(1.08) translateY(-4px);
 }
 
 /* حركات الطفو والنبض المائي للأسماك والعناصر */
