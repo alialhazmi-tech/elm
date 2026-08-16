@@ -1,5 +1,6 @@
 /**
  * محرك الذكاء الاصطناعي لتوليد الإنفوجرافيك التفاعلي — من النص الخام إلى تجربة بصرية متحركة.
+ * يدعم المحركات الثلاثة الرائدة: Anthropic Claude و Google Gemini و OpenAI GPT.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -13,7 +14,7 @@ import {
 } from "./infographic-types.ts";
 import type { AiSettingsData } from "./settings.ts";
 
-function getClient(): Anthropic | null {
+function getAnthropicClient(): Anthropic | null {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   return apiKey ? new Anthropic({ apiKey }) : null;
 }
@@ -357,6 +358,62 @@ const SYSTEM_PROMPT = `أنت «خبير تصميم الإنفوجرافيك ا�
   }
 }`;
 
+/** توليد النص عبر Google Gemini API */
+async function generateViaGeminiLlm(systemPrompt: string, userMessage: string, apiKey: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [
+        { role: "user", parts: [{ text: `${systemPrompt}\n\n${userMessage}` }] },
+      ],
+      generationConfig: {
+        responseMimeType: "application/json",
+        temperature: 0.2,
+      },
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Gemini LLM error (${res.status})`);
+  }
+
+  const data = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+}
+
+/** توليد النص عبر OpenAI GPT-4o API */
+async function generateViaOpenAiLlm(systemPrompt: string, userMessage: string, apiKey: string): Promise<string> {
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userMessage },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`OpenAI LLM error (${res.status})`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+  return data.choices?.[0]?.message?.content ?? "";
+}
+
 export async function generateInfographicPlan(
   input: {
     text: string;
@@ -369,88 +426,92 @@ export async function generateInfographicPlan(
   usage: { model: string; inputTokens: number; outputTokens: number };
   guardFindings: Array<{ ruleId: string; severity: string; message: string }>;
 }> {
-  const anthropic = getClient();
-
-  // في حال عدم توفر المفتاح نرجع نموذجاً مخصصاً مبنياً على الموضوع فورياً
-  if (!anthropic) {
-    return {
-      infographic: buildDynamicInfographic(input),
-      usage: { model: "preset-fallback", inputTokens: 0, outputTokens: 0 },
-      guardFindings: [],
-    };
-  }
-
   const userMessage = `يرجى تحليل النص التالي وصياغة إنفوجرافيك تفاعلي متكامل ومبهر:
-الموضوع: ${input.topic || "تحليل تقرير"}
+الموضوع المقترح: ${input.topic || "تحليل تقرير"}
 السمة المفضلة (إن وجدت): ${input.preferredTheme || "تلقائي حسب الموضوع"}
 
-نص التقرير / البيانات:
+نص التقرير / البيانات الخام:
 ${input.text.slice(0, 15000)}`;
-
-  const candidateModels = [
-    settings?.models?.editorial,
-    settings?.models?.fast,
-    "claude-3-7-sonnet-latest",
-    "claude-3-5-sonnet-20241022",
-    "claude-3-5-haiku-latest",
-    "claude-3-haiku-20240307",
-  ].filter(Boolean) as string[];
-
-  // تنظيف الأسماء غير المعتمدة
-  const resolvedModels = Array.from(
-    new Set(
-      candidateModels.map((m) => {
-        if (m === "claude-3-5-sonnet-latest" || m === "claude-sonnet-5" || m === "claude-opus-5") {
-          return "claude-3-7-sonnet-latest";
-        }
-        if (m === "claude-haiku-4-5") {
-          return "claude-3-5-haiku-latest";
-        }
-        return m;
-      }),
-    ),
-  );
 
   const systemPrompt = settings?.tone
     ? `${SYSTEM_PROMPT}\n\nنبرة التحرير المعتمدة:\n${settings.tone}`
     : SYSTEM_PROMPT;
 
   let responseText = "";
-  let usedModel = resolvedModels[0] || "claude-3-7-sonnet-latest";
-  let usage = { inputTokens: 0, outputTokens: 0 };
+  let usedModel = "claude-3-7-sonnet-latest";
+  const usage = { inputTokens: 0, outputTokens: 0 };
 
-  for (const modelToTry of resolvedModels) {
-    try {
-      const response = await anthropic.messages.create({
-        model: modelToTry,
-        max_tokens: 4000,
-        temperature: 0.2,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userMessage }],
-      });
+  // 1. المحاولة عبر Anthropic Claude
+  const anthropic = getAnthropicClient();
+  if (anthropic) {
+    const candidateModels = [
+      settings?.models?.editorial,
+      "claude-3-7-sonnet-latest",
+      "claude-3-5-sonnet-20241022",
+      "claude-3-5-haiku-latest",
+    ].filter(Boolean) as string[];
 
-      const contentBlock = response.content[0];
-      responseText = contentBlock.type === "text" ? contentBlock.text : "";
-      usedModel = modelToTry;
-      usage = {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-      };
-      if (responseText) break;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("not_found") || msg.includes("model")) {
-        continue;
+    const resolvedModels = Array.from(
+      new Set(
+        candidateModels.map((m) => {
+          if (m === "claude-3-5-sonnet-latest" || m === "claude-sonnet-5" || m === "claude-opus-5") {
+            return "claude-3-7-sonnet-latest";
+          }
+          if (m === "claude-haiku-4-5") {
+            return "claude-3-5-haiku-latest";
+          }
+          return m;
+        }),
+      ),
+    );
+
+    for (const modelToTry of resolvedModels) {
+      try {
+        const response = await anthropic.messages.create({
+          model: modelToTry,
+          max_tokens: 4000,
+          temperature: 0.2,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userMessage }],
+        });
+
+        const contentBlock = response.content[0];
+        responseText = contentBlock.type === "text" ? contentBlock.text : "";
+        usedModel = modelToTry;
+        usage.inputTokens = response.usage.input_tokens;
+        usage.outputTokens = response.usage.output_tokens;
+        if (responseText) break;
+      } catch (err: unknown) {
+        console.error(`Anthropic attempt on ${modelToTry}:`, err);
       }
-      console.error(`Anthropic attempt failed on ${modelToTry}:`, err);
     }
   }
 
-  // إذا لم نتمكن من الحصول على استجابة، نرجع نموذجاً مبنياً على النص
+  // 2. إذا لم يتوفر Claude، نجرب Google Gemini
+  if (!responseText && process.env.GEMINI_API_KEY) {
+    try {
+      responseText = await generateViaGeminiLlm(systemPrompt, userMessage, process.env.GEMINI_API_KEY);
+      usedModel = "gemini-2.0-flash";
+    } catch (err) {
+      console.error("Gemini LLM attempt failed:", err);
+    }
+  }
+
+  // 3. إذا لم يتوفر Gemini، نجرب OpenAI GPT
+  if (!responseText && process.env.OPENAI_API_KEY) {
+    try {
+      responseText = await generateViaOpenAiLlm(systemPrompt, userMessage, process.env.OPENAI_API_KEY);
+      usedModel = "gpt-4o-mini";
+    } catch (err) {
+      console.error("OpenAI LLM attempt failed:", err);
+    }
+  }
+
+  // 4. إذا لم نستطع الاتصال بأي مزود ذكاء، نرجع النموذج الديناميكي المحلي
   if (!responseText) {
     return {
       infographic: buildDynamicInfographic(input),
-      usage: { model: "fallback", inputTokens: 0, outputTokens: 0 },
+      usage: { model: "local-dynamic", inputTokens: 0, outputTokens: 0 },
       guardFindings: [],
     };
   }
@@ -459,7 +520,7 @@ ${input.text.slice(0, 15000)}`;
     const jsonStart = responseText.indexOf("{");
     const jsonEnd = responseText.lastIndexOf("}");
     const jsonText = jsonStart !== -1 && jsonEnd !== -1 ? responseText.slice(jsonStart, jsonEnd + 1) : "";
-    
+
     if (!jsonText) {
       throw new Error("لم يتم العثور على كائن JSON في الرد.");
     }
