@@ -48,3 +48,24 @@ test("توليد الإنفوجرافيك يعيد خطة متكاملة محك�
   assert.ok(result.infographic.macroSection);
   assert.ok(result.infographic.showcaseSection);
 });
+
+test("تحويل نص تقرير تعديني خام إلى عنوان عريض ومؤشرات وأقسام متكاملة", async () => {
+  const rawMiningText = `
+    أعلنت وزارة الصناعة والثروة المعدنية أن الثروة المعدنية غير المستغلة في المملكة تقدر بنحو 9.4 تريليون ريال (2.5 تريليون دولار)، بزيادة 90% عن التقديرات السابقة البالغة 5 تريليونات ريال.
+    تشمل الثروات الذهب والفوسفات والنحاس والزنك والعناصر الأرضية النادرة.
+    تم إصدار أكثر من 2300 رخصة تعدينية، وتهدف الاستراتيجية إلى زيادة مساهمة القطاع في الناتج المحلي الإجمالي إلى أكثر من 280 مليار ريال بحلول 2030 وتوليد أكثر من 200 ألف وظيفة مباشرة.
+  `;
+
+  const result = await generateInfographicPlan({
+    topic: "الثروة المعدنية السعودية",
+    text: rawMiningText,
+    preferredTheme: "desert-gold",
+  });
+
+  assert.ok(result.infographic);
+  assert.equal(result.infographic.themeId, "desert-gold");
+  assert.ok(result.infographic.title.length > 0);
+  assert.ok(result.infographic.macroSection.stats.length >= 3);
+  assert.ok(result.infographic.showcaseSection.items.length >= 3);
+  assert.ok(result.infographic.visionSection.targets.length >= 1);
+});
