@@ -143,47 +143,162 @@ img { max-width: 100%; display: block; }
 .skip-link:focus { inset-inline-start: 22px; }
 
 /* ============ الهيدر ============ */
-.topbar { background: var(--surface); border-bottom: 1px solid var(--line); position: relative; }
+.topbar {
+  background: #060e1a;
+  border-bottom: 1px solid rgb(255 255 255 / 0.08);
+  position: relative;
+  color: #9ab0cc;
+}
 .topbar-inner {
-  max-width: 1200px; margin: 0 auto; padding: 13px 22px;
-  display: flex; align-items: center; gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 13px 22px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
-.brand { display: flex; align-items: center; gap: 11px; flex: none; }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex: none;
+  text-decoration: none;
+}
 .brand svg { display: block; }
-.brand-word { font-family: var(--font-display); font-weight: 800; font-size: 23px; color: var(--ink); line-height: 1; }
-.brand-tag { font-size: 10.5px; color: var(--ink-3); display: block; margin-top: 3px; }
-.topnav { display: flex; gap: 20px; font-size: 13.5px; font-weight: 500; color: var(--ink-2); }
-.topnav a { position: relative; padding-block: 4px; }
-.topnav a:hover { color: var(--ink); }
-.topnav .is-active { color: var(--ink); font-weight: 700; }
+.brand-word {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 24px;
+  color: #ffffff;
+  line-height: 1;
+}
+.brand-tag {
+  font-size: 11px;
+  color: #8fa3bc;
+  display: block;
+  margin-top: 3px;
+}
+.topnav {
+  display: flex;
+  gap: 20px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #9ab0cc;
+}
+.topnav a {
+  position: relative;
+  padding-block: 4px;
+  color: #9ab0cc;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.topnav a:hover {
+  color: #ffffff;
+}
+.topnav .is-active {
+  color: #ffffff;
+  font-weight: 700;
+}
 .topnav .is-active::after {
-  content: ""; position: absolute; inset-inline: 0; bottom: -17px; height: 3px;
-  background: var(--gold); border-radius: 2px;
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -17px;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 2px;
 }
-.mobile-nav { display: none; }
-.top-tools { margin-inline-start: auto; display: flex; align-items: center; gap: 10px; }
+.mobile-nav {
+  display: none;
+}
+.top-tools {
+  margin-inline-start: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .ask-pill {
-  display: flex; align-items: center; gap: 9px; border: 1.5px solid transparent; border-radius: 999px;
-  padding: 7px 15px; font-size: 12.5px; color: var(--ink-2); min-width: 215px; cursor: text;
-  background: linear-gradient(var(--surface-2), var(--surface-2)) padding-box, var(--spectrum) border-box;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  border-radius: 999px;
+  padding: 7px 15px;
+  font-size: 12.5px;
+  color: #9ab0cc;
+  min-width: 215px;
+  cursor: pointer;
+  background: rgb(255 255 255 / 0.05);
+  text-decoration: none;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
 }
-.ask-pill .spark { color: var(--c-shakhsiat); font-size: 13px; }
+.ask-pill:hover {
+  border-color: rgb(255 255 255 / 0.28);
+  color: #ffffff;
+  background: rgb(255 255 255 / 0.08);
+}
+.ask-pill .spark {
+  color: var(--gold);
+  font-size: 13px;
+}
 .ask-pill kbd {
-  margin-inline-start: auto; font: 600 10px var(--font-text); color: var(--ink-3);
-  border: 1px solid var(--line-2); border-radius: 6px; padding: 1px 6px; background: var(--surface);
+  margin-inline-start: auto;
+  font: 600 10px var(--font-text);
+  color: #8fa3bc;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: rgb(255 255 255 / 0.04);
 }
 .theme-toggle {
-  width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line-2);
-  background: var(--surface-2); color: var(--ink-2); font-size: 14px; cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.14);
+  background: rgb(255 255 255 / 0.05);
+  color: #9ab0cc;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.18s ease, border-color 0.18s ease, background 0.18s ease;
 }
-.theme-toggle:hover { color: var(--ink); border-color: var(--ink-3); }
+.theme-toggle:hover {
+  color: #ffffff;
+  border-color: rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.08);
+}
 .member-entry {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-height: 34px; padding: 6px 14px; border-radius: 999px;
-  background: var(--navy-deep); color: #fff; font-size: 11.5px; font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--gold) 0%, #b88228 100%);
+  color: #060e1a;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.member-entry.is-member { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-2); }
+.member-entry:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgb(192 138 46 / 0.3);
+}
+.member-entry.is-member {
+  background: rgb(255 255 255 / 0.08);
+  color: #ffffff;
+  border: 1px solid rgb(255 255 255 / 0.16);
+  font-weight: 700;
+}
+.member-entry.is-member:hover {
+  background: rgb(255 255 255 / 0.14);
+  border-color: rgb(255 255 255 / 0.3);
+  box-shadow: none;
+}
 
 /* ============ أسطح الذكاء ============ */
 .ai-surface {
@@ -920,14 +1035,16 @@ a.story-link:hover { color: var(--link); }
   .member-entry { min-height: 34px; max-width: 110px; padding: 5px 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mobile-nav {
     display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
-    padding: 0 14px 8px; background: var(--surface); overscroll-behavior-inline: contain;
+    padding: 0 14px 8px; background: #060e1a; overscroll-behavior-inline: contain;
+    border-bottom: 1px solid rgb(255 255 255 / 0.06);
   }
   .mobile-nav::-webkit-scrollbar { display: none; }
   .mobile-nav a {
     flex: none; min-height: 30px; display: inline-flex; align-items: center; padding: 4px 11px;
-    border: 1px solid var(--line); border-radius: 999px; color: var(--ink-2); font-size: 11px; font-weight: 600;
+    border: 1px solid rgb(255 255 255 / 0.12); border-radius: 999px; color: #9ab0cc; font-size: 11px; font-weight: 600;
+    background: rgb(255 255 255 / 0.035);
   }
-  .mobile-nav a.is-active { background: var(--navy-deep); border-color: var(--navy-deep); color: #fff; }
+  .mobile-nav a.is-active { background: var(--gold); border-color: var(--gold); color: #060e1a; font-weight: 700; }
   .breaking-inner { padding: 6px 14px; }
   .breaking-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -1902,9 +2019,9 @@ a.story-link:hover { color: var(--link); }
 /* آخر طبقة استجابة: تتغلب عمدًا على مكوّنات السلاسل والفوتر المعرفة لاحقًا. */
 @media screen and (max-width: 640px) {
   .topbar-inner { min-height: 54px; padding: 8px 14px 6px; }
-  .mobile-nav { background: #0a1c30; padding: 1px 14px 8px; }
-  .mobile-nav a { color: #aebfd3; border-color: rgb(255 255 255 / .13); background: rgb(255 255 255 / .035); }
-  .mobile-nav a.is-active { color: #08172a; background: var(--gold); border-color: var(--gold); }
+  .mobile-nav { background: #060e1a; padding: 1px 14px 8px; border-bottom: 1px solid rgb(255 255 255 / .06); }
+  .mobile-nav a { color: #9ab0cc; border-color: rgb(255 255 255 / .13); background: rgb(255 255 255 / .035); }
+  .mobile-nav a.is-active { color: #060e1a; background: var(--gold); border-color: var(--gold); }
 
   .series-index-hero { min-height: 0; margin-inline: 14px; padding: 24px 20px; border-radius: 16px; }
   .series-index-hero h1 { font-size: 29px; }
