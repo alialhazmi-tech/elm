@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>خطة ترحيل البيانات والمحتوى ومصفوفة الفروقات المعمارية — منصة العلم</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #060e1a;
+      --primary-light: #0d1b2e;
+      --accent-gold: #d99a18;
+      --accent-teal: #12b5a0;
+      --accent-blue: #3d7ef7;
+      --accent-purple: #8b5cf6;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --bg-light: #f8fafc;
+      --bg-card: #ffffff;
+      --border-subtle: #e2e8f0;
+      --border-accent: #cbd5e1;
+      --success-bg: #ecfdf5;
+      --success-text: #065f46;
+      --success-border: #a7f3d0;
+      --warning-bg: #fffbeb;
+      --warning-text: #92400e;
+      --warning-border: #fde68a;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 14mm 12mm 14mm 12mm;
+    }
+
+    body {
+      font-family: 'Readex Pro', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+      background: #ffffff;
+      line-height: 1.6;
+      font-size: 11pt;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      page-break-after: always;
+      position: relative;
+      min-height: 98vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .page:last-child {
+      page-break-after: avoid;
+    }
+
+    /* Top Brand Header */
+    .doc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: 20px;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      background: var(--primary);
+      color: #ffffff;
+      font-family: 'Alexandria', sans-serif;
+      font-weight: 800;
+      font-size: 18pt;
+      padding: 4px 14px;
+      border-radius: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-meta h1 {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 13pt;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .brand-meta p {
+      font-size: 8.5pt;
+      color: var(--text-muted);
+    }
+
+    .doc-badge {
+      background: var(--bg-light);
+      border: 1px solid var(--border-accent);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 8pt;
+      font-weight: 600;
+      color: var(--primary-light);
+      text-align: left;
+    }
+
+    /* Executive Hero Box */
+    .hero-box {
+      background: linear-gradient(135deg, #060e1a 0%, #10233d 100%);
+      color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-box::after {
+      content: "";
+      position: absolute;
+      left: -20px;
+      bottom: -20px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(18, 181, 160, 0.25) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-title {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 16pt;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+      font-size: 9.5pt;
+      color: #cbd5e1;
+      line-height: 1.5;
+      max-width: 90%;
+    }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .kpi-card {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    .kpi-val {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 15pt;
+      font-weight: 700;
+      color: var(--accent-gold);
+    }
+
+    .kpi-lbl {
+      font-size: 7.5pt;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    /* Section Headings */
+    .sec-title {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 11.5pt;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 16px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-right: 4px solid var(--accent-teal);
+      padding-right: 8px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 16px;
+      font-size: 8.5pt;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--primary);
+      font-family: 'Alexandria', sans-serif;
+      font-weight: 700;
+      text-align: right;
+      padding: 7px 10px;
+      border: 1px solid var(--border-subtle);
+      font-size: 8pt;
+    }
+
+    td {
+      padding: 7px 10px;
+      border: 1px solid var(--border-subtle);
+      color: #334155;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    .highlight-cell {
+      font-weight: 600;
+      color: var(--accent-teal);
+    }
+
+    .legacy-cell {
+      color: #64748b;
+    }
+
+    /* Cards Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .card-head {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-body {
+      font-size: 8.5pt;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 7.5pt;
+      font-weight: 600;
+    }
+    .badge-teal { background: #e6fffa; color: #0d9488; }
+    .badge-blue { background: #eff6ff; color: #2563eb; }
+    .badge-gold { background: #fefce8; color: #ca8a04; }
+    .badge-purple { background: #faf5ff; color: #7c3aed; }
+
+    /* Alert Boxes */
+    .alert-box {
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 12px 0;
+      font-size: 8.5pt;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .alert-success {
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+    }
+
+    .alert-warning {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      color: var(--warning-text);
+    }
+
+    /* Timeline / Phases */
+    .phase-track {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .phase-step {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid var(--border-subtle);
+      border-top: 3px solid var(--accent-blue);
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .phase-step.active {
+      border-top-color: var(--accent-teal);
+      background: #f0fdfa;
+    }
+
+    .phase-no {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 7.5pt;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .phase-name {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 8.5pt;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 3px 0;
+    }
+
+    .phase-desc {
+      font-size: 7.5pt;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Footer */
+    .doc-footer {
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 10px;
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+
+    .avoid-break {
+      break-inside: avoid;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== PAGE 1: الرؤية ومقارنة البنية التقنية ==================== -->
+  <div class="page">
+    <div>
+      <header class="doc-header">
+        <div class="brand-group">
+          <div class="brand-logo">العلم</div>
+          <div class="brand-meta">
+            <h1>خطة ترحيل البيانات والمحتوى ومصفوفة الفروقات المعمارية</h1>
+            <p>منظومة الإعلام والمعرفة السعودية المستقلة · إصدار الاعتماد التنفيذي</p>
+          </div>
+        </div>
+        <div class="doc-badge">
+          <span>التاريخ: أغسطس 2026</span><br>
+          <span>المسار: M0 – M4 الإنتاجي</span>
+        </div>
+      </header>
+
+      <section class="hero-box">
+        <div class="hero-title">وثيقة التحول المعماري وترحيل الأرشيف التاريخي</div>
+        <div class="hero-subtitle">
+          خطة هندسية دقيقة لترحيل الأرشيف الصحفي والوسائط من بيئة ووردبريس الموروثة إلى منصة العلم الحديثة المبنية على تقنيات الحافة (Edge-First)، مع ضمان 100% لبقاء الروابط وصفر فقدان في الـ SEO.
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-val">29,069</div>
+            <div class="kpi-lbl">مادة صحفية منقولة</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val">96,959</div>
+            <div class="kpi-lbl">ملف وسائط وصور</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val">100%</div>
+            <div class="kpi-lbl">تطابق الروابط (1:1)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-val">&lt; 80ms</div>
+            <div class="kpi-lbl">زمن الاستجابة على الحافة</div>
+          </div>
+        </div>
+      </section>
+
+      <h2 class="sec-title">1. مقارنة البنية التقنية (Architectural Benchmark)</h2>
+      <p style="font-size: 8.5pt; color: var(--text-muted); margin-bottom: 8px;">
+        نقلة نوعية من الاستضافة الأحادية الثقيلة إلى معمارية السيرفرلس وتصيير الخادم الحديث (React Server Components):
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>المعيار الفني</th>
+            <th>البيئة القديمة (WordPress / Oxygen)</th>
+            <th>منصة العلم الجديدة (Next.js 16 / Edge)</th>
+            <th>الأثر الإيجابي والمكاسب</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>المكدس الأساسي</strong></td>
+            <td class="legacy-cell">PHP 8.x + MySQL + WordPress</td>
+            <td class="highlight-cell">Next.js 16 + React 19 + TypeScript</td>
+            <td>تحكم كامل بالكود وأمان سيادي خالٍ من الثغرات</td>
+          </tr>
+          <tr>
+            <td><strong>محرك التصيير</strong></td>
+            <td class="legacy-cell">تصيير خادمي تقليدي بطيء عبر PHP</td>
+            <td class="highlight-cell">React Server Components (RSC) على الحافة</td>
+            <td>تصيير فوري وتفريغ أعباء المعالجة عن المتصفح</td>
+          </tr>
+          <tr>
+            <td><strong>بناء الواجهة</strong></td>
+            <td class="legacy-cell">Oxygen Builder 4.9.2 (أكواد متضخمة)</td>
+            <td class="highlight-cell">Vanilla CSS + Design System «المنشور»</td>
+            <td>تصميم ناعم وفائق الخفة وخالٍ من المكتبات الفائضة</td>
+          </tr>
+          <tr>
+            <td><strong>زمن أول بايت (TTFB)</strong></td>
+            <td class="legacy-cell">560ms – 900ms (استجابة بطيئة)</td>
+            <td class="highlight-cell">&lt; 80ms (Cloudflare Edge Cache)</td>
+            <td>استجابة فائقة السرعة للزوار ومحركات البحث</td>
+          </tr>
+          <tr>
+            <td><strong>حجم الصفحة (HTML/JS)</strong></td>
+            <td class="legacy-cell">601KB HTML + 657KB JS</td>
+            <td class="highlight-cell">&lt; 35KB HTML + &lt; 140KB JS</td>
+            <td>توفير 85% من البيانات وتحميل فوري على الهاتف</td>
+          </tr>
+          <tr>
+            <td><strong>مؤشرات الأداء (LCP)</strong></td>
+            <td class="legacy-cell">3.2s – 4.5s (منطقة حمراء/تحذير)</td>
+            <td class="highlight-cell">&lt; 1.1s (منطقة خضراء مثالية)</td>
+            <td>الامتياز الكامل في تقييم Google Core Web Vitals</td>
+          </tr>
+          <tr>
+            <td><strong>السياسة التحريرية</strong></td>
+            <td class="legacy-cell">مراجعة بشرية غير مؤتمتة</td>
+            <td class="highlight-cell">«حارس السياسة» (39 قاعدة حتمية)</td>
+            <td>منع قاطع للمخالفات اللغوية والسياسية آلياً</td>
+          </tr>
+          <tr>
+            <td><strong>تخزين الوسائط</strong></td>
+            <td class="legacy-cell">تخزين محلي تقليدي على السيرفر</td>
+            <td class="highlight-cell">Cloudflare R2 + ضغط وتحويل WebP</td>
+            <td>توفير 70% من التخزين وسرعة تحميل مضاعفة</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="sec-title">2. نموذج المحتوى الجديد: تفكيك الأبعاد الأربعة</h2>
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-head">
+            <span>1. الموضوع</span>
+            <span class="badge badge-teal">Section</span>
+          </div>
+          <div class="card-body">تخصص موضوعي صريح واحد للمادة (محليات، اقتصاد، تقنية، علوم، صحة، رياضة، ثقافة...).</div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span>2. العدسة</span>
+            <span class="badge badge-blue">Series</span>
+          </div>
+          <div class="card-body">عدسة المعرفة السلسلية الثمانية (أبسط، بالأرقام، افهمها صح، لماذا، شخصيات، ماذا لو...).</div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span>3. الشكل</span>
+            <span class="badge badge-gold">Format</span>
+          </div>
+          <div class="card-body">شكل القالب التحريري (خبر، إنفوجرافيك تفاعلي، مرئي، تقرير جاك العلم، بودكاست).</div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span>4. سير العمل</span>
+            <span class="badge badge-purple">Status</span>
+          </div>
+          <div class="card-body">دورة حياة المادة والاعتماد (draft → review → scheduled → published) محكومة بالحارس.</div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="doc-footer">
+      <span>منصة العلم · وثيقة التحول المعماري وخطة ترحيل البيانات</span>
+      <span>الصفحة 1 من 2</span>
+    </footer>
+  </div>
+
+  <!-- ==================== PAGE 2: خريطة الحقول وضمانات الـ SEO والمراحل ==================== -->
+  <div class="page">
+    <div>
+      <header class="doc-header">
+        <div class="brand-group">
+          <div class="brand-logo">العلم</div>
+          <div class="brand-meta">
+            <h1>خريطة مطابقة الحقول وضمانات الـ SEO ومراحل التنفيذ</h1>
+            <p>منهجية التحويل، حماية الروابط، بوابات الجودة، وخطة التراجع الفوري</p>
+          </div>
+        </div>
+        <div class="doc-badge">
+          <span>الوثيقة التنفيذية</span>
+        </div>
+      </header>
+
+      <h2 class="sec-title">3. خريطة مطابقة الحقول (Field Mapping Matrix)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>حقل ووردبريس القديم</th>
+            <th>مخطط قاعدة بيانات العلم (Postgres)</th>
+            <th>آلية المعالجة والتحويل الهندسي</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>ID</code> (المعرف الرقمي)</td>
+            <td class="highlight-cell"><code>stories.id</code></td>
+            <td><strong>يُحفظ المعرف الرقمي كما هو حرفياً (مفتاح بقاء الروابط والأرشفة)</strong></td>
+          </tr>
+          <tr>
+            <td><code>slug</code> (الاسم اللطيف)</td>
+            <td class="highlight-cell"><code>stories.slug</code></td>
+            <td>تنظيف الترميز العربي والإبقاء على البنية النصية للروابط</td>
+          </tr>
+          <tr>
+            <td><code>title.rendered</code></td>
+            <td class="highlight-cell"><code>stories.title</code></td>
+            <td>فك كيانات HTML وتطهير العنوان وضبطه وفق سقف الـ 10 كلمات</td>
+          </tr>
+          <tr>
+            <td><code>content.rendered</code></td>
+            <td class="highlight-cell"><code>stories.body</code></td>
+            <td>تجريد أكواد Oxygen القصيرة إلى كتل فقرات وHTML دلالي نظيف</td>
+          </tr>
+          <tr>
+            <td><code>excerpt.rendered</code></td>
+            <td class="highlight-cell"><code>stories.excerpt</code></td>
+            <td>تجريد الوسوم وتوليد مقتطف تحريري دقيق ومركز</td>
+          </tr>
+          <tr>
+            <td><code>categories</code> (التصنيف)</td>
+            <td class="highlight-cell"><code>stories.section</code></td>
+            <td>التحويل إلى الأقسام الـ 15 المعتمدة مع إعطاء الأولوية للقسم الموضوعي</td>
+          </tr>
+          <tr>
+            <td><code>tags</code> (الوسوم)</td>
+            <td class="highlight-cell"><code>stories.seriesSlug</code></td>
+            <td>استخلاص وسوم السلاسل الثمانية الرسمية وعزل الوسوم الملوثة للأرشيف</td>
+          </tr>
+          <tr>
+            <td><code>featured_media</code></td>
+            <td class="highlight-cell"><code>stories.image</code> + <code>media</code></td>
+            <td>تحويل الصور وحفظ الأبعاد الأصلية وتوليد صيغ WebP على Cloudflare R2</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2 class="sec-title">4. استراتيجية حماية الـ SEO وصفر فقدان (Zero-SEO-Loss)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head">
+            <span>تطابق الروابط بنسبة 100%</span>
+            <span class="badge badge-teal">URL Match</span>
+          </div>
+          <div class="card-body">
+            بنية الروابط مطابقة تماماً للأرشيف القديم: <code>https://alelm.net/{section}/{id}/{slug}</code> مما يضمن استمرار تدفق زوار Google دون أي انقطاع.
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <span>طبقة التحويلات 301 الذكية</span>
+            <span class="badge badge-blue">Wildcard 301</span>
+          </div>
+          <div class="card-body">
+            قاعدة «المعرّف ID يحسم»: أي طلب يطابق <code>/*/:id/*</code> يتم التعرف عليه وتوجيهه فوراً بتحويل 301 دائم إلى مساره الصحيح.
+          </div>
+        </div>
+      </div>
+
+      <div class="alert-box alert-success avoid-break">
+        <div>
+          <strong>ضمان البيانات المهيكلة (Schema JSON-LD) وخرائط الموقع:</strong>
+          توليد تلقائي لمخططات <code>NewsArticle</code> و <code>BreadcrumbList</code> لكل مادة لتعزيز الترتيب في Google News، مع خريطة موقع لحظية <code>sitemap-news.xml</code> للأخبار خلال 48 ساعة.
+        </div>
+      </div>
+
+      <h2 class="sec-title">5. المخطط الزمني لمراحل الترحيل (Migration Roadmap)</h2>
+      <div class="phase-track avoid-break">
+        <div class="phase-step">
+          <div class="phase-no">المرحلة M0</div>
+          <div class="phase-name">الجرد والاستكشاف</div>
+          <div class="phase-desc">قراءة الأرشيف عبر REST API وتجهيز محولات التحويل المعزولة.</div>
+        </div>
+        <div class="phase-step active">
+          <div class="phase-no">المرحلة M1</div>
+          <div class="phase-name">البروفة التجريبية</div>
+          <div class="phase-desc">ترحيل 500 مادة واختبار مطابقة الروابط وفحص حارس السياسة.</div>
+        </div>
+        <div class="phase-step">
+          <div class="phase-no">المرحلة M2</div>
+          <div class="phase-name">الترحيل الشامل</div>
+          <div class="phase-desc">استيراد 29 ألف مادة إلى Neon ونقل الوسائط إلى R2.</div>
+        </div>
+        <div class="phase-step">
+          <div class="phase-no">المرحلة M3</div>
+          <div class="phase-name">التدقيق والزحف</div>
+          <div class="phase-desc">زحف آلي شامل للتأكد من صفر روابط مكسورة وكفاءة السرعة.</div>
+        </div>
+        <div class="phase-step">
+          <div class="phase-no">المرحلة M4</div>
+          <div class="phase-name">الإطلاق المباشر</div>
+          <div class="phase-desc">تحويل DNS وبدء البث الإنتاجي مع المراقبة الحية.</div>
+        </div>
+      </div>
+
+      <div class="alert-box alert-warning avoid-break" style="margin-top: 10px;">
+        <div>
+          <strong>خطة التراجع الفوري عند الطوارئ (Rollback in &lt; 2 mins):</strong>
+          البيئة القديمة تبقى معزولة ومجمدة كأرشيف بارد. في حال حدوث أي طارئ، يتم تحويل حركة المرور عبر Cloudflare DNS إلى الخادم القديم بنقرة زر واحدة خلال دقيقتين.
+        </div>
+      </div>
+    </div>
+
+    <footer class="doc-footer">
+      <span>منصة العلم · وثيقة التحول المعماري وخطة ترحيل البيانات</span>
+      <span>الصفحة 2 من 2</span>
+    </footer>
+  </div>
+
+</body>
+</html>
