@@ -11,12 +11,46 @@ const NAV = [
   { label: "السلاسل", href: "/series" },
   { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
+  { label: "تقنية", href: "/technology" },
+  { label: "علوم", href: "/sciences" },
+  { label: "صحة", href: "/health" },
   { label: "رياضة", href: "/sport" },
-  { label: "تحليل", href: "/infographics" },
+];
+
+const MOBILE_NAV = [
+  { label: "الرئيسية", href: "/" },
+  { label: "السلاسل", href: "/series" },
+  { label: "محليات", href: "/politics" },
+  { label: "اقتصاد", href: "/economy" },
+  { label: "تقنية", href: "/technology" },
+  { label: "علوم", href: "/sciences" },
+  { label: "صحة", href: "/health" },
+  { label: "رياضة", href: "/sport" },
+  { label: "ثقافة", href: "/culture" },
+  { label: "عالم", href: "/world" },
+  { label: "إنفوجرافيك", href: "/infographics" },
   { label: "مرئي", href: "/videos" },
 ];
 
-const FOOTER_LINKS = NAV.filter((item) => item.href !== "/");
+const FOOTER_SECTIONS = [
+  { label: "محليات وسياق", href: "/politics" },
+  { label: "اقتصاد واستثمار", href: "/economy" },
+  { label: "تقنية وذكاء اصطناعي", href: "/technology" },
+  { label: "علوم ومعرفة", href: "/sciences" },
+  { label: "صحة وجودة حياة", href: "/health" },
+  { label: "رياضة وصناعة", href: "/sport" },
+  { label: "ثقافة وفكر", href: "/culture" },
+  { label: "عالم وجيوسياسة", href: "/world" },
+  { label: "منوعات وظواهر", href: "/varieties" },
+];
+
+const FOOTER_FORMATS = [
+  { label: "إنفوجرافيك وبيانات", href: "/infographics" },
+  { label: "مرئي ووثائقي", href: "/videos" },
+  { label: "سلاسل المعرفة", href: "/series" },
+  { label: "البحث التحريري", href: "/search" },
+];
+
 
 /**
  * شريط العاجل المطور (قرار المالك 2026-08-11): رفيع وساكن بلا زحف،
@@ -73,7 +107,7 @@ export async function SiteHeader({ active }: { active?: string }) {
         </div>
       </div>
       <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
-        {NAV.map((item) => (
+        {MOBILE_NAV.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -133,17 +167,16 @@ export function SiteFooter() {
           <div className="ft-col">
             <h3 className="ft-head">التغطيات والأقسام</h3>
             <ul className="ft-nav-list">
-              {FOOTER_LINKS.map((item) => (
+              {FOOTER_SECTIONS.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>{item.label}</Link>
                 </li>
               ))}
-              <li>
-                <Link href="/series">سلاسل المعرفة</Link>
-              </li>
-              <li>
-                <Link href="/search">البحث التحريري</Link>
-              </li>
+              {FOOTER_FORMATS.map((item) => (
+                <li key={item.href}>
+                  <Link href={item.href}>{item.label}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 

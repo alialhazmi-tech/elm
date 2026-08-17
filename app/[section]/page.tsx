@@ -5,7 +5,8 @@ import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { paginate } from "@/lib/content/pagination";
-import { KNOWN_SECTIONS, sectionName, seedContentProvider } from "@/lib/content/provider";
+import { KNOWN_SECTIONS, seedContentProvider } from "@/lib/content/provider";
+import { getSection, getSectionDescription, getSectionName } from "@/lib/content/sections";
 import { toLatinDigits } from "@/lib/format";
 
 export const revalidate = 180;
@@ -24,16 +25,25 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const { p } = await searchParams;
   if (!KNOWN_SECTIONS.includes(section)) return { title: "القسم غير موجود" };
 
+  const name = getSectionName(section);
   const page = Number.parseInt(p ?? "1", 10);
   const title =
     Number.isFinite(page) && page > 1
-      ? `${sectionName(section)} — صفحة ${page}`
-      : sectionName(section);
+      ? `${name} — صفحة ${page} | العلم`
+      : `${name} | منصة العلم`;
 
   return {
     title,
-    description: `أحدث مواد قسم ${sectionName(section)} في العلم.`,
+    description: getSectionDescription(section),
     alternates: { canonical: page > 1 ? `/${section}?p=${page}` : `/${section}` },
+    openGraph: {
+      title,
+      description: getSectionDescription(section),
+      url: `https://alelm.net/${section}`,
+      siteName: "العلم",
+      locale: "ar_SA",
+      type: "website",
+    },
   };
 }
 
@@ -42,6 +52,7 @@ export default async function SectionPage({ params, searchParams }: Props) {
   const { p } = await searchParams;
   if (!KNOWN_SECTIONS.includes(section)) notFound();
 
+  const secDef = getSection(section);
   const all = await seedContentProvider.listBySection(section);
   const { items, page, pageCount, total, from, to } = paginate(all, p);
   const basePath = `/${section}`;
@@ -54,7 +65,12 @@ export default async function SectionPage({ params, searchParams }: Props) {
       <main id="main-content">
         <section className="hub-hero">
           <p className="eyebrow">قسم</p>
-          <h1>{sectionName(section)}</h1>
+          <h1>{getSectionName(section)}</h1>
+          {secDef?.description ? (
+            <p className="hub-tagline" style={{ maxWidth: 620, margin: "6px auto 14px", color: "var(--muted)", fontSize: 14 }}>
+              {secDef.description}
+            </p>
+          ) : null}
           <p className="hub-count">
             {total === 0
               ? "لا مواد بعد"

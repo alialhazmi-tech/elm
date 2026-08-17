@@ -203,7 +203,10 @@ export function seriesOf(story: Story): Series | undefined {
 }
 
 export const KNOWN_SECTIONS = [
-  ...new Set(SEED_CORPUS.stories.map((story) => story.section)),
+  ...new Set([
+    ...Object.keys(SECTION_NAMES),
+    ...SEED_CORPUS.stories.map((story) => story.section),
+  ]),
 ];
 
 const STAT_PATTERNS: Array<{ pattern: RegExp; label: (story: Story) => string }> = [
