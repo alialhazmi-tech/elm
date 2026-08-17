@@ -1,758 +1,719 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>خطة ترحيل البيانات والمحتوى ومصفوفة الفروقات المعمارية — منصة العلم</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@400;600;700;800&family=Readex+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary: #060e1a;
-      --primary-light: #0d1b2e;
-      --accent-gold: #d99a18;
-      --accent-teal: #12b5a0;
-      --accent-blue: #3d7ef7;
-      --accent-purple: #8b5cf6;
-      --text-main: #1e293b;
-      --text-muted: #64748b;
-      --bg-light: #f8fafc;
-      --bg-card: #ffffff;
-      --border-subtle: #e2e8f0;
-      --border-accent: #cbd5e1;
-      --success-bg: #ecfdf5;
-      --success-text: #065f46;
-      --success-border: #a7f3d0;
-      --warning-bg: #fffbeb;
-      --warning-text: #92400e;
-      --warning-border: #fde68a;
-    }
+<meta charset="UTF-8">
+<title>خطة ترحيل البيانات والبنية المعمارية — منصة العلم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;500;600;700;800;900&family=Readex+Pro:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ————— أساسيات ————— */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root{
+    --ink:        #101828;
+    --ink-2:      #475467;
+    --ink-3:      #98a2b3;
+    --navy:       #0c1a2e;
+    --navy-2:     #12253f;
+    --blue:       #2a78d6;   /* لون السلسلة «الجديدة» — معتمد */
+    --blue-soft:  #eaf2fc;
+    --gold:       #d99a18;
+    --gray-bar:   #7b7970;   /* محايد «القديمة» — بوسوم مباشرة */
+    --line:       #e6e8ec;
+    --panel:      #f7f8fa;
+    --panel-2:    #fbfbfc;
+    --good:       #067647;
+    --good-bg:    #eefbf4;
+    --warn-bg:    #fffaeb;
+    --warn-line:  #f2df9a;
+    --warn-ink:   #93610e;
+  }
+  @page { size: A4 portrait; margin: 0; }
+  html, body { background: #ffffff; }
+  body{
+    font-family: 'Readex Pro', 'Alexandria', system-ui, sans-serif;
+    color: var(--ink);
+    font-size: 10pt;
+    line-height: 1.75;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .ltr{ direction: ltr; unicode-bidi: isolate; }
+  code, .mono{
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+    direction: ltr; unicode-bidi: isolate;
+    font-size: .86em;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0 5px;
+    white-space: nowrap;
+  }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+  /* ————— الصفحات ————— */
+  .sheet{
+    width: 210mm; height: 297mm;
+    padding: 15mm 16mm 13mm;
+    position: relative;
+    page-break-after: always;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .sheet:last-child{ page-break-after: auto; }
 
-    @page {
-      size: A4 portrait;
-      margin: 10mm 12mm 10mm 12mm;
-    }
+  /* رأس وتذييل الصفحات الداخلية */
+  .page-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-bottom: 4mm; margin-bottom: 6mm;
+    border-bottom: 2px solid var(--navy);
+  }
+  .page-head .brand{ font-family:'Alexandria'; font-weight:800; font-size:11pt; color:var(--navy); }
+  .page-head .brand small{ display:block; font-family:'Readex Pro'; font-weight:400; font-size:7pt; color:var(--ink-3); letter-spacing:.02em; }
+  .page-head .sec-no{
+    font-family:'Alexandria'; font-weight:300; font-size:26pt; color:var(--line);
+    line-height:1;
+  }
+  .page-foot{
+    margin-top:auto; padding-top:4mm;
+    border-top:1px solid var(--line);
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:7pt; color:var(--ink-3);
+  }
+  .page-foot .dot{ color: var(--gold); }
+  .pnum{ font-family:'Alexandria'; font-weight:600; color:var(--ink-2); }
 
-    body {
-      font-family: 'Readex Pro', system-ui, -apple-system, sans-serif;
-      color: var(--text-main);
-      background: #ffffff;
-      line-height: 1.5;
-      font-size: 10pt;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+  h2.sec-title{
+    font-family:'Alexandria'; font-weight:800; font-size:16pt; color:var(--navy);
+    line-height:1.4; margin-bottom:1.5mm;
+  }
+  .sec-sub{ color:var(--ink-2); font-size:9.5pt; margin-bottom:6mm; max-width:150mm; }
+  .accent-bar{ display:inline-block; width:9mm; height:1.2mm; background:var(--gold); border-radius:2px; margin-bottom:2mm; }
 
-    .page {
-      page-break-after: always;
-      break-after: page;
-      height: 275mm;
-      max-height: 275mm;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 0;
-    }
+  /* ————— الغلاف ————— */
+  .cover{
+    background: var(--navy);
+    background-image:
+      radial-gradient(ellipse 90mm 70mm at 85% 8%, rgba(42,120,214,.28), transparent 70%),
+      radial-gradient(ellipse 70mm 60mm at 10% 100%, rgba(217,154,24,.12), transparent 70%);
+    color:#fff;
+    padding: 20mm 18mm 16mm;
+  }
+  .cover .doc-kicker{
+    display:inline-flex; align-items:center; gap:3mm;
+    font-size:8.5pt; letter-spacing:.06em; color:#c8d3e2;
+    border:1px solid rgba(255,255,255,.22); border-radius:99px;
+    padding:1.2mm 5mm;
+  }
+  .cover .doc-kicker b{ color:var(--gold); font-weight:600; }
+  .cover h1{
+    font-family:'Alexandria'; font-weight:900; font-size:31pt; line-height:1.45;
+    margin: 14mm 0 4mm; max-width: 165mm;
+  }
+  .cover h1 em{ font-style:normal; color:#7fb3ef; }
+  .cover .cover-sub{
+    font-size:12pt; font-weight:300; color:#c8d3e2; max-width:150mm; line-height:2;
+  }
+  .cover .gold-rule{ width:26mm; height:1.4mm; background:var(--gold); border-radius:2px; margin:10mm 0; }
+  .cover .mission{
+    font-size:10pt; color:#e7edf5; max-width:158mm; line-height:2.1;
+    border-right: 1.2mm solid var(--gold); padding-right:6mm;
+  }
+  .cover .mission b{ color:#fff; }
+  .kpi-band{ margin-top:auto; }
+  .kpi-band .kpi-caption{ font-size:8pt; color:#93a5bd; margin-bottom:3mm; letter-spacing:.04em; }
+  .kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:4mm; }
+  .kpi{
+    background: rgba(255,255,255,.055);
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:10px; padding:5mm 5mm 4.2mm;
+  }
+  .kpi .n{ font-family:'Alexandria'; font-weight:800; font-size:16.5pt; color:#fff; line-height:1.2; }
+  .kpi .n small{ font-size:9pt; font-weight:600; color:#9fc4ee; }
+  .kpi .l{ font-size:8pt; color:#aebdd2; margin-top:1mm; }
+  .cover .meta-row{
+    display:flex; justify-content:space-between; align-items:flex-end;
+    margin-top:9mm; padding-top:5mm; border-top:1px solid rgba(255,255,255,.14);
+    font-size:8pt; color:#93a5bd;
+  }
+  .cover .meta-row .item b{ display:block; color:#dfe7f1; font-weight:600; font-size:8.5pt; }
 
-    .page:last-child {
-      page-break-after: auto;
-      break-after: auto;
-    }
+  /* ————— بطاقات البنية (القسم 1) ————— */
+  .arch-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6mm; margin-bottom:5mm; }
+  .arch-card{ border:1.5px solid var(--line); border-radius:12px; overflow:hidden; }
+  .arch-card .hd{
+    padding:3mm 5mm; font-family:'Alexandria'; font-weight:700; font-size:10.5pt;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .arch-card.legacy .hd{ background:#f2f1ef; color:var(--ink-2); }
+  .arch-card.modern .hd{ background:var(--navy); color:#fff; }
+  .arch-card .hd .tag{ font-family:'Readex Pro'; font-weight:400; font-size:7pt; opacity:.75; }
+  .arch-card .bd{ padding:3mm 5mm 3.6mm; }
+  .step{
+    border:1px solid var(--line); background:var(--panel-2);
+    border-radius:8px; padding:1.5mm 4mm; font-size:8.4pt; color:var(--ink);
+  }
+  .step b{ font-weight:600; }
+  .step small{ display:block; color:var(--ink-3); font-size:7.2pt; }
+  .arrow{ text-align:center; color:var(--ink-3); font-size:7pt; line-height:1.3; margin:.3mm 0; }
+  .arch-card.modern .step{ background:var(--blue-soft); border-color:#cfe2f7; }
+  .arch-card.modern .step.guard{ background:#fff8ea; border-color:#f0dfb2; }
 
-    .page-content {
-      flex: 1;
-    }
+  /* ————— أشرطة المقارنة ————— */
+  .bench{ border:1.5px solid var(--line); border-radius:12px; padding:4mm 6mm 3.4mm; }
+  .bench h3{ font-family:'Alexandria'; font-weight:700; font-size:11pt; color:var(--navy); margin-bottom:.6mm; }
+  .bench .note{ font-size:7.6pt; color:var(--ink-3); margin-bottom:3mm; }
+  .bgrp{ margin-bottom:3.4mm; }
+  .bgrp:last-child{ margin-bottom:0; }
+  .bgrp .t{ display:flex; justify-content:space-between; font-size:8.6pt; margin-bottom:1.2mm; }
+  .bgrp .t b{ font-weight:600; color:var(--ink); }
+  .badge-drop{
+    font-family:'Alexandria'; font-weight:700; font-size:8pt; color:var(--good);
+    background:var(--good-bg); border:1px solid #c9ecd9; border-radius:99px; padding:.2mm 3mm;
+  }
+  .brow{ display:grid; grid-template-columns:17mm 1fr 26mm; align-items:center; gap:3mm; margin-bottom:1mm; }
+  .brow .who{ font-size:7.6pt; color:var(--ink-2); }
+  .brow .lane{ display:block; background:transparent; }
+  .brow .bar{ display:block; height:4.2mm; border-radius:0 3px 3px 0; }
+  .brow.legacy .bar{ background:var(--gray-bar); }
+  .brow.modern .bar{ background:var(--blue); }
+  .brow .val{ font-family:'Alexandria'; font-weight:700; font-size:8.6pt; color:var(--ink); }
+  .brow.modern .val{ color:var(--blue); }
 
-    /* Top Brand Header */
-    .doc-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 10px;
-      border-bottom: 2px solid var(--primary);
-      margin-bottom: 14px;
-    }
+  /* ————— الجداول ————— */
+  table.mx{ width:100%; border-collapse:collapse; font-size:8.4pt; }
+  table.mx th{
+    background:var(--navy); color:#fff; font-family:'Alexandria'; font-weight:600;
+    font-size:8.4pt; padding:2.6mm 3.5mm; text-align:right;
+  }
+  table.mx th:first-child{ border-radius:0 8px 0 0; }
+  table.mx th:last-child{ border-radius:8px 0 0 0; }
+  table.mx td{
+    padding:2.5mm 3.5mm; border-bottom:1px solid var(--line);
+    vertical-align:top; line-height:1.65;
+  }
+  table.mx tr:nth-child(even) td{ background:var(--panel-2); }
+  table.mx td.k{ font-weight:600; color:var(--navy); white-space:nowrap; }
+  table.mx td .plus{ color:var(--good); font-weight:600; }
+  table.mx td.old{ color:var(--ink-2); }
+  table.mx td.new{ }
+  table.mx td.new b{ color:var(--blue); }
 
-    .brand-group {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+  /* ————— جرد البيانات ————— */
+  .inv-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:5mm; margin-bottom:7mm; }
+  .inv{
+    border:1.5px solid var(--line); border-radius:12px; padding:5mm;
+    background:linear-gradient(180deg,#fff, var(--panel-2));
+  }
+  .inv .n{ font-family:'Alexandria'; font-weight:800; font-size:19pt; color:var(--navy); line-height:1.25; }
+  .inv .l{ font-size:8.6pt; color:var(--ink-2); }
+  .inv .sub{ margin-top:2.5mm; padding-top:2.5mm; border-top:1px dashed var(--line); font-size:7.8pt; color:var(--ink-2); line-height:1.9; }
+  .inv .sub b{ font-family:'Alexandria'; color:var(--ink); }
 
-    .brand-logo {
-      background: var(--primary);
-      color: #ffffff;
-      font-family: 'Alexandria', sans-serif;
-      font-weight: 800;
-      font-size: 16pt;
-      padding: 3px 12px;
-      border-radius: 6px;
-      letter-spacing: -0.5px;
-    }
+  .dims{ display:grid; grid-template-columns:repeat(4,1fr); gap:4mm; }
+  .dim{
+    border:1.5px solid var(--line); border-radius:12px; padding:4mm;
+    border-top:1.2mm solid var(--blue);
+  }
+  .dim:nth-child(2){ border-top-color:#6d5bd0; }
+  .dim:nth-child(3){ border-top-color:var(--gold); }
+  .dim:nth-child(4){ border-top-color:#1baf7a; }
+  .dim .no{ font-family:'Alexandria'; font-weight:300; font-size:14pt; color:var(--ink-3); line-height:1.2; }
+  .dim h4{ font-family:'Alexandria'; font-weight:700; font-size:10pt; color:var(--navy); margin:.5mm 0 1mm; }
+  .dim h4 code{ font-size:.72em; }
+  .dim p{ font-size:7.9pt; color:var(--ink-2); line-height:1.85; }
 
-    .brand-meta h1 {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 12pt;
-      font-weight: 700;
-      color: var(--primary);
-    }
+  .split-note{
+    display:flex; gap:5mm; align-items:stretch; margin-top:7mm;
+    border:1.5px solid var(--line); border-radius:12px; overflow:hidden;
+  }
+  .split-note > div{ padding:4mm 5mm; flex:1; }
+  .split-note .from{ background:#f2f1ef; }
+  .split-note .to{ background:var(--blue-soft); }
+  .split-note h5{ font-family:'Alexandria'; font-size:9pt; font-weight:700; margin-bottom:1mm; }
+  .split-note p{ font-size:8pt; color:var(--ink-2); line-height:1.85; }
 
-    .brand-meta p {
-      font-size: 8pt;
-      color: var(--text-muted);
-    }
+  /* ————— SEO ————— */
+  .gold-tip{
+    background:#fffdf5; border:1.5px solid #ecd9a6; border-radius:12px;
+    padding:4mm 6mm; margin-bottom:7mm; display:flex; gap:4mm; align-items:flex-start;
+  }
+  .gold-tip .ico{ font-size:13pt; line-height:1.4; }
+  .gold-tip p{ font-size:9pt; line-height:1.95; color:#5c4a12; }
+  .gold-tip b{ color:#93610e; }
+  .url-box{
+    background:var(--navy); color:#e8eef7; border-radius:12px;
+    padding:5mm 6mm; margin-bottom:7mm;
+  }
+  .url-box .cap{ font-size:8pt; color:#93a5bd; margin-bottom:1.5mm; }
+  .url-box .u{
+    font-family:'IBM Plex Mono', monospace; direction:ltr; unicode-bidi:isolate;
+    font-size:12.5pt; font-weight:600; text-align:center; display:block;
+    letter-spacing:.01em;
+  }
+  .url-box .u .seg{ color:#7fb3ef; }
+  .url-box .u .idseg{ color:var(--gold); }
+  .resolvers{ display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; margin-bottom:7mm; }
+  .rsv{ border:1.5px solid var(--line); border-radius:12px; padding:4mm; }
+  .rsv .no{
+    width:7mm; height:7mm; border-radius:50%; background:var(--navy); color:#fff;
+    font-family:'Alexandria'; font-weight:700; font-size:9.5pt;
+    display:flex; align-items:center; justify-content:center; margin-bottom:2mm;
+  }
+  .rsv h4{ font-family:'Alexandria'; font-weight:700; font-size:9.5pt; color:var(--navy); margin-bottom:1mm; line-height:1.5; }
+  .rsv p{ font-size:8pt; color:var(--ink-2); line-height:1.9; }
+  .maps{ display:grid; grid-template-columns:1fr 1fr; gap:4mm; }
+  .map-card{ border:1.5px solid var(--line); border-radius:12px; padding:4mm 5mm; background:var(--panel-2); }
+  .map-card h4{ font-family:'IBM Plex Mono',monospace; direction:ltr; unicode-bidi:isolate; text-align:right; font-size:9.5pt; color:var(--blue); margin-bottom:1mm; }
+  .map-card p{ font-size:8.2pt; color:var(--ink-2); line-height:1.9; }
 
-    .doc-badge {
-      background: var(--bg-light);
-      border: 1px solid var(--border-accent);
-      padding: 4px 10px;
-      border-radius: 16px;
-      font-size: 7.5pt;
-      font-weight: 600;
-      color: var(--primary-light);
-      text-align: left;
-    }
+  /* ————— المراحل ————— */
+  .timeline{ position:relative; padding-right:10mm; }
+  .timeline::before{
+    content:''; position:absolute; right:3.4mm; top:2mm; bottom:2mm;
+    width:.6mm; background:linear-gradient(180deg, var(--blue), var(--navy)); border-radius:2px;
+  }
+  .phase{ position:relative; margin-bottom:4.6mm; }
+  .phase:last-child{ margin-bottom:0; }
+  .phase::before{
+    content:''; position:absolute; right:-8.4mm; top:1.8mm;
+    width:3.4mm; height:3.4mm; border-radius:50%;
+    background:#fff; border:1mm solid var(--blue);
+  }
+  .phase.final::before{ border-color:var(--gold); }
+  .phase .card{ border:1.5px solid var(--line); border-radius:12px; padding:3.2mm 5mm; }
+  .phase h4{ font-family:'Alexandria'; font-weight:700; font-size:10pt; color:var(--navy); display:flex; align-items:center; gap:3mm; }
+  .phase h4 .m{
+    font-family:'IBM Plex Mono',monospace; font-size:7.5pt; font-weight:600; color:var(--blue);
+    background:var(--blue-soft); border-radius:5px; padding:.3mm 2.5mm; direction:ltr;
+  }
+  .phase.final h4 .m{ color:#93610e; background:#fff6e3; }
+  .phase ul{ margin:1.2mm 0 0; padding:0; list-style:none; }
+  .phase li{ font-size:8.3pt; color:var(--ink-2); line-height:1.85; padding-right:4.5mm; position:relative; }
+  .phase li::before{ content:'—'; position:absolute; right:0; color:var(--gold); }
 
-    /* Executive Hero Box */
-    .hero-box {
-      background: linear-gradient(135deg, #060e1a 0%, #10233d 100%);
-      color: #ffffff;
-      padding: 16px 18px;
-      border-radius: 8px;
-      margin-bottom: 14px;
-      position: relative;
-      overflow: hidden;
-    }
+  /* ————— التراجع والاعتماد ————— */
+  .caution{
+    background:var(--warn-bg); border:1.5px solid #f2df9a; border-radius:12px;
+    padding:4mm 6mm; margin-bottom:6mm; font-size:9pt; color:var(--warn-ink); line-height:1.95;
+  }
+  .caution b{ font-family:'Alexandria'; }
+  .rb-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; }
+  .rb{ border:1.5px solid var(--line); border-radius:12px; padding:4mm; }
+  .rb h4{ font-family:'Alexandria'; font-weight:700; font-size:9.5pt; color:var(--navy); margin-bottom:1mm; }
+  .rb p{ font-size:8pt; color:var(--ink-2); line-height:1.9; }
 
-    .hero-box::after {
-      content: "";
-      position: absolute;
-      left: -20px;
-      bottom: -20px;
-      width: 120px;
-      height: 120px;
-      background: radial-gradient(circle, rgba(18, 181, 160, 0.25) 0%, transparent 70%);
-      border-radius: 50%;
-    }
+  .checks{ border:1.5px solid var(--line); border-radius:12px; overflow:hidden; margin-bottom:8mm; }
+  .chk{
+    display:flex; gap:4mm; align-items:flex-start;
+    padding:3mm 5mm; border-bottom:1px solid var(--line); font-size:9pt;
+  }
+  .chk:last-child{ border-bottom:0; }
+  .chk:nth-child(even){ background:var(--panel-2); }
+  .chk .box{
+    flex:none; width:4.6mm; height:4.6mm; border-radius:4px; margin-top:1mm;
+    background:var(--good); color:#fff; display:flex; align-items:center; justify-content:center;
+    font-size:7.5pt; font-weight:700;
+  }
+  .chk .lbl b{ font-weight:600; }
+  .chk .lbl small{ display:block; color:var(--ink-3); font-size:7.6pt; }
 
-    .hero-title {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 14pt;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 6px;
-    }
-
-    .hero-subtitle {
-      font-size: 8.5pt;
-      color: #cbd5e1;
-      line-height: 1.5;
-    }
-
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .kpi-card {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      text-align: center;
-    }
-
-    .kpi-val {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 13pt;
-      font-weight: 700;
-      color: var(--accent-gold);
-    }
-
-    .kpi-lbl {
-      font-size: 7pt;
-      color: #94a3b8;
-      margin-top: 2px;
-    }
-
-    /* Section Headings */
-    .sec-title {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 10.5pt;
-      font-weight: 700;
-      color: var(--primary);
-      margin: 12px 0 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-right: 4px solid var(--accent-teal);
-      padding-right: 8px;
-    }
-
-    /* Tables */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 8px 0 12px;
-      font-size: 8pt;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    th {
-      background: #f1f5f9;
-      color: var(--primary);
-      font-family: 'Alexandria', sans-serif;
-      font-weight: 700;
-      text-align: right;
-      padding: 6px 9px;
-      border: 1px solid var(--border-subtle);
-      font-size: 7.5pt;
-    }
-
-    td {
-      padding: 6px 9px;
-      border: 1px solid var(--border-subtle);
-      color: #334155;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    tr {
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    tr:nth-child(even) td {
-      background: #f8fafc;
-    }
-
-    .highlight-cell {
-      font-weight: 600;
-      color: var(--accent-teal);
-    }
-
-    .legacy-cell {
-      color: #64748b;
-    }
-
-    /* Cards Grid */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin: 8px 0;
-    }
-
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin: 8px 0;
-    }
-
-    .card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 10px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .card-head {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 8.5pt;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 4px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .card-body {
-      font-size: 7.5pt;
-      color: var(--text-muted);
-      line-height: 1.4;
-    }
-
-    /* Badges */
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 7pt;
-      font-weight: 600;
-    }
-    .badge-teal { background: #e6fffa; color: #0d9488; }
-    .badge-blue { background: #eff6ff; color: #2563eb; }
-    .badge-gold { background: #fefce8; color: #ca8a04; }
-    .badge-purple { background: #faf5ff; color: #7c3aed; }
-
-    /* Alert Boxes */
-    .alert-box {
-      border-radius: 6px;
-      padding: 9px 12px;
-      margin: 8px 0;
-      font-size: 8pt;
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .alert-success {
-      background: var(--success-bg);
-      border: 1px solid var(--success-border);
-      color: var(--success-text);
-    }
-
-    .alert-warning {
-      background: var(--warning-bg);
-      border: 1px solid var(--warning-border);
-      color: var(--warning-text);
-    }
-
-    /* Timeline / Phases */
-    .phase-track {
-      display: flex;
-      gap: 6px;
-      margin: 8px 0;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .phase-step {
-      flex: 1;
-      background: #f8fafc;
-      border: 1px solid var(--border-subtle);
-      border-top: 3px solid var(--accent-blue);
-      padding: 8px;
-      border-radius: 6px;
-    }
-
-    .phase-step.active {
-      border-top-color: var(--accent-teal);
-      background: #f0fdfa;
-    }
-
-    .phase-no {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 7pt;
-      font-weight: 800;
-      color: var(--text-muted);
-    }
-
-    .phase-name {
-      font-family: 'Alexandria', sans-serif;
-      font-size: 8pt;
-      font-weight: 700;
-      color: var(--primary);
-      margin: 2px 0;
-    }
-
-    .phase-desc {
-      font-size: 7pt;
-      color: var(--text-muted);
-      line-height: 1.35;
-    }
-
-    /* Sign-off section */
-    .signoff-box {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 8px;
-      padding: 10px;
-      border: 1px dashed var(--border-accent);
-      border-radius: 6px;
-      background: #fafafa;
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    .sign-field {
-      font-size: 7.5pt;
-      color: var(--text-muted);
-    }
-
-    .sign-line {
-      border-bottom: 1px solid #cbd5e1;
-      height: 16px;
-      margin-top: 4px;
-    }
-
-    /* Footer */
-    .doc-footer {
-      border-top: 1px solid var(--border-subtle);
-      padding-top: 6px;
-      margin-top: 8px;
-      display: flex;
-      justify-content: space-between;
-      font-size: 7.5pt;
-      color: #94a3b8;
-    }
-  </style>
+  .signoff{ display:grid; grid-template-columns:repeat(3,1fr); gap:6mm; margin-top:4mm; }
+  .sig{ border-top:1.5px solid var(--ink-2); padding-top:2mm; font-size:8pt; color:var(--ink-2); }
+  .sig b{ display:block; font-family:'Alexandria'; color:var(--navy); font-size:9pt; margin-bottom:6mm; }
+</style>
 </head>
 <body>
 
-  <!-- ==================== PAGE 1: الغلاف والأهداف وتفكيك الأبعاد الأربعة ==================== -->
-  <div class="page">
-    <div class="page-content">
-      <header class="doc-header">
-        <div class="brand-group">
-          <div class="brand-logo">العلم</div>
-          <div class="brand-meta">
-            <h1>خطة ترحيل البيانات والمحتوى ومصفوفة الفروقات المعمارية</h1>
-            <p>منظومة الإعلام والمعرفة السعودية المستقلة · الإصدار التنفيذي المعتمد</p>
-          </div>
-        </div>
-        <div class="doc-badge">
-          <span>التاريخ: أغسطس 2026</span><br>
-          <span>المسار: M0 – M4 الإنتاجي</span>
-        </div>
-      </header>
+<!-- ═══════════ 1) الغلاف ═══════════ -->
+<section class="sheet cover">
+  <div class="doc-kicker"><b>وثيقة هندسية معتمدة</b> · مشروع إعادة بناء منصة «العلم» · alelm.net</div>
+  <h1>خطة ترحيل البيانات والمحتوى<br>ومصفوفة الفروقات <em>المعمارية</em></h1>
+  <p class="cover-sub">من بيئة ووردبريس الموروثة إلى منصة «العلم» السيادية الحديثة المبنية على تقنيات الحافة Edge-First</p>
+  <div class="gold-rule"></div>
+  <p class="mission"><b>الهدف الاستراتيجي:</b> ترحيل كامل الأرشيف الصحفي ومكتبة الوسائط من النظام الموروث إلى المنصة الجديدة، مع <b>ضمانٍ بنسبة 100% لبقاء الروابط</b> وصفر فقدان في رصيد الـ SEO والترتيب في محركات البحث.</p>
 
-      <section class="hero-box">
-        <div class="hero-title">وثيقة التحول المعماري وترحيل الأرشيف التاريخي</div>
-        <div class="hero-subtitle">
-          خطة استراتيجية محكمة لترحيل الأرشيف الصحفي والوسائط من بيئة ووردبريس الموروثة إلى منصة العلم الحديثة المبنية على تقنيات الحافة (Edge-First)، مع ضمان 100% لبقاء الروابط وصفر فقدان في الـ SEO والترتيب في محركات البحث.
-        </div>
-        <div class="kpi-row">
-          <div class="kpi-card">
-            <div class="kpi-val">29,069</div>
-            <div class="kpi-lbl">مادة صحفية منقولة</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-val">96,959</div>
-            <div class="kpi-lbl">ملف وسائط وصور</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-val">100%</div>
-            <div class="kpi-lbl">تطابق الروابط (1:1)</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-val">&lt; 80ms</div>
-            <div class="kpi-lbl">زمن الاستجابة على الحافة</div>
-          </div>
-        </div>
-      </section>
+  <div class="kpi-band">
+    <div class="kpi-caption">أرقام النطاق التنفيذي للمشروع</div>
+    <div class="kpis">
+      <div class="kpi"><div class="n">29,069</div><div class="l">مادة صحفية مُرحّلة</div></div>
+      <div class="kpi"><div class="n">96,959</div><div class="l">ملف وسائط (صور ومستندات)</div></div>
+      <div class="kpi"><div class="n">100<small>%</small></div><div class="l">بقاء الروابط دون أخطاء 404</div></div>
+      <div class="kpi"><div class="n">&lt; 80<small>ms</small></div><div class="l">زمن أول بايت عبر الحافة</div></div>
+    </div>
+    <div class="meta-row">
+      <div class="item"><b>المرجع</b> docs/migration-and-architecture-plan.md</div>
+      <div class="item"><b>الإصدار</b> 1.0 — أغسطس 2026</div>
+      <div class="item"><b>التصنيف</b> داخلي — للاعتماد التنفيذي</div>
+    </div>
+  </div>
+</section>
 
-      <h2 class="sec-title">1. الأهداف الاستراتيجية ومبادئ التحول</h2>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-head">
-            <span>السيادة والاستقلال البرمجي</span>
-            <span class="badge badge-teal">Sovereign Stack</span>
-          </div>
-          <div class="card-body">
-            التخلص التام من قوالب وإضافات ووردبريس المفتوحة وغير المستقرة، وبناء منصة إعلام ومعرفة وطنية مملوكة بالكامل بكود محكم ومعايير هندسية متقدمة.
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <span>حماية الأرشيف والـ SEO</span>
-            <span class="badge badge-blue">Zero-Loss SEO</span>
-          </div>
-          <div class="card-body">
-            الحفاظ المطلق على 29 ألف رابط مؤرشف دون كسر الروابط الخارجية، وتفعيل محول 301 ذكي يضمن تدفق الزيارات من محركات البحث بدون هبوط.
-          </div>
-        </div>
-      </div>
+<!-- ═══════════ 2) المقارنة المعمارية ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">01</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">مقارنة البنية التقنية</h2>
+  <p class="sec-sub">نقلة نوعية من بنية أحادية قديمة (Monolithic PHP/MySQL) إلى بنية موزعة فائقة السرعة والأمان (Distributed Serverless / RSC).</p>
 
-      <h2 class="sec-title">2. نموذج المحتوى الجديد: تفكيك الأبعاد الأربعة</h2>
-      <p style="font-size: 8pt; color: var(--text-muted); margin-bottom: 6px;">
-        في النظام القديم تداخلت الأقسام والوسوم؛ أما في منصة «العلم» تم تفكيكها بدقة إلى 4 أبعاد مستقلة ونظيفة:
-      </p>
-      <div class="grid-4">
-        <div class="card">
-          <div class="card-head">
-            <span>1. الموضوع</span>
-            <span class="badge badge-teal">Section</span>
-          </div>
-          <div class="card-body">تخصص موضوعي صريح واحد للمادة (محليات، اقتصاد، تقنية، علوم، صحة، رياضة، ثقافة...).</div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <span>2. العدسة</span>
-            <span class="badge badge-blue">Series</span>
-          </div>
-          <div class="card-body">عدسة المعرفة السلسلية الثمانية (أبسط، بالأرقام، افهمها صح، لماذا، شخصيات، ماذا لو...).</div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <span>3. الشكل</span>
-            <span class="badge badge-gold">Format</span>
-          </div>
-          <div class="card-body">شكل القالب التحريري (خبر، إنفوجرافيك تفاعلي، مرئي، تقرير جاك العلم، بودكاست).</div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <span>4. سير العمل</span>
-            <span class="badge badge-purple">Status</span>
-          </div>
-          <div class="card-body">دورة حياة المادة والاعتماد (draft → review → scheduled → published) محكومة بالحارس.</div>
-        </div>
+  <div class="arch-grid">
+    <div class="arch-card legacy">
+      <div class="hd">البنية القديمة <span class="tag">WordPress / Oxygen</span></div>
+      <div class="bd">
+        <div class="step"><b>طلب الزائر</b></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>خادم PHP أحادي</b><small>Apache / Nginx — نقطة اختناق مركزية</small></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>قاعدة بيانات MySQL</b><small>استعلامات ثقيلة عند كل طلب</small></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>بانٍ بصري ثقيل Oxygen Builder</b><small>أكواد متداخلة وقوالب متشابكة</small></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>مخرجات متضخمة +600KB</b><small>سكربتات متعددة تبطئ العرض</small></div>
       </div>
     </div>
-
-    <footer class="doc-footer">
-      <span>منصة العلم · وثيقة التحول المعماري وخطة ترحيل البيانات</span>
-      <span>الصفحة 1 من 3</span>
-    </footer>
-  </div>
-
-  <!-- ==================== PAGE 2: مقارنة البنية التقنية ومطابقة الحقول ==================== -->
-  <div class="page">
-    <div class="page-content">
-      <header class="doc-header">
-        <div class="brand-group">
-          <div class="brand-logo">العلم</div>
-          <div class="brand-meta">
-            <h1>مقارنة البنية التقنية ومصفوفة مطابقة الحقول</h1>
-            <p>المقارنة المعيارية الشاملة وهندسة التحويل لقاعدة البيانات</p>
-          </div>
-        </div>
-        <div class="doc-badge">
-          <span>المصفوفة الفنية</span>
-        </div>
-      </header>
-
-      <h2 class="sec-title">3. مقارنة البنية التقنية (Architectural Benchmark)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>المعيار الفني</th>
-            <th>البيئة القديمة (WordPress / Oxygen)</th>
-            <th>منصة العلم الجديدة (Next.js 16 / Edge)</th>
-            <th>الأثر الإيجابي والمكاسب</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>المكدس الأساسي</strong></td>
-            <td class="legacy-cell">PHP 8.x + MySQL + WordPress</td>
-            <td class="highlight-cell">Next.js 16 + React 19 + TypeScript</td>
-            <td>تحكم كامل بالكود وأمان سيادي خالٍ من الثغرات</td>
-          </tr>
-          <tr>
-            <td><strong>محرك التصيير</strong></td>
-            <td class="legacy-cell">تصيير خادمي تقليدي بطيء عبر PHP</td>
-            <td class="highlight-cell">React Server Components (RSC) على الحافة</td>
-            <td>تصيير فوري وتفريغ أعباء المعالجة عن المتصفح</td>
-          </tr>
-          <tr>
-            <td><strong>بناء الواجهة</strong></td>
-            <td class="legacy-cell">Oxygen Builder 4.9.2 (أكواد متضخمة)</td>
-            <td class="highlight-cell">Vanilla CSS + Design System «المنشور»</td>
-            <td>تصميم ناعم وفائق الخفة وخالٍ من المكتبات الفائضة</td>
-          </tr>
-          <tr>
-            <td><strong>زمن أول بايت (TTFB)</strong></td>
-            <td class="legacy-cell">560ms – 900ms (استجابة بطيئة)</td>
-            <td class="highlight-cell">&lt; 80ms (Cloudflare Edge Cache)</td>
-            <td>استجابة فائقة السرعة للزوار ومحركات البحث</td>
-          </tr>
-          <tr>
-            <td><strong>حجم الصفحة (HTML/JS)</strong></td>
-            <td class="legacy-cell">601KB HTML + 657KB JS</td>
-            <td class="highlight-cell">&lt; 35KB HTML + &lt; 140KB JS</td>
-            <td>توفير 85% من البيانات وتحميل فوري على الهاتف</td>
-          </tr>
-          <tr>
-            <td><strong>مؤشرات الأداء (LCP)</strong></td>
-            <td class="legacy-cell">3.2s – 4.5s (منطقة حمراء/تحذير)</td>
-            <td class="highlight-cell">&lt; 1.1s (منطقة خضراء مثالية)</td>
-            <td>الامتياز الكامل في تقييم Google Core Web Vitals</td>
-          </tr>
-          <tr>
-            <td><strong>السياسة التحريرية</strong></td>
-            <td class="legacy-cell">مراجعة بشرية غير مؤتمتة</td>
-            <td class="highlight-cell">«حارس السياسة» (39 قاعدة حتمية)</td>
-            <td>منع قاطع للمخالفات اللغوية والسياسية آلياً</td>
-          </tr>
-          <tr>
-            <td><strong>تخزين الوسائط</strong></td>
-            <td class="legacy-cell">تخزين محلي تقليدي على السيرفر</td>
-            <td class="highlight-cell">Cloudflare R2 + ضغط وتحويل WebP</td>
-            <td>توفير 70% من التخزين وسرعة تحميل مضاعفة</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h2 class="sec-title">4. خريطة مطابقة الحقول (Field Mapping Matrix)</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>حقل ووردبريس القديم</th>
-            <th>مخطط قاعدة بيانات العلم (Postgres)</th>
-            <th>آلية المعالجة والتحويل الهندسي</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>ID</code> (المعرف الرقمي)</td>
-            <td class="highlight-cell"><code>stories.id</code></td>
-            <td><strong>يُحفظ المعرف الرقمي كما هو حرفياً (مفتاح بقاء الروابط والأرشفة)</strong></td>
-          </tr>
-          <tr>
-            <td><code>slug</code> (الاسم اللطيف)</td>
-            <td class="highlight-cell"><code>stories.slug</code></td>
-            <td>تنظيف الترميز العربي والإبقاء على البنية النصية للروابط</td>
-          </tr>
-          <tr>
-            <td><code>title.rendered</code></td>
-            <td class="highlight-cell"><code>stories.title</code></td>
-            <td>فك كيانات HTML وتطهير العنوان وضبطه وفق سقف الـ 10 كلمات</td>
-          </tr>
-          <tr>
-            <td><code>content.rendered</code></td>
-            <td class="highlight-cell"><code>stories.body</code></td>
-            <td>تجريد أكواد Oxygen القصيرة إلى كتل فقرات وHTML دلالي نظيف</td>
-          </tr>
-          <tr>
-            <td><code>excerpt.rendered</code></td>
-            <td class="highlight-cell"><code>stories.excerpt</code></td>
-            <td>تجريد الوسوم وتوليد مقتطف تحريري دقيق ومركز</td>
-          </tr>
-          <tr>
-            <td><code>categories</code> (التصنيف)</td>
-            <td class="highlight-cell"><code>stories.section</code></td>
-            <td>التحويل إلى الأقسام الـ 15 المعتمدة مع إعطاء الأولوية للقسم الموضوعي</td>
-          </tr>
-          <tr>
-            <td><code>tags</code> (الوسوم)</td>
-            <td class="highlight-cell"><code>stories.seriesSlug</code></td>
-            <td>استخلاص وسوم السلاسل الثمانية الرسمية وعزل الوسوم الملوثة للأرشيف</td>
-          </tr>
-          <tr>
-            <td><code>featured_media</code></td>
-            <td class="highlight-cell"><code>stories.image</code> + <code>media</code></td>
-            <td>تحويل الصور وحفظ الأبعاد الأصلية وتوليد صيغ WebP على Cloudflare R2</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <footer class="doc-footer">
-      <span>منصة العلم · وثيقة التحول المعماري وخطة ترحيل البيانات</span>
-      <span>الصفحة 2 من 3</span>
-    </footer>
-  </div>
-
-  <!-- ==================== PAGE 3: استراتيجية الـ SEO والمراحل وخطة التراجع ==================== -->
-  <div class="page">
-    <div class="page-content">
-      <header class="doc-header">
-        <div class="brand-group">
-          <div class="brand-logo">العلم</div>
-          <div class="brand-meta">
-            <h1>استراتيجية الـ SEO ومراحل التنفيذ وخطة التراجع</h1>
-            <p>ضمانات محركات البحث، المخطط الزمني، وإجراءات الطوارئ والاعتماد</p>
-          </div>
-        </div>
-        <div class="doc-badge">
-          <span>الخطة التنفيذية</span>
-        </div>
-      </header>
-
-      <h2 class="sec-title">5. استراتيجية حماية الـ SEO وصفر فقدان (Zero-SEO-Loss)</h2>
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-head">
-            <span>تطابق الروابط بنسبة 100%</span>
-            <span class="badge badge-teal">URL Match</span>
-          </div>
-          <div class="card-body">
-            بنية الروابط مطابقة تماماً للأرشيف القديم: <code>https://alelm.net/{section}/{id}/{slug}</code> مما يضمن استمرار تدفق زوار Google دون أي انقطاع.
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-head">
-            <span>طبقة التحويلات 301 الذكية</span>
-            <span class="badge badge-blue">Wildcard 301</span>
-          </div>
-          <div class="card-body">
-            قاعدة «المعرّف ID يحسم»: أي طلب يطابق <code>/*/:id/*</code> يتم التعرف عليه وتوجيهه فوراً بتحويل 301 دائم إلى مساره الصحيح.
-          </div>
-        </div>
-      </div>
-
-      <div class="alert-box alert-success">
-        <div>
-          <strong>ضمان البيانات المهيكلة (Schema JSON-LD) وخرائط الموقع:</strong>
-          توليد تلقائي لمخططات <code>NewsArticle</code> و <code>BreadcrumbList</code> لكل مادة لتعزيز الترتيب في Google News، مع خريطة موقع لحظية <code>sitemap-news.xml</code> للأخبار خلال 48 ساعة.
-        </div>
-      </div>
-
-      <h2 class="sec-title">6. المخطط الزمني لمراحل الترحيل (Migration Roadmap)</h2>
-      <div class="phase-track">
-        <div class="phase-step">
-          <div class="phase-no">المرحلة M0</div>
-          <div class="phase-name">الجرد والاستكشاف</div>
-          <div class="phase-desc">قراءة الأرشيف عبر REST API وتجهيز محولات التحويل المعزولة.</div>
-        </div>
-        <div class="phase-step active">
-          <div class="phase-no">المرحلة M1</div>
-          <div class="phase-name">البروفة التجريبية</div>
-          <div class="phase-desc">ترحيل 500 مادة واختبار مطابقة الروابط وفحص حارس السياسة.</div>
-        </div>
-        <div class="phase-step">
-          <div class="phase-no">المرحلة M2</div>
-          <div class="phase-name">الترحيل الشامل</div>
-          <div class="phase-desc">استيراد 29 ألف مادة إلى Neon ونقل الوسائط إلى R2.</div>
-        </div>
-        <div class="phase-step">
-          <div class="phase-no">المرحلة M3</div>
-          <div class="phase-name">التدقيق والزحف</div>
-          <div class="phase-desc">زحف آلي شامل للتأكد من صفر روابط مكسورة وكفاءة السرعة.</div>
-        </div>
-        <div class="phase-step">
-          <div class="phase-no">المرحلة M4</div>
-          <div class="phase-name">الإطلاق المباشر</div>
-          <div class="phase-desc">تحويل DNS وبدء البث الإنتاجي مع المراقبة الحية.</div>
-        </div>
-      </div>
-
-      <div class="alert-box alert-warning">
-        <div>
-          <strong>خطة التراجع الفوري عند الطوارئ (Rollback in &lt; 2 mins):</strong>
-          البيئة القديمة تبقى معزولة ومجمدة كأرشيف بارد. في حال حدوث أي طارئ، يتم تحويل حركة المرور عبر Cloudflare DNS إلى الخادم القديم بنقرة زر واحدة خلال دقيقتين.
-        </div>
-      </div>
-
-      <h2 class="sec-title">7. الاعتماد والتوقيع النهائي (Sign-off & Approvals)</h2>
-      <div class="signoff-box">
-        <div>
-          <div class="sign-field">مدير المشروع والتقنية:</div>
-          <div class="sign-line"></div>
-        </div>
-        <div>
-          <div class="sign-field">رئيس التحرير والسياسة التحريرية:</div>
-          <div class="sign-line"></div>
-        </div>
+    <div class="arch-card modern">
+      <div class="hd">منصة العلم الحديثة <span class="tag">Edge-First / RSC</span></div>
+      <div class="bd">
+        <div class="step"><b>طلب الزائر</b></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>شبكة Cloudflare Edge العالمية</b><small>استجابة من أقرب نقطة للزائر</small></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>Next.js 16 App Router + RSC</b><small>تصيير خادمي على الحافة</small></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>Neon Serverless Postgres</b><small>قاعدة بيانات سحابية مرنة</small></div>
+        <div class="arrow">▼</div>
+        <div class="step guard"><b>حارس السياسة التحريرية</b><small>39 قاعدة حتمية قبل النشر</small></div>
+        <div class="arrow">▼</div>
+        <div class="step"><b>مخرجات نظيفة مضغوطة 35KB</b><small>HTML دلالي خالٍ من الفائض</small></div>
       </div>
     </div>
-
-    <footer class="doc-footer">
-      <span>منصة العلم · وثيقة التحول المعماري وخطة ترحيل البيانات</span>
-      <span>الصفحة 3 من 3</span>
-    </footer>
   </div>
+
+  <div class="bench">
+    <h3>الأداء بالأرقام — قبل وبعد</h3>
+    <div class="note">الأشرطة على مقياس نسبي داخل كل مؤشر؛ القيم الفعلية موسومة على كل شريط. الرمادي: البيئة القديمة · الأزرق: منصة العلم.</div>
+
+    <div class="bgrp">
+      <div class="t"><b>زمن أول بايت (TTFB)</b><span class="badge-drop">أسرع بما يصل إلى 91%</span></div>
+      <div class="brow legacy"><span class="who">القديمة</span><span class="lane"><span class="bar" style="width:100%"></span></span><span class="val ltr">560–900ms</span></div>
+      <div class="brow modern"><span class="who">الجديدة</span><span class="lane"><span class="bar" style="width:9%"></span></span><span class="val ltr">&lt; 80ms</span></div>
+    </div>
+
+    <div class="bgrp">
+      <div class="t"><b>وزن الصفحة (HTML + JS)</b><span class="badge-drop">انخفاض 85% في البيانات</span></div>
+      <div class="brow legacy"><span class="who">القديمة</span><span class="lane"><span class="bar" style="width:100%"></span></span><span class="val ltr">1,258KB</span></div>
+      <div class="brow modern"><span class="who">الجديدة</span><span class="lane"><span class="bar" style="width:14%"></span></span><span class="val ltr">&lt; 175KB</span></div>
+    </div>
+
+    <div class="bgrp">
+      <div class="t"><b>مؤشر أكبر عنصر مرئي (LCP)</b><span class="badge-drop">منطقة خضراء مثالية</span></div>
+      <div class="brow legacy"><span class="who">القديمة</span><span class="lane"><span class="bar" style="width:100%"></span></span><span class="val ltr">3.2–4.5s</span></div>
+      <div class="brow modern"><span class="who">الجديدة</span><span class="lane"><span class="bar" style="width:24%"></span></span><span class="val ltr">&lt; 1.1s</span></div>
+    </div>
+  </div>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">2</span>
+  </div>
+</section>
+
+<!-- ═══════════ 3) مصفوفة الفروقات ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">01</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">مصفوفة الفروقات التقنية والأداء</h2>
+  <p class="sec-sub">ثمانية معايير فنية تلخص الفجوة بين البيئتين والأثر المباشر لكل نقلة.</p>
+
+  <table class="mx">
+    <thead>
+      <tr><th style="width:22%">المعيار الفني</th><th style="width:27%">البيئة القديمة</th><th style="width:28%">منصة العلم الجديدة</th><th>الأثر الإيجابي</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="k">المكدس الأساسي</td><td class="old"><span class="ltr">PHP 8.x + MySQL + WordPress</span></td><td class="new"><b><span class="ltr">Next.js 16 (React 19) + TypeScript + Neon</span></b></td><td><span class="plus">✦</span> استقرار هندسي وتحكم كامل بالكود</td></tr>
+      <tr><td class="k">محرك التصيير</td><td class="old">تصيير خادمي عبر PHP</td><td class="new"><b>React Server Components على الحافة</b></td><td><span class="plus">✦</span> تحميل صفري لجافاسكربت الواجهة في أغلب المكونات</td></tr>
+      <tr><td class="k">بناء الصفحات</td><td class="old"><span class="ltr">Oxygen Builder 4.9.2</span> — أكواد متداخلة</td><td class="new"><b>Vanilla CSS + نظام تصميم «المنشور» الصارم</b></td><td><span class="plus">✦</span> سرعة معالجة وخلو من الكود الفائض</td></tr>
+      <tr><td class="k">زمن أول بايت TTFB</td><td class="old"><span class="ltr">560ms – 900ms</span></td><td class="new"><b><span class="ltr">&lt; 80ms</span></b> عبر كاش الحافة</td><td><span class="plus">✦</span> استجابة فورية للزوار وروبوتات الزحف</td></tr>
+      <tr><td class="k">حجم الصفحة</td><td class="old"><span class="ltr">601KB HTML + 657KB JS</span></td><td class="new"><b><span class="ltr">&lt; 35KB HTML + &lt; 140KB JS</span></b></td><td><span class="plus">✦</span> انخفاض استهلاك البيانات بنسبة 85%</td></tr>
+      <tr><td class="k">مؤشر LCP الحيوي</td><td class="old"><span class="ltr">3.2s – 4.5s</span> — منطقة حمراء/صفراء</td><td class="new"><b><span class="ltr">&lt; 1.1s</span></b> — منطقة خضراء مثالية</td><td><span class="plus">✦</span> تصدر نتائج بحث Google وملاءمة الهاتف</td></tr>
+      <tr><td class="k">السياسة التحريرية</td><td class="old">يدوي / عشوائي / لا حظر برمجي</td><td class="new"><b>محرك «حارس السياسة» — 39 قاعدة حتمية</b></td><td><span class="plus">✦</span> حماية كاملة من المخالفات والأخطاء اللغوية</td></tr>
+      <tr><td class="k">تخزين الوسائط</td><td class="old">استضافة محلية تقليدية على القرص</td><td class="new"><b>Cloudflare R2 + تحويل تلقائي WebP</b></td><td><span class="plus">✦</span> توفير 70% من التخزين وسرعة تحميل مضاعفة</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">3</span>
+  </div>
+</section>
+
+<!-- ═══════════ 4) جرد البيانات ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">02</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">جرد البيانات وتفكيك الأبعاد الأربعة</h2>
+  <p class="sec-sub">حصر دقيق للأرشيف المنقول، وإعادة هندسة التصنيف من حقول متداخلة إلى أربعة كيانات مستقلة.</p>
+
+  <div class="inv-grid">
+    <div class="inv">
+      <div class="n">29,069</div><div class="l">مادة صحفية <code>posts</code></div>
+      <div class="sub"><b>25,423</b> منشورة وحية · <b>930</b> معتمدة · <b>869</b> مسودة وقيد التعديل</div>
+    </div>
+    <div class="inv">
+      <div class="n">96,959</div><div class="l">ملف وسائط <code>media</code></div>
+      <div class="sub">صور ورسوم ومستندات — تُنقل النشطة منها إلى R2 مع ضغط وتحويل تلقائي</div>
+    </div>
+    <div class="inv">
+      <div class="n">16</div><div class="l">قسماً موضوعياً</div>
+      <div class="sub">تُطابَق عبر جدول مطابقة الأقسام إلى مصفوفة الأقسام والسلاسل المعتمدة</div>
+    </div>
+  </div>
+
+  <div class="dims">
+    <div class="dim">
+      <div class="no">١</div>
+      <h4>الموضوع <code>section</code></h4>
+      <p>واحد إلزامي يحدد التخصص الموضوعي للمادة (محليات، اقتصاد، …).</p>
+    </div>
+    <div class="dim">
+      <div class="no">٢</div>
+      <h4>العدسة <code>seriesSlug</code></h4>
+      <p>سلسلة تحريرية اختيارية من سلاسل العلم الثمانية (أبسط، بالأرقام، …).</p>
+    </div>
+    <div class="dim">
+      <div class="no">٣</div>
+      <h4>الشكل <code>format</code></h4>
+      <p>طبيعة إخراج المادة: خبر، إنفوجرافيك، مرئي، تقرير، بودكاست.</p>
+    </div>
+    <div class="dim">
+      <div class="no">٤</div>
+      <h4>سير العمل <code>status</code></h4>
+      <p>حالة المادة في دورة النشر مع تدقيق حارس السياسة التحريرية.</p>
+    </div>
+  </div>
+
+  <div class="split-note">
+    <div class="from">
+      <h5>قبل — سجل ووردبريس المتداخل</h5>
+      <p>تصنيفٌ يخلط الموضوعي بالشكلي، ووسوم حرة ملوثة تختلط فيها السلاسل بالعشوائي، وأنواع مقالات مخصصة، وحالة تحريرية معزولة عن أي رقابة برمجية.</p>
+    </div>
+    <div class="to">
+      <h5>بعد — قصة «العلم» مهندَسة الأبعاد</h5>
+      <p>أربعة حقول مستقلة نظيفة يفرضها المخطط <code>db/schema.ts</code>: موضوع صريح، وعدسة سلسلة، وشكل قالب، وسير عمل يمر إجبارياً على حارس السياسة — هندسة وتطهير كاملان للبيانات.</p>
+    </div>
+  </div>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">4</span>
+  </div>
+</section>
+
+<!-- ═══════════ 5) خريطة الحقول ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">03</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">خريطة مطابقة الحقول</h2>
+  <p class="sec-sub">المسار الدقيق لكل حقل من واجهة ووردبريس REST إلى مخطط <code>db/schema.ts</code> — والمعالجة المطبقة أثناء العبور.</p>
+
+  <table class="mx">
+    <thead>
+      <tr><th style="width:22%">حقل ووردبريس القديم</th><th style="width:24%">حقل منصة العلم</th><th>آلية التحويل والمعالجة</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="k"><code>ID</code></td><td><code>stories.id</code></td><td><b>يُحفظ المعرف الرقمي كما هو حرفياً — المفتاح الأساسي لبقاء الروابط</b></td></tr>
+      <tr><td class="k"><code>slug</code></td><td><code>stories.slug</code></td><td>تنظيف الترميز مع الإبقاء على البنية النصية للعناوين</td></tr>
+      <tr><td class="k"><code>title.rendered</code></td><td><code>stories.title</code></td><td>فك كيانات HTML والتنظيف من محارف التنسيق الزائدة</td></tr>
+      <tr><td class="k"><code>content.rendered</code></td><td><code>stories.body</code></td><td>تجريد أكواد Oxygen القصيرة إلى كتل فقرات وHTML دلالي نظيف</td></tr>
+      <tr><td class="k"><code>excerpt.rendered</code></td><td><code>stories.excerpt</code></td><td>إزالة وسوم التنسيق وتوليد مقتطف مركز لا يتجاوز 180 حرفاً</td></tr>
+      <tr><td class="k"><code>categories</code></td><td><code>stories.section</code></td><td>التحويل عبر جدول مطابقة الأقسام — الموضوعي يغلب الشكلي</td></tr>
+      <tr><td class="k"><code>tags</code></td><td><code>stories.seriesSlug</code></td><td>استخلاص وسوم السلاسل الثمانية وعزل الوسوم العشوائية الملوثة</td></tr>
+      <tr><td class="k"><code>article_type</code></td><td><code>stories.format</code></td><td>تعيين شكل المادة: خبر / إنفوجرافيك / مرئي / تقرير</td></tr>
+      <tr><td class="k"><code>featured_media</code></td><td><code>stories.image</code> + <code>media</code></td><td>ربط الصورة الأصلية وتوليد مسار CDN المحسّن</td></tr>
+      <tr><td class="k"><code>date_gmt</code></td><td><code>stories.publishedAt</code></td><td>تحويل التاريخ إلى صيغة ISO 8601 القياسية</td></tr>
+      <tr><td class="k"><code>modified_gmt</code></td><td><code>stories.updatedAt</code></td><td>حفظ تاريخ آخر تعديل دقيق</td></tr>
+      <tr><td class="k"><code>post_author</code></td><td><code>stories.authorName</code></td><td>تعيين اسم المحرر وربطه بحسابات التحرير</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">5</span>
+  </div>
+</section>
+
+<!-- ═══════════ 6) ضمانات SEO ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">04</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">ضمانات الـ SEO المطلقة</h2>
+  <p class="sec-sub">استراتيجية «صفر فقدان» — Zero-SEO-Loss Strategy.</p>
+
+  <div class="gold-tip">
+    <div class="ico">◆</div>
+    <p><b>قاعدة الذهب:</b> المحافظة على هيكل الروابط بنسبة 100% تضمن استمرار تدفق الزوار من Google دون هبوط في الزيارات أو ظهور أخطاء <code>404 Not Found</code>.</p>
+  </div>
+
+  <div class="url-box">
+    <div class="cap">تطابق بنية الروابط 1:1 — بنية «العلم» مطابقة لبنية الأرشيف السابقة</div>
+    <span class="u">https://alelm.net/<span class="seg">{section}</span>/<span class="idseg">{id}</span>/<span class="seg">{slug}</span></span>
+  </div>
+
+  <h3 style="font-family:'Alexandria'; font-weight:700; font-size:11pt; color:var(--navy); margin-bottom:3mm;">طبقة التحويلات الذكية — Wildcard 301 Resolvers</h3>
+  <div class="resolvers">
+    <div class="rsv">
+      <div class="no">1</div>
+      <h4>قاعدة «الـ ID يحسم»</h4>
+      <p>أي طلب يطابق <code>/*/:id/*</code> تُستخرج مادته من معرّفها ويُوجّه الزائر فوراً بتحويل دائم <code>301</code> إلى المسار الرسمي الحالي.</p>
+    </div>
+    <div class="rsv">
+      <div class="no">2</div>
+      <h4>تحويلات الوسوم والسلاسل</h4>
+      <p>توجيه تلقائي من المسار القديم <code>/tag/:series</code> إلى المسار الحديث <code>/series/:slug</code>.</p>
+    </div>
+    <div class="rsv">
+      <div class="no">3</div>
+      <h4>إرث Rank Math مدمج</h4>
+      <p>تصدير كافة قواعد التحويل السابقة ودمجها في Middleware خفيف يعمل على الحافة.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:'Alexandria'; font-weight:700; font-size:11pt; color:var(--navy); margin-bottom:3mm;">البيانات المهيكلة وخرائط الموقع</h3>
+  <div class="maps">
+    <div class="map-card">
+      <h4>sitemap-news.xml</h4>
+      <p>مقالات آخر 48 ساعة — لفهرسة جوجل الإخبارية السريعة Google News.</p>
+    </div>
+    <div class="map-card">
+      <h4>sitemap.xml</h4>
+      <p>الخريطة الشاملة لكافة الأقسام والسلاسل والمواد الدائمة.</p>
+    </div>
+  </div>
+  <p style="margin-top:5mm; font-size:8.6pt; color:var(--ink-2); line-height:2;">تُولَّد لكل مادة بياناتها المهيكلة <code>NewsArticle JSON-LD</code> شاملةً الكاتب والناشر وتاريخي النشر والتعديل والصور — بما يؤهل المواد لبطاقات النتائج الغنية في محركات البحث.</p>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">6</span>
+  </div>
+</section>
+
+<!-- ═══════════ 7) المراحل + التراجع ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">05</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">مراحل التنفيذ وخطة التراجع</h2>
+  <p class="sec-sub">خمس مراحل متدرجة من الجرد إلى القطع المباشر، تسندها خطة تراجع تُنفَّذ في أقل من دقيقتين.</p>
+
+  <div class="timeline">
+    <div class="phase">
+      <div class="card">
+        <h4><span class="m">M0</span> الإعداد والجرد الآلي</h4>
+        <ul>
+          <li>قراءة أرشيف ووردبريس عبر REST API الآمن ومطابقة الجرد.</li>
+          <li>إنشاء مجلد البيانات المعزول وتجهيز سكربتات التحويل والتنظيف — والعمل على بيئة الإنتاج القديمة بوضع القراءة فقط (0% تعديل).</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="card">
+        <h4><span class="m">M1</span> البروفة الموسعة — Rehearsal</h4>
+        <ul>
+          <li>ترحيل عينة حية من 500 مادة منوعة (أخبار، إنفوجرافيك، مرئي، سلاسل).</li>
+          <li>التحقق من مطابقة الروابط 100% وخلو الصور من الكسور، وفحص المواد عبر «حارس السياسة التحريرية».</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="card">
+        <h4><span class="m">M2</span> ترحيل كامل الأرشيف — Full Ingestion</h4>
+        <ul>
+          <li>استيراد الـ 29,069 مادة إلى Neon Postgres عبر سكربت <code>db-seed</code>.</li>
+          <li>نقل الصور النشطة المحسّنة إلى Cloudflare R2، وبناء فهارس البحث والتصنيفات وتوليد الكاش المسبق.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase">
+      <div class="card">
+        <h4><span class="m">M3</span> تدقيق الروابط والـ SEO — Validation</h4>
+        <ul>
+          <li>زحف آلي شامل لجميع روابط خريطة الموقع القديمة.</li>
+          <li>اشتراط إرجاع <code>200 OK</code> أو تحويل <code>301</code> صحيح بنسبة نجاح 100%، ومراجعة Web Vitals وتجاوب الهواتف.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="phase final">
+      <div class="card">
+        <h4><span class="m">M4</span> القطع المباشر والإطلاق — Cutover</h4>
+        <ul>
+          <li>تبديل DNS على Cloudflare لتوجيه <code>alelm.net</code> إلى المنصة الجديدة.</li>
+          <li>إبقاء ووردبريس في نطاق فرعي محمي كأرشيف بارد، ومراقبة حية عبر Sentry وCloudflare Analytics.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:6mm;">
+    <div class="caution"><b>خطة الطوارئ:</b> لضمان استمرارية الأعمال بنسبة 99.99%، وُضعت خطة تراجع كاملة يمكن تنفيذها في أقل من <b>دقيقتين</b>:</div>
+    <div class="rb-grid">
+      <div class="rb"><h4>بيئة قديمة مجمّدة</h4><p>خادم ووردبريس يبقى قائماً بكامل ملفاته وقواعده دون أي تعديل أو مساس.</p></div>
+      <div class="rb"><h4>تراجع عبر DNS</h4><p>إعادة توجيه حركة المرور فوراً إلى الخادم القديم بنقرة واحدة من لوحة Cloudflare.</p></div>
+      <div class="rb"><h4>تراجع قاعدة البيانات</h4><p>خيار <code>--rollback</code> في سكربت الترحيل يعيد تعيين جداول Neon في ثوانٍ معدودة.</p></div>
+    </div>
+  </div>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">7</span>
+  </div>
+</section>
+
+<!-- ═══════════ 8) الاعتماد ═══════════ -->
+<section class="sheet">
+  <div class="page-head">
+    <div class="brand">منصة العلم<small>خطة الترحيل والبنية المعمارية</small></div>
+    <div class="sec-no">06</div>
+  </div>
+  <span class="accent-bar"></span>
+  <h2 class="sec-title">قائمة التحقق والاعتماد النهائي</h2>
+  <p class="sec-sub">بنود الجاهزية الست — مكتملة وموقعة قبل أمر القطع المباشر.</p>
+
+  <div class="checks">
+    <div class="chk"><div class="box">✓</div><div class="lbl"><b>مطابقة بنية روابط المواد <code>/{section}/{id}/{slug}</code> بنسبة 100%</b><small>مُتحقق منها بالزحف الآلي الشامل على خريطة الموقع القديمة</small></div></div>
+    <div class="chk"><div class="box">✓</div><div class="lbl"><b>تهيئة مصفوفة الأقسام والسلاسل الـ 15 المعتمدة</b><small>جدول مطابقة التصنيفات القديمة جاهز ومختبَر</small></div></div>
+    <div class="chk"><div class="box">✓</div><div class="lbl"><b>اجتياز فحوصات الأمان وCSP الصارم وترويسات HSTS</b><small>سياسة أمن محتوى مشددة على مستوى الحافة</small></div></div>
+    <div class="chk"><div class="box">✓</div><div class="lbl"><b>ربط وضغط صور الأرشيف بصيغة WebP الحديثة</b><small>عبر خط معالجة تلقائي إلى Cloudflare R2</small></div></div>
+    <div class="chk"><div class="box">✓</div><div class="lbl"><b>دمج مخططات البيانات المهيكلة Schema لـ Google News</b><small>NewsArticle JSON-LD لكل مادة منشورة</small></div></div>
+    <div class="chk"><div class="box">✓</div><div class="lbl"><b>جاهزية مسار الترحيل التلقائي وسكربتات التدقيق اليومية</b><small>خط أنابيب قابل للإعادة والقياس مع تقارير انحراف</small></div></div>
+  </div>
+
+  <div class="signoff">
+    <div class="sig"><b>إعداد — الفريق التقني</b>الاسم والتوقيع والتاريخ</div>
+    <div class="sig"><b>مراجعة — رئاسة التحرير</b>الاسم والتوقيع والتاريخ</div>
+    <div class="sig"><b>اعتماد — إدارة المشروع</b>الاسم والتوقيع والتاريخ</div>
+  </div>
+
+  <div class="page-foot">
+    <span>منصة العلم <span class="dot">●</span> خطة الترحيل والبنية المعمارية <span class="dot">●</span> وثيقة داخلية</span>
+    <span class="pnum">8</span>
+  </div>
+</section>
 
 </body>
 </html>
