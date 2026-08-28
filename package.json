@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "node --test tests/*.test.mjs",
     "budget": "node scripts/check-performance-budget.mjs",
+    "audit:migration": "node --env-file-if-exists=.env.local scripts/audit-wp-parity.mjs",
     "policy:check": "node scripts/policy-check.mjs",
     "test": "npm run lint && npm run typecheck && npm run build:gate && NEXT_DIST_DIR=.next-gate npm run test:unit && NEXT_DIST_DIR=.next-gate npm run budget",
     "cf:build": "opennextjs-cloudflare build",
