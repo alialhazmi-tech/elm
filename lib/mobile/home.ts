@@ -42,7 +42,7 @@ export type MobileHomePayload = {
   generatedAt: string;
   breaking: BreakingItem | null;
   brief: BriefItem[];
-  hero: MobileStoryCard;
+  hero: MobileStoryCard | null;
   minis: MobileStoryCard[];
   mosaic: MobileStoryCard[];
   dataStory: MobileStoryCard | null;
@@ -86,7 +86,7 @@ export function toMobileHome(
     generatedAt,
     breaking,
     brief: home.brief,
-    hero: toMobileCard(home.hero, origin, MEDIA_WIDTH.full),
+    hero: home.hero ? toMobileCard(home.hero, origin, MEDIA_WIDTH.full) : null,
     minis: home.minis.map((story) => toMobileCard(story, origin)),
     mosaic: home.mosaic.map((story) => toMobileCard(story, origin)),
     dataStory: home.dataStory ? toMobileCard(home.dataStory, origin) : null,

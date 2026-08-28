@@ -1,6 +1,6 @@
 /**
- * مزود المحتوى الحالي: يقرأ من بذرة `seed.ts` المشتقة من مواد alelm.net المنشورة.
- * يُستبدل لاحقًا بمحوّل WordPress ثم بـ«تحرير العلم» دون تغيير العقد (M2-T1/M2-T2).
+ * مزود المحتوى: Neon أولًا. القاعدة المتصلة الفارغة تُعرض فارغة.
+ * البذرة فقط إن غابت القاعدة أو فشل الاتصال — لا تُملأ الواجهة بمحتوى تجريبي فوق قاعدة حيّة.
  *
  * الإثراءات هنا (الشائعة/الحقيقة، الأرقام) مشتقة من نصوص المواد الحقيقية نفسها —
  * وعند وصول خدمات الذكاء تتولد آليًا وتمر على اعتماد المحرر.
@@ -73,7 +73,9 @@ function normalizeSeriesSlug(value: string | null): SeriesSlug | undefined {
   return value && supportedSeriesSlugs.has(value) ? (value as SeriesSlug) : undefined;
 }
 
-/** يقرأ المحتوى من Neon بكاش دقيقة؛ وعند غياب القاعدة أو فشلها يسقط للبذرة. */
+const EMPTY_CORPUS: Corpus = { articles: [], videos: [], stories: [], source: "db" };
+
+/** يقرأ المحتوى من Neon بكاش دقيقة. القاعدة المتصلة الفارغة تبقى فارغة؛ البذرة فقط عند غياب القاعدة أو فشلها. */
 async function loadCorpus(): Promise<Corpus> {
   const db = getDb();
   if (!db) return SEED_CORPUS;
@@ -94,7 +96,10 @@ async function fetchCorpus(db: NonNullable<ReturnType<typeof getDb>>): Promise<C
       .where(eq(storiesTable.status, "published"))
       .orderBy(desc(storiesTable.publishedAt), asc(storiesTable.id));
 
-    if (rows.length === 0) return SEED_CORPUS;
+    if (rows.length === 0) {
+      corpusCache = { at: Date.now(), value: EMPTY_CORPUS };
+      return EMPTY_CORPUS;
+    }
 
     const mapped: Story[] = rows.map((row) =>
       enrich({
@@ -258,8 +263,9 @@ export const seedContentProvider: ContentProvider = {
     const hero =
       articles.find((story) => story.pinned && story.image) ??
       articles.find((story) => story.section !== "infographics" && story.image) ??
-      articles[0];
-    seen.add(hero.id);
+      articles[0] ??
+      null;
+    if (hero) seen.add(hero.id);
 
     const minis = takeUniqueStories(
       articles.filter((story) => story.section !== "infographics" && story.image),

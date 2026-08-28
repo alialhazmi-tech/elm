@@ -5,6 +5,7 @@
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs           # 500 مادة
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs --count=200
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs --count=5 --with-media
+ *   node --env-file=.env.local scripts/wp-rehearsal.mjs --count=5 --with-media --skip-existing --news
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs --rollback  # حذف ما استوردته البروفة
  *
  * الضمانات: لا كتابة على ووردبريس إطلاقًا؛ المعرف الأصلي يُحفظ كما هو
@@ -27,6 +28,8 @@ const args = process.argv.slice(2);
 const COUNT = Number(args.find((a) => a.startsWith("--count="))?.split("=")[1] ?? 500);
 const ROLLBACK = args.includes("--rollback");
 const WITH_MEDIA = args.includes("--with-media");
+const SKIP_EXISTING = args.includes("--skip-existing");
+const NEWS_ONLY = args.includes("--news");
 const REPORT_PATH = WITH_MEDIA ? MEDIA_REPORT : FULL_REPORT;
 
 const sql = neon(process.env.DATABASE_URL);
@@ -235,11 +238,23 @@ try {
   console.log("(أسماء المؤلفين غير متاحة عبر REST — تُترك فارغة)");
 }
 
+const existingIds = SKIP_EXISTING
+  ? new Set((await sql`select id from stories`).map((row) => String(row.id)))
+  : new Set();
+
 const FIELDS = "id,slug,link,title,content,excerpt,date_gmt,modified_gmt,categories,tags,posttype,featured_media,author";
 const posts = [];
 for (let page = 1; posts.length < COUNT; page += 1) {
   const batch = await fetchJson(`${BASE}/posts?per_page=100&page=${page}&_fields=${FIELDS}`);
-  const usable = WITH_MEDIA ? batch.filter((post) => post.featured_media) : batch;
+  const usable = batch.filter((post) => {
+    if (WITH_MEDIA && !post.featured_media) return false;
+    if (existingIds.has(String(post.id))) return false;
+    if (NEWS_ONLY) {
+      const format = (post.posttype ?? []).map((t) => formatByTypeId.get(t)).find(Boolean) ?? "news";
+      if (format !== "news") return false;
+    }
+    return true;
+  });
   posts.push(...usable);
   process.stdout.write(`  سحب المواد: ${Math.min(posts.length, COUNT)}/${COUNT}\r`);
   if (batch.length < 100) break;

@@ -75,7 +75,7 @@ export type BriefItem = {
 /** حزمة الرئيسية بتوزيع «المنشور»: بنتو + فسيفساء + أرقام + مرئي. */
 export type HomeData = {
   brief: BriefItem[];
-  hero: Story;
+  hero: Story | null;
   minis: Story[];
   dataStory: Story | null;
   mosaic: Story[];

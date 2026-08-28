@@ -24,8 +24,9 @@ const trimExcerpt = (text: string, max: number): string =>
 
 export default async function Home() {
   const home = await seedContentProvider.getHome();
-  const heroSeries = seriesOf(home.hero);
-  const heroKick = heroSeries?.name ?? (home.hero.eyebrow || null);
+  const hero = home.hero;
+  const heroSeries = hero ? seriesOf(hero) : undefined;
+  const heroKick = heroSeries?.name ?? (hero?.eyebrow || null);
   const today = brandDate(new Date().toISOString());
 
   // «وراء الخبر»: مرتكز + 4 صفوف أفقية متناسقة + سؤال تحليلي.
@@ -60,33 +61,41 @@ export default async function Home() {
 
         {/* الصدارة: القصة القائدة + موجز العلم */}
         <section className="lead-region" aria-label="قصة الصدارة وموجز العلم">
-          <article className="lead" data-story-id={home.hero.id}>
-            {home.hero.image ? (
-              <LeadMedia src={home.hero.image} href={storyHref(home.hero)} />
+          {hero ? (
+          <article className="lead" data-story-id={hero.id}>
+            {hero.image ? (
+              <LeadMedia src={hero.image} href={storyHref(hero)} />
             ) : null}
             <span
               className="kicker"
               style={{ "--kc": heroSeries?.color } as React.CSSProperties}
             >
-              {heroKick ?? sectionName(home.hero.section)}
+              {heroKick ?? sectionName(hero.section)}
               {heroKick ? (
-                <span className="sect">· {sectionName(home.hero.section)}</span>
+                <span className="sect">· {sectionName(hero.section)}</span>
               ) : null}
             </span>
             <h1>
-              <Link className="story-link" href={storyHref(home.hero)}>
-                {home.hero.title}
+              <Link className="story-link" href={storyHref(hero)}>
+                {hero.title}
               </Link>
             </h1>
-            {home.hero.excerpt ? (
-              <p className="dek">{trimExcerpt(home.hero.excerpt, 180)}</p>
+            {hero.excerpt ? (
+              <p className="dek">{trimExcerpt(hero.excerpt, 180)}</p>
             ) : null}
             <div className="story-meta">
-              <span><b>قراءة {formatReadingMinutes(home.hero.readingMinutes)}</b></span>
+              <span><b>قراءة {formatReadingMinutes(hero.readingMinutes)}</b></span>
               <span>تحرير: فريق العلم</span>
             </div>
           </article>
+          ) : (
+          <article className="lead empty-state">
+            <h1>لا مواد منشورة بعد</h1>
+            <p className="dek">الأرشيف يُجهَّز الآن. ستظهر المواد هنا فور اكتمال السحب.</p>
+          </article>
+          )}
 
+          {home.brief.length > 0 ? (
           <aside className="briefing" aria-labelledby="briefing-title">
             <header className="rubric">
               <h2 id="briefing-title">موجز العلم</h2>
@@ -115,9 +124,12 @@ export default async function Home() {
               مختار من مواد المحررين المنشورة
             </footer>
           </aside>
+          ) : null}
         </section>
 
         {/* وراء الخبر — مرتكز + صفوف أفقية + سؤال */}
+        {contextFeatured || contextRows.length > 0 || home.question ? (
+        <>
         <div className="section-head">
           <h2>وراء الخبر</h2>
           <span className="sub">السياق قبل السرعة</span>
@@ -192,6 +204,8 @@ export default async function Home() {
             </article>
           ) : null}
         </section>
+        </>
+        ) : null}
 
         {/* بالأرقام */}
         {home.numbers.length > 0 ? (
