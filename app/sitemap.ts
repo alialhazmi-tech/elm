@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE_URL, lastModified: now, changeFrequency: "hourly", priority: 1.0 },
     { url: `${BASE_URL}/series`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/search`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
+    { url: `${BASE_URL}/podcasts`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
   ];
 
   const sectionPages: MetadataRoute.Sitemap = SECTIONS.map((sec) => ({
