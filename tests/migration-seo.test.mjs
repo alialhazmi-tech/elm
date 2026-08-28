@@ -110,3 +110,15 @@ test("الصفحات الإرثية الأربع حية بروابطها الق�
   // الإرثية التسويقية خارج الفهرسة حتى لا تزاحم الرئيسية.
   assert.match(landing, /index: false/u);
 });
+
+test("أرشيف البودكاست الإرثي /podcasts حي ويقود إلى قناة العلم", async () => {
+  const [page, sitemap, provider] = await Promise.all([
+    read("app/podcasts/page.tsx"),
+    read("app/sitemap.ts"),
+    read("lib/content/provider.ts"),
+  ]);
+  assert.match(page, /listByFormat\("podcasts"/u, "الصفحة لا تستعلم مواد شكل البودكاست");
+  assert.match(page, /youtube\.com\/c\/alelmmedia/u, "لا رابط لقناة الحلقات");
+  assert.match(sitemap, /\/podcasts/u, "خريطة الموقع بلا أرشيف البودكاست");
+  assert.match(provider, /listByFormat/u);
+});

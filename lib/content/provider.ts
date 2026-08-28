@@ -419,6 +419,24 @@ export async function seriesDirectory(): Promise<Record<string, SeriesDirectoryE
   );
 }
 
+/** مواد شكل معين (بودكاست/مرئي/تقارير) — لصفحات أرشيف الأشكال مثل /podcasts. */
+export async function listByFormat(format: string, limit = 40): Promise<Story[]> {
+  return dbOrSeed(
+    `list:format:${format}:${limit}`,
+    DB_CACHE_MS,
+    async (db) => {
+      const rows = await db
+        .select(CARD_COLUMNS)
+        .from(storiesTable)
+        .where(and(PUBLISHED, eq(storiesTable.format, format)))
+        .orderBy(...RECENT_ORDER)
+        .limit(limit);
+      return rows.map(mapRow);
+    },
+    () => seedAll.filter((story) => story.format === format).sort(byDateDesc).slice(0, limit),
+  );
+}
+
 /* ============ البحث في SQL بتطبيع عربي ============ */
 
 /** تطبيع داخل SQL يطابق normalizeArabic: توحيد الألفات والهمزات وحذف التشكيل والتطويل. */
