@@ -797,6 +797,27 @@ async function main() {
     conflictRows.push({ kind: "target_orphan", id: row.id, source_url: "", target_url: `${options.legacyBase}${canonicalPath(row.section, row.id, row.slug)}`, classification: "TARGET_ORPHAN", reason: "TARGET_ID_NOT_IN_CURRENT_WP_PUBLISHED_REST" });
   }
 
+  // رابط يثبت الفحص الحي أن المصدر ذاته يرفضه (4xx/5xx) ليس أرشيفًا يُحفظ:
+  // بوابة M-2 تحفظ ما كان يعمل. مثاله الموثق: سلاجات ووردبريس مبتورة الترميز
+  // (قُصّت في منتصف حرف عربي) يرفضها القديم نفسه بـ400 منذ ولادتها.
+  // تُعاد تسميته LEGACY_DEAD_URL ويوثَّق خارج الحكم — والفحص هنا حي لا افتراضي.
+  const deadCandidates = parityRows.filter(
+    (row) => row.classification === "CONFLICT" && /TARGET_HTTP_(5\d\d|ERROR)/u.test(row.reasons),
+  );
+  const legacyDeadRows = [];
+  for (const row of deadCandidates) {
+    const liveLegacy = await probeUrl(row.wp_url);
+    if (liveLegacy.status === null || liveLegacy.status >= 400) {
+      row.classification = "LEGACY_DEAD_URL";
+      row.reasons = `${row.reasons}|LEGACY_LIVE_${liveLegacy.status ?? "ERROR"}`;
+      row.wp_http_status = liveLegacy.status ?? "ERROR";
+      row.wp_http_evidence = "LIVE";
+      const index = conflictRows.findIndex((item) => item.kind === "post" && String(item.id) === String(row.wp_id));
+      if (index >= 0) conflictRows.splice(index, 1);
+      legacyDeadRows.push(row);
+    }
+  }
+
   const specialRows = [];
   for (const item of specialUrls) {
     const key = `${item.kind}|${normalizePath(item.source_url)}`;
@@ -844,6 +865,7 @@ async function main() {
   // عطب الموقع القديم يُوثَّق ولا يقرر جاهزية منصتنا (قرار المالك 2026-08-28):
   // الجرد المرجعي من REST الكامل، وبوابة M-2 المكتوبة لا تشترط صحة خرائط الموروث.
   const legacyNotes = [];
+  if (legacyDeadRows.length) legacyNotes.push({ code: "LEGACY_DEAD_URLS", detail: `${legacyDeadRows.length} رابط مادة يرفضه المصدر القديم نفسه حيًا (4xx) فليس أرشيفًا قابلًا للحفظ — التفاصيل في url-parity.csv بتصنيف LEGACY_DEAD_URL.` });
   if (!wp.complete) blockers.push({ code: "INCOMPLETE_SOURCE_INVENTORY", detail: `سُحب ${wp.posts.length} من ${wp.reportedTotal}; تشغيل --limit لا يصلح لقرار M-2.` });
   if (sourceMissingTarget.length) blockers.push({ code: "MISSING_TARGET_STORIES", detail: `${sourceMissingTarget.length} ID منشور في ووردبريس غير موجود في قاعدة الهدف.` });
   if ((classifications["404"] ?? 0) > 0) blockers.push({ code: "TARGET_404", detail: `${classifications["404"]} مادة مصنفة 404 (حيًا أو مستنتجة بوضوح من غياب صف الهدف).` });
