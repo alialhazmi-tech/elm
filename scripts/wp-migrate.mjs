@@ -7,6 +7,8 @@
  *   node --env-file=.env.local scripts/wp-migrate.mjs --reset          # تجاهل نقطة التوقف وابدأ من الصفر
  *   node --env-file=.env.local scripts/wp-migrate.mjs --since=2026-08-20T00:00:00 # مزامنة تزايدية بالمعدَّل بعد تاريخ
  *   node --env-file=.env.local scripts/wp-migrate.mjs --verify-only    # مطابقة الأعداد دون سحب
+ *   node --env-file=.env.local scripts/wp-migrate.mjs --ids=264148,999  # سحب معرفات بأعيانها
+ *     (لمواد نُشرت بتاريخ تعديل قديم فتفلت من modified_after — يرصدها التدقيق كمفقودة)
  *
  * الضمانات (نفس عقد بروفة M-1):
  * - لا كتابة على ووردبريس إطلاقًا — قراءة REST العامة فقط.
@@ -37,6 +39,7 @@ const flag = (name) => args.includes(`--${name}`);
 const value = (name) => args.find((a) => a.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
 
 const LIMIT = Number(value("limit") ?? Infinity);
+const IDS = (value("ids") ?? "").split(",").map((part) => part.trim()).filter(Boolean);
 const SINCE = value("since") ?? null;
 const RESET = flag("reset");
 const DRY_RUN = flag("dry-run");
@@ -238,14 +241,14 @@ async function main() {
     `بدء الهجرة${SINCE ? ` التزايدية (معدَّل بعد ${SINCE})` : ""}${Number.isFinite(LIMIT) ? ` — حد ${LIMIT}` : " — الأرشيف كامل"}${DRY_RUN ? " — تجربة بلا كتابة" : ""}`,
   );
 
-  const checkpoint = await readCheckpoint();
+  const checkpoint = IDS.length ? null : await readCheckpoint();
   let offset = checkpoint?.offset ?? 0;
   let imported = checkpoint?.imported ?? 0;
   const failures = checkpoint?.failures ?? [];
   if (checkpoint) await log(`استئناف من الإزاحة ${offset} (مستورد سابقًا في هذا المسار: ${imported})`);
 
-  const wpTotal = await wordpressTotal();
-  const target = Math.min(wpTotal, Number.isFinite(LIMIT) ? offset + LIMIT : wpTotal);
+  const wpTotal = IDS.length ? IDS.length : await wordpressTotal();
+  const target = IDS.length ? IDS.length : Math.min(wpTotal, Number.isFinite(LIMIT) ? offset + LIMIT : wpTotal);
   await log(`إجمالي المنشور في المصدر: ${wpTotal} — هدف هذه التشغيلة: حتى ${target}`);
 
   await log("سحب قواميس الوسوم والأشكال والمؤلفين…");
@@ -274,7 +277,9 @@ async function main() {
   const sinceParam = SINCE ? `&modified_after=${encodeURIComponent(SINCE)}` : "";
 
   while (offset < target) {
-    const pageUrl = `${BASE}/posts?per_page=${PER_PAGE}&offset=${offset}&${order}${sinceParam}&_fields=${FIELDS}`;
+    const pageUrl = IDS.length
+      ? `${BASE}/posts?per_page=${PER_PAGE}&include=${IDS.join(",")}&_fields=${FIELDS}`
+      : `${BASE}/posts?per_page=${PER_PAGE}&offset=${offset}&${order}${sinceParam}&_fields=${FIELDS}`;
     const { data: posts, outOfRange } = await fetchWithRetry(pageUrl);
     if (outOfRange || !posts || posts.length === 0) break;
 
@@ -370,7 +375,7 @@ async function main() {
 
     offset += posts.length;
     imported = (checkpoint?.imported ?? 0) + stats.imported;
-    if (!SINCE) {
+    if (!SINCE && !IDS.length) {
       await writeCheckpoint({
         offset,
         imported,
@@ -383,7 +388,7 @@ async function main() {
     await log(
       `صفحة ${Math.ceil(offset / PER_PAGE)}/${Math.ceil(target / PER_PAGE)} — الإزاحة ${offset}/${target} — مستورد ${stats.imported} — فشل ${failures.length} — آخر ID ${lastId}`,
     );
-    if (posts.length < PER_PAGE) break;
+    if (IDS.length || posts.length < PER_PAGE) break;
   }
 
   await log("——— خلاصة التشغيلة ———");
