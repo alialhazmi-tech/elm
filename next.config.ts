@@ -17,6 +17,8 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "img-src 'self' data: blob:",
+  // مشغل حلقات البودكاست الأصلي — صوتيات خلاصات RSS.com حصرًا.
+  "media-src 'self' https://content.rss.com https://media.rss.com",
   "object-src 'none'",
   isDevelopment ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
