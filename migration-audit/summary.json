@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-08-28T05:56:09.205Z",
-  "durationSeconds": 254,
+  "generatedAt": "2026-08-28T13:34:28.667Z",
+  "durationSeconds": 1196,
   "readOnly": true,
   "sources": {
     "wordpress": "https://dash.alelm.net/wp-json/wp/v2",
     "legacySite": "https://alelm.net",
-    "targetSite": "https://elm-production-5035.up.railway.app",
+    "targetSite": "https://elm-production-ea24.up.railway.app",
     "database": "Neon عبر DATABASE_URL (SELECT فقط)"
   },
   "options": {
@@ -16,8 +16,8 @@
     "limit": null
   },
   "wordpress": {
-    "reportedPosts": 29094,
-    "fetchedPosts": 29094,
+    "reportedPosts": 29099,
+    "fetchedPosts": 29099,
     "reportedPages": 291,
     "fetchedPages": 291,
     "complete": true,
@@ -28,35 +28,36 @@
   "target": {
     "configured": true,
     "error": null,
-    "totalRows": 508,
-    "matchedWordPressRows": 500,
-    "orphanRows": 8,
-    "publishedRows": 506
+    "totalRows": 29099,
+    "matchedWordPressRows": 29099,
+    "orphanRows": 0,
+    "publishedRows": 29099
   },
   "parity": {
     "classifications": {
-      "404": 28594,
-      "EXACT_200": 498,
-      "CONFLICT": 2
+      "EXACT_200": 28969,
+      "VALID_301": 129,
+      "LEGACY_DEAD_URL": 1
     },
-    "missingTargetRows": 28594,
-    "redirectsRequired": 17,
-    "conflictRows": 231
+    "missingTargetRows": 0,
+    "redirectsRequired": 144,
+    "conflictRows": 200
   },
   "http": {
     "mode": "sample",
-    "targetProbes": 659,
+    "targetProbes": 29099,
     "legacyProbes": 160,
     "specialTargetProbes": 36,
     "specialLegacyProbes": 36,
     "targetStatusCounts": {
-      "200": 500,
-      "404": 159
+      "200": 28969,
+      "308": 129,
+      "502": 1
     },
     "legacyStatusCounts": {
-      "200": 123,
+      "200": 122,
       "301": 34,
-      "307": 3
+      "307": 4
     }
   },
   "sitemaps": {
@@ -69,12 +70,12 @@
         "error": "Error: 500 على https://alelm.net/sitemap-videos.xml"
       }
     ],
-    "totalLocations": 28665,
+    "totalLocations": 28672,
     "validArticleUrls": 0,
-    "invalidUndefinedUrls": 28660,
+    "invalidUndefinedUrls": 28667,
     "patterns": {
-      "/{section}/{id}/{slug}": 29094,
-      "INVALID_UNDEFINED": 28660,
+      "/{section}/{id}/{slug}": 29099,
+      "INVALID_UNDEFINED": 28667,
       "/{single}": 20,
       "/tag/{slug}": 15,
       "/": 1
@@ -83,9 +84,8 @@
   "specialUrls": {
     "total": 36,
     "statuses": {
-      "404": 19,
-      "EXACT_200": 15,
-      "MISSING": 2
+      "EXACT_200": 19,
+      "VALID_301": 17
     },
     "kinds": {
       "section_archive": 16,
@@ -97,12 +97,13 @@
       "200": 36
     },
     "targetStatusCounts": {
-      "200": 15,
-      "404": 21
+      "200": 19,
+      "301": 15,
+      "308": 2
     }
   },
   "media": {
-    "resolvedFeaturedMedia": 28787,
+    "resolvedFeaturedMedia": 28792,
     "riskRows": 173,
     "riskTypes": {
       "CONTENT_MEDIA_EXTERNAL_HOST": 146,
@@ -122,19 +123,19 @@
       {
         "code": "ARTICLE_PARAM_CANONICAL_GUARD",
         "severity": "BLOCKER",
-        "passed": false,
+        "passed": true,
         "detail": "يجب تحويل section/slug غير القانونيين دائمًا إلى رابط المادة المحفوظ."
       },
       {
         "code": "SITEMAP_INCLUDES_STORIES",
         "severity": "BLOCKER",
-        "passed": false,
+        "passed": true,
         "detail": "خريطة الموقع الجديدة يجب أن تضم كل المواد المنشورة، لا الأقسام والسلاسل فقط."
       },
       {
         "code": "REDIRECT_LAYER_PRESENT",
         "severity": "BLOCKER",
-        "passed": false,
+        "passed": true,
         "detail": "لا توجد طبقة 301 ظاهرة تحسم الاختلاف بالـ ID."
       },
       {
@@ -169,23 +170,16 @@
     ]
   },
   "decision": {
-    "status": "NOT READY FOR M2",
-    "blockers": [
+    "status": "READY FOR M2",
+    "blockers": [],
+    "legacyNotes": [
       {
-        "code": "MISSING_TARGET_STORIES",
-        "detail": "28594 ID منشور في ووردبريس غير موجود في قاعدة الهدف."
-      },
-      {
-        "code": "TARGET_404",
-        "detail": "28594 مادة مصنفة 404 (حيًا أو مستنتجة بوضوح من غياب صف الهدف)."
-      },
-      {
-        "code": "URL_CONFLICTS",
-        "detail": "2 تعارض ID/section/slug/canonical/HTTP."
+        "code": "LEGACY_DEAD_URLS",
+        "detail": "1 رابط مادة يرفضه المصدر القديم نفسه حيًا (4xx) فليس أرشيفًا قابلًا للحفظ — التفاصيل في url-parity.csv بتصنيف LEGACY_DEAD_URL."
       },
       {
         "code": "LEGACY_SITEMAP_INVALID",
-        "detail": "28660 إدخالًا غير صالح في خرائط الموقع الحية، وأبرزها alElm.netundefined."
+        "detail": "28667 إدخالًا غير صالح في خرائط الموقع الحية، وأبرزها alElm.netundefined."
       },
       {
         "code": "SITEMAP_FETCH_FAILED",
@@ -193,23 +187,7 @@
       },
       {
         "code": "LEGACY_SITEMAP_COVERAGE",
-        "detail": "خرائط الموقع الحية قدمت 0 رابط مادة صالحًا مقابل 29094 مادة REST."
-      },
-      {
-        "code": "LEGACY_SPECIAL_URLS",
-        "detail": "21 صفحة قسم/وسم/صفحة ثابتة بلا تطابق 200 أو 301 صالح."
-      },
-      {
-        "code": "ARTICLE_PARAM_CANONICAL_GUARD",
-        "detail": "يجب تحويل section/slug غير القانونيين دائمًا إلى رابط المادة المحفوظ."
-      },
-      {
-        "code": "SITEMAP_INCLUDES_STORIES",
-        "detail": "خريطة الموقع الجديدة يجب أن تضم كل المواد المنشورة، لا الأقسام والسلاسل فقط."
-      },
-      {
-        "code": "REDIRECT_LAYER_PRESENT",
-        "detail": "لا توجد طبقة 301 ظاهرة تحسم الاختلاف بالـ ID."
+        "detail": "خرائط الموقع الحية قدمت 0 رابط مادة صالحًا مقابل 29099 مادة REST."
       }
     ]
   }
