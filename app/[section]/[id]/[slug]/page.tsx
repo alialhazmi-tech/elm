@@ -18,6 +18,7 @@ import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
 import { toRelatedCard } from "@/lib/personalization/recommend";
+import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 
 export const revalidate = 300;
 
@@ -201,15 +202,22 @@ export default async function ArticlePage({ params }: Params) {
           <ArticleTracker storyId={story.id} />
 
           {story.image ? (
-            <figure className="article-figure">
-              <Image
-                src={story.image}
-                alt=""
-                fill
-                sizes="(max-width: 900px) 100vw, 860px"
-                priority
-              />
-            </figure>
+            story.section === "infographics" ||
+            story.format === "infographics" ||
+            story.format === "infographic" ||
+            story.title.includes("إنفوجرافيك") ? (
+              <InfographicLightbox src={story.image} title={story.title} />
+            ) : (
+              <figure className="article-figure">
+                <Image
+                  src={story.image}
+                  alt=""
+                  fill
+                  sizes="(max-width: 900px) 100vw, 860px"
+                  priority
+                />
+              </figure>
+            )
           ) : null}
 
           <div className="article-body">
