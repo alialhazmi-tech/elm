@@ -6,15 +6,16 @@ import { NewsletterForm } from "./newsletter-form";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
 
+// «السلاسل» خرجت من القائمة العلوية — مسطرة السلاسل تحت الهيدر تغني عنها.
 const NAV = [
   { label: "الرئيسية", href: "/" },
-  { label: "السلاسل", href: "/series" },
   { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "تقنية", href: "/technology" },
   { label: "علوم", href: "/sciences" },
   { label: "صحة", href: "/health" },
   { label: "رياضة", href: "/sport" },
+  { label: "مرئي", href: "/videos" },
 ];
 
 const MOBILE_NAV = [
@@ -47,7 +48,6 @@ const FOOTER_SECTIONS = [
 const FOOTER_FORMATS = [
   { label: "إنفوجرافيك وبيانات", href: "/infographics" },
   { label: "مرئي ووثائقي", href: "/videos" },
-  { label: "سلاسل المعرفة", href: "/series" },
   { label: "البحث التحريري", href: "/search" },
 ];
 
@@ -99,7 +99,8 @@ export async function SiteHeader({ active }: { active?: string }) {
         </nav>
         <div className="top-tools">
           <Link className="ask-pill" href="/search" aria-label="البحث في العلم">
-            <span className="hint">ابحث في العلم…</span>
+            <span className="spark" aria-hidden="true">✦</span>
+            <span className="hint">ابحث أو اسأل العلم…</span>
             <kbd>⌘K</kbd>
           </Link>
           <ThemeToggle />
@@ -146,7 +147,7 @@ export function SiteFooter() {
 
           {/* العمود الثاني: سلاسل المعرفة */}
           <div className="ft-col">
-            <h3 className="ft-head">سلاسل المعرفة</h3>
+            <h3 className="ft-head">السلاسل</h3>
             <ul className="ft-nav-list ft-series-list">
               {SERIES.slice(0, 8).map((item) => (
                 <li key={item.slug}>
@@ -159,14 +160,14 @@ export function SiteFooter() {
               ))}
             </ul>
             <Link className="ft-all-series" href="/series">
-              استكشف كل السلاسل والأرشيف <span aria-hidden="true">←</span>
+              كل السلاسل والأرشيف <span aria-hidden="true">←</span>
             </Link>
           </div>
 
           {/* العمود الثالث: الأقسام والتغطيات */}
           <div className="ft-col">
-            <h3 className="ft-head">التغطيات والأقسام</h3>
-            <ul className="ft-nav-list">
+            <h3 className="ft-head">الأقسام</h3>
+            <ul className="ft-nav-list ft-cols">
               {FOOTER_SECTIONS.map((item) => (
                 <li key={item.href}>
                   <Link href={item.href}>{item.label}</Link>
@@ -182,7 +183,7 @@ export function SiteFooter() {
 
           {/* العمود الرابع: النشرة البريدية */}
           <div className="ft-col ft-col-newsletter">
-            <h3 className="ft-head">ما وراء العناوين</h3>
+            <h3 className="ft-head">نشرة «ما وراء العناوين»</h3>
             <p className="ft-newsletter-sub">
               موجز أسبوعي يختصر أهم ما نشره محررونا في بريدك — بقراءة هادئة بلا إعلانات.
             </p>
