@@ -29,7 +29,7 @@ test("طبقة التحويلات تغطي وسوم السلاسل الثلاث 
 
 test("مسار المقال يفرض canonical بالمعرّف: تحويل دائم لأي قسم أو سلاج مخالف", async () => {
   const page = await read("app/[section]/[id]/[slug]/page.tsx");
-  assert.match(page, /permanentRedirect\(storyHref\(story\)\)/u, "لا يوجد تحويل دائم للرابط المحفوظ");
+  assert.match(page, /permanentRedirect\(encodeURI\(storyHref\(story\)\)\)/u, "لا يوجد تحويل دائم مرمّز للرابط المحفوظ");
   assert.match(page, /safeDecode\(section\) !== story\.section/u, "لا فحص للقسم المطلوب");
   assert.match(page, /safeDecode\(slug\) !== story\.slug/u, "لا فحص للسلاج المطلوب");
   assert.match(page, /alternates: \{ canonical: storyHref\(story\) \}/u, "canonical لا يُبنى من الرابط المحفوظ");
@@ -73,4 +73,40 @@ test("المزود لا يحمّل الأرشيف كله: نافذة حديثة 
     /db\s*\n?\s*\.select\(\)\s*\n?\s*\.from\(storiesTable\)\s*\n?\s*\.where\(eq\(storiesTable\.status, "published"\)\)\s*\n?\s*\.orderBy\(desc\(storiesTable\.publishedAt\), asc\(storiesTable\.id\)\);/u,
     "عاد تحميل الأرشيف الكامل",
   );
+});
+
+test("مسار /tag ينفذ 301: وسم السلسلة إلى صفحتها وأي وسم آخر إلى البحث", async () => {
+  const route = await read("app/tag/[tag]/route.ts");
+  assert.match(route, /TAG_TO_SERIES/u);
+  assert.match(route, /status: 301/u);
+  assert.match(route, /\/series\/\$\{series\}/u);
+  assert.match(route, /search\?q=/u, "الوسوم الحرة بلا وجهة بحث");
+});
+
+test("ترويسة تحويل المقال ASCII — الرابط العربي يُرمّز قبل Location", async () => {
+  const page = await read("app/[section]/[id]/[slug]/page.tsx");
+  assert.match(page, /permanentRedirect\(encodeURI\(storyHref\(story\)\)\)/u, "Location بالعربية الخام يرد 500");
+});
+
+test("قسما «غير مصنف» القديمان يتحولان دائمًا إلى منوعات", async () => {
+  const page = await read("app/[section]/page.tsx");
+  assert.match(page, /غير-مصنف/u);
+  assert.match(page, /uncategorized/u);
+  assert.match(page, /permanentRedirect\("\/varieties"\)/u);
+});
+
+test("الصفحات الإرثية الأربع حية بروابطها القديمة", async () => {
+  const [about, contact, privacy, landing] = await Promise.all([
+    read("app/about/page.tsx"),
+    read("app/contact/page.tsx"),
+    read("app/privacy-policy/page.tsx"),
+    read("app/landing-page/page.tsx"),
+  ]);
+  assert.match(about, /عن العلم/u);
+  assert.match(contact, /تواصل/u);
+  assert.match(privacy, /خصوصيتك ليست ثمن التخصيص/u);
+  // القانونية الكاملة تُعتمد من المالك قبل الإطلاق — الصفحة تصرّح بذلك كما في iOS.
+  assert.match(privacy, /السياسة القانونية الكاملة/u);
+  // الإرثية التسويقية خارج الفهرسة حتى لا تزاحم الرئيسية.
+  assert.match(landing, /index: false/u);
 });

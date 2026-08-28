@@ -74,7 +74,8 @@ export default async function ArticlePage({ params }: Params) {
   // حارس canonical (شرط الهجرة): المعرّف يحسم — أي قسم أو سلاج مخالف للرابط المحفوظ
   // يتحول تحويلًا دائمًا (308) إليه، فلا يوجد 200 على بدائل ولا canonical متعارض.
   if (safeDecode(section) !== story.section || safeDecode(slug) !== story.slug) {
-    permanentRedirect(storyHref(story));
+    // ترويسة Location لا تقبل غير ASCII — الرابط العربي يُرمّز وإلا رد الخادم 500.
+    permanentRedirect(encodeURI(storyHref(story)));
   }
 
   const series = seriesOf(story);

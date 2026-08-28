@@ -418,7 +418,10 @@ function buildSpecialUrls(options, sitemapLocations, categories, tags, targetSec
       kind: "tag_archive",
       name: tag.name,
       source_url: `${options.legacyBase}/tag/${sourceSlug}`,
-      expected_target_url: seriesSlug ? `${options.legacyBase}/series/${seriesSlug}` : "",
+      // وسم سلسلة → صفحتها؛ وأي وسم فعال آخر → البحث المعرفي (ينفذه مسار /tag على الهدف).
+      expected_target_url: seriesSlug
+        ? `${options.legacyBase}/series/${seriesSlug}`
+        : `${options.legacyBase}/search?q=${encodeURIComponent(String(tag.name ?? "").replace(/^#/u, "").replace(/_/gu, " "))}`,
       mapping: seriesSlug ? "301_REQUIRED" : "UNMAPPED",
     });
   }

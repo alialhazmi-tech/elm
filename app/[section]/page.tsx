@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
@@ -46,9 +46,21 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   };
 }
 
+/** الفكّ الآمن لمعامل مسار قد يصل مرمّزًا أو مفكوكًا بحسب العميل. */
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export default async function SectionPage({ params, searchParams }: Props) {
   const { section } = await params;
   const { p } = await searchParams;
+  // قسم «غير مصنف» القديم بنسختيه — مواده هاجرت إلى منوعات فيتبعها أرشيفه (شرط M-2).
+  const decoded = safeDecode(section);
+  if (decoded === "غير-مصنف" || decoded === "uncategorized") permanentRedirect("/varieties");
   if (!KNOWN_SECTIONS.includes(section)) notFound();
 
   const secDef = getSection(section);
