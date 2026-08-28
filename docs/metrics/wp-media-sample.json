@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-08-28T06:47:55.720Z",
+  "requested": 5,
+  "withMedia": true,
+  "imported": 5,
+  "urlIdentical": 5,
+  "urlNeedsRedirect": 0,
+  "withSeries": 5,
+  "withImage": 5,
+  "withAuthor": 0,
+  "imagesArchived": 5,
+  "sections": {
+    "infographics": 2,
+    "sciences": 1,
+    "politics": 1,
+    "sport": 1
+  },
+  "formats": {
+    "infographics": 2,
+    "news": 3
+  },
+  "series": {
+    "bel-arqam": 2,
+    "absat": 1,
+    "shakhsiat": 1,
+    "matha-baad": 1
+  },
+  "issues": [],
+  "urlMismatchSamples": [],
+  "importedIds": [
+    "264116",
+    "264236",
+    "264227",
+    "264108",
+    "264220"
+  ]
+}

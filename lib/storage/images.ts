@@ -5,20 +5,23 @@ const IMAGE_PREFIX = "uploads/";
 
 let client: S3Client | null = null;
 
-function requiredEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) throw new Error(`متغير مخزن الصور ${name} غير مضبوط.`);
-  return value;
+/** Railway يحقن AWS_* عند ربط البوكت؛ BUCKET_* يبقى للتوافق المحلي القديم. */
+export function resolveStorageConfig(env: NodeJS.ProcessEnv = process.env) {
+  const endpoint = (env.AWS_ENDPOINT_URL || env.BUCKET_ENDPOINT || "").trim();
+  const bucket = (env.AWS_S3_BUCKET_NAME || env.BUCKET_NAME || "").trim();
+  const accessKeyId = (env.AWS_ACCESS_KEY_ID || env.BUCKET_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = (env.AWS_SECRET_ACCESS_KEY || env.BUCKET_SECRET_ACCESS_KEY || "").trim();
+  const rawRegion = (env.AWS_DEFAULT_REGION || env.AWS_REGION || env.BUCKET_REGION || "").trim();
+  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) {
+    throw new Error("متغيرات مخزن الصور غير مكتملة. يلزم AWS_S3_BUCKET_NAME وAWS_ENDPOINT_URL ومفاتيح AWS.");
+  }
+  // Tigris على Railway يتطلب region=auto حتى لو كانت منطقة الخدمة ams.
+  const region = /storageapi\.dev$/i.test(new URL(endpoint).hostname) ? "auto" : (rawRegion || "auto");
+  return { endpoint, region, bucket, accessKeyId, secretAccessKey };
 }
 
 function storageConfig() {
-  return {
-    endpoint: requiredEnv("BUCKET_ENDPOINT"),
-    region: requiredEnv("BUCKET_REGION"),
-    bucket: requiredEnv("BUCKET_NAME"),
-    accessKeyId: requiredEnv("BUCKET_ACCESS_KEY_ID"),
-    secretAccessKey: requiredEnv("BUCKET_SECRET_ACCESS_KEY"),
-  };
+  return resolveStorageConfig();
 }
 
 function storageClient(): { s3: S3Client; bucket: string } {

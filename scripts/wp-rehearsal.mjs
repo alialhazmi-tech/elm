@@ -4,25 +4,113 @@
  *
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs           # 500 مادة
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs --count=200
+ *   node --env-file=.env.local scripts/wp-rehearsal.mjs --count=5 --with-media
  *   node --env-file=.env.local scripts/wp-rehearsal.mjs --rollback  # حذف ما استوردته البروفة
  *
  * الضمانات: لا كتابة على ووردبريس إطلاقًا؛ المعرف الأصلي يُحفظ كما هو
  * (حماية الروابط)؛ upsert آمن للتكرار؛ والتراجع بقائمة المعرفات المحفوظة.
  * المخرج: docs/metrics/wp-rehearsal.json — تقرير البروفة الكامل.
+ * مع --with-media يُكتب docs/metrics/wp-media-sample.json حتى لا يُمس تقرير الـ500.
  */
 
+import { randomUUID } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 
+import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { neon } from "@neondatabase/serverless";
 
 const BASE = "https://dash.alelm.net/wp-json/wp/v2";
-const REPORT_PATH = new URL("../docs/metrics/wp-rehearsal.json", import.meta.url);
+const FULL_REPORT = new URL("../docs/metrics/wp-rehearsal.json", import.meta.url);
+const MEDIA_REPORT = new URL("../docs/metrics/wp-media-sample.json", import.meta.url);
 
 const args = process.argv.slice(2);
 const COUNT = Number(args.find((a) => a.startsWith("--count="))?.split("=")[1] ?? 500);
 const ROLLBACK = args.includes("--rollback");
+const WITH_MEDIA = args.includes("--with-media");
+const REPORT_PATH = WITH_MEDIA ? MEDIA_REPORT : FULL_REPORT;
 
 const sql = neon(process.env.DATABASE_URL);
+
+function storageConfig() {
+  const endpoint = (process.env.AWS_ENDPOINT_URL || process.env.BUCKET_ENDPOINT || "").trim();
+  const bucket = (process.env.AWS_S3_BUCKET_NAME || process.env.BUCKET_NAME || "").trim();
+  const accessKeyId = (process.env.AWS_ACCESS_KEY_ID || process.env.BUCKET_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = (process.env.AWS_SECRET_ACCESS_KEY || process.env.BUCKET_SECRET_ACCESS_KEY || "").trim();
+  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) {
+    throw new Error("متغيرات المخزن غير مكتملة. يلزم AWS_S3_BUCKET_NAME وAWS_ENDPOINT_URL ومفاتيح AWS.");
+  }
+  const region = /storageapi\.dev$/i.test(new URL(endpoint).hostname)
+    ? "auto"
+    : (process.env.AWS_DEFAULT_REGION || process.env.BUCKET_REGION || "auto").trim();
+  return { endpoint, region, bucket, accessKeyId, secretAccessKey };
+}
+
+function storageClient() {
+  const config = storageConfig();
+  return {
+    s3: new S3Client({
+      endpoint: config.endpoint,
+      region: config.region,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+    }),
+    bucket: config.bucket,
+  };
+}
+
+function sniffImage(bytes) {
+  if (bytes.length > 24 && bytes[0] === 0x89 && bytes[1] === 0x50) {
+    return { mime: "image/png", ext: "png" };
+  }
+  if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8) {
+    return { mime: "image/jpeg", ext: "jpg" };
+  }
+  if (
+    bytes.length > 16 &&
+    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
+  ) {
+    return { mime: "image/webp", ext: "webp" };
+  }
+  return null;
+}
+
+async function archiveFeaturedImage(sourceUrl, storyId) {
+  const response = await fetch(sourceUrl, {
+    headers: { "User-Agent": "alelm-migration/1.0" },
+  });
+  if (!response.ok) throw new Error(`تنزيل الصورة ${response.status}`);
+  const body = new Uint8Array(await response.arrayBuffer());
+  const kind = sniffImage(body);
+  if (!kind) throw new Error("صيغة الصورة غير مدعومة (يلزم PNG أو JPEG أو WebP)");
+
+  const id = randomUUID();
+  const filename = `${id}.${kind.ext}`;
+  const key = `uploads/${filename}`;
+  const url = `/uploads/${filename}`;
+  const { s3, bucket } = storageClient();
+  await s3.send(new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    Body: body,
+    ContentType: kind.mime,
+    CacheControl: "public, max-age=31536000, immutable",
+  }));
+  const stored = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+  if (stored.ContentLength !== body.byteLength) {
+    throw new Error("تعذر التحقق من اكتمال حفظ الصورة في البوكت.");
+  }
+
+  await sql`
+    insert into media (id, url, filename, mime, bytes, width, height, rights_cleared, flags, uploaded_by, created_at, ai_generated)
+    values (${id}, ${url}, ${`wp-${storyId}.${kind.ext}`}, ${kind.mime}, ${body.byteLength},
+            ${null}, ${null}, ${1}, ${"legacy"}, ${"wp-rehearsal"}, ${new Date().toISOString()}, ${0})
+    on conflict (id) do nothing`;
+
+  return { url, bytes: body.byteLength, mime: kind.mime };
+}
 
 /* ============ التراجع ============ */
 if (ROLLBACK) {
@@ -124,7 +212,9 @@ async function fetchAllTerms(path) {
 
 /* ============ السحب ============ */
 
-console.log(`بروفة الهجرة — سحب ${COUNT} مادة (قراءة فقط من ووردبريس)…\n`);
+console.log(
+  `بروفة الهجرة — سحب ${COUNT} مادة${WITH_MEDIA ? " مع صورها إلى البوكت" : ""} (قراءة فقط من ووردبريس)…\n`,
+);
 
 const [tags, posttypes] = await Promise.all([
   fetchAllTerms("tags"),
@@ -149,7 +239,8 @@ const FIELDS = "id,slug,link,title,content,excerpt,date_gmt,modified_gmt,categor
 const posts = [];
 for (let page = 1; posts.length < COUNT; page += 1) {
   const batch = await fetchJson(`${BASE}/posts?per_page=100&page=${page}&_fields=${FIELDS}`);
-  posts.push(...batch);
+  const usable = WITH_MEDIA ? batch.filter((post) => post.featured_media) : batch;
+  posts.push(...usable);
   process.stdout.write(`  سحب المواد: ${Math.min(posts.length, COUNT)}/${COUNT}\r`);
   if (batch.length < 100) break;
 }
@@ -173,7 +264,7 @@ console.log(`\n  صور بارزة: ${mediaById.size}/${mediaIds.length}.`);
 
 const stats = {
   imported: 0, urlIdentical: 0, urlNeedsRedirect: 0,
-  withSeries: 0, withImage: 0, withAuthor: 0,
+  withSeries: 0, withImage: 0, withAuthor: 0, imagesArchived: 0,
   sections: {}, formats: {}, series: {}, issues: [],
 };
 const importedIds = [];
@@ -201,8 +292,18 @@ for (const post of posts) {
     const format = (post.posttype ?? []).map((t) => formatByTypeId.get(t)).find(Boolean) ?? "news";
     const body = htmlToParagraphs(post.content?.rendered ?? "");
     const words = body.split(/\s+/).filter(Boolean).length;
-    const image = mediaById.get(post.featured_media) ?? null;
+    let image = mediaById.get(post.featured_media) ?? null;
     const authorName = authorsById.get(post.author) ?? "";
+    if (WITH_MEDIA && image) {
+      try {
+        const archived = await archiveFeaturedImage(image, id);
+        image = archived.url;
+        stats.imagesArchived += 1;
+        process.stdout.write(`  بوكت: ${stats.imagesArchived} صورة (${archived.mime}, ${archived.bytes} بايت)\n`);
+      } catch (error) {
+        stats.issues.push({ id: post.id, error: `وسائط: ${String(error).slice(0, 160)}` });
+      }
+    }
 
     // مطابقة الرابط: مسارنا مقابل مسار ووردبريس بايتًا ببايت (بعد الترميز)
     const ourPath = `/${section}/${id}/${encodeURIComponent(slug)}`;
@@ -251,6 +352,7 @@ console.log(`\n  أُدخلت ${stats.imported} مادة (${stats.issues.length}
 const report = {
   generatedAt: new Date().toISOString(),
   requested: COUNT,
+  withMedia: WITH_MEDIA,
   ...stats,
   urlMismatchSamples: urlMismatches,
   importedIds,
@@ -263,6 +365,7 @@ console.log(`
 روابط مطابقة بايتًا ببايت: ${stats.urlIdentical} (${Math.round((stats.urlIdentical / stats.imported) * 100)}%)
 تحتاج تحويل 301: ${stats.urlNeedsRedirect}
 بسلسلة: ${stats.withSeries} · بصورة: ${stats.withImage} · بمؤلف: ${stats.withAuthor}
+صور نُقلت إلى البوكت: ${stats.imagesArchived}
 الأقسام: ${JSON.stringify(stats.sections)}
 الأشكال: ${JSON.stringify(stats.formats)}
-التقرير: docs/metrics/wp-rehearsal.json`);
+التقرير: ${WITH_MEDIA ? "docs/metrics/wp-media-sample.json" : "docs/metrics/wp-rehearsal.json"}`);
