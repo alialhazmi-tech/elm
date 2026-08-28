@@ -17,8 +17,9 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'none'",
   "img-src 'self' data: blob:",
-  // مشغل حلقات البودكاست الأصلي — صوتيات خلاصات RSS.com حصرًا.
-  "media-src 'self' https://content.rss.com https://media.rss.com",
+  // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
+  // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
+  "media-src 'self' https:",
   "object-src 'none'",
   isDevelopment ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",

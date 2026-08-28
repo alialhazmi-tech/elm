@@ -46,14 +46,25 @@ test("برامج البودكاست الأربعة معرفاتها محفوظة
   }
 });
 
-test("قالب المقال يعرض الحلقات لمواد شكل podcasts بمشغل أصلي وسياسة الأمان تسمح ببثها", async () => {
+test("قالب المقال يشغّل الحلقات بمشغل «الطبعة التحريرية» وسياسة الأمان تسمح ببثها", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [page, config] = await Promise.all([
+  const [page, player, config] = await Promise.all([
     readFile(new URL("../app/[section]/[id]/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/_components/podcast-player.tsx", import.meta.url), "utf8"),
     readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
   ]);
   assert.match(page, /story\.format === "podcasts"/u);
-  assert.match(page, /fetchEpisodes\(podcastShow\)/u);
-  assert.match(page, /<audio controls preload="none"/u, "مشغل المتصفح الأصلي غائب");
-  assert.match(config, /media-src 'self' https:\/\/content\.rss\.com https:\/\/media\.rss\.com/u, "CSP لا يسمح بصوتيات الخلاصة");
+  assert.match(page, /<PodcastPlayer/u, "مكون المشغل غير مستخدم في القالب");
+  // مشغل حقيقي: شريط تقدم، سرعة، قفز 15 ثانية، وشريط لاصق — لا عنصر متصفح خام
+  assert.match(player, /"use client"/u);
+  assert.match(player, /pp-seek/u, "لا شريط تقدم");
+  assert.match(player, /RATES/u, "لا سرعة تشغيل");
+  assert.match(player, /skip\(-15\)/u, "لا قفز للخلف");
+  assert.match(player, /pp-bar/u, "لا شريط تشغيل لاصق");
+  assert.match(player, /onError/u, "لا معالجة لفشل البث");
+  // مضيفو الخلاصات يحوّلون عبر CDN متغير — البث المؤمّن مسموح والمنقي يمنع أي حقن وسائط
+  assert.match(config, /media-src 'self' https:/u, "CSP يمنع بث الحلقات");
+  // كل برنامج بطابعه اللوني
+  const shows = await readFile(new URL("../lib/podcasts.ts", import.meta.url), "utf8");
+  assert.match(shows, /accent: "#/u);
 });
