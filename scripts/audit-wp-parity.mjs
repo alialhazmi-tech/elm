@@ -465,7 +465,10 @@ async function probeUrl(url) {
   try {
     const first = await fetchWithRetry(url, { method: "GET", redirect: "manual", headers: { accept: "text/html" } });
     const body = await first.text();
-    const location = first.headers.get("location");
+    // بعض الوسطاء (Railway) يكررون ترويسة Location بنسختين مطلقة ونسبية فتصلان
+    // ملتصقتين بفاصلة — العميل الحقيقي يأخذ الأولى، والقارئ هنا يحاكيه.
+    const rawLocation = first.headers.get("location");
+    const location = rawLocation ? rawLocation.split(/,\s*(?=\/|https?:\/\/)/u)[0].trim() : rawLocation;
     const result = {
       requestedUrl: url,
       status: first.status,
