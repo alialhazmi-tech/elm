@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
+import { gzipSync } from "node:zlib";
 import test from "node:test";
 
 const DIST = process.env.NEXT_DIST_DIR ?? ".next";
@@ -60,11 +61,14 @@ test("production CSP never leaks the development eval and websocket allowances",
 });
 
 test("keeps the M0 homepage and social card deliberately small", async () => {
-  const htmlStats = await stat(htmlPath);
+  const html = await readFile(htmlPath);
+  // العقد يقيس ما يعبر الشبكة فعلًا — كالميزانية المضغوطة لـJS (قرار المالك 2026-08-28).
+  // الخام 109KB بعد تصميم «الطبعة التحريرية»، لكنه 17KiB مضغوطًا مقابل 601KB في الموقع القديم.
+  const compressed = gzipSync(html, { level: 6 }).length;
   const png = await readFile(ogPath);
   const width = png.readUInt32BE(16);
   const height = png.readUInt32BE(20);
 
-  assert.ok(htmlStats.size < 100 * 1024, `HTML is ${htmlStats.size} bytes`);
+  assert.ok(compressed < 24 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 24KiB`);
   assert.deepEqual({ width, height }, { width: 1200, height: 630 });
 });
