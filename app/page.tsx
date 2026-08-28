@@ -127,6 +127,40 @@ export default async function Home() {
           ) : null}
         </section>
 
+        {/* اسأل العلم */}
+        <section className="ask-band" aria-labelledby="ask-title">
+          <div className="ask-band-info">
+            <div className="ask-band-badge">
+              <span className="ask-spark" aria-hidden="true">✦</span>
+              <span>ذكاء العلم التحريري</span>
+            </div>
+            <h2 id="ask-title">اسأل العلم</h2>
+            <p className="ask-sub">
+              بحث ذكي يفهم سؤالك ويجيب مباشرة من أرشيف مواد محررينا — مع تجاهل التشكيل واختلاف الهمزات.
+            </p>
+          </div>
+          <div className="ask-band-interactive">
+            <form className="ask-band-form" action="/search" role="search">
+              <input
+                type="search"
+                name="q"
+                placeholder="لماذا ترتفع أسعار التنجستن؟"
+                aria-label="ابحث في العلم"
+                dir="rtl"
+              />
+              <button type="submit">اسأل</button>
+            </form>
+            <p className="ask-suggest">
+              <span className="suggest-lbl">جرّب:</span>
+              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
+              <span aria-hidden="true"> · </span>
+              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
+            </p>
+          </div>
+        </section>
+
         {/* وراء الخبر — مرتكز + صفوف أفقية + سؤال */}
         {contextFeatured || contextRows.length > 0 || home.question ? (
         <>
@@ -234,7 +268,8 @@ export default async function Home() {
           </>
         ) : null}
 
-        {/* الأكثر قراءة */}
+        {/* الأكثر قراءة + مرئي وصوتي — عمودان */}
+        <div className="home-two">
         {home.mostRead.length > 0 ? (
           <section className="most-read" aria-label="الأكثر قراءة">
             <div className="section-head">
@@ -250,10 +285,7 @@ export default async function Home() {
                       {toLatinDigits(String(index + 1).padStart(2, "0"))}
                     </span>
                     <div className="mr-body">
-                      <span
-                        className="mr-kick"
-                        style={{ color: series?.color ?? "var(--ink-3)" }}
-                      >
+                      <span className="mr-kick">
                         {series?.name ?? sectionName(story.section)}
                       </span>
                       <Link className="story-link" href={storyHref(story)}>{story.title}</Link>
@@ -265,55 +297,21 @@ export default async function Home() {
           </section>
         ) : null}
 
-        {/* اسأل العلم */}
-        <section className="ask-band" aria-labelledby="ask-title">
-          <div className="ask-band-info">
-            <div className="ask-band-badge">
-              <span className="ask-spark" aria-hidden="true">✦</span>
-              <span>ذكاء العلم التحريري</span>
-            </div>
-            <h2 id="ask-title">اسأل العلم</h2>
-            <p className="ask-sub">
-              بحث ذكي يفهم سؤالك ويجيب مباشرة من أرشيف مواد محررينا — مع تجاهل التشكيل واختلاف الهمزات.
-            </p>
-          </div>
-          <div className="ask-band-interactive">
-            <form className="ask-band-form" action="/search" role="search">
-              <input
-                type="search"
-                name="q"
-                placeholder="لماذا ترتفع أسعار التنجستن؟"
-                aria-label="ابحث في العلم"
-                dir="rtl"
-              />
-              <button type="submit">ابحث</button>
-            </form>
-            <p className="ask-suggest">
-              <span className="suggest-lbl">جرّب:</span>
-              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
-              <span aria-hidden="true"> · </span>
-              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
-              <span aria-hidden="true"> · </span>
-              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-            </p>
-          </div>
-        </section>
-
-        {/* مرئي وصوتي */}
         {home.videos.length > 0 ? (
-          <>
+          <div className="home-media">
             <div className="section-head">
               <h2>مرئي وصوتي</h2>
               <span className="sub">المعرفة بأكثر من شكل</span>
               <Link className="more" href="/videos">كل الوسائط ←</Link>
             </div>
             <section className="media-grid" aria-label="مرئي وصوتي">
-              {home.videos.map((story) => (
+              {home.videos.slice(0, 2).map((story) => (
                 <VideoCard key={story.id} story={story} />
               ))}
             </section>
-          </>
+          </div>
         ) : null}
+        </div>
       </main>
 
       <SiteFooter />

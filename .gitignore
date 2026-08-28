@@ -48,3 +48,8 @@ ios/DerivedData/
 ios/**/xcuserdata/
 
 .claude/
+
+# مخرجات قياس ضخمة/تشغيلية — الصغيرة (summary/conflicts/…) تبقى متتبعة للتاريخ
+migration-audit/url-parity.csv
+migration-audit/*.log
+migration-audit/wp-migrate.checkpoint.json

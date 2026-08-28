@@ -1,0 +1,292 @@
+{
+  "generatedAt": "2026-08-28T11:08:31.569Z",
+  "mode": "migrate",
+  "movedThisRun": 3879,
+  "movedBytes": 1261812573,
+  "skippedUnsupportedFormat": 56,
+  "failed": 0,
+  "inBucketTotal": 29012,
+  "externalRemaining": 56,
+  "issues": [
+    {
+      "id": "10265",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/09/growing-city-gif.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "10441",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/09/apple-dubai-mall-main.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "143007",
+      "image": "https://dash.alelm.net/wp-content/uploads/2023/08/Netflix_2015_logo.svg",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "147341",
+      "image": "https://dash.alelm.net/wp-content/uploads/2023/09/لدغات-الأفاعي.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "179105",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/04/schema_org_16_9.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "179551",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/04/روماريو.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "179701",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/04/ركة-هواوي.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "181726",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/إخلاء-رفح.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "181915",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/إسرائيل-تسيطر-على-معبر-رفح.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "182307",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/الولايات-المتحدة-والمساعدات-الإسرائيلية.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "182451",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/4UFSRRCYZVML5ETPNU32MNTGMI.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "182664",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/الانتخابات-الهندية.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "182683",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/وزير-الدفاع-الروسي-الجديد.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "182726",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/sabq_2024-05_ef7fe24a-cb0a-4c53-ae22-9c9ed4ab8f7b__78_______6__.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "183240",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/iStock-614028206.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "183499",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/WTPIORSVYZLKWBMWJTTULJAXXE.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "183700",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/what-is-628x353-1.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "183975",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/1473-hero-what-is-efuel.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "184594",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/كريم-خان.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "184814",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/الاعتراف-بفلسطين-1.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "184837",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/05/إسرائيل-على-الحدود-مع-مصر.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "185043",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/الانقسام-يهدد-إسرئايل.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "185212",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/رئيسة-المكسيك.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "185363",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/معدل-المواليد.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "185620",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/إنفلونزا-الطيور.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "185726",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/جرائم-القتل-في-الولايات-المتحدة.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "185794",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/القبة-الحرارية.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "186344",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/القصف-الإسرائيلي-على-غزة-1.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "186469",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/حرب-غزة.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "186536",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/أحزاب-اليمين-المتطرف-في-أوروبا.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "187190",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/مفاوضات-نووية-بين-الصين-والولايات-المتحدة.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "187757",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/حزب-الله-وإسرائيل.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "187772",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/الجنيه-الاسترليني.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "187796",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/06/الإفرج-عن-أسانج.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "188664",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/مخترعون.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "188703",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/بايدن.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "188726",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/انتخابات-بريطانيا-العامة.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "189072",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/ajel_import_618285c511ae8d2ac66f6d12_6182852d65c93.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "189159",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/اللحوم-المزيفة.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "189274",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/العاضفة-بيريل-4.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "189376",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/رواد-الفضاء.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "189630",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/GettyImages-1247322550.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "189658",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/07/تيتانك3.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "199971",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/10/imgid392927.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "207690",
+      "image": "https://dash.alelm.net/wp-content/uploads/2024/12/المملكة.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "21018",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/11/الأخبار-المزيفة.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "24616",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/11/سيف-الإسلام-القذافي.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "25549",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/11/5G-الجيل-الخامس.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "263396",
+      "image": "https://dash.alelm.net/wp-content/uploads/2026/08/Indonesia-earthquake-AP26227063975823-e1786767712385.avif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "26947",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/12/alfred-lab.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "28359",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/12/52424baaa984b81c8c990f5280f2730c.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "43664",
+      "image": "https://dash.alelm.net/wp-content/uploads/2022/04/99da0cc6c8b5b0a1736e6f3341559330.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "46252",
+      "image": "https://dash.alelm.net/wp-content/uploads/2022/04/c9f5c85d91964caa732e450dc209be75.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "84813",
+      "image": "https://dash.alelm.net/wp-content/uploads/2022/12/22d6853a8a42eb2093f55e393d8743ed.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "87748",
+      "image": "https://dash.alelm.net/wp-content/uploads/2023/01/gn.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    },
+    {
+      "id": "8997",
+      "image": "https://dash.alelm.net/wp-content/uploads/2021/09/111257679__100228508_billgates.gif",
+      "reason": "صيغة غير مدعومة (ليست png/jpeg/webp)"
+    }
+  ]
+}

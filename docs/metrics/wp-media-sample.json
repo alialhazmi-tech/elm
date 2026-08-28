@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-28T06:47:55.720Z",
+  "generatedAt": "2026-08-28T07:17:56.583Z",
   "requested": 5,
   "withMedia": true,
   "imported": 5,
@@ -10,28 +10,25 @@
   "withAuthor": 0,
   "imagesArchived": 5,
   "sections": {
-    "infographics": 2,
-    "sciences": 1,
-    "politics": 1,
-    "sport": 1
+    "technology": 2,
+    "health": 1,
+    "politics": 2
   },
   "formats": {
-    "infographics": 2,
-    "news": 3
+    "news": 5
   },
   "series": {
-    "bel-arqam": 2,
+    "matha-baad": 3,
     "absat": 1,
-    "shakhsiat": 1,
-    "matha-baad": 1
+    "limatha": 1
   },
   "issues": [],
   "urlMismatchSamples": [],
   "importedIds": [
-    "264116",
-    "264236",
-    "264227",
-    "264108",
-    "264220"
+    "264181",
+    "264174",
+    "264171",
+    "264168",
+    "264163"
   ]
 }
