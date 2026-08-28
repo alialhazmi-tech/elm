@@ -53,10 +53,49 @@ function decodeEntities(text: string): string {
 }
 
 function textOf(block: string, tag: string): string {
-  const match = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i").exec(block);
+  // اسم الوسم حرفيًا — حتى لا يلتقط itunes:episode وسم itunes:episodeType.
+  const match = new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`, "i").exec(block);
   if (!match) return "";
   const raw = match[1].replace(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/, "$1");
   return decodeEntities(raw.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+}
+
+/** يحذف تكرار اسم البرنامج من عنوان الحلقة: «العلم | بودكاست عتمة | …». */
+export function stripShowPrefix(title: string, showName: string): string {
+  const escaped = showName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const cleaned = title
+    .replace(new RegExp(`^(?:العلم\\s*\\|\\s*)?(?:بودكاست\\s*)?${escaped}\\s*\\|\\s*`, "u"), "")
+    .replace(/^العلم\s*\|\s*/u, "")
+    .trim();
+  return cleaned || title.trim();
+}
+
+/** المدة من الخلاصة: ثوانٍ («4517») أو ساعة:دقيقة:ثانية. */
+export function formatPodcastDuration(raw: string | null): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (/^\d+$/.test(value)) {
+    const sec = Number(value);
+    const hours = Math.floor(sec / 3600);
+    const minutes = Math.floor((sec % 3600) / 60);
+    const seconds = sec % 60;
+    if (hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+  return value;
+}
+
+export function presentEpisode(rawTitle: string, showName: string, description = ""): {
+  title: string;
+  guest: string | null;
+} {
+  const cleaned = stripShowPrefix(rawTitle, showName);
+  const withGuest = /^(.*?)\s+مع\s+([^|،.]{2,40})$/u.exec(cleaned);
+  if (withGuest?.[1]?.trim()) {
+    return { title: withGuest[1].trim(), guest: withGuest[2].trim() };
+  }
+  const fromDesc = /ضيف(?:ة)?(?:\s+الحلقة)?[:\s]+([^\n،.]{2,40})/u.exec(description);
+  return { title: cleaned, guest: fromDesc?.[1]?.trim() || null };
 }
 
 function attrOf(block: string, tag: string, attr: string): string {

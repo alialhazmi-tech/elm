@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
+import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
 // تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
 const displayFont = Alexandria({
@@ -77,7 +78,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
-        {children}
+        <PodcastDockProvider>{children}</PodcastDockProvider>
       </body>
     </html>
   );
