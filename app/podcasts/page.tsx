@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
@@ -56,7 +55,7 @@ export default async function PodcastsPage() {
           <section className="ai-surface ask-block" style={{ marginTop: 28 }}>
             <p style={{ margin: 0, lineHeight: 1.9 }}>
               حلقات البرامج كاملة — الغبوق، ملامح، عتمة، وتقرير — على{" "}
-              <a href={YOUTUBE_CHANNEL} rel="noopener" target="_blank">
+              <a href={YOUTUBE_CHANNEL} rel="noopener noreferrer" target="_blank">
                 قناة العلم في يوتيوب ←
               </a>
             </p>
