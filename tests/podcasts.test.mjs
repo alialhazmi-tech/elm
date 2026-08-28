@@ -78,6 +78,7 @@ test("قالب المقال يشغّل الحلقات بمشغل «الطبعة 
   assert.match(page, /presentEpisode/u);
   assert.match(player, /"use client"/u);
   assert.match(player, /pp-ep-fields/u, "بطاقة الحلقة بلا حقول الضيف/المدة");
+  assert.match(player, /pp-ico/u, "لا أيقونات أمام المدة والتاريخ");
   assert.match(dock, /pp-seek/u, "لا شريط تقدم");
   assert.match(dock, /RATES/u, "لا سرعة تشغيل");
   assert.match(dock, /skip\(-15\)/u, "لا قفز للخلف");

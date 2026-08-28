@@ -25,6 +25,20 @@ interface Props {
   dateLabels: string[];
 }
 
+function FieldIcon({ name }: { name: "guest" | "duration" | "episode" | "date" }) {
+  const paths = {
+    guest: "M12 12a3.5 3.5 0 1 0-3.5-3.5A3.5 3.5 0 0 0 12 12Zm0 1.8c-3.1 0-7 1.5-7 4.2V20h14v-2c0-2.7-3.9-4.2-7-4.2Z",
+    duration: "M12 4.5a7.5 7.5 0 1 0 7.5 7.5A7.5 7.5 0 0 0 12 4.5Zm.7 4v3.2l2.6 1.6-.7 1.1L11 12.4V8.5Z",
+    episode: "M8 6h10v2H8Zm0 5h10v2H8Zm0 5h7v2H8ZM5 6.2h1.6v1.6H5Zm0 5h1.6v1.6H5Zm0 5h1.6v1.6H5Z",
+    date: "M7 4.5h1.6V6h6.8V4.5H17V6h2v14H5V6h2Zm10.4 4.2H6.6v9.6h10.8Z",
+  } as const;
+  return (
+    <svg className="pp-ico" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d={paths[name]} />
+    </svg>
+  );
+}
+
 function PlayIcon({ playing }: { playing: boolean }) {
   return playing ? (
     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -76,26 +90,30 @@ export function PodcastPlayer({ showName, accent, episodes, youtube, dateLabels 
                 <dl className="pp-ep-fields">
                   {episode.guest ? (
                     <div>
-                      <dt>الضيف</dt>
-                      <dd>{episode.guest}</dd>
+                      <dt className="sr-only">الضيف</dt>
+                      <dd><FieldIcon name="guest" />{episode.guest}</dd>
                     </div>
                   ) : null}
                   {episode.duration ? (
                     <div>
-                      <dt>المدة</dt>
-                      <dd className="latin-number" dir="ltr" lang="en">{toLatinDigits(episode.duration)}</dd>
+                      <dt className="sr-only">المدة</dt>
+                      <dd className="latin-number" dir="ltr" lang="en">
+                        <FieldIcon name="duration" />{toLatinDigits(episode.duration)}
+                      </dd>
                     </div>
                   ) : null}
                   {episode.episode && /^\d+$/.test(episode.episode) ? (
                     <div>
-                      <dt>الحلقة</dt>
-                      <dd className="latin-number" dir="ltr" lang="en">{toLatinDigits(episode.episode)}</dd>
+                      <dt className="sr-only">الحلقة</dt>
+                      <dd className="latin-number" dir="ltr" lang="en">
+                        <FieldIcon name="episode" />{toLatinDigits(episode.episode)}
+                      </dd>
                     </div>
                   ) : null}
                   {dateLabels[index] ? (
                     <div>
-                      <dt>التاريخ</dt>
-                      <dd>{dateLabels[index]}</dd>
+                      <dt className="sr-only">التاريخ</dt>
+                      <dd><FieldIcon name="date" />{dateLabels[index]}</dd>
                     </div>
                   ) : null}
                 </dl>

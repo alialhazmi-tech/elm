@@ -31,12 +31,12 @@
 .pp-meta { min-width: 0; }
 .pp-ep-title { margin: 2px 0 8px; font-size: 16.5px; line-height: 1.5; font-weight: 800; }
 .pp-ep-fields {
-  margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 8px 16px;
+  margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 8px 14px;
   font-size: 12.5px; color: var(--ink-2, #4e5f78);
 }
-.pp-ep-fields div { display: flex; gap: 6px; align-items: baseline; }
-.pp-ep-fields dt { margin: 0; font-weight: 700; color: var(--ink-3, #8494ab); }
-.pp-ep-fields dd { margin: 0; }
+.pp-ep-fields div { display: flex; align-items: center; }
+.pp-ep-fields dd { margin: 0; display: inline-flex; align-items: center; gap: 6px; }
+.pp-ico { width: 14px; height: 14px; flex: none; color: var(--ink-3, #8494ab); }
 .pp-ep-desc {
   margin: 0; font-size: 13.5px; line-height: 1.8; color: var(--ink-2, #4e5f78);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
@@ -46,10 +46,12 @@
 
 /* شريط ثابت أسفل النافذة — يبقى عند التمرير ومغادرة صفحة البرنامج */
 .pp-bar {
-  position: fixed; inset-inline: 12px; bottom: 12px; z-index: 80; margin: 0;
-  display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
-  padding: 10px 14px; border-radius: 16px;
-  background: color-mix(in srgb, var(--surface, #fff) 92%, transparent);
+  position: fixed; left: 50%; bottom: 16px; z-index: 80; margin: 0;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 28px));
+  display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center;
+  padding: 10px 12px; border-radius: 18px;
+  background: color-mix(in srgb, var(--surface, #fff) 94%, transparent);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--line-2, #c7d2e2);
   box-shadow: 0 14px 40px -18px rgba(11, 26, 51, .45);
@@ -74,7 +76,7 @@ html[data-pp-dock] { padding-bottom: 96px; }
 .pp-follow { margin: 16px 0 0; font-size: 14px; }
 
 @media (max-width: 640px) {
-  .pp-bar { grid-template-columns: auto 1fr; }
+  .pp-bar { width: min(360px, calc(100vw - 20px)); grid-template-columns: auto 1fr; }
   .pp-tools { display: none; }
   .pp-episode { grid-template-columns: 42px 1fr; padding: 12px 13px; }
   .pp-play { width: 42px; height: 42px; }
