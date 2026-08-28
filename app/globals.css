@@ -790,20 +790,45 @@ a.story-link:hover { color: var(--link); }
 .article-head { max-width: none; }
 .article-head h1 {
   font-size: clamp(1.5rem, 3vw, 2.15rem); font-weight: 800; line-height: 1.45;
-  margin: 0.9rem 0 0.55rem;
-}
-.article-deck {
-  margin: 0.85rem 0 1.35rem;
-  font-size: clamp(1.08rem, 2vw, 1.25rem);
-  line-height: 1.82;
-  color: var(--ink-2);
-  font-weight: 400;
-  white-space: normal;
+  margin: 0.9rem 0 0.7rem;
 }
 .article-meta {
   display: flex; gap: 1.1rem; flex-wrap: wrap;
-  font-size: 0.78rem; color: var(--ink-3); padding-bottom: 1.3rem;
+  font-size: 0.78rem; color: var(--ink-3); padding-bottom: 1.15rem;
   border-bottom: 1px solid var(--line);
+}
+/* موجز «قبل القراءة»: وحدة مستقلة عن العنوان والمتن حتى لا يُقرأ كبداية المقال */
+.article-brief {
+  margin: 1.25rem 0 0;
+  padding: 0.95rem 1.15rem 1.05rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-inline-start: 3px solid var(--gold);
+  border-radius: var(--r-sm);
+}
+.article-brief-label {
+  margin: 0 0 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--gold);
+}
+.article-brief-label::before {
+  content: "";
+  width: 12px;
+  height: 2.5px;
+  background: var(--gold);
+  flex: none;
+}
+.article-brief-text {
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1.8;
+  color: var(--ink-2);
+  font-weight: 500;
 }
 .ai-toolbar { margin: 1.3rem 0; padding: 9px 12px; border-radius: 999px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .ai-toolbar .tool {
@@ -1316,7 +1341,8 @@ a.story-link:hover { color: var(--link); }
   .article-shell { padding: 20px 14px 42px; }
   .breadcrumb { margin-bottom: 14px; font-size: 10.5px; white-space: nowrap; flex-wrap: nowrap; overflow: hidden; }
   .article-head h1 { font-size: 24px; line-height: 1.45; margin-top: 10px; }
-  .article-deck { font-size: 15.5px; line-height: 1.75; margin: 8px 0 14px; }
+  .article-brief { margin-top: 14px; padding: 12px 14px 13px; }
+  .article-brief-text { font-size: 15px; line-height: 1.75; }
   .article-meta { gap: 7px 12px; font-size: 10.5px; padding-bottom: 14px; }
   .ai-toolbar { margin: 12px 0; padding: 7px; gap: 5px; border-radius: 13px; overflow-x: auto; flex-wrap: nowrap; }
   .ai-toolbar .tool { flex: none; padding: 6px 10px; font-size: 10.5px; }

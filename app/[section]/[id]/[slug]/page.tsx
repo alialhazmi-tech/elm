@@ -12,7 +12,7 @@ import {
   ArticleTracker,
   PersonalizedRelated,
 } from "@/app/_components/article-experience";
-import { brandDate, formatArticleDek, toLatinDigits } from "@/lib/format";
+import { brandDate, formatReadingBrief, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
@@ -133,6 +133,7 @@ export default async function ArticlePage({ params }: Params) {
     ? related.find((item) => item.series === series.slug)
     : undefined;
   const published = story.publishedAt ? new Date(story.publishedAt) : null;
+  const readingBrief = formatReadingBrief(story.excerpt);
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -176,11 +177,6 @@ export default async function ArticlePage({ params }: Params) {
               </Link>
             ) : null}
             <h1>{story.title}</h1>
-            {story.excerpt ? (
-              <p className="article-deck">
-                {formatArticleDek(story.excerpt)}
-              </p>
-            ) : null}
             <div className="article-meta">
               <span>{sectionName(story.section)}</span>
               {published && story.publishedAt ? (
@@ -192,6 +188,13 @@ export default async function ArticlePage({ params }: Params) {
               <span>تحرير: فريق العلم</span>
             </div>
           </header>
+
+          {readingBrief ? (
+            <aside className="article-brief" aria-labelledby="article-brief-label">
+              <p id="article-brief-label" className="article-brief-label">قبل القراءة</p>
+              <p className="article-brief-text">{readingBrief}</p>
+            </aside>
+          ) : null}
 
           <ArticleToolbar
             storyId={story.id}
@@ -219,7 +222,7 @@ export default async function ArticlePage({ params }: Params) {
             )
           ) : null}
 
-          <div className="article-body">
+          <div className="article-body" id="article-body">
             {story.body && looksLikeHtml(story.body) ? (
               // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
               <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
@@ -228,8 +231,8 @@ export default async function ArticlePage({ params }: Params) {
                 .split(/\n{2,}/)
                 .filter((paragraph) => paragraph.trim())
                 .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
-            ) : (
-              <p>{story.excerpt}</p>
+            ) : story.excerpt ? null : (
+              <p className="article-placeholder">متن هذه المادة غير متاح الآن.</p>
             )}
 
             {story.factCheck ? (
