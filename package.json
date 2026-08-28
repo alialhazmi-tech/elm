@@ -21,7 +21,8 @@
     "build:gate": "NEXT_DIST_DIR=.next-gate DATABASE_URL= next build",
     "db:push": "node --env-file=.env.local node_modules/.bin/drizzle-kit push",
     "db:seed": "node --env-file=.env.local scripts/db-seed.mjs",
-    "migrate:wp": "node --env-file=.env.local scripts/wp-migrate.mjs"
+    "migrate:wp": "node --env-file=.env.local scripts/wp-migrate.mjs",
+    "media:migrate": "node --env-file=.env.local scripts/wp-media-migrate.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
