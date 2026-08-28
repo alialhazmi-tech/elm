@@ -18,6 +18,7 @@ import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesO
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
 import { toRelatedCard } from "@/lib/personalization/recommend";
+import { fetchEpisodes, podcastShowFor } from "@/lib/podcasts";
 import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 
 export const revalidate = 300;
@@ -80,6 +81,10 @@ export default async function ArticlePage({ params }: Params) {
 
   const series = seriesOf(story);
   const related = await seedContentProvider.listRelated(story, 3);
+
+  // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية نفسها التي يقرأ منها الموقع القديم.
+  const podcastShow = story.format === "podcasts" ? podcastShowFor(story.id) : undefined;
+  const episodes = podcastShow ? await fetchEpisodes(podcastShow) : [];
 
   // «جاك العلم»: نفس الرابط المقدس، قالب قراءة غامر مختلف كليًا.
   if (story.format === "jakalelm") {
@@ -267,6 +272,53 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             ) : null}
           </div>
+
+          {podcastShow ? (
+            <section className="ai-surface" style={{ marginTop: 26 }} aria-label="حلقات البرنامج">
+              <h2 style={{ margin: "0 0 6px" }}>حلقات {podcastShow.name}</h2>
+              {episodes.length > 0 ? (
+                <div>
+                  {episodes.map((episode) => (
+                    <article
+                      key={episode.audioUrl}
+                      style={{ padding: "14px 0", borderTop: "1px solid var(--line, #e7ecf4)" }}
+                    >
+                      <h3 style={{ margin: "0 0 4px", fontSize: 16 }}>
+                        {episode.episode ? (
+                          <span className="latin-number" dir="ltr" lang="en">
+                            {toLatinDigits(episode.episode)}.{" "}
+                          </span>
+                        ) : null}
+                        {episode.title}
+                      </h3>
+                      {episode.publishedAt ? (
+                        <p style={{ margin: "0 0 8px", fontSize: 13, color: "var(--muted, #4e5f78)" }}>
+                          {brandDate(episode.publishedAt).gregorian}
+                          {episode.duration ? ` · ${toLatinDigits(episode.duration)}` : null}
+                        </p>
+                      ) : null}
+                      {episode.description ? (
+                        <p style={{ margin: "0 0 10px", fontSize: 14, lineHeight: 1.8 }}>{episode.description}</p>
+                      ) : null}
+                      {/* مشغل المتصفح الأصلي — صفر جافاسكربت، والصوت يتدفق من خلاصة RSS مباشرة */}
+                      {/* حلقات صوتية بلا مسار نصي في الخلاصة — وصف الحلقة أعلاه يقوم مقامه */}
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <audio controls preload="none" src={episode.audioUrl} style={{ width: "100%" }}>
+                        <a href={episode.audioUrl}>استمع إلى الحلقة</a>
+                      </audio>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ margin: 0, lineHeight: 1.9 }}>حلقات هذا البرنامج تُبث عبر قناة العلم.</p>
+              )}
+              <p style={{ margin: "14px 0 0" }}>
+                <a href={podcastShow.youtube} rel="noopener noreferrer" target="_blank">
+                  تابع البرنامج على قناة العلم في يوتيوب ←
+                </a>
+              </p>
+            </section>
+          ) : null}
 
           <ArticleClosingPoll
             storyId={story.id}
