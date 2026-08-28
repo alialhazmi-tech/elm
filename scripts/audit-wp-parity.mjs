@@ -30,7 +30,7 @@ const REPO_ROOT = path.resolve(SCRIPT_DIR, "..");
 const DEFAULTS = {
   wpBase: "https://dash.alelm.net/wp-json/wp/v2",
   legacyBase: "https://alelm.net",
-  targetBase: "https://elm-production-5035.up.railway.app",
+  targetBase: "https://elm-production-ea24.up.railway.app",
   output: path.join(REPO_ROOT, "migration-audit"),
   concurrency: 6,
   http: "sample",

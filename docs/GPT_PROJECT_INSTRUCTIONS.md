@@ -10,7 +10,7 @@
 
 ## ما هو المشروع
 
-إعادة بناء **alelm.net** (منصة أخبار معرفية سعودية، شعارها «المعرفة بسلاسة») من ووردبريس إلى منصة حديثة. المستودع: `github.com/sabq4org/elm` (خاص) في `~/alelm`. الإنتاج على **Railway** — كل push إلى `main` ينشر تلقائيًا: `elm-production-5035.up.railway.app`. القاعدة **Neon Postgres** عبر `@neondatabase/serverless` (HTTP) + **drizzle-orm**، والمخطط في `db/schema.ts` يُدفع بـ`npm run db:push`.
+إعادة بناء **alelm.net** (منصة أخبار معرفية سعودية، شعارها «المعرفة بسلاسة») من ووردبريس إلى منصة حديثة. المستودع: `github.com/sabq4org/elm` (خاص) في `~/alelm`. الإنتاج على **Railway** — كل push إلى `main` ينشر تلقائيًا: `elm-production-ea24.up.railway.app`. القاعدة **Neon Postgres** عبر `@neondatabase/serverless` (HTTP) + **drizzle-orm**، والمخطط في `db/schema.ts` يُدفع بـ`npm run db:push`.
 
 ## التقنية والبنية
 
