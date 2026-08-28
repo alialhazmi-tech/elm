@@ -1,6 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image";
 import { useState, useEffect } from "react";
 
 export function InfographicLightbox({
@@ -35,17 +35,22 @@ export function InfographicLightbox({
     <>
       <button
         type="button"
-        className="article-figure--infographic group"
+        className="article-figure--infographic"
         onClick={() => setIsOpen(true)}
         aria-label={`عرض ${title} بدقة كاملة`}
       >
-        <img
-          src={src}
-          alt={title}
-          className="infographic-main-img"
-          loading="eager"
-          onError={() => setFailed(true)}
-        />
+        <div className="infographic-img-wrapper">
+          <Image
+            src={src}
+            alt={title}
+            width={1200}
+            height={1200}
+            sizes="(max-width: 900px) 100vw, 860px"
+            priority
+            className="infographic-main-img"
+            onError={() => setFailed(true)}
+          />
+        </div>
         <div className="infographic-overlay-hint" aria-hidden="true">
           <span className="infographic-zoom-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -98,9 +103,12 @@ export function InfographicLightbox({
           </div>
 
           <div className="infographic-lightbox-body">
-            <img
+            <Image
               src={src}
               alt={title}
+              width={1600}
+              height={1600}
+              sizes="100vw"
               className="infographic-lightbox-img"
             />
           </div>

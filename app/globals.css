@@ -843,17 +843,25 @@ a.story-link:hover { color: var(--link); }
   border: 1px solid var(--line);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
   cursor: zoom-in;
+  display: block;
+  width: 100%;
+  padding: 0;
+  text-align: right;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .article-figure--infographic:hover {
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.14);
 }
-.infographic-main-img {
+.infographic-img-wrapper {
+  position: relative;
   width: 100%;
   height: auto;
-  display: block;
-  object-fit: contain;
-  max-height: 85vh;
+}
+.infographic-main-img {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  object-fit: contain !important;
   margin: 0 auto;
 }
 .infographic-overlay-hint {
