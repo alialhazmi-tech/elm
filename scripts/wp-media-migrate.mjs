@@ -126,6 +126,18 @@ async function main() {
   await log(`الوضع الحالي: ${migrated} صورة في البوكت — ${pending} صورة خارجية متبقية`);
   if (VERIFY_ONLY) return;
 
+  // فشل مبكر واضح: لا معنى لتنزيل مئات الصور إن كانت بيانات المخزن ناقصة أصلًا.
+  if (!DRY_RUN) {
+    try {
+      storageConfig();
+    } catch (error) {
+      await log(String(error instanceof Error ? error.message : error));
+      await log("أضف مفاتيح البوكت إلى .env.local — تجدها في Railway: خدمة البوكت ← Variables:");
+      await log("AWS_ENDPOINT_URL · AWS_S3_BUCKET_NAME · AWS_ACCESS_KEY_ID · AWS_SECRET_ACCESS_KEY · AWS_DEFAULT_REGION=auto");
+      process.exit(1);
+    }
+  }
+
   const target = Math.min(pending, LIMIT);
   await log(`بدء هجرة الوسائط${DRY_RUN ? " (تجربة بلا كتابة)" : ""} — هدف هذه التشغيلة: ${target} صورة بتوازي ${CONCURRENCY}`);
 
