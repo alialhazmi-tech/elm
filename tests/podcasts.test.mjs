@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseRssEpisodes, PODCAST_SHOWS, podcastShowFor } from "../lib/podcasts.ts";
+import {
+  formatPodcastDuration,
+  parseRssEpisodes,
+  PODCAST_SHOWS,
+  podcastShowFor,
+  presentEpisode,
+  stripShowPrefix,
+} from "../lib/podcasts.ts";
 
 const FIXTURE = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
@@ -11,6 +18,7 @@ const FIXTURE = `<?xml version="1.0" encoding="UTF-8"?>
   <pubDate>Thu, 09 Jan 2025 16:36:01 GMT</pubDate>
   <enclosure url="https://content.rss.com/episodes/187671/1840234/malameh/ep13.mp3" length="53294" type="audio/mpeg"/>
   <itunes:duration>23:45</itunes:duration>
+  <itunes:episodeType>full</itunes:episodeType>
   <itunes:episode>13</itunes:episode>
   <itunes:season>1</itunes:season>
   <description><![CDATA[<p>حلقة جديدة من #بودكاست_ملامح يتحدث فيها عبدالرحمن الناصر&nbsp;عن مشواره</p>]]></description>
@@ -46,25 +54,36 @@ test("برامج البودكاست الأربعة معرفاتها محفوظة
   }
 });
 
+test("عنوان الحلقة يُنظَّف من تكرار اسم البرنامج ويُفصل الضيف والمدة", () => {
+  assert.equal(stripShowPrefix("العلم | بودكاست عتمة | فلسفة الحب", "عتمة"), "فلسفة الحب");
+  assert.equal(stripShowPrefix("بودكاست عتمة | اللغة و البنية النفسية", "عتمة"), "اللغة و البنية النفسية");
+  const presented = presentEpisode("العلم | بودكاست عتمة | ما وراء السجون مع ياسر البحري", "عتمة");
+  assert.equal(presented.title, "ما وراء السجون");
+  assert.equal(presented.guest, "ياسر البحري");
+  assert.equal(formatPodcastDuration("4517"), "1:15:17");
+  assert.equal(formatPodcastDuration("23:45"), "23:45");
+});
+
 test("قالب المقال يشغّل الحلقات بمشغل «الطبعة التحريرية» وسياسة الأمان تسمح ببثها", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [page, player, config] = await Promise.all([
+  const [page, player, dock, config] = await Promise.all([
     readFile(new URL("../app/[section]/[id]/[slug]/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/_components/podcast-player.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/_components/podcast-dock.tsx", import.meta.url), "utf8"),
     readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
   ]);
   assert.match(page, /story\.format === "podcasts"/u);
   assert.match(page, /<PodcastPlayer/u, "مكون المشغل غير مستخدم في القالب");
-  // مشغل حقيقي: شريط تقدم، سرعة، قفز 15 ثانية، وشريط لاصق — لا عنصر متصفح خام
+  assert.match(page, /podcast-show/u, "غلاف البرنامج الضخم ما زال قالب المقال");
+  assert.match(page, /presentEpisode/u);
   assert.match(player, /"use client"/u);
-  assert.match(player, /pp-seek/u, "لا شريط تقدم");
-  assert.match(player, /RATES/u, "لا سرعة تشغيل");
-  assert.match(player, /skip\(-15\)/u, "لا قفز للخلف");
-  assert.match(player, /pp-bar/u, "لا شريط تشغيل لاصق");
-  assert.match(player, /onError/u, "لا معالجة لفشل البث");
-  // مضيفو الخلاصات يحوّلون عبر CDN متغير — البث المؤمّن مسموح والمنقي يمنع أي حقن وسائط
+  assert.match(player, /pp-ep-fields/u, "بطاقة الحلقة بلا حقول الضيف/المدة");
+  assert.match(dock, /pp-seek/u, "لا شريط تقدم");
+  assert.match(dock, /RATES/u, "لا سرعة تشغيل");
+  assert.match(dock, /skip\(-15\)/u, "لا قفز للخلف");
+  assert.match(dock, /pp-bar/u, "لا شريط تشغيل ثابت");
+  assert.match(dock, /position: fixed|PodcastDockProvider/u);
   assert.match(config, /media-src 'self' https:/u, "CSP يمنع بث الحلقات");
-  // كل برنامج بطابعه اللوني
   const shows = await readFile(new URL("../lib/podcasts.ts", import.meta.url), "utf8");
   assert.match(shows, /accent: "#/u);
 });

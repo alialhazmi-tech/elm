@@ -18,7 +18,7 @@ import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesO
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
 import { toRelatedCard } from "@/lib/personalization/recommend";
-import { fetchEpisodes, podcastShowFor } from "@/lib/podcasts";
+import { fetchEpisodes, formatPodcastDuration, podcastShowFor, presentEpisode } from "@/lib/podcasts";
 import { PodcastPlayer } from "@/app/_components/podcast-player";
 import "@/app/_components/podcast-player.css";
 import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
@@ -192,44 +192,71 @@ export default async function ArticlePage({ params }: Params) {
         </nav>
 
         <article data-story-id={story.id}>
-          <header className="article-head">
-            {series ? (
-              <Link
-                className="series-chip"
-                href={`/series/${series.slug}`}
-                style={{ "--sc": series.color } as React.CSSProperties}
-              >
-                {series.name}
-              </Link>
-            ) : null}
-            <h1>{story.title}</h1>
-            <div className="article-meta">
-              <span>{sectionName(story.section)}</span>
-              {published && story.publishedAt ? (
-                <time dateTime={story.publishedAt}>
-                  {brandDate(story.publishedAt).hijri} — {brandDate(story.publishedAt).gregorian}
-                </time>
+          {podcastShow ? (
+            <header className="podcast-show">
+              {story.image ? (
+                <div className="podcast-cover">
+                  <Image src={story.image} alt="" fill sizes="120px" priority />
+                </div>
               ) : null}
-              <span>{toLatinDigits(story.readingMinutes)} دقائق قراءة</span>
-              <span>تحرير: فريق العلم</span>
-            </div>
-          </header>
+              <div className="podcast-show-copy">
+                <p className="podcast-kicker">بودكاست</p>
+                <h1>{podcastShow.name}</h1>
+                <p className="podcast-show-meta">
+                  {episodes.length > 0
+                    ? `${toLatinDigits(episodes.length)} حلقة`
+                    : "حلقات البرنامج"}
+                  {published && story.publishedAt ? (
+                    <>
+                      <span aria-hidden="true"> · </span>
+                      <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+            </header>
+          ) : (
+            <header className="article-head">
+              {series ? (
+                <Link
+                  className="series-chip"
+                  href={`/series/${series.slug}`}
+                  style={{ "--sc": series.color } as React.CSSProperties}
+                >
+                  {series.name}
+                </Link>
+              ) : null}
+              <h1>{story.title}</h1>
+              <div className="article-meta">
+                <span>{sectionName(story.section)}</span>
+                {published && story.publishedAt ? (
+                  <time dateTime={story.publishedAt}>
+                    {brandDate(story.publishedAt).hijri} — {brandDate(story.publishedAt).gregorian}
+                  </time>
+                ) : null}
+                <span>{toLatinDigits(story.readingMinutes)} دقائق قراءة</span>
+                <span>تحرير: فريق العلم</span>
+              </div>
+            </header>
+          )}
 
-          {readingBrief ? (
+          {!podcastShow && readingBrief ? (
             <aside className="article-brief" aria-labelledby="article-brief-label">
               <p id="article-brief-label" className="article-brief-label">قبل القراءة</p>
               <p className="article-brief-text">{readingBrief}</p>
             </aside>
           ) : null}
 
-          <ArticleToolbar
-            storyId={story.id}
-            joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
-            excerpt={story.excerpt}
-          />
+          {!podcastShow ? (
+            <ArticleToolbar
+              storyId={story.id}
+              joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
+              excerpt={story.excerpt}
+            />
+          ) : null}
           <ArticleTracker storyId={story.id} />
 
-          {story.image ? (
+          {!podcastShow && story.image ? (
             story.section === "infographics" ||
             story.format === "infographics" ||
             story.format === "infographic" ||
@@ -248,6 +275,7 @@ export default async function ArticlePage({ params }: Params) {
             )
           ) : null}
 
+          {!podcastShow ? (
           <div className="article-body" id="article-body">
             {story.body && looksLikeHtml(story.body) ? (
               // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
@@ -274,6 +302,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             ) : null}
           </div>
+          ) : null}
 
           {podcastShow ? (
             episodes.length > 0 ? (
@@ -281,9 +310,18 @@ export default async function ArticlePage({ params }: Params) {
                 showName={podcastShow.name}
                 accent={podcastShow.accent}
                 youtube={podcastShow.youtube}
-                episodes={episodes.map(({ title, audioUrl, publishedAt, duration, description, episode }) => ({
-                  title, audioUrl, publishedAt, duration, description, episode,
-                }))}
+                episodes={episodes.map((episode) => {
+                  const presented = presentEpisode(episode.title, podcastShow.name, episode.description);
+                  return {
+                    title: presented.title,
+                    guest: presented.guest,
+                    audioUrl: episode.audioUrl,
+                    publishedAt: episode.publishedAt,
+                    duration: formatPodcastDuration(episode.duration),
+                    description: episode.description,
+                    episode: episode.episode,
+                  };
+                })}
                 dateLabels={episodes.map((episode) =>
                   episode.publishedAt ? brandDate(episode.publishedAt).gregorian : "",
                 )}
@@ -300,14 +338,16 @@ export default async function ArticlePage({ params }: Params) {
             )
           ) : null}
 
-          <ArticleClosingPoll
-            storyId={story.id}
-            question="هل غيّرت هذه المادة فهمك للموضوع؟"
-            options={[
-              { label: "نعم، أضافت لي سياقًا جديدًا" },
-              { label: "كنت أعرف أغلب ما فيها" },
-            ]}
-          />
+          {!podcastShow ? (
+            <ArticleClosingPoll
+              storyId={story.id}
+              question="هل غيّرت هذه المادة فهمك للموضوع؟"
+              options={[
+                { label: "نعم، أضافت لي سياقًا جديدًا" },
+                { label: "كنت أعرف أغلب ما فيها" },
+              ]}
+            />
+          ) : null}
 
           {series ? (
             <aside className="series-note" style={{ "--sc": series.color } as React.CSSProperties}>
