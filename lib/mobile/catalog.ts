@@ -1,6 +1,7 @@
 import {
   contentSource,
   listPublicSlides,
+  listRecent,
   listVisibleArchivedSeries,
   seedContentProvider,
   seriesOf,
@@ -214,13 +215,9 @@ export async function toMobileSearch(query: string, origin?: string): Promise<Mo
     return { contract: MOBILE_SEARCH_CONTRACT, query: trimmed, results: [], total: 0 };
   }
 
-  const all = await seedContentProvider.listAll();
-  const stories = all.filter((story) => {
-    const haystack = foldSearchText(
-      `${story.title} ${story.excerpt} ${story.eyebrow} ${(story.keywords ?? []).join(" ")}`,
-    );
-    return haystack.includes(needle);
-  });
+  // البحث في SQL عبر المزود: نفس التطبيع (همزات/تشكيل/نزع «الـ») على كامل الأرشيف،
+  // لا على نافذة الذاكرة — فالمواد القديمة تبقى قابلة للعثور.
+  const stories = await seedContentProvider.search(trimmed);
 
   return {
     contract: MOBILE_SEARCH_CONTRACT,
@@ -239,7 +236,7 @@ export type MobileForYouPayload = {
 
 export async function toMobileForYou(memberId: string, limit = 9, origin?: string): Promise<MobileForYouPayload> {
   const cards = await forYouForMember(memberId, limit);
-  const all = await seedContentProvider.listAll();
+  const all = await listRecent(400);
   const byId = new Map(all.map((story) => [story.id, story]));
   const items = cards
     .map((card) => {

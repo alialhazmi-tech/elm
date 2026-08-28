@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 
 import { memberLikes, memberProfiles, memberStoryStats } from "@/db/schema";
 import { getDb } from "@/lib/db";
-import { seedContentProvider, sectionName } from "@/lib/content/provider";
+import { listRecent, seedContentProvider, sectionName } from "@/lib/content/provider";
 import { ALL_SERIES } from "@/lib/content/series";
 import { storyHref, type Story } from "@/lib/content/types";
 import { MEMBER_INTERESTS } from "@/lib/membership/interests";
@@ -106,7 +106,7 @@ export async function relatedForMember(memberId: string, storyId: string, limit 
     const ctx = await memberContext(memberId);
     if (!ctx.enabled) return relatedForVisitor(current, limit);
 
-    const all = await seedContentProvider.listAll();
+    const all = await listRecent(320);
     const pool = all.filter((item) => item.id !== current.id);
     const topicsByStory = await topicsMap([current, ...pool.slice(0, 40)]);
     const ranked = rankCandidates({
@@ -141,7 +141,7 @@ export async function relatedForMember(memberId: string, storyId: string, limit 
 export async function forYouForMember(memberId: string, limit = 9): Promise<RelatedCard[]> {
   try {
     const ctx = await memberContext(memberId);
-    const all = await seedContentProvider.listAll();
+    const all = await listRecent(320);
     const topicsByStory = await topicsMap(all.slice(0, 48));
     const ranked = rankCandidates({
       candidates: all.map(asRankable),
@@ -164,7 +164,7 @@ export async function forYouForMember(memberId: string, limit = 9): Promise<Rela
       })
       .filter((item): item is RelatedCard => Boolean(item));
   } catch {
-    const all = await seedContentProvider.listAll();
+    const all = await listRecent(320);
     return all.slice(0, limit).map((story) => toRelatedCard(story));
   }
 }

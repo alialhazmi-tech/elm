@@ -4,8 +4,7 @@ import { notFound } from "next/navigation";
 import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
-import { paginate } from "@/lib/content/pagination";
-import { KNOWN_SECTIONS, seedContentProvider } from "@/lib/content/provider";
+import { KNOWN_SECTIONS, pageBySection } from "@/lib/content/provider";
 import { getSection, getSectionDescription, getSectionName } from "@/lib/content/sections";
 import { toLatinDigits } from "@/lib/format";
 
@@ -53,8 +52,8 @@ export default async function SectionPage({ params, searchParams }: Props) {
   if (!KNOWN_SECTIONS.includes(section)) notFound();
 
   const secDef = getSection(section);
-  const all = await seedContentProvider.listBySection(section);
-  const { items, page, pageCount, total, from, to } = paginate(all, p);
+  // ترقيم في SQL — القسم قد يحوي آلاف مواد الأرشيف ولا يُحمَّل كله.
+  const { items, page, pageCount, total, from, to } = await pageBySection(section, p);
   const basePath = `/${section}`;
 
   return (

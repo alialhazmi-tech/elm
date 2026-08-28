@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { JakStory } from "@/app/_components/jak-slides";
 import { JakReport } from "@/app/_components/jak-report";
@@ -14,18 +14,29 @@ import {
 } from "@/app/_components/article-experience";
 import { brandDate, formatReadingBrief, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
-import { listPublicSlides, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
+import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { storyHref } from "@/lib/content/types";
 import { toRelatedCard } from "@/lib/personalization/recommend";
 import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 
 export const revalidate = 300;
+/** الأرشيف 29 ألف مادة: يُبنى مسبقًا أحدثها فقط والبقية ISR عند الطلب. */
+export const dynamicParams = true;
 
 type Params = { params: Promise<{ section: string; id: string; slug: string }> };
 
+/** الفكّ الآمن لمعامل مسار قد يصل مرمّزًا أو مفكوكًا بحسب العميل. */
+function safeDecode(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export async function generateStaticParams() {
-  const stories = await seedContentProvider.listAll();
+  const stories = await listRecent(150);
   return stories.map((story) => ({
     section: story.section,
     id: story.id,
@@ -34,7 +45,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { id, section, slug } = await params;
+  const { id } = await params;
   const story = await seedContentProvider.getStory(id);
   if (!story) return { title: "المادة غير موجودة" };
 
@@ -44,7 +55,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     title: seoTitle,
     description: seoDescription,
     keywords: story.keywords?.length ? story.keywords : undefined,
-    alternates: { canonical: `/${section}/${id}/${slug}` },
+    // canonical واحد دائمًا من الرابط المحفوظ — لا يعكس معاملات طلب غير قانونية.
+    alternates: { canonical: storyHref(story) },
     openGraph: {
       type: "article",
       title: seoTitle,
@@ -55,9 +67,15 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 export default async function ArticlePage({ params }: Params) {
-  const { id } = await params;
+  const { id, section, slug } = await params;
   const story = await seedContentProvider.getStory(id);
   if (!story) notFound();
+
+  // حارس canonical (شرط الهجرة): المعرّف يحسم — أي قسم أو سلاج مخالف للرابط المحفوظ
+  // يتحول تحويلًا دائمًا (308) إليه، فلا يوجد 200 على بدائل ولا canonical متعارض.
+  if (safeDecode(section) !== story.section || safeDecode(slug) !== story.slug) {
+    permanentRedirect(storyHref(story));
+  }
 
   const series = seriesOf(story);
   const related = await seedContentProvider.listRelated(story, 3);

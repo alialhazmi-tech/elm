@@ -5,8 +5,7 @@ import { notFound } from "next/navigation";
 import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
-import { paginate } from "@/lib/content/pagination";
-import { ALL_SERIES, SERIES, seedContentProvider } from "@/lib/content/provider";
+import { ALL_SERIES, pageBySeries, SERIES, seedContentProvider } from "@/lib/content/provider";
 import { toLatinDigits } from "@/lib/format";
 
 export const revalidate = 300;
@@ -48,8 +47,8 @@ export default async function SeriesPage({ params, searchParams }: Props) {
   const series = await seedContentProvider.getSeries(slug);
   if (!series) notFound();
 
-  const all = await seedContentProvider.listBySeries(series.slug);
-  const { items, page, pageCount, total, from, to } = paginate(all, p);
+  // ترقيم في SQL — سلاسل الأرشيف تحمل آلاف المواد.
+  const { items, page, pageCount, total, from, to } = await pageBySeries(series.slug, p);
   const seriesIndex = SERIES.findIndex((item) => item.slug === series.slug);
   const basePath = `/series/${series.slug}`;
 

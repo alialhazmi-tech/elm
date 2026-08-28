@@ -1,15 +1,19 @@
 /**
- * مزود المحتوى: Neon أولًا. القاعدة المتصلة الفارغة تُعرض فارغة.
- * البذرة فقط إن غابت القاعدة أو فشل الاتصال — لا تُملأ الواجهة بمحتوى تجريبي فوق قاعدة حيّة.
+ * مزود المحتوى: Neon أولًا باستعلامات موجهة مفهرسة — لا تحميل للأرشيف كله في الذاكرة.
  *
- * الإثراءات هنا (الشائعة/الحقيقة، الأرقام) مشتقة من نصوص المواد الحقيقية نفسها —
- * وعند وصول خدمات الذكاء تتولد آليًا وتمر على اعتماد المحرر.
+ * قبل الهجرة الكاملة كان المزود يقرأ كل المواد بمتونها في كاش دقيقة، وهذا ينهار عند
+ * 29 ألف مادة. الآن كل حاجة استعلامها: نافذة حديثة خفيفة (بلا متن) للرئيسية والترشيح،
+ * صفحات الأقسام والسلاسل ترقّم في SQL، والمادة الكاملة تُجلب بمعرّفها وتُكاش قصيرًا.
+ *
+ * القاعدة المتصلة الفارغة تُعرض فارغة. البذرة فقط إن غابت القاعدة أو فشل الاتصال —
+ * لا تُملأ الواجهة بمحتوى تجريبي فوق قاعدة حيّة.
  */
 
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, isNotNull, ne, or, sql } from "drizzle-orm";
 
 import { stories as storiesTable } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { LIST_PAGE_SIZE, paginate, parsePage, type PageSlice } from "./pagination";
 import { SECTION_NAMES, seedStories, seedVideos } from "./seed";
 import { takeUniqueStories } from "./dedupe";
 import type {
@@ -51,21 +55,82 @@ function enrich(story: Story): Story {
 
 const seedArticles = [...seedStories].sort(byDateDesc).map(enrich);
 const seedVideosList = [...seedVideos].map(enrich);
+const seedAll: Story[] = [...seedArticles, ...seedVideosList];
 
-type Corpus = { articles: Story[]; videos: Story[]; stories: Story[]; source: "db" | "seed" };
-
-const SEED_CORPUS: Corpus = {
-  articles: seedArticles,
-  videos: seedVideosList,
-  stories: [...seedArticles, ...seedVideosList],
-  source: "seed",
-};
+/* ============ كاش الاستعلامات الموجهة ============ */
 
 const DB_CACHE_MS = 60_000;
-let corpusCache: { at: number; value: Corpus } | null = null;
-/** طلبات متزامنة على كاش بارد كانت تطلق استعلامًا كاملًا لكل واحد (٨ مرات في /series). */
-let corpusInflight: Promise<Corpus> | null = null;
+const SITEMAP_TTL_MS = 30 * 60_000;
+const CACHE_MAX_ENTRIES = 900;
+
+type CacheEntry = { at: number; value: unknown };
+const queryCache = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<unknown>>();
+let dbHealthy = true;
 let dbWarned = false;
+
+function pruneCache() {
+  if (queryCache.size <= CACHE_MAX_ENTRIES) return;
+  const now = Date.now();
+  for (const [key, entry] of queryCache) {
+    if (now - entry.at > DB_CACHE_MS) queryCache.delete(key);
+  }
+  // إن بقيت ممتلئة بعد إسقاط المنتهي، احذف الأقدم (أول المفاتيح إدراجًا).
+  if (queryCache.size > CACHE_MAX_ENTRIES) {
+    for (const key of queryCache.keys()) {
+      queryCache.delete(key);
+      if (queryCache.size <= CACHE_MAX_ENTRIES / 2) break;
+    }
+  }
+}
+
+async function cached<T>(key: string, ttl: number, load: () => Promise<T>): Promise<T> {
+  const hit = queryCache.get(key);
+  if (hit && Date.now() - hit.at < ttl) return hit.value as T;
+  const running = inflight.get(key);
+  if (running) return running as Promise<T>;
+  const promise = load()
+    .then((value) => {
+      queryCache.set(key, { at: Date.now(), value });
+      pruneCache();
+      dbHealthy = true;
+      return value;
+    })
+    .finally(() => inflight.delete(key));
+  inflight.set(key, promise);
+  return promise;
+}
+
+type Db = NonNullable<ReturnType<typeof getDb>>;
+
+/** قاعدة أولًا؛ وعند فشل الاستعلام (لا عند خلوّه) يسقط للبذرة كما في العقد القديم. */
+async function dbOrSeed<T>(
+  key: string,
+  ttl: number,
+  viaDb: (db: Db) => Promise<T>,
+  viaSeed: () => T,
+): Promise<T> {
+  const db = getDb();
+  if (!db) return viaSeed();
+  try {
+    return await cached(key, ttl, () => viaDb(db));
+  } catch (error) {
+    dbHealthy = false;
+    if (!dbWarned) {
+      dbWarned = true;
+      console.error("[content] فشل القراءة من قاعدة البيانات — السقوط للبذرة:", error);
+    }
+    return viaSeed();
+  }
+}
+
+/** يُستدعى بعد أرشفة/نشر حتى لا تبقى المادة في كاش الدقيقة على الموقع العام. */
+export function invalidateCorpus() {
+  queryCache.clear();
+}
+
+/* ============ التحويل من صف القاعدة ============ */
+
 const supportedSeriesSlugs = new Set<string>(ALL_SERIES.map((series) => series.slug));
 
 function normalizeSeriesSlug(value: string | null): SeriesSlug | undefined {
@@ -73,78 +138,98 @@ function normalizeSeriesSlug(value: string | null): SeriesSlug | undefined {
   return value && supportedSeriesSlugs.has(value) ? (value as SeriesSlug) : undefined;
 }
 
-const EMPTY_CORPUS: Corpus = { articles: [], videos: [], stories: [], source: "db" };
+/** أعمدة البطاقة — كل شيء إلا المتن: القوائم والترشيح لا تحتاجه، والمتن أثقل الأعمدة. */
+const CARD_COLUMNS = {
+  id: storiesTable.id,
+  slug: storiesTable.slug,
+  section: storiesTable.section,
+  title: storiesTable.title,
+  excerpt: storiesTable.excerpt,
+  eyebrow: storiesTable.eyebrow,
+  readingMinutes: storiesTable.readingMinutes,
+  seriesSlug: storiesTable.seriesSlug,
+  image: storiesTable.image,
+  publishedAt: storiesTable.publishedAt,
+  factCheck: storiesTable.factCheck,
+  format: storiesTable.format,
+  seoTitle: storiesTable.seoTitle,
+  seoDescription: storiesTable.seoDescription,
+  keywords: storiesTable.keywords,
+  pinned: storiesTable.pinned,
+  breakingUntil: storiesTable.breakingUntil,
+} as const;
 
-/** يقرأ المحتوى من Neon بكاش دقيقة. القاعدة المتصلة الفارغة تبقى فارغة؛ البذرة فقط عند غياب القاعدة أو فشلها. */
-async function loadCorpus(): Promise<Corpus> {
-  const db = getDb();
-  if (!db) return SEED_CORPUS;
-  if (corpusCache && Date.now() - corpusCache.at < DB_CACHE_MS) return corpusCache.value;
-  if (corpusInflight) return corpusInflight;
-  corpusInflight = fetchCorpus(db).finally(() => {
-    corpusInflight = null;
+type CardRow = {
+  id: string;
+  slug: string;
+  section: string;
+  title: string;
+  excerpt: string;
+  eyebrow: string;
+  readingMinutes: number;
+  seriesSlug: string | null;
+  image: string | null;
+  publishedAt: string | null;
+  factCheck: unknown;
+  format: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  keywords: unknown;
+  pinned: number;
+  breakingUntil: string | null;
+  body?: string | null;
+};
+
+function mapRow(row: CardRow): Story {
+  return enrich({
+    id: row.id,
+    slug: row.slug,
+    section: row.section,
+    title: row.title,
+    excerpt: row.excerpt,
+    eyebrow: row.eyebrow,
+    readingMinutes: row.readingMinutes,
+    series: normalizeSeriesSlug(row.seriesSlug),
+    image: row.image ?? undefined,
+    publishedAt: row.publishedAt ?? undefined,
+    factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
+    format: row.format ?? undefined,
+    body: row.body || undefined,
+    seoTitle: row.seoTitle || undefined,
+    seoDescription: row.seoDescription || undefined,
+    keywords: Array.isArray(row.keywords) ? (row.keywords as string[]) : undefined,
+    pinned: row.pinned === 1,
+    breakingUntil: row.breakingUntil ?? undefined,
   });
-  return corpusInflight;
 }
 
-async function fetchCorpus(db: NonNullable<ReturnType<typeof getDb>>): Promise<Corpus> {
-  try {
-    // الموقع العام يرى المنشور فقط — مسودات «تحرير العلم» لا تتسرب هنا.
-    const rows = await db
-      .select()
-      .from(storiesTable)
-      .where(eq(storiesTable.status, "published"))
-      .orderBy(desc(storiesTable.publishedAt), asc(storiesTable.id));
+const PUBLISHED = eq(storiesTable.status, "published");
+const RECENT_ORDER = [desc(storiesTable.publishedAt), asc(storiesTable.id)] as const;
 
-    if (rows.length === 0) {
-      corpusCache = { at: Date.now(), value: EMPTY_CORPUS };
-      return EMPTY_CORPUS;
-    }
+/** نافذة الترشيح والرئيسية — أحدث المواد بلا متون. */
+const RECENT_LIMIT = 400;
 
-    const mapped: Story[] = rows.map((row) =>
-      enrich({
-        id: row.id,
-        slug: row.slug,
-        section: row.section,
-        title: row.title,
-        excerpt: row.excerpt,
-        eyebrow: row.eyebrow,
-        readingMinutes: row.readingMinutes,
-        series: normalizeSeriesSlug(row.seriesSlug),
-        image: row.image ?? undefined,
-        publishedAt: row.publishedAt ?? undefined,
-        factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
-        format: row.format ?? undefined,
-        body: row.body || undefined,
-        seoTitle: row.seoTitle || undefined,
-        seoDescription: row.seoDescription || undefined,
-        keywords: Array.isArray(row.keywords) ? (row.keywords as string[]) : undefined,
-        pinned: row.pinned === 1,
-        breakingUntil: row.breakingUntil ?? undefined,
-      }),
-    );
-
-    const value: Corpus = {
-      articles: mapped.filter((story) => story.section !== "videos"),
-      videos: mapped.filter((story) => story.section === "videos"),
-      stories: mapped,
-      source: "db",
-    };
-    corpusCache = { at: Date.now(), value };
-    return value;
-  } catch (error) {
-    if (!dbWarned) {
-      dbWarned = true;
-      console.error("[content] فشل القراءة من قاعدة البيانات — السقوط للبذرة:", error);
-    }
-    return SEED_CORPUS;
-  }
+async function recentCardsFromDb(db: Db): Promise<Story[]> {
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(storiesTable)
+    .where(PUBLISHED)
+    .orderBy(...RECENT_ORDER)
+    .limit(RECENT_LIMIT);
+  return rows.map(mapRow);
 }
 
-/** يُستدعى بعد أرشفة/نشر حتى لا تبقى المادة في كاش الدقيقة على الموقع العام. */
-export function invalidateCorpus() {
-  corpusCache = null;
+/** أحدث المواد (بلا متون) — النافذة التي تعمل عليها الرئيسية والترشيح والبناء المسبق. */
+export async function listRecent(limit = RECENT_LIMIT): Promise<Story[]> {
+  const window = await dbOrSeed("recent", DB_CACHE_MS, recentCardsFromDb, () => seedAll);
+  return window.slice(0, Math.min(limit, RECENT_LIMIT));
 }
+
+const isVideo = (story: Story) => story.section === "videos" || story.format === "videos";
+const isInfographic = (story: Story) =>
+  story.section === "infographics" || story.format === "infographics";
+
+/* ============ العاجل ============ */
 
 export interface BreakingItem {
   title: string;
@@ -154,14 +239,32 @@ export interface BreakingItem {
 
 /** أحدث مادة «عاجل» سارية الصلاحية — يختفي الشريط وحده بانتهائها. */
 export async function getBreaking(): Promise<BreakingItem | null> {
-  const { stories } = await loadCorpus();
   const now = new Date().toISOString();
-  const active = stories
-    .filter((story) => story.breakingUntil && story.breakingUntil > now)
-    .sort((a, b) => (b.breakingUntil ?? "").localeCompare(a.breakingUntil ?? ""));
+  const active = await dbOrSeed(
+    "breaking",
+    30_000,
+    async (db) => {
+      const rows = await db
+        .select(CARD_COLUMNS)
+        .from(storiesTable)
+        .where(and(PUBLISHED, gt(storiesTable.breakingUntil, now)))
+        .orderBy(desc(storiesTable.breakingUntil))
+        .limit(1);
+      return rows.map(mapRow);
+    },
+    () =>
+      seedAll
+        .filter((story) => story.breakingUntil && story.breakingUntil > now)
+        .sort((a, b) => (b.breakingUntil ?? "").localeCompare(a.breakingUntil ?? ""))
+        .slice(0, 1),
+  );
   const story = active[0];
-  return story ? { title: story.title, href: storyHref(story), until: story.breakingUntil! } : null;
+  return story && story.breakingUntil && story.breakingUntil > now
+    ? { title: story.title, href: storyHref(story), until: story.breakingUntil }
+    : null;
 }
+
+/* ============ شرائح جاك والسلاسل المتقاعدة ============ */
 
 /** شرائح «جاك العلم» لمادة منشورة — الظاهرة فقط وبترتيبها. */
 export async function listPublicSlides(storyId: string) {
@@ -169,12 +272,11 @@ export async function listPublicSlides(storyId: string) {
   if (!db) return [];
   try {
     const { storySlides } = await import("@/db/schema");
-    const { asc: ascOp } = await import("drizzle-orm");
     const rows = await db
       .select()
       .from(storySlides)
       .where(eq(storySlides.storyId, storyId))
-      .orderBy(ascOp(storySlides.position));
+      .orderBy(asc(storySlides.position));
     return rows.filter((row) => row.hidden !== 1);
   } catch {
     return [];
@@ -195,9 +297,10 @@ export async function listVisibleArchivedSeries(): Promise<Series[]> {
   }
 }
 
-/** مصدر المحتوى الفعلي للطلب الحالي — للتشخيص والترويسات. */
+/** مصدر المحتوى الفعلي — للتشخيص والترويسات. */
 export async function contentSource(): Promise<"db" | "seed"> {
-  return (await loadCorpus()).source;
+  if (!getDb()) return "seed";
+  return dbHealthy ? "db" : "seed";
 }
 
 export const sectionName = (slug: string) => SECTION_NAMES[slug] ?? slug;
@@ -208,11 +311,206 @@ export function seriesOf(story: Story): Series | undefined {
 }
 
 export const KNOWN_SECTIONS = [
-  ...new Set([
-    ...Object.keys(SECTION_NAMES),
-    ...SEED_CORPUS.stories.map((story) => story.section),
-  ]),
+  ...new Set([...Object.keys(SECTION_NAMES), ...seedAll.map((story) => story.section)]),
 ];
+
+/* ============ ترقيم SQL لصفحات الأقسام والسلاسل ============ */
+
+async function pageFromDb(
+  db: Db,
+  where: ReturnType<typeof and>,
+  rawPage: string | undefined | null,
+): Promise<PageSlice<Story>> {
+  const [{ value: total }] = await db
+    .select({ value: count() })
+    .from(storiesTable)
+    .where(where);
+  const pageCount = Math.max(1, Math.ceil(total / LIST_PAGE_SIZE) || 1);
+  const page = Math.min(parsePage(rawPage), pageCount);
+  const offset = (page - 1) * LIST_PAGE_SIZE;
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(storiesTable)
+    .where(where)
+    .orderBy(...RECENT_ORDER)
+    .limit(LIST_PAGE_SIZE)
+    .offset(offset);
+  const items = rows.map(mapRow);
+  return {
+    items,
+    page,
+    pageCount,
+    total,
+    from: total === 0 ? 0 : offset + 1,
+    to: offset + items.length,
+  };
+}
+
+/** صفحة قسم مرقّمة في SQL — الأرشيف الكامل دون تحميل القسم كله. */
+export async function pageBySection(
+  section: string,
+  rawPage: string | undefined | null,
+): Promise<PageSlice<Story>> {
+  return dbOrSeed(
+    `page:section:${section}:${parsePage(rawPage)}`,
+    DB_CACHE_MS,
+    (db) => pageFromDb(db, and(PUBLISHED, eq(storiesTable.section, section)), rawPage),
+    () => paginate(seedAll.filter((story) => story.section === section).sort(byDateDesc), rawPage),
+  );
+}
+
+/** صفحة سلسلة مرقّمة في SQL. */
+export async function pageBySeries(
+  slug: string,
+  rawPage: string | undefined | null,
+): Promise<PageSlice<Story>> {
+  return dbOrSeed(
+    `page:series:${slug}:${parsePage(rawPage)}`,
+    DB_CACHE_MS,
+    (db) => pageFromDb(db, and(PUBLISHED, eq(storiesTable.seriesSlug, slug)), rawPage),
+    () => paginate(seedAll.filter((story) => story.series === slug).sort(byDateDesc), rawPage),
+  );
+}
+
+export type SeriesDirectoryEntry = { count: number; latest: Story | null };
+
+/** أعداد مواد السلاسل كلها وأحدث مادة للنشطة — لفهرس السلاسل بلا تحميل الأرشيف. */
+export async function seriesDirectory(): Promise<Record<string, SeriesDirectoryEntry>> {
+  return dbOrSeed(
+    "series:directory",
+    DB_CACHE_MS,
+    async (db) => {
+      const counts = await db
+        .select({ slug: storiesTable.seriesSlug, total: count() })
+        .from(storiesTable)
+        .where(and(PUBLISHED, isNotNull(storiesTable.seriesSlug)))
+        .groupBy(storiesTable.seriesSlug);
+      const directory: Record<string, SeriesDirectoryEntry> = {};
+      for (const series of ALL_SERIES) {
+        directory[series.slug] = {
+          count: counts.find((row) => row.slug === series.slug)?.total ?? 0,
+          latest: null,
+        };
+      }
+      // أحدث مادة للنشطة فقط (الفهرس يعرضها لها وحدها) — 8 استعلامات خفيفة بكاش دقيقة.
+      await Promise.all(
+        SERIES.map(async (series) => {
+          const rows = await db
+            .select(CARD_COLUMNS)
+            .from(storiesTable)
+            .where(and(PUBLISHED, eq(storiesTable.seriesSlug, series.slug)))
+            .orderBy(...RECENT_ORDER)
+            .limit(1);
+          directory[series.slug].latest = rows[0] ? mapRow(rows[0]) : null;
+        }),
+      );
+      return directory;
+    },
+    () => {
+      const directory: Record<string, SeriesDirectoryEntry> = {};
+      for (const series of ALL_SERIES) {
+        const stories = seedAll
+          .filter((story) => story.series === series.slug)
+          .sort(byDateDesc);
+        directory[series.slug] = { count: stories.length, latest: stories[0] ?? null };
+      }
+      return directory;
+    },
+  );
+}
+
+/* ============ البحث في SQL بتطبيع عربي ============ */
+
+/** تطبيع داخل SQL يطابق normalizeArabic: توحيد الألفات والهمزات وحذف التشكيل والتطويل. */
+const SQL_NORM_FROM = "أإآٱىةؤئًٌٍَُِّْٰـ";
+const SQL_NORM_TO = "اايهوي";
+
+function normalizedHaystackSql() {
+  const raw = sql`concat_ws(' ', ${storiesTable.title}, ${storiesTable.excerpt}, ${storiesTable.eyebrow}, coalesce(${storiesTable.keywords}::text, ''))`;
+  return sql`translate(lower(${raw}), ${SQL_NORM_FROM}, ${SQL_NORM_TO})`;
+}
+
+/** يجزئ الاستعلام إلى كلمات مطبّعة وينزع «الـ» وأخواتها من البداية لرفع الاستدعاء. */
+export function searchTokens(query: string): string[] {
+  return normalizeArabic(query)
+    .toLowerCase()
+    .replace(/[%_\\]/g, " ")
+    .split(/\s+/)
+    .map((token) => token.replace(/^(وال|فال|بال|كال|ال|لل)(?=.{2})/u, ""))
+    .filter((token) => token.length > 1)
+    .slice(0, 8);
+}
+
+const SEARCH_LIMIT = 200;
+
+async function searchFromDb(db: Db, tokens: string[]): Promise<Story[]> {
+  const haystack = normalizedHaystackSql();
+  const conditions = tokens.map((token) => sql`${haystack} like ${`%${token}%`}`);
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(storiesTable)
+    .where(and(PUBLISHED, ...conditions))
+    .orderBy(...RECENT_ORDER)
+    .limit(SEARCH_LIMIT);
+  return rows.map(mapRow);
+}
+
+function searchSeed(tokens: string[]): Story[] {
+  return seedAll
+    .filter((story) => {
+      const haystack = normalizeArabic(
+        `${story.title} ${story.excerpt} ${story.eyebrow} ${(story.keywords ?? []).join(" ")}`,
+      ).toLowerCase();
+      return tokens.every((token) => haystack.includes(token));
+    })
+    .sort(byDateDesc)
+    .slice(0, SEARCH_LIMIT);
+}
+
+/* ============ خريطة الموقع ============ */
+
+export type SitemapStoryEntry = {
+  id: string;
+  slug: string;
+  section: string;
+  publishedAt: string | null;
+  updatedAt: string | null;
+};
+
+/**
+ * كل المواد المنشورة لخريطة الموقع — أعمدة الرابط والتواريخ فقط، بكاش نصف ساعة.
+ * الأرشيف ~29 ألف رابط: خريطة واحدة صالحة (السقف 50 ألفًا)؛ عند الاقتراب منه تُقسَّم.
+ */
+export async function listSitemapEntries(): Promise<SitemapStoryEntry[]> {
+  return dbOrSeed(
+    "sitemap:stories",
+    SITEMAP_TTL_MS,
+    async (db) => {
+      const rows = await db
+        .select({
+          id: storiesTable.id,
+          slug: storiesTable.slug,
+          section: storiesTable.section,
+          publishedAt: storiesTable.publishedAt,
+          updatedAt: storiesTable.updatedAt,
+        })
+        .from(storiesTable)
+        .where(PUBLISHED)
+        .orderBy(...RECENT_ORDER);
+      return rows;
+    },
+    () =>
+      seedAll.map((story) => ({
+        id: story.id,
+        slug: story.slug,
+        section: story.section,
+        publishedAt: story.publishedAt ?? null,
+        updatedAt: null,
+      })),
+  );
+}
+
+/* ============ استخراج الأرقام للرئيسية ============ */
 
 const STAT_PATTERNS: Array<{ pattern: RegExp; label: (story: Story) => string }> = [
   { pattern: /(\d{2,4})\s*%/u, label: (story) => story.title.replace(/[…]+$/, "") },
@@ -254,93 +552,162 @@ function extractNumbers(from: Story[]): NumberStat[] {
   return found;
 }
 
+/* ============ تركيب الرئيسية ============ */
+
+function composeHome(articles: Story[], videos: Story[], stories: Story[]): HomeData {
+  const seen = new Set<string>();
+
+  // المثبت بقرار معتمد يتصدر؛ وإلا فالهيرو يتجنب الإنفوجرافيك (صوره نصية متزاحمة).
+  const hero =
+    articles.find((story) => story.pinned && story.image) ??
+    articles.find((story) => !isInfographic(story) && story.image) ??
+    articles[0] ??
+    null;
+  if (hero) seen.add(hero.id);
+
+  const minis = takeUniqueStories(
+    articles.filter((story) => !isInfographic(story) && story.image),
+    seen,
+    2,
+  );
+
+  const dataStory =
+    articles.find((story) => !seen.has(story.id) && /\d{2,4}\s*%/.test(story.title)) ?? null;
+  if (dataStory) seen.add(dataStory.id);
+
+  const mosaic = takeUniqueStories(
+    articles.filter((story) => story.image && !isInfographic(story)),
+    seen,
+    5,
+  );
+
+  const questionStory = articles.find(
+    (story) => !seen.has(story.id) && story.series === "limatha",
+  );
+  const question = dataStory
+    ? {
+        kick: "لماذا",
+        title: "لماذا يتنافس العالم على معدن لا يعرفه أغلب الناس؟",
+        text: "التنجستن مثالًا: كيف يتحول عنصر مغمور إلى ورقة تفاوض بين الاقتصادات الكبرى.",
+        href: storyHref(questionStory ?? dataStory),
+      }
+    : null;
+  if (questionStory) seen.add(questionStory.id);
+
+  const homeVideos = takeUniqueStories(videos, seen, 2);
+
+  // الموجز يعرض ما ليس أمام القارئ: الهيرو مجاور له فلا يتكرر فيه.
+  const briefExtras = takeUniqueStories(
+    articles.filter((story) => !isInfographic(story)),
+    seen,
+    3,
+  );
+  const brief: BriefItem[] = [...minis, dataStory, ...briefExtras]
+    .filter((story): story is Story => story !== null)
+    .slice(0, 5)
+    .map((story) => {
+      const storySeries = seriesOf(story);
+      return {
+        title: story.title,
+        href: storyHref(story),
+        color: storySeries?.color ?? "#3d7ef7",
+        label: storySeries?.name ?? sectionName(story.section),
+        publishedAt: story.publishedAt,
+      };
+    });
+
+  // الأكثر قراءة: مواد حديثة غير مكررة مع ما عُرض أعلاه — بلا عدّادات إنتاجية بعد.
+  const mostRead = stories
+    .filter((story) => !seen.has(story.id) && !isVideo(story))
+    .sort(byDateDesc)
+    .slice(0, 5);
+
+  return {
+    brief,
+    hero,
+    minis,
+    dataStory,
+    mosaic,
+    question,
+    videos: homeVideos,
+    numbers: extractNumbers(stories),
+    series: SERIES,
+    mostRead,
+  };
+}
+
+async function homeVideoCards(db: Db): Promise<Story[]> {
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(storiesTable)
+    .where(
+      and(
+        PUBLISHED,
+        or(eq(storiesTable.section, "videos"), eq(storiesTable.format, "videos")),
+      ),
+    )
+    .orderBy(...RECENT_ORDER)
+    .limit(8);
+  return rows.map(mapRow);
+}
+
+async function pinnedCard(db: Db): Promise<Story | null> {
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(storiesTable)
+    .where(and(PUBLISHED, eq(storiesTable.pinned, 1), isNotNull(storiesTable.image)))
+    .orderBy(...RECENT_ORDER)
+    .limit(1);
+  return rows[0] ? mapRow(rows[0]) : null;
+}
+
+/* ============ المزود ============ */
+
 export const seedContentProvider: ContentProvider = {
   async getHome(): Promise<HomeData> {
-    const { articles, videos, stories } = await loadCorpus();
-    const seen = new Set<string>();
-
-    // المثبت بقرار معتمد يتصدر؛ وإلا فالهيرو يتجنب الإنفوجرافيك (صوره نصية متزاحمة).
-    const hero =
-      articles.find((story) => story.pinned && story.image) ??
-      articles.find((story) => story.section !== "infographics" && story.image) ??
-      articles[0] ??
-      null;
-    if (hero) seen.add(hero.id);
-
-    const minis = takeUniqueStories(
-      articles.filter((story) => story.section !== "infographics" && story.image),
-      seen,
-      2,
-    );
-
-    const dataStory =
-      articles.find((story) => !seen.has(story.id) && /\d{2,4}\s*%/.test(story.title)) ?? null;
-    if (dataStory) seen.add(dataStory.id);
-
-    const mosaic = takeUniqueStories(
-      articles.filter((story) => story.image && story.section !== "infographics"),
-      seen,
-      5,
-    );
-
-    const questionStory = articles.find(
-      (story) => !seen.has(story.id) && story.series === "limatha",
-    );
-    const question = dataStory
-      ? {
-          kick: "لماذا",
-          title: "لماذا يتنافس العالم على معدن لا يعرفه أغلب الناس؟",
-          text: "التنجستن مثالًا: كيف يتحول عنصر مغمور إلى ورقة تفاوض بين الاقتصادات الكبرى.",
-          href: storyHref(questionStory ?? dataStory),
-        }
-      : null;
-    if (questionStory) seen.add(questionStory.id);
-
-    const homeVideos = takeUniqueStories(videos, seen, 2);
-
-    // الموجز يعرض ما ليس أمام القارئ: الهيرو مجاور له فلا يتكرر فيه.
-    const briefExtras = takeUniqueStories(
-      articles.filter((story) => story.section !== "infographics"),
-      seen,
-      3,
-    );
-    const brief: BriefItem[] = [...minis, dataStory, ...briefExtras]
-      .filter((story): story is Story => story !== null)
-      .slice(0, 5)
-      .map((story) => {
-        const storySeries = seriesOf(story);
-        return {
-          title: story.title,
-          href: storyHref(story),
-          color: storySeries?.color ?? "#3d7ef7",
-          label: storySeries?.name ?? sectionName(story.section),
-          publishedAt: story.publishedAt,
-        };
-      });
-
-    // الأكثر قراءة: مواد حديثة غير مكررة مع ما عُرض أعلاه — بلا عدّادات إنتاجية بعد.
-    const mostRead = stories
-      .filter((story) => !seen.has(story.id) && story.section !== "videos")
-      .sort(byDateDesc)
-      .slice(0, 5);
-
-    return {
-      brief,
-      hero,
-      minis,
-      dataStory,
-      mosaic,
-      question,
-      videos: homeVideos,
-      numbers: extractNumbers(stories),
-      series: SERIES,
-      mostRead,
-    };
+    const db = getDb();
+    if (!db) {
+      return composeHome(seedArticles, seedVideosList, seedAll);
+    }
+    try {
+      const [recent, videos, pinned] = await Promise.all([
+        cached("recent", DB_CACHE_MS, () => recentCardsFromDb(db)),
+        cached("home:videos", DB_CACHE_MS, () => homeVideoCards(db)),
+        cached("home:pinned", DB_CACHE_MS, () => pinnedCard(db)),
+      ]);
+      // المثبت قد يكون أقدم من النافذة الحديثة — يُقدَّم عليها دون تكرار.
+      const articlesBase = recent.filter((story) => !isVideo(story));
+      const articles =
+        pinned && !articlesBase.some((story) => story.id === pinned.id)
+          ? [pinned, ...articlesBase]
+          : articlesBase;
+      return composeHome(articles, videos, recent);
+    } catch (error) {
+      dbHealthy = false;
+      if (!dbWarned) {
+        dbWarned = true;
+        console.error("[content] فشل القراءة من قاعدة البيانات — السقوط للبذرة:", error);
+      }
+      return composeHome(seedArticles, seedVideosList, seedAll);
+    }
   },
 
   async getStory(id) {
-    const { stories } = await loadCorpus();
-    return stories.find((story) => story.id === id) ?? null;
+    const clean = id.slice(0, 64);
+    const story = await dbOrSeed(
+      `story:${clean}`,
+      DB_CACHE_MS,
+      async (db) => {
+        const rows = await db
+          .select()
+          .from(storiesTable)
+          .where(and(PUBLISHED, eq(storiesTable.id, clean)))
+          .limit(1);
+        return rows.map((row) => mapRow(row as CardRow));
+      },
+      () => seedAll.filter((item) => item.id === clean),
+    );
+    return story[0] ?? null;
   },
 
   async getSeries(slug) {
@@ -352,46 +719,99 @@ export const seedContentProvider: ContentProvider = {
   },
 
   async listBySeries(slug) {
-    const { stories } = await loadCorpus();
-    return stories.filter((story) => story.series === slug).sort(byDateDesc);
+    return dbOrSeed(
+      `list:series:${slug}`,
+      DB_CACHE_MS,
+      async (db) => {
+        const rows = await db
+          .select(CARD_COLUMNS)
+          .from(storiesTable)
+          .where(and(PUBLISHED, eq(storiesTable.seriesSlug, slug)))
+          .orderBy(...RECENT_ORDER)
+          .limit(RECENT_LIMIT);
+        return rows.map(mapRow);
+      },
+      () => seedAll.filter((story) => story.series === slug).sort(byDateDesc),
+    );
   },
 
   async listBySection(section) {
-    const { stories } = await loadCorpus();
-    return stories.filter((story) => story.section === section).sort(byDateDesc);
+    return dbOrSeed(
+      `list:section:${section}`,
+      DB_CACHE_MS,
+      async (db) => {
+        const rows = await db
+          .select(CARD_COLUMNS)
+          .from(storiesTable)
+          .where(and(PUBLISHED, eq(storiesTable.section, section)))
+          .orderBy(...RECENT_ORDER)
+          .limit(RECENT_LIMIT);
+        return rows.map(mapRow);
+      },
+      () => seedAll.filter((story) => story.section === section).sort(byDateDesc),
+    );
   },
 
   async listRelated(story, limit = 3) {
-    const { stories } = await loadCorpus();
-    const sameSeries = stories.filter(
-      (item) => item.id !== story.id && item.series === story.series,
+    return dbOrSeed(
+      `related:${story.id}:${limit}`,
+      DB_CACHE_MS,
+      async (db) => {
+        const notSelf = ne(storiesTable.id, story.id);
+        const sameSeries = story.series
+          ? await db
+              .select(CARD_COLUMNS)
+              .from(storiesTable)
+              .where(and(PUBLISHED, notSelf, eq(storiesTable.seriesSlug, story.series)))
+              .orderBy(...RECENT_ORDER)
+              .limit(limit)
+          : [];
+        const sameSection = await db
+          .select(CARD_COLUMNS)
+          .from(storiesTable)
+          .where(and(PUBLISHED, notSelf, eq(storiesTable.section, story.section)))
+          .orderBy(...RECENT_ORDER)
+          .limit(limit + sameSeries.length);
+        const merged: Story[] = [];
+        for (const candidate of [...sameSeries.map(mapRow), ...sameSection.map(mapRow)]) {
+          if (candidate.id === story.id) continue;
+          if (merged.some((item) => item.id === candidate.id)) continue;
+          merged.push(candidate);
+          if (merged.length === limit) break;
+        }
+        return merged;
+      },
+      () => {
+        const sameSeries = seedAll.filter(
+          (item) => item.id !== story.id && item.series === story.series,
+        );
+        const sameSection = seedAll.filter(
+          (item) => item.id !== story.id && item.section === story.section,
+        );
+        const merged: Story[] = [];
+        for (const candidate of [...sameSeries, ...sameSection]) {
+          if (merged.some((item) => item.id === candidate.id)) continue;
+          merged.push(candidate);
+          if (merged.length === limit) break;
+        }
+        return merged;
+      },
     );
-    const sameSection = stories.filter(
-      (item) => item.id !== story.id && item.section === story.section,
-    );
-
-    const merged: Story[] = [];
-    for (const candidate of [...sameSeries, ...sameSection]) {
-      if (merged.some((item) => item.id === candidate.id)) continue;
-      merged.push(candidate);
-      if (merged.length === limit) break;
-    }
-
-    return merged;
   },
 
+  /** نافذة حديثة لا الأرشيف كله — من يحتاج الأرشيف يستعلم القاعدة مباشرة (خريطة الموقع). */
   async listAll() {
-    return (await loadCorpus()).stories;
+    return listRecent(RECENT_LIMIT);
   },
 
   async search(query) {
-    const needle = normalizeArabic(query).toLowerCase();
-    if (!needle) return [];
-
-    const { stories } = await loadCorpus();
-    return stories.filter((story) => {
-      const haystack = normalizeArabic(`${story.title} ${story.excerpt}`).toLowerCase();
-      return haystack.includes(needle);
-    });
+    const tokens = searchTokens(query);
+    if (tokens.length === 0) return [];
+    return dbOrSeed(
+      `search:${tokens.join("|")}`,
+      DB_CACHE_MS,
+      (db) => searchFromDb(db, tokens),
+      () => searchSeed(tokens),
+    );
   },
 };

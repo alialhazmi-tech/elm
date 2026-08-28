@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { toLatinDigits } from "@/lib/format";
-import { listVisibleArchivedSeries, SERIES, seedContentProvider } from "@/lib/content/provider";
+import { listVisibleArchivedSeries, SERIES, seriesDirectory } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
 export const revalidate = 300;
@@ -16,18 +16,17 @@ export const metadata: Metadata = {
 
 export default async function SeriesIndexPage() {
   const archived = await listVisibleArchivedSeries();
-  const archivedCatalog = await Promise.all(
-    archived.map(async (series) => ({
-      series,
-      count: (await seedContentProvider.listBySeries(series.slug)).length,
-    })),
-  );
-  const catalog = await Promise.all(
-    SERIES.map(async (series) => ({
-      series,
-      stories: await seedContentProvider.listBySeries(series.slug),
-    })),
-  );
+  // دليل واحد بكاش دقيقة: أعداد كل السلاسل وأحدث مادة للنشطة — بلا تحميل الأرشيف.
+  const directory = await seriesDirectory();
+  const archivedCatalog = archived.map((series) => ({
+    series,
+    count: directory[series.slug]?.count ?? 0,
+  }));
+  const catalog = SERIES.map((series) => ({
+    series,
+    count: directory[series.slug]?.count ?? 0,
+    latest: directory[series.slug]?.latest ?? null,
+  }));
 
   return (
     <>
@@ -52,8 +51,7 @@ export default async function SeriesIndexPage() {
         </section>
 
         <section className="wrap series-directory" aria-label="دليل سلاسل العلم">
-          {catalog.map(({ series, stories }, index) => {
-            const latest = stories[0];
+          {catalog.map(({ series, count, latest }, index) => {
             return (
               <article
                 key={series.slug}
@@ -65,7 +63,7 @@ export default async function SeriesIndexPage() {
                     {toLatinDigits(String(index + 1).padStart(2, "0"))}
                   </span>
                   <span className="series-directory-count">
-                    {toLatinDigits(stories.length)} مادة
+                    {toLatinDigits(count)} مادة
                   </span>
                 </div>
                 <h2>{series.name}</h2>

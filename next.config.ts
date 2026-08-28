@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
+import { LEGACY_REDIRECTS } from "./lib/content/redirects";
+
 /**
  * وضع التطوير يحتاج eval(): React وHMR وأدوات Next تستخدمه لإعادة بناء المكدسات
  * وتحديث الوحدات. بدونه يموت جافاسكربت الصفحة في المتصفح رغم أن التصيير الخادمي سليم.
@@ -55,7 +57,20 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "dash.alelm.net", pathname: "/wp-content/**" }],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        // قبل قطع النطاق: أصل Railway لا يدخل فهرس قوقل حتى لا ينافس alelm.net القديم.
+        // canonical المطلق إلى alelm.net قائم أيضًا، وهذه الترويسة تحسم الازدواج نهائيًا.
+        source: "/:path*",
+        has: [{ type: "host", value: ".*\\.up\\.railway\\.app" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+    ];
+  },
+  async redirects() {
+    // طبقة 301 للروابط القديمة (وسوم السلاسل و«غير مصنف») — تفاصيلها في lib/content/redirects.
+    return LEGACY_REDIRECTS;
   },
 };
 
