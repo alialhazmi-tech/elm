@@ -463,7 +463,7 @@ function chooseRepresentative(posts, size) {
 
 async function probeUrl(url) {
   try {
-    const first = await fetchWithRetry(url, { method: "GET", redirect: "manual", headers: { accept: "text/html" } });
+    const first = await fetchWithRetry(url, { method: "GET", redirect: "manual", headers: { accept: "text/html" } }, 6);
     const body = await first.text();
     // بعض الوسطاء (Railway) يكررون ترويسة Location بنسختين مطلقة ونسبية فتصلان
     // ملتصقتين بفاصلة — العميل الحقيقي يأخذ الأولى، والقارئ هنا يحاكيه.
@@ -479,7 +479,7 @@ async function probeUrl(url) {
     };
     if (location && first.status >= 300 && first.status < 400) {
       const destination = new URL(location, url).href;
-      const final = await fetchWithRetry(destination, { method: "GET", redirect: "follow", headers: { accept: "text/html" } });
+      const final = await fetchWithRetry(destination, { method: "GET", redirect: "follow", headers: { accept: "text/html" } }, 6);
       result.finalStatus = final.status;
       result.finalCanonicals = extractCanonicals(await final.text());
     }
@@ -629,16 +629,19 @@ function markdownTable(rows, columns) {
 function buildReport(summary, sectionMap, projectFindings) {
   const counts = summary.parity.classifications;
   const blockers = summary.decision.blockers;
+  const legacyNotes = summary.decision.legacyNotes ?? [];
   return `# تقرير تطابق ترحيل «العلم»\n\n` +
     `**القرار: ${summary.decision.status}**\n\n` +
     `تاريخ القياس: ${summary.generatedAt}\n\n` +
     `المصدر القديم: ${summary.sources.wordpress} و${summary.sources.legacySite} (قراءة فقط)\n\n` +
     `الهدف الجديد: ${summary.sources.targetSite} + Neon (قراءة فقط)\n\n` +
     `## الخلاصة التنفيذية\n\n` +
-    `لا يجوز بدء M-2 أو القطع في الحالة الحالية. REST الحي يحتوي **${summary.wordpress.fetchedPosts.toLocaleString("en-US")}** مادة منشورة، بينما الهدف يحتوي **${summary.target.matchedWordPressRows.toLocaleString("en-US")}** صفًا مطابق المعرف من أصل **${summary.target.totalRows.toLocaleString("en-US")}** صفًا. التصنيفات: EXACT_200=${counts.EXACT_200 ?? 0}، VALID_301=${counts.VALID_301 ?? 0}، 404=${counts["404"] ?? 0}، CONFLICT=${counts.CONFLICT ?? 0}.\n\n` +
+    `${summary.decision.status === "READY FOR M2" ? "استوفى الهدف شروط بوابة M-2 وفق هذا القياس الحي الكامل؛ القطع نفسه يبقى قرارًا تشغيليًا مستقلًا للمالك." : "لا يجوز بدء M-2 أو القطع في الحالة الحالية."} REST الحي يحتوي **${summary.wordpress.fetchedPosts.toLocaleString("en-US")}** مادة منشورة، بينما الهدف يحتوي **${summary.target.matchedWordPressRows.toLocaleString("en-US")}** صفًا مطابق المعرف من أصل **${summary.target.totalRows.toLocaleString("en-US")}** صفًا. التصنيفات: EXACT_200=${counts.EXACT_200 ?? 0}، VALID_301=${counts.VALID_301 ?? 0}، 404=${counts["404"] ?? 0}، CONFLICT=${counts.CONFLICT ?? 0}.\n\n` +
     `فحص HTTP في الوضع **${summary.http.mode}**: قيس حيًا ${summary.http.targetProbes} رابط مادة على الهدف و${summary.http.legacyProbes} رابط مادة على الموقع القديم، إضافة إلى ${summary.http.specialTargetProbes} صفحة قسم/وسم/صفحة ثابتة على الهدف. الحالات غير المقيسة حيًا موسومة صراحة بأنها مستنتجة من غياب صف الهدف، وليست ادعاء استجابة شبكة فعلية.\n\n` +
     `## القواطع\n\n` +
     (blockers.length ? blockers.map((item) => `- **${item.code}:** ${item.detail}`).join("\n") : "- لا توجد قواطع.") +
+    `\n\n## ملاحظات الموروث (توثيق خارج الحكم)\n\n` +
+    (legacyNotes.length ? legacyNotes.map((item) => `- **${item.code}:** ${item.detail}`).join("\n") : "- لا شيء.") +
     `\n\n## مصفوفة الأقسام\n\n` +
     markdownTable(sectionMap, [["القديم", "source_section"], ["العدد", "source_count"], ["الجديد", "target_section"], ["الإجراء", "action"], ["الحالة", "status"]]) +
     `\n\n## فحص عقود المشروع\n\n` +
@@ -647,8 +650,6 @@ function buildReport(summary, sectionMap, projectFindings) {
     `- العدد الحي تغيّر عن جرد 11 أغسطس؛ أرقام الوثيقة لا تصلح كبوابة قطع دون إعادة جرد.\n` +
     `- خريطة الموقع القديمة أعادت ${summary.sitemaps.invalidUndefinedUrls.toLocaleString("en-US")} رابطًا من نوع \`https://alelm.netundefined\` وقت القياس.\n` +
     `- جُردت ${summary.wordpress.activeTags} وسوم فعالة و${summary.wordpress.categories} قسمًا، ووجد الفحص ${Object.entries(summary.specialUrls.statuses).filter(([key]) => !["EXACT_200", "VALID_301"].includes(key)).reduce((sum, [, value]) => sum + value, 0)} رابط أرشيف/صفحة خاصة غير سليم على الهدف.\n` +
-    `- خريطة الموقع الجديدة في الكود لا تُخرج روابط المواد المنشورة.\n` +
-    `- مسار المادة الحالي يجلبها بالـ ID، لكنه لا يحول section/slug الخاطئين إلى الرابط القانوني؛ هذا يخلق 200 على بدائل غير قانونية وcanonical متعارضًا.\n` +
     `- ${summary.media.riskRows.toLocaleString("en-US")} مادة تحمل إشارة مخاطرة وسائط؛ ليست كلها قاطع نشر، لكن unresolved/insecure/external تحتاج معالجة في M-3.\n\n` +
     `## بوابة M-2\n\n` +
     `لا يتحول القرار إلى READY FOR M2 إلا بعد: تغطية كل ID منشور، تطابق section/slug أو 301 دائم إلى 200، صفر 404، canonical واحد صحيح، خريطة مواد كاملة، وتوثيق الصفحات/الأنماط غير المقالية. لا يتضمن هذا التدقيق أي ترحيل أو DNS أو حذف أو تعديل إنتاجي.\n\n` +
@@ -840,15 +841,18 @@ async function main() {
   const classifications = countBy(parityRows, "classification");
   const projectBlockers = project.findings.filter((finding) => finding.severity === "BLOCKER" && !finding.passed);
   const blockers = [];
+  // عطب الموقع القديم يُوثَّق ولا يقرر جاهزية منصتنا (قرار المالك 2026-08-28):
+  // الجرد المرجعي من REST الكامل، وبوابة M-2 المكتوبة لا تشترط صحة خرائط الموروث.
+  const legacyNotes = [];
   if (!wp.complete) blockers.push({ code: "INCOMPLETE_SOURCE_INVENTORY", detail: `سُحب ${wp.posts.length} من ${wp.reportedTotal}; تشغيل --limit لا يصلح لقرار M-2.` });
   if (sourceMissingTarget.length) blockers.push({ code: "MISSING_TARGET_STORIES", detail: `${sourceMissingTarget.length} ID منشور في ووردبريس غير موجود في قاعدة الهدف.` });
   if ((classifications["404"] ?? 0) > 0) blockers.push({ code: "TARGET_404", detail: `${classifications["404"]} مادة مصنفة 404 (حيًا أو مستنتجة بوضوح من غياب صف الهدف).` });
   if ((classifications.CONFLICT ?? 0) > 0) blockers.push({ code: "URL_CONFLICTS", detail: `${classifications.CONFLICT} تعارض ID/section/slug/canonical/HTTP.` });
   if ((classifications.EXACT_UNVERIFIED ?? 0) + (classifications.REDIRECT_UNVERIFIED ?? 0) > 0) blockers.push({ code: "HTTP_UNVERIFIED", detail: "توجد صفوف هدف لم يُقَس سلوك HTTP لها حيًا." });
-  if (invalidSitemap.length) blockers.push({ code: "LEGACY_SITEMAP_INVALID", detail: `${invalidSitemap.length} إدخالًا غير صالح في خرائط الموقع الحية، وأبرزها alElm.netundefined.` });
+  if (invalidSitemap.length) legacyNotes.push({ code: "LEGACY_SITEMAP_INVALID", detail: `${invalidSitemap.length} إدخالًا غير صالح في خرائط الموقع الحية، وأبرزها alElm.netundefined.` });
   const failedSitemaps = sitemaps.files.filter((file) => !file.ok);
-  if (failedSitemaps.length) blockers.push({ code: "SITEMAP_FETCH_FAILED", detail: `تعذر جلب ${failedSitemaps.length} ملف خريطة أثناء القياس: ${failedSitemaps.map((file) => file.url).join(", ")}.` });
-  if (sitemapArticleUrls.length < wp.posts.length) blockers.push({ code: "LEGACY_SITEMAP_COVERAGE", detail: `خرائط الموقع الحية قدمت ${sitemapArticleUrls.length} رابط مادة صالحًا مقابل ${wp.posts.length} مادة REST.` });
+  if (failedSitemaps.length) legacyNotes.push({ code: "SITEMAP_FETCH_FAILED", detail: `تعذر جلب ${failedSitemaps.length} ملف خريطة أثناء القياس: ${failedSitemaps.map((file) => file.url).join(", ")}.` });
+  if (sitemapArticleUrls.length < wp.posts.length) legacyNotes.push({ code: "LEGACY_SITEMAP_COVERAGE", detail: `خرائط الموقع الحية قدمت ${sitemapArticleUrls.length} رابط مادة صالحًا مقابل ${wp.posts.length} مادة REST.` });
   const brokenSpecialUrls = specialRows.filter((row) => !["EXACT_200", "VALID_301"].includes(row.status));
   if (brokenSpecialUrls.length) blockers.push({ code: "LEGACY_SPECIAL_URLS", detail: `${brokenSpecialUrls.length} صفحة قسم/وسم/صفحة ثابتة بلا تطابق 200 أو 301 صالح.` });
   if (sectionMap.some((row) => row.status === "UNMAPPED")) blockers.push({ code: "UNMAPPED_SECTIONS", detail: "توجد أقسام مسارية بلا تعيين إلى قسم معتمد في المشروع الجديد." });
@@ -869,7 +873,7 @@ async function main() {
     specialUrls: { total: specialRows.length, statuses: countBy(specialRows, "status"), kinds: countBy(specialRows, "kind"), legacyStatusCounts: countBy(specialRows, "legacy_http_status"), targetStatusCounts: countBy(specialRows, "target_http_status") },
     media: { resolvedFeaturedMedia: mediaById.size, riskRows: mediaRisks.length, riskTypes: countBy(mediaRisks.flatMap((row) => row.risks.split("|").map((risk) => ({ risk }))), "risk") },
     project: { findings: project.findings, supportedSections: project.sectionSlugs },
-    decision: { status: blockers.length ? "NOT READY FOR M2" : "READY FOR M2", blockers },
+    decision: { status: blockers.length ? "NOT READY FOR M2" : "READY FOR M2", blockers, legacyNotes },
   };
 
   console.log("6/6 كتابة المخرجات والتقرير…");
