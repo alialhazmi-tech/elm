@@ -20,6 +20,7 @@ import { storyHref } from "@/lib/content/types";
 import { toRelatedCard } from "@/lib/personalization/recommend";
 import { fetchEpisodes, formatPodcastDuration, podcastShowFor, presentEpisode } from "@/lib/podcasts";
 import { PodcastPlayer } from "@/app/_components/podcast-player";
+import { PodcastHeroPlay } from "@/app/_components/podcast-hero";
 import "@/app/_components/podcast-player.css";
 import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 
@@ -87,6 +88,13 @@ export default async function ArticlePage({ params }: Params) {
   // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية نفسها التي يقرأ منها الموقع القديم.
   const podcastShow = story.format === "podcasts" ? podcastShowFor(story.id) : undefined;
   const episodes = podcastShow ? await fetchEpisodes(podcastShow) : [];
+  const latestEpisode =
+    podcastShow && episodes[0]
+      ? (() => {
+          const presented = presentEpisode(episodes[0].title, podcastShow.name, episodes[0].description);
+          return { title: presented.title, guest: presented.guest, audioUrl: episodes[0].audioUrl };
+        })()
+      : null;
 
   // «جاك العلم»: نفس الرابط المقدس، قالب قراءة غامر مختلف كليًا.
   if (story.format === "jakalelm") {
@@ -198,26 +206,36 @@ export default async function ArticlePage({ params }: Params) {
 
         <article data-story-id={story.id}>
           {podcastShow ? (
-            <header className="podcast-show">
-              {story.image ? (
-                <div className="podcast-cover">
-                  <Image src={story.image} alt="" fill sizes="120px" priority />
-                </div>
-              ) : null}
-              <div className="podcast-show-copy">
-                <p className="podcast-kicker">بودكاست</p>
+            <header className="pc-hero podcast-show" style={{ "--pc": podcastShow.accent } as React.CSSProperties}>
+              <div className="pc-hero-cover">
+                {story.image ? <Image src={story.image} alt="" fill sizes="(max-width: 640px) 160px, 260px" priority /> : null}
+              </div>
+              <div className="pc-hero-copy">
+                <span className="pc-kicker">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" />
+                  </svg>
+                  <Link href="/podcasts">بودكاست العلم</Link>
+                </span>
                 <h1>{podcastShow.name}</h1>
-                <p className="podcast-show-meta">
-                  {episodes.length > 0
-                    ? `${toLatinDigits(episodes.length)} حلقة`
-                    : "حلقات البرنامج"}
+                {story.excerpt ? <p className="pc-hero-desc">{story.excerpt}</p> : null}
+                <p className="pc-hero-meta">
+                  {episodes.length > 0 ? `${toLatinDigits(episodes.length)} حلقة` : "الحلقات على يوتيوب"}
                   {published && story.publishedAt ? (
                     <>
                       <span aria-hidden="true"> · </span>
-                      <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
+                      منذ <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
                     </>
                   ) : null}
                 </p>
+                <div className="pc-hero-actions">
+                  <PodcastHeroPlay
+                    showName={podcastShow.name}
+                    accent={podcastShow.accent}
+                    episode={latestEpisode}
+                  />
+                  <a className="pc-yt" href={podcastShow.youtube} rel="noopener noreferrer" target="_blank">يوتيوب ←</a>
+                </div>
               </div>
             </header>
           ) : (

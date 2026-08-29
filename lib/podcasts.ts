@@ -66,6 +66,8 @@ export function stripShowPrefix(title: string, showName: string): string {
   const cleaned = title
     .replace(new RegExp(`^(?:العلم\\s*\\|\\s*)?(?:بودكاست\\s*)?${escaped}\\s*\\|\\s*`, "u"), "")
     .replace(/^العلم\s*\|\s*/u, "")
+    // الذيل أيضًا: «… | بودكاست ملامح» أو «… | ملامح»
+    .replace(new RegExp(`\\s*\\|\\s*(?:بودكاست\\s*)?${escaped}\\s*$`, "u"), "")
     .trim();
   return cleaned || title.trim();
 }
