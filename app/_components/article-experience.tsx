@@ -29,6 +29,33 @@ export type RelatedCard = {
   readingMinutes: number;
 };
 
+
+const TOOL_ICONS = {
+  heart: "M12 20.3l-1.3-1.2C5.9 14.8 3 12.2 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.9 1.8 1-1.1 2.4-1.8 3.9-1.8C18 4.3 20 6.3 20 8.9c0 3.3-2.9 5.9-7.7 10.2L12 20.3z",
+  listen: "M4 13v-1a8 8 0 0 1 16 0v1M4 13a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2v-3zm16 0a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2v-3z",
+  discuss: "M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4V6z",
+  share: "M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4",
+} as const;
+
+function ToolIcon({ name, filled = false }: { name: keyof typeof TOOL_ICONS; filled?: boolean }) {
+  return (
+    <svg
+      className="tool-ico"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d={TOOL_ICONS[name]} />
+    </svg>
+  );
+}
+
 type State = { signedIn: boolean; liked: boolean };
 
 const FLUSH_MS = 15_000;
@@ -143,24 +170,32 @@ export function ArticleToolbar({
             aria-pressed={state.liked}
             onClick={() => void toggleLike()}
           >
-            {state.liked ? "♥ أعجبني" : "♡ أعجبني"}
+            <ToolIcon name="heart" filled={state.liked} />
+            أعجبني
           </button>
         ) : (
           <Link className="tool" href={joinHref}>
-            ♡ أعجبني
+            <ToolIcon name="heart" />
+            أعجبني
           </Link>
         )}
         <button type="button" className="tool" onClick={listen}>
+          <ToolIcon name="listen" />
           استمع
         </button>
         {state.signedIn ? (
           <button type="button" className="tool" onClick={() => setDiscussOpen((open) => !open)}>
+            <ToolIcon name="discuss" />
             ناقش المادة
           </button>
         ) : (
-          <Link className="tool" href={joinHref}>ناقش المادة</Link>
+          <Link className="tool" href={joinHref}>
+            <ToolIcon name="discuss" />
+            ناقش المادة
+          </Link>
         )}
         <button type="button" className="tool" onClick={() => void share()}>
+          <ToolIcon name="share" />
           مشاركة
         </button>
       </div>
