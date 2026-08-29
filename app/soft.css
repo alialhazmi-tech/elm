@@ -785,3 +785,13 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
   .topbar-row2 { display: none; }
 }
 @media (max-width: 640px) { .sx-page > .sx-switch:not(.top-series-mobile) { display: none; } }
+
+/* صفحة السلسلة على الجوال: اسم السلسلة → صورة أحدث مادة → عنوانها (لا الصورة أولًا) */
+@media (max-width: 1040px) {
+  .sx-hero-copy { display: contents; }
+  .sx-hero-top { order: 1; padding: 6px 4px 0; }
+  .sx-hero-media { order: 2; }
+  .sx-lead { order: 3; padding: 4px 4px 6px; border-top: 0; }
+  .sx-lead::before { content: "أحدث مادة"; display: block; font-size: 12px; font-weight: 700; color: color-mix(in srgb, var(--sc, var(--navy)) 78%, var(--ink)); margin-bottom: 2px; }
+  .sx-lead > .meta:first-child { display: none; }
+}
