@@ -470,3 +470,27 @@ body { background: var(--bg); color: var(--ink); }
   .footer-shell { padding: 28px 22px 18px; }
   .footer-grid { grid-template-columns: 1fr; gap: 26px; }
 }
+
+/* ============ تخفيف الأزرار (ملاحظة المالك 2026-08-29) ============ */
+/* الهيدر: «اسأل العلم» و«انضم» نصّان هادئان بلا كتل مملوءة؛ الأيقونات بلا خلفية */
+.ask-pill { background: transparent; color: var(--ink); font-weight: 600; padding: 0 10px; height: 40px; }
+.ask-pill:hover { background: var(--surface-2); color: var(--navy); }
+.ask-pill .spark { color: var(--navy); }
+.member-entry { background: transparent; color: var(--ink); font-weight: 600; min-height: 40px; padding: 0 10px; border: 1px solid var(--line-2); }
+.member-entry:hover { opacity: 1; background: var(--surface-2); border-color: var(--line-2); }
+.member-entry.is-member { border: 1px solid var(--line-2); background: transparent; }
+.icon-btn, .theme-toggle { width: 40px; height: 40px; background: transparent; }
+.icon-btn:hover, .theme-toggle:hover { background: var(--surface-2); }
+.top-tools { gap: 4px; }
+
+/* روابط الفعل داخل المحتوى: نص + سهم بدل حبّة مملوءة */
+.btn-pill { height: auto; padding: 0; border-radius: 0; background: transparent; color: var(--navy); font-size: 15px; font-weight: 700; }
+.btn-pill::after { content: " ←"; }
+.btn-pill:hover { background: transparent; color: var(--navy-deep); text-decoration: underline; text-underline-offset: 0.3em; }
+.sx-lead-actions .btn-pill { background: transparent; color: color-mix(in srgb, var(--sc, var(--navy)) 78%, var(--ink)); }
+.sx-lead-actions .btn-pill:hover { filter: none; }
+
+/* أزرار الإرسال داخل الحقول: أصغر وأهدأ */
+.ask-band-form button, .sa-ask form button, .ft-compose button { height: 36px; padding: 0 16px; font-size: 14px; }
+.sa-ask .q { height: 42px; }
+.sa-ask form { height: 46px; }
