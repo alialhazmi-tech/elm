@@ -17,6 +17,7 @@ import { randomUUID } from "node:crypto";
 import path from "node:path";
 import process from "node:process";
 
+import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { neon } from "@neondatabase/serverless";
 
 const BASE = "https://jakelelm.alelm.net";
@@ -29,6 +30,7 @@ const value = (name) => args.find((a) => a.startsWith(`--${name}=`))?.split("=")
 const DRY_RUN = flag("dry-run");
 const PUBLISH = flag("publish");
 const IDS = (value("ids") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+const KEEP_REMOTE_IMAGES = flag("keep-remote-images");
 
 if (!DRY_RUN && !process.env.DATABASE_URL) {
   console.error("DATABASE_URL غير مضبوط — شغّل عبر: node --env-file=.env.local scripts/jak-migrate.mjs");
@@ -218,6 +220,54 @@ function projectSlides(slides) {
 
 const SECTION_BY_CAT = { 13: "technology", 14: "culture", 1: "world" };
 
+/* ============ الصور → البوكت (نفس عقد wp-media-migrate) ============ */
+
+function storageClient() {
+  const endpoint = (process.env.AWS_ENDPOINT_URL || "").trim();
+  const bucket = (process.env.AWS_S3_BUCKET_NAME || process.env.BUCKET_NAME || "").trim();
+  const accessKeyId = (process.env.AWS_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = (process.env.AWS_SECRET_ACCESS_KEY || "").trim();
+  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey) throw new Error("متغيرات المخزن ناقصة: AWS_ENDPOINT_URL وAWS_S3_BUCKET_NAME ومفاتيح AWS.");
+  const region = /storageapi\.dev$/i.test(new URL(endpoint).hostname) ? "auto" : (process.env.AWS_DEFAULT_REGION || "auto").trim();
+  return { s3: new S3Client({ endpoint, region, credentials: { accessKeyId, secretAccessKey } }), bucket };
+}
+function sniffImage(bytes) {
+  if (bytes.length > 24 && bytes[0] === 0x89 && bytes[1] === 0x50) return { mime: "image/png", ext: "png" };
+  if (bytes.length > 3 && bytes[0] === 0xff && bytes[1] === 0xd8) return { mime: "image/jpeg", ext: "jpg" };
+  if (bytes.length > 16 && bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) return { mime: "image/webp", ext: "webp" };
+  return null;
+}
+const imageCache = new Map(); // رابط المصدر → /uploads/… (صورة الخلفية تتكرر بين شرائح المقطع الواحد)
+let storage = null;
+async function migrateImage(url, sourceLabel) {
+  if (!url || !/^https?:/.test(url)) return url;
+  if (imageCache.has(url)) return imageCache.get(url);
+  if (DRY_RUN || KEEP_REMOTE_IMAGES) return url;
+  storage ??= storageClient();
+  try {
+    const response = await fetch(url, { headers: { "User-Agent": "alelm-jak-migration/1.0 (read-only)" } });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const kind = sniffImage(bytes);
+    if (!kind) throw new Error("صيغة غير مدعومة");
+    const uuid = randomUUID();
+    const filename = `${uuid}.${kind.ext}`;
+    const key = `uploads/${filename}`;
+    await storage.s3.send(new PutObjectCommand({ Bucket: storage.bucket, Key: key, Body: bytes, ContentType: kind.mime, CacheControl: "public, max-age=31536000, immutable" }));
+    const head = await storage.s3.send(new HeadObjectCommand({ Bucket: storage.bucket, Key: key }));
+    if (head.ContentLength !== bytes.byteLength) throw new Error("حجم المخزن لا يطابق");
+    const publicUrl = `/uploads/${filename}`;
+    await sql`insert into media (id, url, filename, mime, bytes, rights_cleared, flags, uploaded_by, created_at)
+      values (${uuid}, ${publicUrl}, ${`jak-${sourceLabel}.${kind.ext}`}, ${kind.mime}, ${bytes.byteLength}, 1, ${""}, ${"jak-migration"}, ${new Date().toISOString()})`;
+    imageCache.set(url, publicUrl);
+    return publicUrl;
+  } catch (error) {
+    console.warn(`  ⚠ صورة بقيت بروابطها: ${url} — ${error.message}`);
+    imageCache.set(url, url);
+    return url;
+  }
+}
+
 /* ============ التنفيذ ============ */
 
 async function main() {
@@ -250,6 +300,10 @@ async function main() {
     console.log(`${post.id} ${title} — ${mode} | مقاطع ${sections} → شرائح ${slides.length} [${summary.types.join(",")}] صور ${summary.images} كلمات ${summary.words}`);
 
     if (DRY_RUN) continue;
+    story.image = await migrateImage(story.image, `${post.id}-cover`);
+    for (const [i, slide] of slides.entries()) slide.image = await migrateImage(slide.image, `${post.id}-s${i}`);
+    const migrated = [story.image, ...slides.map((x) => x.image)].filter((u) => u && u.startsWith("/uploads/")).length;
+    console.log(`  صور منقولة إلى المخزن: ${migrated}`);
     const now = new Date().toISOString();
     await sql`insert into stories (id, slug, section, title, excerpt, eyebrow, reading_minutes, image, published_at, status, body, author_name, updated_at, format, seo_description)
       values (${story.id}, ${story.slug}, ${story.section}, ${story.title}, ${story.excerpt}, ${story.eyebrow}, ${story.readingMinutes}, ${story.image}, ${story.publishedAt}, ${story.status}, ${story.body}, ${story.authorName}, ${now}, ${story.format}, ${story.seoDescription})
