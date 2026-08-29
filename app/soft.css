@@ -749,3 +749,39 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 .nav-panel a { font-weight: 400; }
 .nav-panel-series span { font-weight: 500; }
 @media (max-width: 1100px) { .topbar-inner { grid-template-columns: 1fr auto; } .topbar-inner .top-tools { grid-column: 2; } }
+
+/* ============ مراجعة الجوال (2026-08-29) ============ */
+/* تصنيفات السلاسل فوق في كل الصفحات على الجوال؛ على الحاسوب تبقى داخل الرئيسية فقط */
+.top-series-mobile { display: none; }
+@media (max-width: 640px) {
+  .top-series-mobile { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 8px; margin: 0; padding: 0 16px 10px; }
+  .top-series-mobile::-webkit-scrollbar { display: none; }
+  .top-series-mobile a { flex: none; height: 34px; font-size: 13.5px; }
+  .home-switch { display: none; }
+  .home-shell { padding-top: 12px; }
+}
+@media (max-width: 640px) {
+  /* شريط السلسلة داخل المادة يكرر رقائق الهيدر على الجوال */
+  .sa-strip { display: none; }
+  .sa-head { margin-top: 4px; }
+  /* بلاطات السلاسل الثماني: عمودان مضغوطان بدل عمود طويل */
+  .sh-series { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .sh-series a { padding: 14px; min-height: 0; gap: 6px; }
+  .sh-series .sname { font-size: 19px; }
+  .sh-series .slatest { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sh-series .scount { font-size: 12px; padding-top: 4px; }
+  /* دليل السلاسل: هواء أقل فوق العنوان، والبلاطات أقصر */
+  .sx-index-hero { padding-top: 12px; gap: 8px; }
+  .sx-index-hero h1 { font-size: 30px; }
+  .sx-tile { min-height: 0; padding: 18px; }
+  .sx-tile .sname { font-size: 24px; }
+  /* رأس القسم/الفهرس ورأس السلسلة أقرب إلى الرقائق */
+  .hub-hero { margin-top: 6px; }
+  .sx-page, .home-shell { padding-top: 10px; }
+  .sx-hero { margin-top: 0; }
+  /* أعمدة بطاقات البودكاست: نص أصغر ليتسع «استمع» والعدد في سطر */
+  .pc-show-meta { font-size: 12px; }
+  /* الصف الثاني للهيدر (سطح المكتب) لا يظهر هنا */
+  .topbar-row2 { display: none; }
+}
+@media (max-width: 640px) { .sx-page > .sx-switch:not(.top-series-mobile) { display: none; } }
