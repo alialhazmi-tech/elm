@@ -174,10 +174,10 @@ export function PodcastDockProvider({ children }: { children: React.ReactNode })
             <button type="button" className="pp-tool latin-number" dir="ltr" lang="en" onClick={cycleRate} aria-label="سرعة التشغيل">
               {rate}×
             </button>
-            <button type="button" className="pp-tool" onClick={stop} aria-label="أغلق المشغل">
-              ✕
-            </button>
           </div>
+          <button type="button" className="pp-close" onClick={stop} aria-label="أغلق المشغل">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
         </div>
       ) : null}
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
