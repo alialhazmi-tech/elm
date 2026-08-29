@@ -598,3 +598,8 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 .ask-band-form button, .sa-ask form button, .ft-compose button { height: 36px; padding: 0 16px; font-size: 14px; }
 .sa-ask .q { height: 42px; }
 .sa-ask form { height: 46px; }
+
+/* رقائق السلاسل تحت الهيدر في الرئيسية */
+.home-switch { margin: 4px 0 6px; justify-content: center; }
+.home-switch a { height: 38px; font-size: 14px; }
+@media (max-width: 640px) { .home-switch { justify-content: flex-start; } }

@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
-import { brandDate, formatReadingMinutes, relativeTimeAr, riyadhDateISO, toLatinDigits } from "@/lib/format";
+import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesDirectory, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
 
@@ -57,6 +57,19 @@ export default async function Home() {
       <SiteHeader active="/" />
 
       <main id="main-content" className="wrap home-shell">
+        <nav className="sx-switch home-switch" aria-label="السلاسل">
+          <Link href="/series" className="sx-all">كل السلاسل</Link>
+          {home.series.map((item) => (
+            <Link
+              key={item.slug}
+              href={`/series/${item.slug}`}
+              style={{ "--sc": item.color } as React.CSSProperties}
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+
         <div className="day-line" aria-label="تاريخ اليوم">
           <time dateTime={riyadhDateISO()}>
             {toLatinDigits(today.hijri)}
@@ -99,22 +112,6 @@ export default async function Home() {
           </section>
         )}
 
-        {/* الموجز: أربع بطاقات خفيفة */}
-        {home.brief.length > 0 ? (
-          <section className="sh-digest" aria-label="موجز العلم">
-            {home.brief.slice(0, 4).map((item) => {
-              const when = relativeTimeAr(item.publishedAt);
-              return (
-                <article key={item.href}>
-                  <span className="kick" style={{ "--kc": item.color } as React.CSSProperties}>{item.label}</span>
-                  <h3><Link className="story-link" href={item.href}>{item.title}</Link></h3>
-                  {when ? <span className="meta">{when}</span> : null}
-                </article>
-              );
-            })}
-          </section>
-        ) : null}
-
         {/* اسأل العلم */}
         <section className="ask-band" aria-labelledby="ask-title">
           <div className="ask-band-info">
@@ -140,35 +137,6 @@ export default async function Home() {
               <span aria-hidden="true">·</span>
               <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
             </p>
-          </div>
-        </section>
-
-        {/* السلاسل — عمود العلم الفقري، بلاطات بلون كل سلسلة */}
-        <section className="sh-section" aria-label="السلاسل">
-          <div className="section-head">
-            <h2>السلاسل</h2>
-            <Link className="more" href="/series">كل السلاسل ←</Link>
-          </div>
-          <div className="sh-series">
-            {home.series.map((series) => {
-              const entry = directory[series.slug];
-              return (
-                <Link
-                  key={series.slug}
-                  className="series-lens"
-                  href={`/series/${series.slug}`}
-                  style={{ "--sc": series.color } as React.CSSProperties}
-                >
-                  <span className="sname">{series.name}</span>
-                  <span className="slatest">{entry?.latest?.title ?? series.description}</span>
-                  {entry?.count ? (
-                    <span className="scount">{toLatinDigits(String(entry.count))} مادة</span>
-                  ) : (
-                    <span className="scount">{series.description}</span>
-                  )}
-                </Link>
-              );
-            })}
           </div>
         </section>
 
@@ -249,6 +217,35 @@ export default async function Home() {
             </div>
           </section>
         ) : null}
+
+        {/* السلاسل — عمود العلم الفقري، بلاطات بلون كل سلسلة */}
+        <section className="sh-section" aria-label="السلاسل">
+          <div className="section-head">
+            <h2>السلاسل</h2>
+            <Link className="more" href="/series">كل السلاسل ←</Link>
+          </div>
+          <div className="sh-series">
+            {home.series.map((series) => {
+              const entry = directory[series.slug];
+              return (
+                <Link
+                  key={series.slug}
+                  className="series-lens"
+                  href={`/series/${series.slug}`}
+                  style={{ "--sc": series.color } as React.CSSProperties}
+                >
+                  <span className="sname">{series.name}</span>
+                  <span className="slatest">{entry?.latest?.title ?? series.description}</span>
+                  {entry?.count ? (
+                    <span className="scount">{toLatinDigits(String(entry.count))} مادة</span>
+                  ) : (
+                    <span className="scount">{series.description}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
 
         {/* مرئي وصوتي + الأكثر قراءة */}
         <div className="home-two">
