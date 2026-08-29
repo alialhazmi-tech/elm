@@ -726,3 +726,15 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 @media (max-width: 640px) {
   .mobile-nav { inset-inline: 16px; width: auto; }
 }
+
+/* تصحيح بطلب المالك: ارتفاع الهيدر واللوقو وزر الدخول كما كانت، والقائمة بوزن عادي */
+.topbar-inner { padding: 16px 24px; min-height: 0; gap: 28px; }
+.brand-word { font-size: 34px; }
+.topnav > a, .nav-item > a { font-size: 15px; font-weight: 500; height: 36px; }
+.topnav > a.is-active, .nav-item > a.is-active { font-weight: 600; }
+.nav-panel a { font-weight: 500; }
+.member-entry { min-height: 40px; height: 40px; padding: 0 16px; font-size: 14px; font-weight: 600; gap: 8px; }
+.member-entry svg { width: 16px; height: 16px; }
+.icon-btn, .theme-toggle { width: 40px; height: 40px; }
+@media (max-width: 1100px) { .topbar-inner { min-height: 0; padding: 12px 24px; } .brand-word { font-size: 30px; } }
+@media (max-width: 640px) { .topbar-inner { padding: 10px 16px; } .brand-word { font-size: 28px; } }
