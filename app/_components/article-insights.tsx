@@ -159,7 +159,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
               <li key={labels[i]}>
                 <span className="lbl">{labels[i]}</span>
                 <span className="bar"><i style={{ width: `${fresh ? 0 : value}%`, opacity: 0.5 + i * 0.16 }} /></span>
-                <span className="val latin-number" dir="ltr" lang="en">{fresh ? "—" : `${n(value)}%`}</span>
+                {fresh ? <span className="val muted">—</span> : <span className="val latin-number" dir="ltr" lang="en">{`${n(value)}%`}</span>}
               </li>
             ))}
           </ul>
@@ -171,7 +171,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             <h3>إكمال القراءة</h3>
             {fresh ? null : <span className="ins-chip">{n(ins.readers)} قارئ</span>}
           </header>
-          <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{fresh ? "—" : n(ins.completion)}</b>{fresh ? null : <span>%</span>}</p>
+          {fresh ? <p className="ins-big ins-empty">لا قراءات بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.completion)}</b><span>%</span></p>}
           <p className="ins-desc">{fresh ? "تُحسب مع أول قراءات الأعضاء" : "نسبة القرّاء الذين أكملوا قراءة المادة حتى النهاية"}</p>
           <div className="ins-progress"><i style={{ width: `${fresh ? 0 : ins.completion}%` }} /></div>
           <ul className="ins-steps">
@@ -179,7 +179,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
               <li key={label}>
                 <span className="bar"><i style={{ width: `${fresh ? 0 : value}%`, opacity: 0.55 + i * 0.22 }} /></span>
                 <span className="lbl">{label}</span>
-                <span className="val latin-number" dir="ltr" lang="en">{fresh ? "—" : `${n(value)}%`}</span>
+                {fresh ? <span className="val muted">—</span> : <span className="val latin-number" dir="ltr" lang="en">{`${n(value)}%`}</span>}
               </li>
             ))}
           </ul>
@@ -194,8 +194,14 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
           <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(total)}</b></p>
           <p className="ins-desc">مجموع الإعجابات وإجابات الختام خلال آخر 30 يومًا</p>
           <div className="ins-split" aria-hidden="true">
-            <i style={{ flex: total === 0 ? 1 : Math.max(ins.likes, 0.001) }} />
-            <i className="alt" style={{ flex: total === 0 ? 1 : Math.max(ins.answers, 0.001) }} />
+            {total === 0 ? (
+              <i className="empty" style={{ flex: 1 }} />
+            ) : (
+              <>
+                <i style={{ flex: Math.max(ins.likes, 0.001) }} />
+                <i className="alt" style={{ flex: Math.max(ins.answers, 0.001) }} />
+              </>
+            )}
           </div>
           <p className="ins-legend">
             <span><i />إعجابات <b className="latin-number" dir="ltr" lang="en">{n(ins.likes)}</b></span>
@@ -210,7 +216,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             <h3>نسبة التفاعل</h3>
             <Trend value={ins.trend} />
           </header>
-          <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{fresh ? "—" : n(ins.engagement)}</b>{fresh ? null : <span>%</span>}</p>
+          {fresh ? <p className="ins-big ins-empty">لا قراءات بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.engagement)}</b><span>%</span></p>}
           <p className="ins-desc">{fresh ? "تُحسب مع أول قراءات الأعضاء" : "نسبة القرّاء الذين تفاعلوا بشكل إيجابي مع المحتوى"}</p>
           <div className="ins-levels" aria-hidden="true">
             <i className={level === "منخفض" ? "is-on low" : "low"} /><i className={level === "متوسط" ? "is-on mid" : "mid"} /><i className={level === "مرتفع" ? "is-on high" : "high"} />
