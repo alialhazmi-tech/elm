@@ -638,3 +638,11 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 .ins-legend i.alt { background: color-mix(in srgb, var(--navy) 30%, var(--surface)); }
 .ins-legend b { color: var(--navy); }
 .ins-legend .eng { flex-basis: 100%; color: var(--ink-3); }
+/* بالأرقام: الرقم يمينًا، والعلامة (٪/عملة) قبله على الطريقة العربية */
+.figure-cell .v { direction: rtl; text-align: right; display: flex; align-items: baseline; gap: 4px; justify-content: flex-start; }
+.figure-cell .v small { order: -1; font-size: 26px; font-weight: 700; color: var(--navy); }
+/* أدوات القارئ: أيقونة + نص، شبكة 2×2 */
+.ai-surface.ai-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.ai-toolbar .tool { gap: 8px; height: 44px; padding: 0 14px; justify-content: flex-start; }
+.ai-toolbar .tool-ico { flex: none; color: var(--navy); }
+.ai-toolbar .tool.is-on .tool-ico { color: #e0245e; }
