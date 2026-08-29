@@ -5,36 +5,34 @@ import { SERIES } from "@/lib/content/series";
 import { NewsletterForm } from "./newsletter-form";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
-import { HeaderScroll } from "./header-scroll";
-import { brandDate, riyadhDateISO, toLatinDigits } from "@/lib/format";
 
-/** الصف الأول: خمسة مداخل فقط — الأقسام تُجمع تحت «الأخبار». */
+// «السلاسل» خرجت من القائمة العلوية — مسطرة السلاسل تحت الهيدر تغني عنها.
 const NAV = [
+  { label: "الرئيسية", href: "/" },
   { label: "السلاسل", href: "/series" },
-  { label: "جاك العلم", href: "/jak" },
+  { label: "محليات", href: "/politics" },
+  { label: "اقتصاد", href: "/economy" },
+  { label: "تقنية", href: "/technology" },
+  { label: "علوم", href: "/sciences" },
+  { label: "صحة", href: "/health" },
+  { label: "رياضة", href: "/sport" },
   { label: "بودكاست", href: "/podcasts" },
-  { label: "فيديو", href: "/videos" },
-];
-
-const SECTIONS = [
-  { label: "محليات", href: "/politics", desc: "سياق وقرارات" },
-  { label: "اقتصاد", href: "/economy", desc: "أسواق واستثمار" },
-  { label: "تقنية", href: "/technology", desc: "ذكاء اصطناعي ومنصات" },
-  { label: "علوم", href: "/sciences", desc: "فضاء وبيئة ومعرفة" },
-  { label: "صحة", href: "/health", desc: "طب وجودة حياة" },
-  { label: "رياضة", href: "/sport", desc: "صناعة الرياضة" },
-  { label: "ثقافة", href: "/culture", desc: "فكر وفن" },
-  { label: "عالم", href: "/world", desc: "جيوسياسة" },
-  { label: "إنفوجرافيك", href: "/infographics", desc: "بيانات مرسومة" },
 ];
 
 const MOBILE_NAV = [
   { label: "الرئيسية", href: "/" },
   { label: "السلاسل", href: "/series" },
-  { label: "جاك العلم", href: "/jak" },
+  { label: "محليات", href: "/politics" },
+  { label: "اقتصاد", href: "/economy" },
+  { label: "تقنية", href: "/technology" },
+  { label: "علوم", href: "/sciences" },
+  { label: "صحة", href: "/health" },
+  { label: "رياضة", href: "/sport" },
+  { label: "ثقافة", href: "/culture" },
+  { label: "عالم", href: "/world" },
+  { label: "إنفوجرافيك", href: "/infographics" },
+  { label: "مرئي", href: "/videos" },
   { label: "بودكاست", href: "/podcasts" },
-  { label: "فيديو", href: "/videos" },
-  ...SECTIONS.map(({ label, href }) => ({ label, href })),
 ];
 
 const FOOTER_SECTIONS = [
@@ -83,99 +81,52 @@ async function BreakingBar() {
  * الهيدر: لوح مداد، اللوجوتايب السالب (كلمة «العلم» وحدها —
  * Noto Kufi ‏900)، والنشط بتمييز كحلي فاتح دون أحمر.
  */
-export async function SiteHeader({
-  active,
-  activeSeries,
-}: {
-  active?: string;
-  activeSeries?: string;
-}) {
-  const today = brandDate(new Date().toISOString());
-  const sectionActive = SECTIONS.some((item) => item.href === active);
-
+export async function SiteHeader({ active }: { active?: string }) {
   return (
     <header className="topbar">
-      <HeaderScroll />
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
           <span className="brand-word">العلم</span>
         </Link>
-
         <nav className="topnav" aria-label="التنقل الرئيسي">
-          <div className={`nav-news${sectionActive ? " is-active" : ""}`}>
-            <Link href="/politics" className={sectionActive ? "is-active" : undefined} aria-haspopup="true">
-              الأخبار
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
-            </Link>
-            <div className="nav-panel" role="menu">
-              {SECTIONS.map((item) => (
-                <Link key={item.href} href={item.href} role="menuitem" className={item.href === active ? "is-active" : undefined}>
-                  <b>{item.label}</b>
-                  <small>{item.desc}</small>
-                </Link>
-              ))}
-            </div>
-          </div>
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={active === item.href ? "is-active" : undefined}>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={active === item.href ? "is-active" : undefined}
+            >
               {item.label}
             </Link>
           ))}
         </nav>
-
         <div className="top-tools">
-          <form className="ask-pill" action="/search" role="search">
-            <svg className="spark" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <Link className="ask-pill" href="/search" aria-label="اسأل العلم">
+            <span>اسأل العلم</span>
+            <svg className="spark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
             </svg>
-            <input type="search" name="q" placeholder="ابحث أو اسأل العلم…" aria-label="ابحث أو اسأل العلم" dir="rtl" />
-            <kbd aria-hidden="true" dir="ltr">⌘K</kbd>
-            <Link className="ask-go" href="/search" aria-label="البحث في العلم">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-            </Link>
-          </form>
+          </Link>
+          <Link className="icon-btn" href="/search" aria-label="البحث في العلم">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+          </Link>
           <ThemeToggle />
           <MemberEntry />
-          <details className="mnav">
-            <summary aria-label="القائمة">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-            </summary>
-            <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
-              {MOBILE_NAV.map((item) => (
-                <Link key={item.href} href={item.href} className={active === item.href ? "is-active" : undefined}>
-                  {item.label}
-                </Link>
-              ))}
-              <span className="mnav-lbl">السلاسل</span>
-              {SERIES.map((item) => (
-                <Link key={item.slug} href={`/series/${item.slug}`} style={{ "--sc": item.color } as React.CSSProperties} className="mnav-series">
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
-          </details>
         </div>
       </div>
-
-      <div className="topbar-row2">
-        <nav className="sx-switch top-series" aria-label="السلاسل">
-          {SERIES.map((item) => (
-            <Link
-              key={item.slug}
-              href={`/series/${item.slug}`}
-              className={item.slug === activeSeries ? "is-active" : undefined}
-              style={{ "--sc": item.color } as React.CSSProperties}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-        <div className="top-live">
-          <span className="live">تغطية مستمرة</span>
-          <time dateTime={riyadhDateISO()}>{toLatinDigits(today.hijri)} · {toLatinDigits(today.gregorian)}</time>
-        </div>
-      </div>
-
+      <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
+        {MOBILE_NAV.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={active === item.href ? "is-active" : undefined}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </nav>
       <BreakingBar />
     </header>
   );
