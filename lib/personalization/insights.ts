@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 
-import { memberLikes, memberStoryStats } from "@/db/schema";
+import { memberEvents, memberLikes, memberStoryStats } from "@/db/schema";
 import { getDb } from "@/lib/db";
 
 /**
@@ -23,6 +23,10 @@ export interface StoryInsights {
   answers: number;
   /** نسبة من تفاعلوا (إعجاب أو إجابة أو أداة ذكاء) من القرّاء. */
   engagement: number;
+  /** تفاعلات كل يوم خلال آخر 30 يومًا (الأقدم أولًا). */
+  daily: number[];
+  /** تغيّر التفاعل: آخر 7 أيام مقابل السبعة قبلها — نسبة مئوية. */
+  trend: number;
 }
 
 export const EMPTY_INSIGHTS: StoryInsights = {
@@ -34,6 +38,8 @@ export const EMPTY_INSIGHTS: StoryInsights = {
   likes: 0,
   answers: 0,
   engagement: 0,
+  daily: Array.from({ length: 30 }, () => 0),
+  trend: 0,
 };
 
 const pct = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
@@ -42,7 +48,8 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
   const db = getDb();
   if (!db || !storyId) return EMPTY_INSIGHTS;
 
-  const [[agg], [likeRow]] = await Promise.all([
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const [[agg], [likeRow], dayRows] = await Promise.all([
     db
       .select({
         readers: sql<number>`count(*)::int`,
@@ -63,10 +70,29 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
       .select({ n: sql<number>`count(*)::int` })
       .from(memberLikes)
       .where(eq(memberLikes.storyId, storyId)),
+    db
+      .select({
+        day: sql<string>`substr(${memberEvents.createdAt}, 1, 10)`,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(memberEvents)
+      .where(
+        sql`${memberEvents.storyId} = ${storyId} and ${memberEvents.createdAt} >= ${since} and ${memberEvents.type} in ('like', 'closing_answer', 'ai_discuss', 'ai_summary', 'ai_simplify', 'listen')`,
+      )
+      .groupBy(sql`substr(${memberEvents.createdAt}, 1, 10)`),
   ]);
 
+  const byDay = new Map(dayRows.map((row) => [row.day, Number(row.n)]));
+  const daily = Array.from({ length: 30 }, (_, i) => {
+    const day = new Date(Date.now() - (29 - i) * 86_400_000).toISOString().slice(0, 10);
+    return byDay.get(day) ?? 0;
+  });
+  const last7 = daily.slice(23).reduce((a, b) => a + b, 0);
+  const prev7 = daily.slice(16, 23).reduce((a, b) => a + b, 0);
+  const trend = prev7 > 0 ? Math.round(((last7 - prev7) / prev7) * 100) : last7 > 0 ? 100 : 0;
+
   const readers = Number(agg?.readers ?? 0);
-  if (readers === 0) return { ...EMPTY_INSIGHTS, likes: Number(likeRow?.n ?? 0) };
+  if (readers === 0) return { ...EMPTY_INSIGHTS, likes: Number(likeRow?.n ?? 0), daily, trend };
 
   return {
     readers,
@@ -77,5 +103,7 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
     likes: Number(likeRow?.n ?? 0),
     answers: Number(agg.answers),
     engagement: pct(agg.engaged, readers),
+    daily,
+    trend,
   };
 }
