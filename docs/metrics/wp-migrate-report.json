@@ -1,30 +1,9 @@
 {
-  "generatedAt": "2026-08-28T13:14:32.287Z",
-  "startedAt": "2026-08-28T13:13:53.778Z",
-  "mode": "full",
-  "wordpressPublished": 29099,
-  "targetNumericIds": 29099,
-  "targetPublished": 29099,
-  "coveragePercent": 100,
-  "runStats": {
-    "imported": 2,
-    "urlIdentical": 2,
-    "urlNeedsRedirect": 0,
-    "withSeries": 2,
-    "withImage": 2,
-    "withAuthor": 0,
-    "sections": {
-      "politics": 1,
-      "world": 1
-    },
-    "formats": {
-      "news": 1,
-      "videos": 1
-    },
-    "series": {
-      "shakhsiat": 1,
-      "matha-baad": 1
-    }
-  },
-  "failures": []
+  "generatedAt": "2026-08-29T16:29:02.985Z",
+  "startedAt": "2026-08-29T16:29:02.227Z",
+  "mode": "verify-only",
+  "wordpressPublished": 29121,
+  "targetNumericIds": 29121,
+  "targetPublished": 29121,
+  "coveragePercent": 100
 }
