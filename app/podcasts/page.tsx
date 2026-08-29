@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
 import { listByFormat } from "@/lib/content/provider";
+import { storyHref } from "@/lib/content/types";
 import { toLatinDigits } from "@/lib/format";
+import { podcastShowFor } from "@/lib/podcasts";
 
 /**
  * أرشيف برامج البودكاست — رابط إرثي حي من الموقع القديم (شرط M-2).
@@ -31,9 +34,12 @@ export default async function PodcastsPage() {
       <SiteHeader />
 
       <main id="main-content">
-        <section className="hub-hero">
-          <p className="eyebrow">بودكاست</p>
-          <h1>برامج العلم الصوتية</h1>
+        <section className="hub-hero podcast-hero">
+          <div className="hub-hero-copy">
+            <p className="eyebrow">بودكاست</p>
+            <h1>برامج العلم الصوتية</h1>
+            <p className="hub-tagline">حوارات وقصص تُسمع بهدوء، بعيدًا عن ضجيج الخبر العابر.</p>
+          </div>
           <p className="hub-count">
             {shows.length > 0
               ? `${toLatinDigits(shows.length)} برامج · الحلقات تُبث عبر قناة العلم`
@@ -43,23 +49,56 @@ export default async function PodcastsPage() {
 
         <div className="wrap">
           {shows.length > 0 ? (
-            <div className="section-feed">
-              {shows.map((story) => (
-                <MosaicCard key={story.id} story={story} />
-              ))}
+            <div className="podcast-directory">
+              {shows.map((story, index) => {
+                const show = podcastShowFor(story.id);
+                const href = storyHref(story);
+                return (
+                  <article
+                    key={story.id}
+                    className="podcast-tile"
+                    style={{ "--pc": show?.accent ?? "var(--navy)" } as React.CSSProperties}
+                  >
+                    {story.image ? (
+                      <Link className="podcast-tile-cover" href={href} tabIndex={-1} aria-hidden="true">
+                        <Image src={story.image} alt="" fill sizes="(max-width: 640px) 120px, 240px" />
+                      </Link>
+                    ) : null}
+                    <div className="podcast-tile-copy">
+                      <span className="podcast-tile-index">
+                        برنامج {toLatinDigits(String(index + 1).padStart(2, "0"))}
+                      </span>
+                      <h2><Link href={href}>{show?.name ?? story.title}</Link></h2>
+                      <p>{story.excerpt}</p>
+                      <Link className="podcast-tile-action" href={href}>
+                        الحلقات والتفاصيل <span aria-hidden="true">←</span>
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           ) : (
-            <p className="empty-state">برامج البودكاست في الطريق.</p>
+            <section className="podcast-empty">
+              <span>استمع الآن</span>
+              <h2>الحلقات موجودة، وتجربة البرامج الجديدة في الطريق.</h2>
+              <p>تجد أرشيف الغبوق وملامح وعتمة وتقرير كاملًا عبر قناة العلم.</p>
+              <a href={YOUTUBE_CHANNEL} rel="noopener noreferrer" target="_blank">
+                افتح قناة العلم في يوتيوب <span aria-hidden="true">←</span>
+              </a>
+            </section>
           )}
 
-          <section className="ai-surface ask-block" style={{ marginTop: 28 }}>
-            <p style={{ margin: 0, lineHeight: 1.9 }}>
-              حلقات البرامج كاملة — الغبوق، ملامح، عتمة، وتقرير — على{" "}
-              <a href={YOUTUBE_CHANNEL} rel="noopener noreferrer" target="_blank">
-                قناة العلم في يوتيوب ←
-              </a>
-            </p>
-          </section>
+          {shows.length > 0 ? (
+            <section className="ai-surface ask-block" style={{ marginTop: 28 }}>
+              <p style={{ margin: 0, lineHeight: 1.9 }}>
+                حلقات البرامج كاملة — الغبوق، ملامح، عتمة، وتقرير — على{" "}
+                <a href={YOUTUBE_CHANNEL} rel="noopener noreferrer" target="_blank">
+                  قناة العلم في يوتيوب ←
+                </a>
+              </p>
+            </section>
+          ) : null}
         </div>
       </main>
 

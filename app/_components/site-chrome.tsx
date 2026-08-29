@@ -15,7 +15,7 @@ const NAV = [
   { label: "علوم", href: "/sciences" },
   { label: "صحة", href: "/health" },
   { label: "رياضة", href: "/sport" },
-  { label: "مرئي", href: "/videos" },
+  { label: "بودكاست", href: "/podcasts" },
 ];
 
 const MOBILE_NAV = [
@@ -31,6 +31,7 @@ const MOBILE_NAV = [
   { label: "عالم", href: "/world" },
   { label: "إنفوجرافيك", href: "/infographics" },
   { label: "مرئي", href: "/videos" },
+  { label: "بودكاست", href: "/podcasts" },
 ];
 
 const FOOTER_SECTIONS = [
@@ -48,6 +49,7 @@ const FOOTER_SECTIONS = [
 const FOOTER_FORMATS = [
   { label: "إنفوجرافيك وبيانات", href: "/infographics" },
   { label: "مرئي ووثائقي", href: "/videos" },
+  { label: "بودكاست العلم", href: "/podcasts" },
   { label: "البحث التحريري", href: "/search" },
 ];
 
@@ -84,7 +86,7 @@ export async function SiteHeader({ active }: { active?: string }) {
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
           <span className="brand-word">العلم</span>
-          <span className="brand-tag">المعرفة بسلاسة</span>
+          <span className="brand-tag">المعرفة وراء الخبر</span>
         </Link>
         <nav className="topnav" aria-label="التنقل الرئيسي">
           {NAV.map((item) => (

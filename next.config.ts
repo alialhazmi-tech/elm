@@ -16,7 +16,7 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  "img-src 'self' data: blob:",
+  "img-src 'self' data: blob: https://dash.alelm.net",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
   "media-src 'self' https:",
@@ -48,6 +48,9 @@ const nextConfig: NextConfig = {
     // webp فقط: ترميز AVIF أبطأ بمرات على حاوية Railway المشتركة مع الـ API،
     // وwebp مقروء في التطبيق والمتصفحات كلها.
     formats: ["image/webp"],
+    // بيئة التشغيل تحل نطاق الأرشيف عبر NAT64 فيرفضه محسّن Next كعنوان خاص.
+    // نخدم الصور من المصدر الموثوق مباشرة بدل تعطيل حماية SSRF.
+    unoptimized: true,
     deviceSizes: [360, 640, 768, 1080, 1280, 1920],
     imageSizes: [320, 480, 640],
     // إلزامي في Next 16 — بدونه يرفض المحسّن كل طلب (كما حدث في الإنتاج).
@@ -57,7 +60,7 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: "/uploads/**", search: "" }],
     dangerouslyAllowSVG: false,
     // أصل الوسائط الحالي؛ ينتقل إلى media.alelm.net على R2 ضمن M4.
-    remotePatterns: [{ protocol: "https", hostname: "dash.alelm.net", pathname: "/wp-content/**" }],
+    remotePatterns: [{ protocol: "https", hostname: "dash.alelm.net" }],
   },
   async headers() {
     return [

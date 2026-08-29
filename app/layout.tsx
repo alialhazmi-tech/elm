@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
+import "./editorial-v2.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
 // تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
@@ -59,8 +60,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F5F7FA" },
-    { media: "(prefers-color-scheme: dark)", color: "#060E18" },
+    { media: "(prefers-color-scheme: light)", color: "#F4F5F0" },
+    { media: "(prefers-color-scheme: dark)", color: "#121A18" },
   ],
 };
 

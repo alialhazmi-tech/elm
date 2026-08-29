@@ -247,13 +247,6 @@ export default async function ArticlePage({ params }: Params) {
             </aside>
           ) : null}
 
-          {!podcastShow ? (
-            <ArticleToolbar
-              storyId={story.id}
-              joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
-              excerpt={story.excerpt}
-            />
-          ) : null}
           <ArticleTracker storyId={story.id} />
 
           {!podcastShow && story.image ? (
@@ -268,7 +261,7 @@ export default async function ArticlePage({ params }: Params) {
                   src={story.image}
                   alt=""
                   fill
-                  sizes="(max-width: 900px) 100vw, 860px"
+                  sizes="(max-width: 1100px) 100vw, 1180px"
                   priority
                 />
               </figure>
@@ -276,32 +269,41 @@ export default async function ArticlePage({ params }: Params) {
           ) : null}
 
           {!podcastShow ? (
-          <div className="article-body" id="article-body">
-            {story.body && looksLikeHtml(story.body) ? (
-              // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
-              <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
-            ) : story.body ? (
-              story.body
-                .split(/\n{2,}/)
-                .filter((paragraph) => paragraph.trim())
-                .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
-            ) : story.excerpt ? null : (
-              <p className="article-placeholder">متن هذه المادة غير متاح الآن.</p>
-            )}
+            <div className="article-reading-layout">
+              <aside className="article-reader-rail" aria-label="أدوات المادة">
+                <ArticleToolbar
+                  storyId={story.id}
+                  joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
+                  excerpt={story.excerpt}
+                />
+              </aside>
+              <div className="article-body" id="article-body">
+                {story.body && looksLikeHtml(story.body) ? (
+                  // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
+                ) : story.body ? (
+                  story.body
+                    .split(/\n{2,}/)
+                    .filter((paragraph) => paragraph.trim())
+                    .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
+                ) : story.excerpt ? null : (
+                  <p className="article-placeholder">متن هذه المادة غير متاح الآن.</p>
+                )}
 
-            {story.factCheck ? (
-              <div className="fact-block">
-                <div className="fact-rumor">
-                  <b>✕ الشائعة</b>
-                  <p>{story.factCheck.rumor}</p>
-                </div>
-                <div className="fact-truth">
-                  <b>✓ الحقيقة</b>
-                  <p>{story.factCheck.truth}</p>
-                </div>
+                {story.factCheck ? (
+                  <div className="fact-block">
+                    <div className="fact-rumor">
+                      <b>✕ الشائعة</b>
+                      <p>{story.factCheck.rumor}</p>
+                    </div>
+                    <div className="fact-truth">
+                      <b>✓ الحقيقة</b>
+                      <p>{story.factCheck.truth}</p>
+                    </div>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
+            </div>
           ) : null}
 
           {podcastShow ? (

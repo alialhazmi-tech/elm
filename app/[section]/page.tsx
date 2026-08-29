@@ -74,14 +74,17 @@ export default async function SectionPage({ params, searchParams }: Props) {
       <SiteHeader active={basePath} />
 
       <main id="main-content">
-        <section className="hub-hero">
-          <p className="eyebrow">قسم</p>
-          <h1>{getSectionName(section)}</h1>
-          {secDef?.description ? (
-            <p className="hub-tagline" style={{ maxWidth: 620, margin: "6px auto 14px", color: "var(--muted)", fontSize: 14 }}>
-              {secDef.description}
-            </p>
-          ) : null}
+        <section
+          className="hub-hero"
+          style={{ "--sc": secDef?.color } as React.CSSProperties}
+        >
+          <div className="hub-hero-copy">
+            <p className="eyebrow">قسم</p>
+            <h1>{getSectionName(section)}</h1>
+            {secDef?.description ? (
+              <p className="hub-tagline">{secDef.description}</p>
+            ) : null}
+          </div>
           <p className="hub-count">
             {total === 0
               ? "لا مواد بعد"

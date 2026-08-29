@@ -49,7 +49,7 @@ export default async function Home() {
       <SiteHeader active="/" />
       <SeriesRail series={home.series} />
 
-      <main id="main-content" className="wrap">
+      <main id="main-content" className="wrap home-shell">
         <div className="day-line" aria-label="تاريخ اليوم">
           <time dateTime={riyadhDateISO()}>
             {toLatinDigits(today.hijri)}
@@ -66,26 +66,28 @@ export default async function Home() {
             {hero.image ? (
               <LeadMedia src={hero.image} href={storyHref(hero)} />
             ) : null}
-            <span
-              className="kicker"
-              style={{ "--kc": heroSeries?.color } as React.CSSProperties}
-            >
-              {heroKick ?? sectionName(hero.section)}
-              {heroKick ? (
-                <span className="sect">· {sectionName(hero.section)}</span>
+            <div className="lead-copy">
+              <span
+                className="kicker"
+                style={{ "--kc": heroSeries?.color } as React.CSSProperties}
+              >
+                {heroKick ?? sectionName(hero.section)}
+                {heroKick ? (
+                  <span className="sect">· {sectionName(hero.section)}</span>
+                ) : null}
+              </span>
+              <h1>
+                <Link className="story-link" href={storyHref(hero)}>
+                  {hero.title}
+                </Link>
+              </h1>
+              {hero.excerpt ? (
+                <p className="dek">{trimExcerpt(hero.excerpt, 180)}</p>
               ) : null}
-            </span>
-            <h1>
-              <Link className="story-link" href={storyHref(hero)}>
-                {hero.title}
-              </Link>
-            </h1>
-            {hero.excerpt ? (
-              <p className="dek">{trimExcerpt(hero.excerpt, 180)}</p>
-            ) : null}
-            <div className="story-meta">
-              <span><b>قراءة {formatReadingMinutes(hero.readingMinutes)}</b></span>
-              <span>تحرير: فريق العلم</span>
+              <div className="story-meta">
+                <span><b>قراءة {formatReadingMinutes(hero.readingMinutes)}</b></span>
+                <span>تحرير: فريق العلم</span>
+              </div>
             </div>
           </article>
           ) : (
