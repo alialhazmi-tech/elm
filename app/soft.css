@@ -738,3 +738,14 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 .icon-btn, .theme-toggle { width: 40px; height: 40px; }
 @media (max-width: 1100px) { .topbar-inner { min-height: 0; padding: 12px 24px; } .brand-word { font-size: 30px; } }
 @media (max-width: 640px) { .topbar-inner { padding: 10px 16px; } .brand-word { font-size: 28px; } }
+
+/* الهيدر: القائمة في المنتصف، والنص بوزن عادي */
+.topbar-inner { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 24px; }
+.topbar-inner .brand { justify-self: start; }
+.topbar-inner .topnav { justify-self: center; }
+.topbar-inner .top-tools { justify-self: end; margin-inline-start: 0; }
+.topnav > a, .nav-item > a { font-weight: 400; }
+.topnav > a.is-active, .nav-item > a.is-active { font-weight: 500; }
+.nav-panel a { font-weight: 400; }
+.nav-panel-series span { font-weight: 500; }
+@media (max-width: 1100px) { .topbar-inner { grid-template-columns: 1fr auto; } .topbar-inner .top-tools { grid-column: 2; } }
