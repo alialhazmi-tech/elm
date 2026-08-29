@@ -69,7 +69,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader active="/series" />
+      <SiteHeader active="/series" activeSeries={series.slug} />
 
       <main id="main-content" className="wrap sx-page" style={seriesStyle}>
         <nav className="sx-switch" aria-label="السلاسل">

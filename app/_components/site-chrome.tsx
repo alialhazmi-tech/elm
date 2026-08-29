@@ -86,7 +86,7 @@ function Caret() {
  * الهيدر: صف واحد رحب — شعار كبير يمينًا، قائمة بأسهم منسدلة هادئة،
  * ويسارًا زر دخول مملوء واحد وأيقونات بسيطة بلا خلفيات.
  */
-export async function SiteHeader({ active }: { active?: string }) {
+export async function SiteHeader({ active, activeSeries }: { active?: string; activeSeries?: string }) {
   const sectionActive = SECTIONS.some((item) => item.href === active);
   const seriesActive = active === "/series";
 
@@ -156,6 +156,20 @@ export async function SiteHeader({ active }: { active?: string }) {
           </details>
         </div>
       </div>
+      {/* الجوال: تصنيفات السلاسل فوق في كل الصفحات — شريط رقائق قابل للتمرير */}
+      <nav className="sx-switch top-series-mobile" aria-label="السلاسل">
+        <Link href="/series" className="sx-all">كل السلاسل</Link>
+        {SERIES.map((item) => (
+          <Link
+            key={item.slug}
+            href={`/series/${item.slug}`}
+            className={item.slug === activeSeries ? "is-active" : undefined}
+            style={{ "--sc": item.color } as React.CSSProperties}
+          >
+            {item.name}
+          </Link>
+        ))}
+      </nav>
       <BreakingBar />
     </header>
   );
