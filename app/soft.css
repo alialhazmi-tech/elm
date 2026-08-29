@@ -426,3 +426,47 @@ body { background: var(--bg); color: var(--ink); }
 @media (max-width: 1040px) {
   .sx-hero-media, .sh-lead-media { height: auto; min-height: 0; aspect-ratio: 16 / 10; }
 }
+
+/* ============ الفوتر ============ */
+.footer { margin: 72px auto 0; max-width: 1240px; padding: 0 24px 24px; background: transparent; color: var(--ink-2); border: 0; }
+.footer-shell { max-width: none; padding: 40px 40px 24px; border-radius: var(--r-panel); background: var(--surface-2); }
+.footer-grid { display: grid; grid-template-columns: 1.1fr 0.9fr 1.1fr 1.4fr; gap: 36px; }
+.ft-col { display: flex; flex-direction: column; gap: 14px; }
+.ft-brand-word { font-family: var(--f-logo), var(--font-display); font-weight: 900; font-size: 34px; color: var(--ink); text-decoration: none; line-height: 1; }
+.ft-tagline { margin: 0; font-size: 14px; line-height: 1.8; color: var(--ink-2); max-width: 32ch; }
+.ft-pills { display: none; }
+.ft-head { margin: 0; font-family: var(--font-display); font-size: 15px; font-weight: 800; color: var(--ink); }
+.ft-nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.ft-nav-list.ft-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+.ft-nav-list a { font-size: 14px; color: var(--ink-2); text-decoration: none; }
+.ft-nav-list a:hover { color: var(--navy); }
+.ft-series-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 18px; }
+.ft-series-link { display: inline-flex; align-items: center; gap: 8px; color: var(--ink-2); font-size: 14px; text-decoration: none; }
+.ft-series-link:hover { color: var(--navy); }
+.ft-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ft-series-name { font-weight: 600; color: var(--ink); }
+.ft-series-sub { display: none; }
+.ft-all-series { margin-top: 4px; font-size: 13.5px; font-weight: 600; color: var(--navy); text-decoration: none; }
+.ft-all-series:hover { text-decoration: underline; }
+.ft-col-newsletter { padding: 0; border: 0; background: transparent; }
+.ft-newsletter-sub { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
+.ft-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; min-height: 50px; padding: 6px 6px 6px 16px; margin: 0; border-radius: 25px; background: var(--surface); border: 0; gap: 8px; }
+.ft-compose:focus-within { box-shadow: 0 0 0 3px rgb(31 79 163 / 0.18); }
+.ft-compose input { width: 100%; min-width: 0; height: auto; border: 0; background: transparent; padding: 0; font: inherit; font-size: 14px; color: var(--ink); outline: none; border-radius: 0; }
+.ft-compose input:focus { box-shadow: none; border: 0; }
+.ft-compose input::placeholder { color: var(--ink-3); }
+.ft-compose button { flex: none; width: auto; height: 38px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ft-compose button:hover:not(:disabled) { background: var(--navy-deep); }
+.ft-compose-msg { grid-column: 1 / -1; font-size: 13px; margin: 0; padding: 0 8px 4px; color: var(--ink-2); }
+.ft-compose-msg.is-ok { color: var(--success); }
+.ft-compose-msg.is-err { color: #c0392b; }
+.ft-compose button:disabled { opacity: 0.45; }
+.footer-legal { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-3); }
+.ft-legal-left a { color: var(--ink-3); text-decoration: none; }
+.ft-legal-left a:hover { color: var(--navy); }
+@media (max-width: 1040px) { .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; } }
+@media (max-width: 640px) {
+  .footer { padding: 0 16px 16px; margin-top: 48px; }
+  .footer-shell { padding: 28px 22px 18px; }
+  .footer-grid { grid-template-columns: 1fr; gap: 26px; }
+}
