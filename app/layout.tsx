@@ -1,19 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { Amiri, Tajawal } from "next/font/google";
+import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
-// خط تحريري عربي واحد للواجهة، مع Amiri لكلمة «العلم» وحدها.
-const textFont = Tajawal({
+// تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
+const displayFont = Alexandria({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700", "800"],
+  weight: ["700", "800"],
+  variable: "--f-display",
+  display: "swap",
+});
+
+const textFont = Readex_Pro({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
   variable: "--f-text",
   display: "swap",
 });
 
-const logoFont = Amiri({
+const logoFont = Noto_Kufi_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["700"],
+  weight: ["900"],
   variable: "--f-logo",
   display: "swap",
 });
@@ -52,8 +59,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBF7F4" },
-    { media: "(prefers-color-scheme: dark)", color: "#1F1518" },
+    { media: "(prefers-color-scheme: light)", color: "#F5F7FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#060E18" },
   ],
 };
 
@@ -66,7 +73,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="ar"
       dir="rtl"
       data-scroll-behavior="smooth"
-      className={`${textFont.variable} ${logoFont.variable}`}
+      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
       suppressHydrationWarning
     >
       <body>
