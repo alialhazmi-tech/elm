@@ -9,6 +9,7 @@ import { MemberEntry } from "./member-entry";
 // «السلاسل» خرجت من القائمة العلوية — مسطرة السلاسل تحت الهيدر تغني عنها.
 const NAV = [
   { label: "الرئيسية", href: "/" },
+  { label: "السلاسل", href: "/series" },
   { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "تقنية", href: "/technology" },
@@ -86,7 +87,6 @@ export async function SiteHeader({ active }: { active?: string }) {
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
           <span className="brand-word">العلم</span>
-          <span className="brand-tag">المعرفة وراء الخبر</span>
         </Link>
         <nav className="topnav" aria-label="التنقل الرئيسي">
           {NAV.map((item) => (
@@ -100,10 +100,17 @@ export async function SiteHeader({ active }: { active?: string }) {
           ))}
         </nav>
         <div className="top-tools">
-          <Link className="ask-pill" href="/search" aria-label="البحث في العلم">
-            <span className="spark" aria-hidden="true">✦</span>
-            <span className="hint">ابحث أو اسأل العلم…</span>
-            <kbd>⌘K</kbd>
+          <Link className="ask-pill" href="/search" aria-label="اسأل العلم">
+            <span>اسأل العلم</span>
+            <svg className="spark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+            </svg>
+          </Link>
+          <Link className="icon-btn" href="/search" aria-label="البحث في العلم">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
           </Link>
           <ThemeToggle />
           <MemberEntry />

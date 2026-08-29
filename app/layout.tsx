@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
 import "./editorial-v2.css";
+import "./soft.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
 // تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
