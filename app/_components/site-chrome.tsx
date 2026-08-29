@@ -6,22 +6,8 @@ import { NewsletterForm } from "./newsletter-form";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
 
-// «السلاسل» خرجت من القائمة العلوية — مسطرة السلاسل تحت الهيدر تغني عنها.
-const NAV = [
-  { label: "الرئيسية", href: "/" },
-  { label: "السلاسل", href: "/series" },
-  { label: "محليات", href: "/politics" },
-  { label: "اقتصاد", href: "/economy" },
-  { label: "تقنية", href: "/technology" },
-  { label: "علوم", href: "/sciences" },
-  { label: "صحة", href: "/health" },
-  { label: "رياضة", href: "/sport" },
-  { label: "بودكاست", href: "/podcasts" },
-];
-
-const MOBILE_NAV = [
-  { label: "الرئيسية", href: "/" },
-  { label: "السلاسل", href: "/series" },
+/** الأقسام — تحت «الأخبار» في قائمة منسدلة. */
+const SECTIONS = [
   { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "تقنية", href: "/technology" },
@@ -31,8 +17,15 @@ const MOBILE_NAV = [
   { label: "ثقافة", href: "/culture" },
   { label: "عالم", href: "/world" },
   { label: "إنفوجرافيك", href: "/infographics" },
-  { label: "مرئي", href: "/videos" },
+];
+
+const MOBILE_NAV = [
+  { label: "الرئيسية", href: "/" },
+  { label: "السلاسل", href: "/series" },
+  { label: "جاك العلم", href: "/jak" },
   { label: "بودكاست", href: "/podcasts" },
+  { label: "فيديو", href: "/videos" },
+  ...SECTIONS,
 ];
 
 const FOOTER_SECTIONS = [
@@ -81,52 +74,88 @@ async function BreakingBar() {
  * الهيدر: لوح مداد، اللوجوتايب السالب (كلمة «العلم» وحدها —
  * Noto Kufi ‏900)، والنشط بتمييز كحلي فاتح دون أحمر.
  */
+function Caret() {
+  return (
+    <svg className="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+/**
+ * الهيدر: صف واحد رحب — شعار كبير يمينًا، قائمة بأسهم منسدلة هادئة،
+ * ويسارًا زر دخول مملوء واحد وأيقونات بسيطة بلا خلفيات.
+ */
 export async function SiteHeader({ active }: { active?: string }) {
+  const sectionActive = SECTIONS.some((item) => item.href === active);
+  const seriesActive = active === "/series";
+
   return (
     <header className="topbar">
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
           <span className="brand-word">العلم</span>
         </Link>
+
         <nav className="topnav" aria-label="التنقل الرئيسي">
-          {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={active === item.href ? "is-active" : undefined}
-            >
-              {item.label}
+          <div className="nav-item has-menu">
+            <Link href="/politics" className={sectionActive ? "is-active" : undefined} aria-haspopup="true">
+              الأخبار <Caret />
             </Link>
-          ))}
+            <div className="nav-panel" role="menu">
+              {SECTIONS.map((item) => (
+                <Link key={item.href} href={item.href} role="menuitem" className={item.href === active ? "is-active" : undefined}>
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="nav-item has-menu">
+            <Link href="/series" className={seriesActive ? "is-active" : undefined} aria-haspopup="true">
+              السلاسل <Caret />
+            </Link>
+            <div className="nav-panel nav-panel-series" role="menu">
+              {SERIES.map((item) => (
+                <Link key={item.slug} href={`/series/${item.slug}`} role="menuitem" style={{ "--sc": item.color } as React.CSSProperties}>
+                  <i className="dot" aria-hidden="true" />
+                  <span>{item.name}</span>
+                  <small>{item.description}</small>
+                </Link>
+              ))}
+              <Link href="/series" role="menuitem" className="nav-all">كل السلاسل ←</Link>
+            </div>
+          </div>
+          <Link href="/jak" className={active === "/jak" ? "is-active" : undefined}>جاك العلم</Link>
+          <Link href="/podcasts" className={active === "/podcasts" ? "is-active" : undefined}>بودكاست</Link>
+          <Link href="/videos" className={active === "/videos" ? "is-active" : undefined}>فيديو</Link>
         </nav>
+
         <div className="top-tools">
-          <Link className="ask-pill" href="/search" aria-label="اسأل العلم">
-            <span>اسأل العلم</span>
-            <svg className="spark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-            </svg>
-          </Link>
-          <Link className="icon-btn" href="/search" aria-label="البحث في العلم">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M20 20l-3.5-3.5" />
-            </svg>
+          <Link className="icon-btn" href="/search" aria-label="ابحث أو اسأل العلم">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           </Link>
           <ThemeToggle />
           <MemberEntry />
+          <details className="mnav">
+            <summary aria-label="القائمة">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+            </summary>
+            <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
+              {MOBILE_NAV.map((item) => (
+                <Link key={item.href} href={item.href} className={active === item.href ? "is-active" : undefined}>
+                  {item.label}
+                </Link>
+              ))}
+              <span className="mnav-lbl">السلاسل</span>
+              {SERIES.map((item) => (
+                <Link key={item.slug} href={`/series/${item.slug}`} style={{ "--sc": item.color } as React.CSSProperties} className="mnav-series">
+                  {item.name}
+                </Link>
+              ))}
+            </nav>
+          </details>
         </div>
       </div>
-      <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
-        {MOBILE_NAV.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={active === item.href ? "is-active" : undefined}
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
       <BreakingBar />
     </header>
   );

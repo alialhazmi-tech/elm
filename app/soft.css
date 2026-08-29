@@ -658,3 +658,71 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 .ins-arrows { display: inline-flex; gap: 4px; }
 .ins-arrows button { width: 30px; height: 30px; border: 0; border-radius: 15px; background: transparent; color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
 .ins-arrows button:hover { background: var(--surface-2); color: var(--ins-ink); }
+
+/* ============ الهيدر: صف واحد رحب (نمط property) ============ */
+.topbar { background: var(--surface); border-bottom: 1px solid var(--line); }
+.topbar-inner { max-width: 1240px; padding: 22px 24px; min-height: 104px; gap: 40px; align-items: center; }
+.brand-word { font-size: 46px; }
+.topnav { gap: 6px; align-items: center; }
+.topnav > a, .nav-item > a { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 10px; border-radius: 0; background: transparent; font-size: 16px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.topnav > a:hover, .nav-item > a:hover { background: transparent; color: var(--navy); }
+.topnav > a.is-active, .nav-item > a.is-active { background: transparent; color: var(--navy); }
+.nav-item { position: relative; }
+.nav-item .caret { color: var(--ink-3); transition: transform 0.2s ease; }
+.nav-item:hover .caret, .nav-item:focus-within .caret { transform: rotate(180deg); }
+.nav-panel {
+  position: absolute; top: calc(100% + 8px); inset-inline-start: 0; min-width: 220px; padding: 10px; z-index: 50;
+  display: flex; flex-direction: column; gap: 2px; width: auto; grid-template-columns: none;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 20px 50px rgb(16 30 48 / 0.14);
+  opacity: 0; visibility: hidden; transform: translateY(-6px); transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s;
+}
+.nav-item:hover .nav-panel, .nav-item:focus-within .nav-panel { opacity: 1; visibility: visible; transform: translateY(0); }
+.nav-panel a { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-radius: 12px; color: var(--ink); font-size: 15px; font-weight: 600; text-decoration: none; }
+.nav-panel a:hover, .nav-panel a.is-active { background: var(--surface-2); color: var(--navy); }
+.nav-panel-series { min-width: 300px; }
+.nav-panel-series .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--sc); flex: none; }
+.nav-panel-series small { margin-inline-start: auto; font-size: 12px; font-weight: 500; color: var(--ink-3); }
+.nav-panel .nav-all { margin-top: 4px; border-top: 1px solid var(--line); border-radius: 0; padding-top: 12px; color: var(--navy); font-size: 14px; }
+.top-tools { gap: 6px; }
+.icon-btn, .theme-toggle { width: 44px; height: 44px; background: transparent; color: var(--ink); }
+.icon-btn:hover, .theme-toggle:hover { background: var(--surface-2); }
+.theme-toggle { font-size: 18px; }
+.member-entry { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; height: 48px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-size: 16px; font-weight: 700; margin-inline-start: 6px; }
+.member-entry:hover { background: var(--navy-deep); color: #fff; opacity: 1; }
+.member-entry.is-member { background: var(--surface-2); color: var(--ink); border: 0; }
+.member-entry.is-member:hover { background: var(--line); }
+@media (max-width: 1100px) {
+  .topbar-inner { min-height: 84px; padding: 14px 24px; gap: 20px; }
+  .brand-word { font-size: 36px; }
+}
+@media (max-width: 640px) {
+  .topbar-inner { padding: 10px 16px; min-height: 64px; gap: 8px; }
+  .brand-word { font-size: 30px; }
+  .member-entry { display: none; }
+  .theme-toggle { display: none; }
+}
+
+/* قائمة الجوال/اللوحي: زر واحد يفتح لوحة كاملة */
+.mnav { display: none; position: relative; }
+.mnav summary { list-style: none; width: 44px; height: 44px; border-radius: 22px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: var(--ink); }
+.mnav summary::-webkit-details-marker { display: none; }
+.mnav summary::marker { content: ""; }
+.mnav[open] summary { background: var(--surface-2); }
+.mnav-lbl { flex-basis: 100%; margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--ink-3); }
+.mnav-series { color: color-mix(in srgb, var(--sc) 70%, var(--ink)) !important; background: color-mix(in srgb, var(--sc) 12%, var(--surface)) !important; }
+@media (max-width: 1100px) {
+  .topnav { display: none; }
+  .mnav { display: block; }
+  .topbar-inner { position: relative; }
+  .mobile-nav {
+    position: absolute; inset-inline-end: 24px; top: calc(100% + 4px); z-index: 60; width: min(380px, calc(100vw - 48px));
+    display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; margin: 0; overflow: visible;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 20px; box-shadow: 0 20px 50px rgb(16 30 48 / 0.16);
+  }
+  .mobile-nav a { flex: none; height: 36px; padding: 0 14px; border-radius: 999px; background: var(--surface-2); color: var(--ink); font-size: 13.5px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; }
+  .mobile-nav a.is-active { background: var(--navy); color: #fff; }
+  .mnav { position: static; }
+}
+@media (max-width: 640px) {
+  .mobile-nav { inset-inline: 16px; width: auto; }
+}
