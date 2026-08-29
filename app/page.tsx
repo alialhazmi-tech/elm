@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
-import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
+import { formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesDirectory, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
 
@@ -37,7 +37,6 @@ export default async function Home() {
     seriesDirectory().catch(() => ({} as Awaited<ReturnType<typeof seriesDirectory>>)),
   ]);
   const hero = home.hero;
-  const today = brandDate(new Date().toISOString());
 
   // «وراء الخبر»: مرتكز + 3 صفوف + سؤال الأسبوع.
   const contextFeatured = home.mosaic[0];
@@ -57,28 +56,6 @@ export default async function Home() {
       <SiteHeader active="/" />
 
       <main id="main-content" className="wrap home-shell">
-        <nav className="sx-switch home-switch" aria-label="السلاسل">
-          <Link href="/series" className="sx-all">كل السلاسل</Link>
-          {home.series.map((item) => (
-            <Link
-              key={item.slug}
-              href={`/series/${item.slug}`}
-              style={{ "--sc": item.color } as React.CSSProperties}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="day-line" aria-label="تاريخ اليوم">
-          <time dateTime={riyadhDateISO()}>
-            {toLatinDigits(today.hijri)}
-            <span aria-hidden="true"> · </span>
-            {toLatinDigits(today.gregorian)}
-          </time>
-          <span className="live">تغطية مستمرة</span>
-        </div>
-
         {/* الصدارة: لوحة ناعمة — النص يمينًا والصورة يسارًا بلا طبقة داكنة */}
         {hero ? (
           <section className="sh-lead" aria-label="قصة الصدارة" data-story-id={hero.id}>

@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
-import { ALL_SERIES, pageBySeries, sectionName, SERIES, seedContentProvider } from "@/lib/content/provider";
+import { ALL_SERIES, pageBySeries, sectionName, seedContentProvider } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 import { formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
 
@@ -69,23 +69,9 @@ export default async function SeriesPage({ params, searchParams }: Props) {
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader active="/series" />
+      <SiteHeader active="/series" activeSeries={series.slug} />
 
       <main id="main-content" className="wrap sx-page" style={seriesStyle}>
-        <nav className="sx-switch" aria-label="السلاسل">
-          <Link href="/series" className="sx-all">كل السلاسل</Link>
-          {SERIES.map((item) => (
-            <Link
-              key={item.slug}
-              href={`/series/${item.slug}`}
-              className={item.slug === series.slug ? "is-active" : undefined}
-              style={{ "--sc": item.color } as React.CSSProperties}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-
         <section className={`sx-hero${lead?.image ? "" : " no-media"}`} aria-label={`سلسلة ${series.name}`}>
           <div className="sx-hero-copy">
             <div className="sx-hero-top">
