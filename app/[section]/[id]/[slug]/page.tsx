@@ -12,7 +12,7 @@ import {
   ArticleTracker,
   PersonalizedRelated,
 } from "@/app/_components/article-experience";
-import { brandDate, formatReadingBrief, toLatinDigits } from "@/lib/format";
+import { brandDate, formatArticleDek, formatReadingBrief, formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
@@ -82,7 +82,7 @@ export default async function ArticlePage({ params }: Params) {
   }
 
   const series = seriesOf(story);
-  const related = await seedContentProvider.listRelated(story, 3);
+  const related = await seedContentProvider.listRelated(story, 6);
 
   // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية نفسها التي يقرأ منها الموقع القديم.
   const podcastShow = story.format === "podcasts" ? podcastShowFor(story.id) : undefined;
@@ -155,11 +155,21 @@ export default async function ArticlePage({ params }: Params) {
       </>
     );
   }
-  const nextInSeries = series
-    ? related.find((item) => item.series === series.slug)
-    : undefined;
   const published = story.publishedAt ? new Date(story.publishedAt) : null;
   const readingBrief = formatReadingBrief(story.excerpt);
+  const isInfographicStory =
+    story.section === "infographics" ||
+    story.format === "infographics" ||
+    story.format === "infographic" ||
+    story.title.includes("إنفوجرافيك");
+  // تحت العنوان: الجملة الأولى (الخلاصة). صندوق «قبل القراءة» يظهر فقط حين يضيف الموجز الكامل شيئًا يُذكر.
+  const dek = readingBrief;
+  const fullExcerpt = formatArticleDek(story.excerpt);
+  const showBrief = fullExcerpt.length > readingBrief.length + 80;
+  const askSeed = story.title.slice(0, 80);
+  // الجانب: التالي في السلسلة نفسها (حتى 3)، والذيل: مواد من سلاسل أخرى.
+  const sameSeries = series ? related.filter((item) => item.series === series.slug).slice(0, 3) : [];
+  const otherSeries = related.filter((item) => !sameSeries.includes(item));
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -179,17 +189,12 @@ export default async function ArticlePage({ params }: Params) {
       <SiteHeader />
 
       <main id="main-content" className="article-shell">
-        <nav className="breadcrumb" aria-label="مسار التصفح">
-          <Link href="/">الرئيسية</Link>
-          <span aria-hidden="true">/</span>
-          <Link href={`/${story.section}`}>{sectionName(story.section)}</Link>
-          {series ? (
-            <>
-              <span aria-hidden="true">/</span>
-              <Link href={`/series/${series.slug}`}>{series.name}</Link>
-            </>
-          ) : null}
-        </nav>
+        {series && !podcastShow ? (
+          <div className="sa-strip" style={{ "--sc": series.color } as React.CSSProperties}>
+            <span className="sn">أنت تقرأ ضمن سلسلة «{series.name}» — {series.description}</span>
+            <Link href={`/series/${series.slug}`}>تصفح السلسلة ←</Link>
+          </div>
+        ) : null}
 
         <article data-story-id={story.id}>
           {podcastShow ? (
@@ -216,93 +221,151 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             </header>
           ) : (
-            <header className="article-head">
-              {series ? (
-                <Link
-                  className="series-chip"
-                  href={`/series/${series.slug}`}
-                  style={{ "--sc": series.color } as React.CSSProperties}
-                >
-                  {series.name}
-                </Link>
-              ) : null}
-              <h1>{story.title}</h1>
-              <div className="article-meta">
-                <span>{sectionName(story.section)}</span>
-                {published && story.publishedAt ? (
-                  <time dateTime={story.publishedAt}>
-                    {brandDate(story.publishedAt).hijri} — {brandDate(story.publishedAt).gregorian}
-                  </time>
-                ) : null}
-                <span>{toLatinDigits(story.readingMinutes)} دقائق قراءة</span>
-                <span>تحرير: فريق العلم</span>
+            <header className={`sa-head${isInfographicStory || !story.image ? " no-media" : ""}`}>
+              <div className="sa-head-copy">
+                <div className="sa-head-top">
+                  <nav className="breadcrumb" aria-label="مسار التصفح">
+                    <Link href="/">الرئيسية</Link>
+                    <span aria-hidden="true">·</span>
+                    <Link href={`/${story.section}`}>{sectionName(story.section)}</Link>
+                    {series ? (
+                      <>
+                        <span aria-hidden="true">·</span>
+                        <Link href={`/series/${series.slug}`}>{series.name}</Link>
+                      </>
+                    ) : null}
+                  </nav>
+                  <h1>{story.title}</h1>
+                  {dek ? <p className="sa-dek">{dek}</p> : null}
+                </div>
+                <div className="sa-head-bottom">
+                  <div className="sa-byline">
+                    <span className="sa-avatar" aria-hidden="true">ع</span>
+                    <div>
+                      <b>فريق العلم</b>
+                      <span className="meta">
+                        {published && story.publishedAt ? (
+                          <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
+                        ) : null}
+                        {published ? " · " : ""}
+                        قراءة {formatReadingMinutes(story.readingMinutes)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
+              {story.image && !isInfographicStory ? (
+                <figure className="sa-media">
+                  <div className="soft-img">
+                    <Image
+                      src={story.image}
+                      alt=""
+                      fill
+                      sizes="(max-width: 1040px) 100vw, 600px"
+                      priority
+                    />
+                  </div>
+                </figure>
+              ) : null}
             </header>
           )}
 
-          {!podcastShow && readingBrief ? (
-            <aside className="article-brief" aria-labelledby="article-brief-label">
-              <p id="article-brief-label" className="article-brief-label">قبل القراءة</p>
-              <p className="article-brief-text">{readingBrief}</p>
-            </aside>
-          ) : null}
-
           <ArticleTracker storyId={story.id} />
 
-          {!podcastShow && story.image ? (
-            story.section === "infographics" ||
-            story.format === "infographics" ||
-            story.format === "infographic" ||
-            story.title.includes("إنفوجرافيك") ? (
-              <InfographicLightbox src={story.image} title={story.title} />
-            ) : (
-              <figure className="article-figure">
-                <Image
-                  src={story.image}
-                  alt=""
-                  fill
-                  sizes="(max-width: 1100px) 100vw, 1180px"
-                  priority
-                />
-              </figure>
-            )
+          {!podcastShow && story.image && isInfographicStory ? (
+            <InfographicLightbox src={story.image} title={story.title} />
           ) : null}
 
           {!podcastShow ? (
-            <div className="article-reading-layout">
-              <aside className="article-reader-rail" aria-label="أدوات المادة">
+            <div className="sa-layout">
+              <div className="sa-body">
+                {showBrief ? (
+                  <aside className="article-brief" aria-labelledby="article-brief-label">
+                    <p id="article-brief-label" className="article-brief-label">قبل القراءة — الخلاصة في 30 ثانية</p>
+                    <p className="article-brief-text">{fullExcerpt}</p>
+                    <p className="article-brief-foot">من موجز المادة المنشورة</p>
+                  </aside>
+                ) : null}
+
+                <div className="article-body" id="article-body">
+                  {story.body && looksLikeHtml(story.body) ? (
+                    // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
+                    <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
+                  ) : story.body ? (
+                    story.body
+                      .split(/\n{2,}/)
+                      .filter((paragraph) => paragraph.trim())
+                      .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
+                  ) : story.excerpt ? null : (
+                    <p className="article-placeholder">متن هذه المادة غير متاح الآن.</p>
+                  )}
+
+                  {story.factCheck ? (
+                    <div className="fact-block">
+                      <div className="fact-rumor">
+                        <b>✕ الشائعة</b>
+                        <p>{story.factCheck.rumor}</p>
+                      </div>
+                      <div className="fact-truth">
+                        <b>✓ الحقيقة</b>
+                        <p>{story.factCheck.truth}</p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="sa-poll">
+                  <ArticleClosingPoll
+                    storyId={story.id}
+                    question="هل غيّرت هذه المادة فهمك للموضوع؟"
+                    options={[
+                      { label: "نعم، أضافت لي سياقًا جديدًا" },
+                      { label: "كنت أعرف أغلب ما فيها" },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <aside className="sa-aside" aria-label="أدوات المادة">
+                <div className="sa-ask">
+                  <span className="sa-ask-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+                    </svg>
+                    اسأل العلم عن هذه المادة
+                  </span>
+                  <Link className="q" href={`/search?q=${encodeURIComponent(askSeed)}`}>ما خلفية الموضوع؟</Link>
+                  <Link className="q" href={`/search?q=${encodeURIComponent(askSeed)}`}>ماذا نشر العلم عنه سابقًا؟</Link>
+                  <form action="/search" role="search">
+                    <input type="search" name="q" placeholder="اكتب سؤالك" aria-label="اسأل العلم" dir="rtl" />
+                    <button type="submit">اسأل</button>
+                  </form>
+                </div>
+
                 <ArticleToolbar
                   storyId={story.id}
                   joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
                   excerpt={story.excerpt}
                 />
-              </aside>
-              <div className="article-body" id="article-body">
-                {story.body && looksLikeHtml(story.body) ? (
-                  // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
-                  <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
-                ) : story.body ? (
-                  story.body
-                    .split(/\n{2,}/)
-                    .filter((paragraph) => paragraph.trim())
-                    .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
-                ) : story.excerpt ? null : (
-                  <p className="article-placeholder">متن هذه المادة غير متاح الآن.</p>
-                )}
 
-                {story.factCheck ? (
-                  <div className="fact-block">
-                    <div className="fact-rumor">
-                      <b>✕ الشائعة</b>
-                      <p>{story.factCheck.rumor}</p>
-                    </div>
-                    <div className="fact-truth">
-                      <b>✓ الحقيقة</b>
-                      <p>{story.factCheck.truth}</p>
-                    </div>
+                {series ? (
+                  <div className="sa-next" style={{ "--sc": series.color } as React.CSSProperties}>
+                    <span className="lbl">التالي في سلسلة «{series.name}»</span>
+                    {sameSeries.map((item, index) => (
+                      <Link key={item.id} href={storyHref(item)}>
+                        {index === 0 && item.image ? (
+                          <span className="soft-img">
+                            <Image src={item.image} alt="" fill sizes="360px" />
+                          </span>
+                        ) : null}
+                        <h3>{item.title}</h3>
+                        <span className="meta">قراءة {formatReadingMinutes(item.readingMinutes)}</span>
+                      </Link>
+                    ))}
+                    <Link className="all" href={`/series/${series.slug}`}>تصفح السلسلة كاملة ←</Link>
                   </div>
                 ) : null}
-              </div>
+              </aside>
             </div>
           ) : null}
 
@@ -339,38 +402,11 @@ export default async function ArticlePage({ params }: Params) {
               </section>
             )
           ) : null}
-
-          {!podcastShow ? (
-            <ArticleClosingPoll
-              storyId={story.id}
-              question="هل غيّرت هذه المادة فهمك للموضوع؟"
-              options={[
-                { label: "نعم، أضافت لي سياقًا جديدًا" },
-                { label: "كنت أعرف أغلب ما فيها" },
-              ]}
-            />
-          ) : null}
-
-          {series ? (
-            <aside className="series-note" style={{ "--sc": series.color } as React.CSSProperties}>
-              <div className="series-note-copy">
-                <p className="sn-kick">أنت تقرأ ضمن سلسلة</p>
-                <h2>{series.name}</h2>
-                <p className="sn-desc">{series.description}</p>
-                <Link href={`/series/${series.slug}`}>تصفح السلسلة كاملة ←</Link>
-              </div>
-              {nextInSeries ? (
-                <Link className="series-next" href={storyHref(nextInSeries)}>
-                  <span>أكمل الفهم</span>
-                  <b>{nextInSeries.title}</b>
-                  <small>{toLatinDigits(nextInSeries.readingMinutes)} دقائق قراءة ←</small>
-                </Link>
-              ) : null}
-            </aside>
-          ) : null}
         </article>
 
-        <PersonalizedRelated storyId={story.id} fallback={related.map((item) => toRelatedCard(item))} />
+        <div className="sa-related">
+          <PersonalizedRelated storyId={story.id} fallback={otherSeries.map((item) => toRelatedCard(item))} />
+        </div>
       </main>
 
       <SiteFooter />
