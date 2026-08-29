@@ -86,7 +86,7 @@ test("الإعجاب للزائر يقود إلى مسار الدخول الحا
     read("app/[section]/[id]/[slug]/page.tsx"),
   ]);
   assert.match(client, /joinHref/);
-  assert.match(client, /♡ أعجبني/);
+  assert.match(client, /<ToolIcon name="heart" \/>\s*أعجبني/, "زر الإعجاب للزائر بلا أيقونة قلب");
   assert.match(article, /\/join\?next=/);
 });
 
