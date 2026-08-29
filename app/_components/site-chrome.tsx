@@ -22,10 +22,10 @@ const SECTIONS = [
 const MOBILE_NAV = [
   { label: "الرئيسية", href: "/" },
   { label: "السلاسل", href: "/series" },
-  { label: "جاك العلم", href: "/jak" },
+  { label: "إنفوجرافيك", href: "/infographics" },
   { label: "بودكاست", href: "/podcasts" },
   { label: "فيديو", href: "/videos" },
-  ...SECTIONS,
+  ...SECTIONS.filter((item) => item.href !== "/infographics"),
 ];
 
 const FOOTER_SECTIONS = [
@@ -103,7 +103,7 @@ export async function SiteHeader({ active, activeSeries }: { active?: string; ac
               الأخبار <Caret />
             </Link>
             <div className="nav-panel" role="menu">
-              {SECTIONS.map((item) => (
+              {SECTIONS.filter((item) => item.href !== "/infographics").map((item) => (
                 <Link key={item.href} href={item.href} role="menuitem" className={item.href === active ? "is-active" : undefined}>
                   {item.label}
                 </Link>
@@ -125,7 +125,7 @@ export async function SiteHeader({ active, activeSeries }: { active?: string; ac
               <Link href="/series" role="menuitem" className="nav-all">كل السلاسل ←</Link>
             </div>
           </div>
-          <Link href="/jak" className={active === "/jak" ? "is-active" : undefined}>جاك العلم</Link>
+          <Link href="/infographics" className={active === "/infographics" ? "is-active" : undefined}>إنفوجرافيك</Link>
           <Link href="/podcasts" className={active === "/podcasts" ? "is-active" : undefined}>بودكاست</Link>
           <Link href="/videos" className={active === "/videos" ? "is-active" : undefined}>فيديو</Link>
         </nav>
