@@ -603,3 +603,7 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 .home-switch { margin: 4px 0 6px; justify-content: center; }
 .home-switch a { height: 38px; font-size: 14px; }
 @media (max-width: 640px) { .home-switch { justify-content: flex-start; } }
+
+/* بالأرقام: الرقم يمينًا، والعلامة (٪/عملة) قبله على الطريقة العربية */
+.figure-cell .v { direction: rtl; text-align: right; display: flex; align-items: baseline; gap: 4px; justify-content: flex-start; }
+.figure-cell .v small { order: -1; font-size: 26px; font-weight: 700; color: var(--navy); }
