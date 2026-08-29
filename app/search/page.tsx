@@ -28,27 +28,17 @@ export default async function SearchPage({ searchParams }: Props) {
       <SiteHeader />
 
       <main id="main-content">
-        <section className="hub-hero">
-          <p className="eyebrow">اسأل العلم</p>
-          <h1>{query ? `نتائج «${query}»` : "ابحث في العلم"}</h1>
-          <p className="hub-count">
-            {query
-              ? pageCount > 1
-                ? `${toLatinDigits(total)} نتيجة · عرض ${toLatinDigits(from)}–${toLatinDigits(to)} · صفحة ${toLatinDigits(page)} من ${toLatinDigits(pageCount)}`
-                : `${toLatinDigits(total)} نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات`
-              : "اكتب سؤالك أو كلمتك — والإجابات الذكية بالإحالة للمصدر تصل مع مرحلة خدمات الذكاء"}
-          </p>
-        </section>
-
-        <div className="wrap">
-          <section className="ai-surface ask-block" style={{ marginTop: 0 }}>
-            <form className="ask-form" action="/search" role="search">
+        <section className="hub-hero search-hero">
+          <div className="hub-hero-copy search-hero-copy">
+            <p className="eyebrow">اسأل العلم</p>
+            <h1>{query ? `نتائج «${query}»` : "ماذا تريد أن تعرف؟"}</h1>
+            <form className="ask-form search-hero-form" action="/search" role="search">
               <span className="spark" aria-hidden="true">✦</span>
               <input
                 type="search"
                 name="q"
                 defaultValue={query}
-                placeholder="لماذا ترتفع أسعار التنجستن؟"
+                placeholder="اكتب سؤالًا أو موضوعًا"
                 aria-label="ابحث في العلم"
                 dir="rtl"
               />
@@ -64,8 +54,17 @@ export default async function SearchPage({ searchParams }: Props) {
                 </div>
               </div>
             ) : null}
-          </section>
+          </div>
+          <p className="hub-count">
+            {query
+              ? pageCount > 1
+                ? `${toLatinDigits(total)} نتيجة · عرض ${toLatinDigits(from)}–${toLatinDigits(to)} · صفحة ${toLatinDigits(page)} من ${toLatinDigits(pageCount)}`
+                : `${toLatinDigits(total)} نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات`
+              : "بحث واحد في المواد والسلاسل والموضوعات"}
+          </p>
+        </section>
 
+        <div className="wrap">
           {results.length > 0 ? (
             <>
               <div className="grid-3">

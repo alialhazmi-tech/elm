@@ -60,7 +60,9 @@ export function MosaicCard({
       data-story-id={story.id}
     >
       {story.image ? (
-        <Image className="c-img" src={story.image} alt="" width={640} height={tall ? 590 : 400} />
+        <Link className="m-media" href={storyHref(story)} tabIndex={-1} aria-hidden="true">
+          <Image className="c-img" src={story.image} alt="" width={640} height={tall ? 590 : 400} />
+        </Link>
       ) : null}
       <div className="m-body">
         <div className="m-kick">
@@ -73,7 +75,11 @@ export function MosaicCard({
         <h3>
           <Link href={storyHref(story)}>{story.title}</Link>
         </h3>
-        {tall ? <p>{story.excerpt.slice(0, 140)}{story.excerpt.length > 140 ? "…" : ""}</p> : null}
+        {tall ? <p>{story.excerpt.slice(0, 180)}{story.excerpt.length > 180 ? "…" : ""}</p> : null}
+        <div className="m-meta">
+          <span>{formatReadingMinutes(story.readingMinutes)}</span>
+          {when ? <time>{when}</time> : null}
+        </div>
         {story.factCheck ? (
           <span className="verdict">✓ دقّقها العلم: شائعة متداولة — الحقيقة داخل المادة</span>
         ) : null}

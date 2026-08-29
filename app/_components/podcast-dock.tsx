@@ -6,7 +6,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import { toLatinDigits } from "@/lib/format";
 import "@/app/_components/podcast-player.css";
 
 export type DockTrack = {
