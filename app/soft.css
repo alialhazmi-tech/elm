@@ -810,3 +810,8 @@ body .ai-toolbar .tool { white-space: nowrap; font-size: 13.5px; height: 44px; p
 }
 .ins .val.muted { color: var(--ink-3); font-weight: 400; }
 body .ins-split i.empty { background: var(--ins-track); }
+
+/* المشغّل الثابت: زر إغلاق ظاهر دائمًا (كان داخل الأدوات المخفية على الجوال) */
+body .pp-bar { position: fixed; padding-top: 12px; }
+body .pp-close { position: absolute; top: -12px; inset-inline-start: -6px; width: 30px; height: 30px; border-radius: 15px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgb(11 26 51 / 0.15); }
+body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
