@@ -4,6 +4,9 @@ import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
+import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
+import { homeStream } from "@/lib/content/homeStream";
+import { relativeTimeAr } from "@/lib/format";
 import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesDirectory, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
@@ -37,6 +40,25 @@ export default async function Home() {
     seriesDirectory().catch(() => ({} as Awaited<ReturnType<typeof seriesDirectory>>)),
   ]);
   const hero = home.hero;
+  // التدفّق: يستبعد ما تعرضه الصدارة و«وراء الخبر» والأكثر قراءة حتى لا يتكرر خبر في الصفحة.
+  const shownIds = new Set<string>([hero?.id, ...home.mosaic.map((s) => s.id), ...home.mostRead.map((s) => s.id)].filter((id): id is string => Boolean(id)));
+  const stream = await homeStream(shownIds).catch(() => null);
+  // الأكثر قراءة لا يكرر ما يعرضه معرض الإنفوجرافيك أو النهر أو اللوحات.
+  const streamIds = new Set<string>([
+    ...(stream?.river ?? []).map((s) => s.id),
+    ...(stream?.infographics ?? []).map((s) => s.id),
+    ...(stream?.panels ?? []).flatMap((panel) => [panel.lead?.id, ...panel.rows.map((s) => s.id)]).filter((id): id is string => Boolean(id)),
+  ]);
+  const mostRead = home.mostRead.filter((s) => !streamIds.has(s.id)).slice(0, 4);
+  const riverItems = (stream?.river ?? []).map((story) => {
+    const series = seriesOf(story);
+    return {
+      id: story.id, href: storyHref(story), title: story.title, image: story.image ?? null,
+      kick: series?.name ?? sectionName(story.section), color: series?.color ?? null,
+      when: relativeTimeAr(story.publishedAt) ?? "", publishedAt: story.publishedAt ?? null,
+      fresh: Boolean(story.publishedAt && stream && stream.pulse.nowMs - Date.parse(story.publishedAt) < 3_600_000),
+    };
+  });
   const today = brandDate(new Date().toISOString());
 
   // «وراء الخبر»: مرتكز + 3 صفوف + سؤال الأسبوع.
@@ -111,6 +133,91 @@ export default async function Home() {
             </div>
           </section>
         )}
+
+        {/* نبض اليوم + الجديد الآن */}
+        {stream && riverItems.length > 0 ? (
+          <section aria-label="الجديد الآن">
+            <div className="pulse">
+              <div className="pulse-copy">
+                <h2>الجديد الآن</h2>
+                <span className="meta">
+                  {stream.pulse.todayCount > 0
+                    ? `نُشرت ${toLatinDigits(String(stream.pulse.todayCount))} مادة خلال 24 ساعة`
+                    : "آخر ما نُشر"}
+                  {stream.pulse.lastAt && relativeTimeAr(stream.pulse.lastAt) ? ` · آخرها ${relativeTimeAr(stream.pulse.lastAt)}` : ""}
+                </span>
+              </div>
+              <div className="pulse-line" aria-hidden="true">
+                {stream.pulse.hours.map((count, hour) => (
+                  <i
+                    key={hour}
+                    className={hour === stream.pulse.nowHour ? "is-now" : count > 0 ? "is-on" : undefined}
+                    style={{ height: `${Math.min(22, 4 + count * 6)}px` }}
+                  />
+                ))}
+              </div>
+            </div>
+            <NewsRiver initial={riverItems} exclude={[...shownIds]} />
+          </section>
+        ) : null}
+
+        {/* لوحات الأقسام بالتناوب */}
+        {stream && stream.panels.length > 0 ? (
+          <section className="panels" aria-label="الأقسام">
+            {stream.panels.map((panel) => (
+              <div className="panel" key={panel.slug} style={{ "--pc": panel.color } as React.CSSProperties}>
+                <div className="panel-head">
+                  <div>
+                    <h2><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h2>
+                    <span className="meta">
+                      {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
+                    </span>
+                  </div>
+                  <Link className="more" href={`/${panel.slug}`}>كل {panel.name} ←</Link>
+                </div>
+                <div className="panel-body">
+                  {panel.lead ? (
+                    <article className="panel-lead" data-story-id={panel.lead.id}>
+                      {panel.lead.image ? (
+                        <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
+                          <Image src={panel.lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 420px" />
+                        </Link>
+                      ) : null}
+                      <Kick story={panel.lead} />
+                      <h3><Link className="story-link" href={storyHref(panel.lead)}>{panel.lead.title}</Link></h3>
+                      {panel.lead.excerpt ? <p>{trimExcerpt(panel.lead.excerpt, 140)}</p> : null}
+                    </article>
+                  ) : null}
+                  <div className="panel-rows">
+                    {panel.rows.map((story) => (
+                      <article className="panel-row" key={story.id} data-story-id={story.id}>
+                        <Kick story={story} />
+                        <h3><Link className="story-link" href={storyHref(story)}>{story.title}</Link></h3>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </section>
+        ) : null}
+
+        {/* معرض الإنفوجرافيك */}
+        {stream && stream.infographics.length > 0 ? (
+          <section className="sh-section" aria-label="إنفوجرافيك">
+            <div className="section-head">
+              <h2>إنفوجرافيك</h2>
+              <span className="sub">البيانات مرسومة</span>
+              <Link className="more" href="/infographics">كل الإنفوجرافيك ←</Link>
+            </div>
+            <InfographicGallery
+              items={stream.infographics.map((story) => ({
+                id: story.id, href: storyHref(story), title: story.title, image: story.image as string,
+                kick: seriesOf(story)?.name ?? sectionName(story.section),
+              }))}
+            />
+          </section>
+        ) : null}
 
         {/* اسأل العلم */}
         <section className="ask-band" aria-labelledby="ask-title">
@@ -262,13 +369,13 @@ export default async function Home() {
               </section>
             </div>
           ) : null}
-          {home.mostRead.length > 0 ? (
+          {mostRead.length > 0 ? (
             <section className="most-read" aria-label="الأكثر قراءة">
               <div className="section-head">
                 <h2>الأكثر قراءة</h2>
               </div>
               <ol className="most-read-list">
-                {home.mostRead.slice(0, 4).map((story, index) => (
+                {mostRead.map((story, index) => (
                   <li key={story.id} data-story-id={story.id}>
                     <span className="mr-no latin-number" dir="ltr" lang="en" aria-hidden="true">
                       {toLatinDigits(String(index + 1))}
