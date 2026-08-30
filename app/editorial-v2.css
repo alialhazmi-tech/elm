@@ -507,7 +507,7 @@ body {
   border-radius: 0;
 }
 .article-brief-label { color: var(--gold-ink); }
-.article-brief-text { font-size: 19px; line-height: 1.9; color: var(--ink-2); font-weight: 400; }
+.article-brief-text { font-family: var(--font-article); font-size: 19px; line-height: 1.9; color: var(--ink-2); font-weight: 400; }
 .article-figure,
 .article-figure--infographic {
   max-width: 1160px;
@@ -555,6 +555,7 @@ body {
 .article-body {
   max-width: 68ch;
   margin: 0;
+  font-family: var(--font-article);
   font-size: 18px;
   line-height: 1.98;
 }

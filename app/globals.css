@@ -48,6 +48,7 @@
 
   --font-display: var(--f-display, 'Alexandria'), var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
   --font-text: var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-article: var(--f-article, "Noto Naskh Arabic"), var(--font-text);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -804,6 +805,7 @@ a.story-link:hover { color: var(--link); }
 }
 .article-brief-text {
   margin: 0;
+  font-family: var(--font-article);
   font-size: 1.02rem;
   line-height: 1.8;
   color: var(--ink-2);
@@ -1045,10 +1047,11 @@ a.story-link:hover { color: var(--link); }
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
 }
 .article-body {
+  font-family: var(--font-article);
   font-size: 1.12rem;
   line-height: 2.1;
   color: var(--ink);
-  letter-spacing: -0.005em;
+  letter-spacing: 0;
 }
 .article-body p { margin: 0 0 1.45rem; }
 .article-body h2 { font-size: 1.45rem; font-weight: 800; margin: 2.2rem 0 0.85rem; line-height: 1.5; color: var(--ink); }
@@ -1062,7 +1065,7 @@ a.story-link:hover { color: var(--link); }
 }
 .article-body a { color: var(--navy); text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
 .article-body a:hover { opacity: 0.85; }
-.article-body strong, .article-body b { font-weight: 800; color: var(--ink); }
+.article-body strong, .article-body b { font-weight: 700; color: var(--ink); }
 .article-body em, .article-body i { font-style: italic; }
 .article-body u { text-decoration: underline; text-underline-offset: 3px; }
 .article-body s { text-decoration: line-through; opacity: 0.75; }
