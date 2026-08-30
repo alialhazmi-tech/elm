@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Noto_Kufi_Arabic, Readex_Pro } from "next/font/google";
+import { Alexandria, Noto_Kufi_Arabic, Noto_Naskh_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
 import "./editorial-v2.css";
 import "./soft.css";
@@ -25,6 +25,14 @@ const logoFont = Noto_Kufi_Arabic({
   weight: ["900"],
   variable: "--f-logo",
   display: "swap",
+});
+
+const articleFont = Noto_Naskh_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "700"],
+  variable: "--f-article",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -75,7 +83,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="ar"
       dir="rtl"
       data-scroll-behavior="smooth"
-      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
+      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable} ${articleFont.variable}`}
       suppressHydrationWarning
     >
       <body>
