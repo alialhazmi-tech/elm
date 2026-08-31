@@ -57,14 +57,15 @@ async function BreakingBar() {
   const breaking = await getBreaking().catch(() => null);
   if (!breaking) return null;
 
-  // «عاجل» الأحمر يُحجز للساعة الأولى؛ بعدها الخبر «مستجد» بنبضة خضراء هادئة.
-  const { urgent } = breaking;
+  // «عاجل» الأحمر يُحجز للساعة الأولى؛ بعدها اسم السلسلة أو التصنيف.
+  const { urgent, label } = breaking;
+  const tag = urgent ? "عاجل" : label;
 
   return (
-    <div className={urgent ? "breaking" : "breaking is-fresh"} role="status" aria-label={urgent ? "خبر عاجل" : "خبر مستجد"}>
+    <div className={urgent ? "breaking" : "breaking is-fresh"} role="status" aria-label={urgent ? "خبر عاجل" : tag}>
       <div className="breaking-inner">
         <span className="breaking-dot" aria-hidden="true" />
-        <span className="breaking-tag">{urgent ? "عاجل" : "مستجد"}</span>
+        <span className="breaking-tag">{tag}</span>
         <Link className="breaking-title" href={breaking.href}>
           {breaking.title}
         </Link>

@@ -235,8 +235,10 @@ export interface BreakingItem {
   title: string;
   href: string;
   until: string;
-  /** الساعة الأولى بعد النشر وحدها تستحق «عاجل»؛ بعدها الخبر «مستجد». */
+  /** الساعة الأولى بعد النشر وحدها تستحق «عاجل». */
   urgent: boolean;
+  /** اسم السلسلة، أو التصنيف إن لم تُنسَب المادة لسلسلة. */
+  label: string;
 }
 
 const URGENT_MS = 3_600_000;
@@ -249,6 +251,7 @@ function toStripItem(story: Story, now: string, flagged: boolean): BreakingItem 
     urgent: Boolean(
       flagged && story.publishedAt && Date.parse(now) - Date.parse(story.publishedAt) < URGENT_MS,
     ),
+    label: seriesOf(story)?.name ?? sectionName(story.section),
   };
 }
 
