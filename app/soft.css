@@ -887,15 +887,3 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
   .gallery { margin: 0 -16px; padding: 0 16px 6px; scroll-padding: 0 16px; }
   .gallery-card { flex-basis: 78%; }
 }
-
-/* لوحات الأقسام: الصفوف تملأ ارتفاع اللوحة بالتساوي — لا فراغ ميت تحتها */
-.panel-body { align-items: stretch; }
-.panel-rows { height: 100%; justify-content: stretch; }
-.panel-row { flex: 1; justify-content: center; }
-.panel-lead .soft-img { flex: 1; min-height: 220px; aspect-ratio: auto; }
-.panel-lead { height: 100%; }
-@media (max-width: 1040px) {
-  .panel-lead .soft-img { aspect-ratio: 16 / 10; flex: none; min-height: 0; }
-  .panel-rows { height: auto; }
-  .panel-row { flex: none; }
-}
