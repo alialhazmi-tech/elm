@@ -66,11 +66,22 @@ test("التتبع النشط لا يرسل في كل ثانية ويحترم ا
   assert.doesNotMatch(client, /setInterval\([^,]+,\s*1000\)/);
 });
 
-test("أدوات التلخيص والتبسيط ليست في شريط المادة", async () => {
+/*
+ * «أدوات القارئ» بعد طبقة الناعم v2: بطاقة واحدة تجمع الاستماع والتلخيص
+ * والمشاركة وحقل السؤال، بدل شريط الأدوات و«اسأل عن المادة» المنفصلين.
+ * الشرط الباقي: كل أداة ذكاء تمر بـ /api/me/ai، ولغير الأعضاء دعوة للانضمام
+ * لا زر يستدعي الخدمة — فلا تُستهلك قبل التحقق من الجلسة.
+ */
+test("أدوات القارئ في بطاقة واحدة وأدوات الذكاء خلف العضوية", async () => {
   const client = await read("app/_components/article-experience.tsx");
-  assert.doesNotMatch(client, /لخّص لي|اشرحها أبسط/);
-  assert.match(client, /ناقش المادة/);
-  assert.match(client, /أعجبني/);
+  assert.match(client, /className="sa-tools"/);
+  assert.match(client, /لخّص لي/);
+  assert.match(client, /اسأل عن هذه المادة/);
+  assert.match(client, /"\/api\/me\/ai"/);
+  assert.match(client, /tool: "summary"|runTool\("summary"\)/);
+  // لغير العضو: رابط انضمام مكان الأداة، لا زر ينادي الخدمة.
+  assert.match(client, /state\.signedIn \? \([\s\S]*?لخّص لي[\s\S]*?<Link className="sa-tool" href=\{joinHref\}/);
+  assert.doesNotMatch(client, /tool: "simplify"/);
 });
 
 test("صور ذات الصلة تمر عبر next/image حتى لا يحجبها CSP", async () => {
@@ -80,13 +91,20 @@ test("صور ذات الصلة تمر عبر next/image حتى لا يحجبها
   assert.doesNotMatch(client, /<img className="c-img"/);
 });
 
-test("الإعجاب للزائر يقود إلى مسار الدخول الحالي", async () => {
+/* «أعجبني» صار «احفظ المادة» في صف البايلاين — نفس مكتبة العضو خلفه. */
+test("حفظ المادة للزائر يقود إلى مسار الدخول الحالي", async () => {
   const [client, article] = await Promise.all([
     read("app/_components/article-experience.tsx"),
     read("app/[section]/[id]/[slug]/page.tsx"),
   ]);
   assert.match(client, /joinHref/);
-  assert.match(client, /<ToolIcon name="heart" \/>\s*أعجبني/, "زر الإعجاب للزائر بلا أيقونة قلب");
+  assert.match(client, /ArticleSaveButton/);
+  assert.match(client, /"\/api\/me\/like"/);
+  assert.match(
+    client,
+    /!state\.signedIn[\s\S]*?<Link className="sa-save" href=\{joinHref\}[\s\S]*?احفظ المادة/,
+    "زر الحفظ للزائر لا يقود إلى الانضمام",
+  );
   assert.match(article, /\/join\?next=/);
 });
 

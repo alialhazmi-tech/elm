@@ -41,6 +41,31 @@ export function PodcastHeroPlay({
   );
 }
 
+/**
+ * صف حلقة في «أحدث الحلقات» — يصطبغ بلون البرنامج أثناء التشغيل.
+ * المحتوى يُبنى خادميًا ويُمرَّر كأبناء؛ العميل يحمل حالة التشغيل وحدها.
+ */
+export function EpisodeRow({
+  audioUrl,
+  accent,
+  children,
+}: {
+  audioUrl: string;
+  accent: string;
+  children: React.ReactNode;
+}) {
+  const dock = usePodcastDock();
+  const active = dock.track?.audioUrl === audioUrl;
+  return (
+    <article
+      className={active ? "pp-episode is-active" : "pp-episode"}
+      style={{ "--pp-accent": accent } as React.CSSProperties}
+    >
+      {children}
+    </article>
+  );
+}
+
 /** زر تشغيل دائري صغير — لقائمة أحدث الحلقات عبر البرامج. */
 export function EpisodePlayButton({
   showName,

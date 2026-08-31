@@ -26,6 +26,10 @@ export default async function SeriesIndexPage() {
     count: directory[series.slug]?.count ?? 0,
     latest: directory[series.slug]?.latest ?? null,
   }));
+  const activeTotal = catalog.reduce((sum, entry) => sum + entry.count, 0);
+  const spectrum = {
+    backgroundImage: `linear-gradient(270deg, ${SERIES.map((series) => series.color).join(", ")})`,
+  };
 
   return (
     <>
@@ -34,22 +38,37 @@ export default async function SeriesIndexPage() {
 
       <main id="main-content" className="wrap sx-page">
         <section className="sx-index-hero">
-          <span className="kick">سلاسل العلم</span>
-          <h1>ثماني طرق لرؤية الخبر كاملًا</h1>
-          <p>
-            لا نكتفي بتصنيف ما يحدث. نختار لكل قصة الطريقة الأنسب لفهمها:
-            نشرح المعقد، نختبر الشائعة، نقرأ الأرقام، ونبني احتمالات المستقبل.
+          {/* شريط الطيف: ألوان السلاسل الثماني بترتيبها — توقيع الصفحة. */}
+          <i className="sx-spectrum" aria-hidden="true" style={spectrum} />
+          <div className="sx-index-copy">
+            <span className="kick">سلاسل العلم</span>
+            <h1>ثماني طرق لرؤية الخبر كاملًا</h1>
+            <p>
+              لا نكتفي بتصنيف ما يحدث. نختار لكل قصة الطريقة الأنسب لفهمها:
+              نشرح المعقد، نختبر الشائعة، نقرأ الأرقام، ونبني احتمالات المستقبل.
+            </p>
+          </div>
+          <p className="sx-index-stat">
+            <b className="latin-number" dir="ltr" lang="en">{toLatinDigits(activeTotal)}</b>
+            <span>مادة عبر ثماني سلاسل</span>
+            <small>منذ إطلاق تجربة السلاسل</small>
           </p>
         </section>
 
         <section className="sx-directory" aria-label="دليل سلاسل العلم">
-          {catalog.map(({ series, count, latest }) => (
+          {catalog.map(({ series, count, latest }, index) => (
             <Link
               key={series.slug}
               className="sx-tile"
               href={`/series/${series.slug}`}
               style={{ "--sc": series.color } as React.CSSProperties}
             >
+              <span className="sx-tile-head">
+                <span className="sno latin-number" dir="ltr" lang="en">
+                  {toLatinDigits(String(index + 1).padStart(2, "0"))}
+                </span>
+                <span className="sbadge">{toLatinDigits(count)} مادة</span>
+              </span>
               <span className="sname">{series.name}</span>
               <span className="sdesc">{series.description}</span>
               {latest ? (
@@ -60,7 +79,7 @@ export default async function SeriesIndexPage() {
               ) : (
                 <span className="slatest"><small>مواد السلسلة في الطريق.</small></span>
               )}
-              <span className="scount">{toLatinDigits(count)} مادة ←</span>
+              <span className="scount">تصفح السلسلة ←</span>
             </Link>
           ))}
         </section>

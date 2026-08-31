@@ -45,10 +45,13 @@ export function MosaicCard({
   story,
   tall = false,
   className,
+  stat,
 }: {
   story: Story;
   tall?: boolean;
   className?: string;
+  /** الرقم المفتاحي تحت العنوان — بطاقات صفحة السلسلة تُبرزه حين يحمله العنوان. */
+  stat?: string | null;
 }) {
   const series = seriesOf(story);
   const when = relativeTimeAr(story.publishedAt);
@@ -75,6 +78,7 @@ export function MosaicCard({
         <h3>
           <Link href={storyHref(story)}>{story.title}</Link>
         </h3>
+        {stat ? <span className="m-stat latin-number" dir="ltr" lang="en">{stat}</span> : null}
         {tall ? <p>{story.excerpt.slice(0, 180)}{story.excerpt.length > 180 ? "…" : ""}</p> : null}
         <div className="m-meta">
           <span>{formatReadingMinutes(story.readingMinutes)}</span>

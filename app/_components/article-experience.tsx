@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { ListenMeter } from "@/app/_components/article-listen";
 import { EndingPoll } from "@/app/_components/poll";
 import { toLatinDigits } from "@/lib/format";
 
@@ -27,36 +28,8 @@ export type RelatedCard = {
   sectionLabel: string;
   image?: string;
   readingMinutes: number;
+  reason?: { code: string; text: string };
 };
-
-
-const TOOL_ICONS = {
-  heart: "M12 20.3l-1.3-1.2C5.9 14.8 3 12.2 3 8.9 3 6.3 5 4.3 7.6 4.3c1.5 0 2.9.7 3.9 1.8 1-1.1 2.4-1.8 3.9-1.8C18 4.3 20 6.3 20 8.9c0 3.3-2.9 5.9-7.7 10.2L12 20.3z",
-  listen: "M4 13v-1a8 8 0 0 1 16 0v1M4 13a2 2 0 0 1 2-2h1v7H6a2 2 0 0 1-2-2v-3zm16 0a2 2 0 0 0-2-2h-1v7h1a2 2 0 0 0 2-2v-3z",
-  discuss: "M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4V6z",
-  share: "M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v12M8 7l4-4 4 4",
-} as const;
-
-function ToolIcon({ name, filled = false }: { name: keyof typeof TOOL_ICONS; filled?: boolean }) {
-  return (
-    <svg
-      className="tool-ico"
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d={TOOL_ICONS[name]} />
-    </svg>
-  );
-}
-
-type State = { signedIn: boolean; liked: boolean };
 
 const FLUSH_MS = 15_000;
 
@@ -70,6 +43,90 @@ function postJson(url: string, body: unknown, keepalive = false) {
   });
 }
 
+type ArticleState = { signedIn: boolean; liked: boolean };
+
+/** طلب واحد للمادة يتشاركه كل من يسأل عنها في الصفحة نفسها. */
+const stateRequests = new Map<string, Promise<ArticleState | null>>();
+
+function fetchArticleState(storyId: string): Promise<ArticleState | null> {
+  const pending = stateRequests.get(storyId);
+  if (pending) return pending;
+
+  const request = fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin" })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((data) => (data ? { signedIn: Boolean(data.signedIn), liked: Boolean(data.liked) } : null))
+    .catch(() => null);
+
+  stateRequests.set(storyId, request);
+  return request;
+}
+
+/** يقرأ حالة العضوية للمادة — تتشاركها أزرار الجانب والرأس بطلب واحد. */
+function useArticleState(storyId: string) {
+  const [state, setState] = useState<ArticleState>({ signedIn: false, liked: false });
+
+  useEffect(() => {
+    let live = true;
+    void fetchArticleState(storyId).then((data) => {
+      if (live && data) setState(data);
+    });
+    return () => {
+      live = false;
+    };
+  }, [storyId]);
+
+  return [state, setState] as const;
+}
+
+/**
+ * «احفظ المادة» في صف البايلاين — نفس مكتبة العضو خلف الواجهة
+ * (`/api/me/like`)، فالمحفوظ هنا هو المحفوظ في صفحة «لك».
+ */
+export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; joinHref: string }) {
+  const [state, setState] = useArticleState(storyId);
+
+  if (!state.signedIn) {
+    return (
+      <Link className="sa-save" href={joinHref}>
+        <span aria-hidden="true">☆</span> احفظ المادة
+      </Link>
+    );
+  }
+
+  const toggle = async () => {
+    const next = !state.liked;
+    setState((current) => ({ ...current, liked: next }));
+    try {
+      const response = await postJson("/api/me/like", { storyId, liked: next });
+      if (!response.ok) throw new Error("like");
+      const data = (await response.json()) as { liked?: boolean };
+      const liked = Boolean(data.liked);
+      setState((current) => ({ ...current, liked }));
+      // الكاش المشترك يلحق بالحفظ، فلا تعود البطاقة قديمة عند إعادة التركيب.
+      stateRequests.set(storyId, Promise.resolve({ signedIn: true, liked }));
+    } catch {
+      setState((current) => ({ ...current, liked: !next }));
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      className={state.liked ? "sa-save is-on" : "sa-save"}
+      aria-pressed={state.liked}
+      onClick={() => void toggle()}
+    >
+      <span aria-hidden="true">{state.liked ? "★" : "☆"}</span>
+      {state.liked ? "محفوظة" : "احفظ المادة"}
+    </button>
+  );
+}
+
+/**
+ * «✦ أدوات القارئ» — بطاقة واحدة تجمع ما كان مبعثرًا بين شريط الأدوات
+ * و«اسأل عن المادة»: استمع، لخّص لي، مشاركة، نسخ الرابط، ثم حقل السؤال.
+ * أدوات الذكاء تحتاج عضوية، فتتحول لغير الأعضاء إلى دعوة للانضمام.
+ */
 export function ArticleToolbar({
   storyId,
   joinHref,
@@ -79,66 +136,29 @@ export function ArticleToolbar({
   joinHref: string;
   excerpt: string;
 }) {
-  const [state, setState] = useState<State>({ signedIn: false, liked: false });
-  const [busy, setBusy] = useState<string | null>(null);
-  const [panel, setPanel] = useState<{ title: string; text: string } | null>(null);
+  const [state] = useArticleState(storyId);
+  const [listening, setListening] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summary, setSummary] = useState<string[] | null>(null);
+  const [answer, setAnswer] = useState<string[] | null>(null);
   const [question, setQuestion] = useState("");
-  const [discussOpen, setDiscussOpen] = useState(false);
+  const [busy, setBusy] = useState<"summary" | "discuss" | null>(null);
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        if (data) setState({ signedIn: Boolean(data.signedIn), liked: Boolean(data.liked) });
-      })
-      .catch(() => undefined);
-  }, [storyId]);
+  // القراءة الصوتية لا تتبع القارئ إلى صفحة أخرى.
+  useEffect(() => () => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  }, []);
 
-  const toggleLike = async () => {
-    if (!state.signedIn) return;
-    const next = !state.liked;
-    setState((current) => ({ ...current, liked: next }));
-    try {
-      const response = await postJson("/api/me/like", { storyId, liked: next });
-      if (!response.ok) throw new Error("like");
-      const data = (await response.json()) as { liked?: boolean };
-      setState((current) => ({ ...current, liked: Boolean(data.liked) }));
-    } catch {
-      setState((current) => ({ ...current, liked: !next }));
-    }
-  };
-
-  const runTool = async (tool: "discuss") => {
-    if (!state.signedIn) return;
-    setBusy(tool);
-    setError(null);
-    try {
-      const response = await postJson("/api/me/ai", {
-        tool,
-        storyId,
-        question: question,
-      });
-      const data = (await response.json()) as { text?: string; error?: string };
-      if (!response.ok) {
-        setError(data.error ?? "تعذر تشغيل الأداة.");
-        return;
-      }
-      setPanel({
-        title: "نقاش المادة",
-        text: data.text ?? "",
-      });
-      setDiscussOpen(false);
-    } catch {
-      setError("تعذر الاتصال بخدمة الذكاء.");
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  const listen = () => {
+  const toggleListen = () => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       setError("الاستماع غير متاح في هذا المتصفح.");
+      return;
+    }
+    if (listening) {
+      window.speechSynthesis.cancel();
+      setListening(false);
       return;
     }
     window.speechSynthesis.cancel();
@@ -147,7 +167,47 @@ export function ArticleToolbar({
     utterance.onstart = () => {
       if (state.signedIn) void postJson("/api/me/events", { events: [{ type: "listen", storyId }] });
     };
+    utterance.onend = () => setListening(false);
+    utterance.onerror = () => setListening(false);
+    setError(null);
+    setListening(true);
     window.speechSynthesis.speak(utterance);
+  };
+
+  /** يفصل نص الأداة إلى نقاط — الخدمة تردّ أسطرًا، وقد تسبقها شرطة. */
+  const asPoints = (text: string) =>
+    text
+      .split(/\n+/)
+      .map((line) => line.replace(/^\s*[-—•*]\s*/u, "").trim())
+      .filter(Boolean);
+
+  const runTool = async (tool: "summary" | "discuss") => {
+    setBusy(tool);
+    setError(null);
+    try {
+      const response = await postJson("/api/me/ai", { tool, storyId, question: tool === "discuss" ? question : undefined });
+      const data = (await response.json()) as { text?: string; error?: string };
+      if (!response.ok) {
+        setError(data.error ?? "تعذر تشغيل الأداة.");
+        return;
+      }
+      const points = asPoints(data.text ?? "");
+      if (tool === "summary") setSummary(points);
+      else {
+        setAnswer(points);
+        setQuestion("");
+      }
+    } catch {
+      setError("تعذر الاتصال بخدمة الذكاء.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const toggleSummary = () => {
+    const next = !summaryOpen;
+    setSummaryOpen(next);
+    if (next && !summary && busy !== "summary") void runTool("summary");
   };
 
   const share = async () => {
@@ -160,78 +220,109 @@ export function ArticleToolbar({
     }
   };
 
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("تعذّر نسخ الرابط في هذا المتصفح.");
+    }
+  };
+
   return (
-    <>
-      <div className="ai-surface ai-toolbar" aria-label="أدوات القارئ">
+    <div className="sa-tools" aria-label="أدوات القارئ">
+      <span className="sa-tools-title">
+        <span className="spark" aria-hidden="true">✦</span> أدوات القارئ
+      </span>
+
+      <div className="sa-tools-grid">
+        <button
+          type="button"
+          className={listening ? "sa-tool is-on" : "sa-tool"}
+          aria-pressed={listening}
+          onClick={toggleListen}
+        >
+          <span aria-hidden="true">{listening ? "⏸" : "▶"}</span> {listening ? "إيقاف" : "استمع"}
+        </button>
+
         {state.signedIn ? (
           <button
             type="button"
-            className={state.liked ? "tool is-on" : "tool"}
-            aria-pressed={state.liked}
-            onClick={() => void toggleLike()}
+            className={summaryOpen ? "sa-tool is-on" : "sa-tool"}
+            aria-pressed={summaryOpen}
+            aria-expanded={summaryOpen}
+            onClick={toggleSummary}
           >
-            <ToolIcon name="heart" filled={state.liked} />
-            أعجبني
+            <span className="spark" aria-hidden="true">✦</span> لخّص لي
           </button>
         ) : (
-          <Link className="tool" href={joinHref}>
-            <ToolIcon name="heart" />
-            أعجبني
+          <Link className="sa-tool" href={joinHref}>
+            <span className="spark" aria-hidden="true">✦</span> لخّص لي
           </Link>
         )}
-        <button type="button" className="tool" onClick={listen}>
-          <ToolIcon name="listen" />
-          استمع
-        </button>
-        {state.signedIn ? (
-          <button type="button" className="tool" onClick={() => setDiscussOpen((open) => !open)}>
-            <ToolIcon name="discuss" />
-            ناقش المادة
-          </button>
-        ) : (
-          <Link className="tool" href={joinHref}>
-            <ToolIcon name="discuss" />
-            ناقش المادة
-          </Link>
-        )}
-        <button type="button" className="tool" onClick={() => void share()}>
-          <ToolIcon name="share" />
-          مشاركة
+
+        <button type="button" className="sa-tool" onClick={() => void share()}>مشاركة</button>
+        <button type="button" className="sa-tool" onClick={() => void copyLink()}>
+          {copied ? "نُسخ ✓" : "نسخ الرابط"}
         </button>
       </div>
-      {discussOpen ? (
-        <form
-          className="ai-reader-panel"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void runTool("discuss");
-          }}
-        >
-          <h3>ناقش المادة</h3>
-          <label>
-            <span className="sr-only">سؤالك عن المادة</span>
-            <input
-              value={question}
-              onChange={(event) => setQuestion(event.target.value)}
-              maxLength={400}
-              placeholder="اسأل عن فكرة وردت في المادة"
-            />
-          </label>
-          <button type="submit" className="tool primary" disabled={busy === "discuss"}>
-            {busy === "discuss" ? "يجيب…" : "اسأل"}
-          </button>
-        </form>
-      ) : null}
-      {error ? <p className="ai-reader-error" role="alert">{error}</p> : null}
-      {panel ? (
-        <div className="ai-reader-panel">
-          <h3>{panel.title}</h3>
-          {panel.text.split(/\n+/).map((paragraph) => (
-            <p key={paragraph.slice(0, 24)}>{paragraph}</p>
-          ))}
+
+      {summaryOpen ? (
+        <div className="sa-tools-panel">
+          <b className="sa-tools-panel-head">
+            <span className="spark" aria-hidden="true">✦</span> ملخص في ثلاث نقاط
+          </b>
+          {busy === "summary" ? (
+            <p className="sa-tools-wait">يلخّص المادة…</p>
+          ) : summary?.length ? (
+            <ul>
+              {summary.slice(0, 3).map((point) => <li key={point.slice(0, 32)}>{point}</li>)}
+            </ul>
+          ) : null}
+          <span className="sa-tools-note">مولّد آليًا من نص المادة — راجع النص الكامل قبل الاقتباس.</span>
         </div>
       ) : null}
-    </>
+
+      {listening ? <ListenMeter /> : null}
+
+      {answer?.length ? (
+        <div className="sa-tools-panel">
+          <b className="sa-tools-panel-head">
+            <span className="spark" aria-hidden="true">✦</span> إجابة عن سؤالك
+          </b>
+          {answer.map((paragraph) => <p key={paragraph.slice(0, 32)}>{paragraph}</p>)}
+          <span className="sa-tools-note">إجابة مولّدة آليًا من نص المادة — تحقّق من المصدر قبل الاعتماد.</span>
+        </div>
+      ) : null}
+
+      {error ? <p className="ai-reader-error" role="alert">{error}</p> : null}
+
+      {state.signedIn ? (
+        <form
+          className="sa-tools-ask"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (question.trim().length >= 4) void runTool("discuss");
+          }}
+        >
+          <label className="sr-only" htmlFor={`ask-${storyId}`}>اسأل عن هذه المادة</label>
+          <input
+            id={`ask-${storyId}`}
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            maxLength={400}
+            placeholder="اسأل عن هذه المادة…"
+          />
+          <button type="submit" disabled={busy === "discuss"}>{busy === "discuss" ? "يجيب…" : "اسأل"}</button>
+        </form>
+      ) : (
+        <Link className="sa-tools-ask is-invite" href={joinHref}>
+          <span>اسأل عن هذه المادة…</span>
+          <b>انضم</b>
+        </Link>
+      )}
+    </div>
   );
 }
 
@@ -274,16 +365,13 @@ export function ArticleTracker({ storyId }: { storyId: string }) {
   }, [storyId]);
 
   useEffect(() => {
-    fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data) => {
-        signedIn.current = Boolean(data?.signedIn);
-        if (signedIn.current && !opened.current) {
-          opened.current = true;
-          void postJson("/api/me/events", { events: [{ type: "article_open", storyId }] });
-        }
-      })
-      .catch(() => undefined);
+    void fetchArticleState(storyId).then((data) => {
+      signedIn.current = Boolean(data?.signedIn);
+      if (signedIn.current && !opened.current) {
+        opened.current = true;
+        void postJson("/api/me/events", { events: [{ type: "article_open", storyId }] });
+      }
+    });
 
     lastTick.current = Date.now();
     const interval = window.setInterval(() => {
@@ -355,9 +443,8 @@ export function PersonalizedRelated({
   return (
     <section aria-labelledby="related-title">
       <div className="section-head">
-        <div>
-          <h2 id="related-title">مواد ذات صلة</h2>
-        </div>
+        <h2 id="related-title">نرشّح لك</h2>
+        <span className="sub">الترشيح يشرح نفسه دائمًا — تحت كل مادة سبب اختيارها لك</span>
       </div>
       <div className="grid-3">
         {items.map((item) => (
@@ -379,6 +466,7 @@ export function PersonalizedRelated({
                   {item.title}
                 </Link>
               </h3>
+              {item.reason ? <p className="m-why">{item.reason.text}</p> : null}
               <p>{toLatinDigits(item.readingMinutes)} دقائق قراءة</p>
             </div>
           </article>

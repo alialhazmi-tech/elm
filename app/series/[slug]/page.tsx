@@ -7,6 +7,7 @@ import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { ALL_SERIES, pageBySeries, sectionName, SERIES, seedContentProvider } from "@/lib/content/provider";
+import { headlineStat } from "@/lib/content/headline-stat";
 import { storyHref } from "@/lib/content/types";
 import { formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
 
@@ -122,7 +123,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
           <>
             <div className="grid-3 sx-grid">
               {grid.map((story) => (
-                <MosaicCard key={story.id} story={story} />
+                <MosaicCard key={story.id} story={story} stat={headlineStat(story.title)} />
               ))}
             </div>
             <Pagination basePath={basePath} page={page} pageCount={pageCount} />

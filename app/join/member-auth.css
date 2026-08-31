@@ -1,59 +1,165 @@
-/* صفحة الانضمام — مسار مركزي هادئ، بلا عمود تسويقي عريض */
+/*
+ * صفحة الانضمام — عمود قيمة يشرح ما تفتحه العضوية، وبطاقة النموذج بجانبه.
+ * (طبقة «الناعم v2» — الشاشة السادسة في تسليم Claude Design.)
+ */
 
 .member-auth-shell {
-  min-height: calc(100vh - 72px);
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  gap: 64px;
+  align-items: start;
+  padding: 48px 24px 64px;
+}
+
+.member-value {
   display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding-top: 8px;
+  min-width: 0;
+}
+
+.member-value h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 3.4vw, 42px);
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.member-value-dek {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.85;
+  color: var(--ink-2);
+  max-width: 46ch;
+}
+
+.member-perks {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.member-perks li {
+  display: flex;
+  gap: 14px;
   align-items: flex-start;
-  justify-content: center;
-  padding: 40px 22px 64px;
-  background:
-    radial-gradient(900px 280px at 100% -20%, rgb(43 92 158 / 0.1), transparent 55%),
-    var(--bg);
+}
+
+.member-perk-ico {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  border-radius: 12px;
+  background: var(--surface-3);
+  color: var(--navy);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+}
+
+.member-perk-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.member-perk-body b {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.member-perk-body span {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+.member-interests-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px;
+  border-radius: var(--r-md, 20px);
+  background: var(--surface-2);
+}
+
+.member-interests-lbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+
+.member-interests-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.member-interests-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.member-interests-row i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--interest, var(--navy));
+}
+
+.member-interests-privacy {
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink-3);
 }
 
 .member-auth-panel {
-  width: min(440px, 100%);
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
-}
-
-.member-auth-head {
-  padding: 4px 2px 2px;
+  position: sticky;
+  top: 32px;
 }
 
 .member-auth-kicker {
   display: block;
-  margin-bottom: 8px;
-  color: #82a9d8;
-  font-size: 11px;
+  color: var(--navy);
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
-}
-
-.member-auth-head h1 {
-  margin: 0 0 8px;
-  font-size: clamp(1.7rem, 3.5vw, 2.1rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
-  color: var(--ink);
-}
-
-.member-auth-head p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.7;
-  color: var(--ink-2);
-  max-width: 36ch;
 }
 
 .member-auth-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
-  padding: 20px 20px 18px;
+  border-radius: var(--r-lg, 24px);
+  box-shadow: 0 10px 30px rgb(16 30 48 / 0.06);
+  padding: 24px 24px 20px;
 }
 
 .member-auth-tabs {
@@ -63,8 +169,8 @@
   padding: 4px;
   margin-bottom: 18px;
   background: var(--surface-2);
-  border-radius: 8px;
-  border: 1px solid var(--line);
+  border-radius: 12px;
+  border: 0;
 }
 
 .member-auth-tabs button {
@@ -72,8 +178,8 @@
   background: transparent;
   color: var(--ink-2);
   padding: 10px 8px;
-  border-radius: 6px;
-  font: 600 13px var(--font-text);
+  border-radius: 9px;
+  font: 600 13.5px var(--font-text);
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -102,10 +208,11 @@
 
 .member-auth-form input {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid var(--line-2);
   background: var(--bg);
   color: var(--ink);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 12px 14px;
   font: 500 14px var(--font-text);
   outline: none;
@@ -113,7 +220,7 @@
 }
 
 .member-auth-form input:focus {
-  border-color: color-mix(in srgb, var(--c-arqam) 55%, var(--line));
+  border-color: var(--navy);
   background: var(--surface);
 }
 
@@ -128,19 +235,20 @@
 }
 
 .member-auth-submit {
+  height: 48px;
   border: 0;
-  border-radius: 8px;
-  background: var(--navy-deep);
+  border-radius: 999px;
+  background: var(--navy);
   color: #fff;
-  padding: 13px 18px;
-  font: 700 14px var(--font-text);
+  padding: 0 18px;
+  font: 700 15px var(--font-text);
   cursor: pointer;
   margin-top: 2px;
   transition: background 0.15s ease;
 }
 
 .member-auth-submit:hover:not(:disabled) {
-  background: #0a1c30;
+  background: var(--navy-deep);
 }
 
 .member-auth-submit:disabled {
@@ -173,8 +281,9 @@
 .member-auth-terms {
   margin: 14px 2px 0;
   color: var(--ink-3);
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.7;
+  text-align: center;
 }
 
 .member-auth-foot {
@@ -315,18 +424,34 @@
   font-size: 11px;
 }
 
+/* عمود واحد قبل أن يضيق عمود القيمة: النموذج أولًا، والقيمة تحته. */
+@media (max-width: 1040px) {
+  .member-auth-shell {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    max-width: 560px;
+    padding: 28px 24px 48px;
+  }
+
+  .member-auth-panel { position: static; order: -1; }
+  .member-value { padding-top: 0; }
+}
+
 @media (max-width: 560px) {
   .member-auth-shell {
-    min-height: calc(100svh - 96px);
     padding: 20px 14px 36px;
+    gap: 24px;
   }
 
   .member-auth-panel { gap: 12px; }
-  .member-auth-head { padding-inline: 2px; }
-  .member-auth-kicker { margin-bottom: 4px; font-size: 10px; }
-  .member-auth-head h1 { margin-bottom: 4px; font-size: 25px; }
-  .member-auth-head p { font-size: 12.5px; line-height: 1.65; }
-  .member-auth-card { padding: 14px; border-radius: 12px; }
+  .member-auth-kicker { font-size: 11px; }
+  .member-value { gap: 16px; }
+  .member-value h1 { font-size: 26px; }
+  .member-value-dek { font-size: 14px; line-height: 1.75; }
+  .member-perk-body b { font-size: 14px; }
+  .member-perk-body span { font-size: 12.5px; }
+  .member-interests-preview { padding: 14px 16px; }
+  .member-auth-card { padding: 16px; border-radius: 18px; }
   .member-auth-tabs { margin-bottom: 13px; }
   .member-auth-tabs button { min-height: 40px; }
   .member-auth-form { gap: 11px; }

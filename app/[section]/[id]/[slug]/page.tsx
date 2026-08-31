@@ -8,10 +8,12 @@ import { JakReport } from "@/app/_components/jak-report";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import {
   ArticleClosingPoll,
+  ArticleSaveButton,
   ArticleToolbar,
   ArticleTracker,
   PersonalizedRelated,
 } from "@/app/_components/article-experience";
+import { ReadingProgress } from "@/app/_components/reading-progress";
 import { brandDate, formatArticleDek, formatReadingBrief, formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
@@ -178,6 +180,7 @@ export default async function ArticlePage({ params }: Params) {
   // الجانب: التالي في السلسلة نفسها (حتى 3)، والذيل: مواد من سلاسل أخرى.
   const sameSeries = series ? related.filter((item) => item.series === series.slug).slice(0, 3) : [];
   const otherSeries = related.filter((item) => !sameSeries.includes(item));
+  const joinHref = `/join?next=${encodeURIComponent(storyHref(story))}`;
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -195,6 +198,7 @@ export default async function ArticlePage({ params }: Params) {
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
       <SiteHeader />
+      {!podcastShow ? <ReadingProgress /> : null}
 
       <main id="main-content" className="article-shell">
         {series && !podcastShow ? (
@@ -270,6 +274,7 @@ export default async function ArticlePage({ params }: Params) {
                       </span>
                     </div>
                   </div>
+                  <ArticleSaveButton storyId={story.id} joinHref={joinHref} />
                 </div>
               </div>
               {story.image && !isInfographicStory ? (
@@ -345,13 +350,9 @@ export default async function ArticlePage({ params }: Params) {
               </div>
 
               <aside className="sa-aside" aria-label="أدوات المادة">
-                <ArticleInsights storyId={story.id} readingMinutes={story.readingMinutes} />
+                <ArticleToolbar storyId={story.id} joinHref={joinHref} excerpt={story.excerpt} />
 
-                <ArticleToolbar
-                  storyId={story.id}
-                  joinHref={`/join?next=${encodeURIComponent(storyHref(story))}`}
-                  excerpt={story.excerpt}
-                />
+                <ArticleInsights storyId={story.id} readingMinutes={story.readingMinutes} />
 
                 {series ? (
                   <div className="sa-next" style={{ "--sc": series.color } as React.CSSProperties}>
@@ -410,7 +411,15 @@ export default async function ArticlePage({ params }: Params) {
         </article>
 
         <div className="sa-related">
-          <PersonalizedRelated storyId={story.id} fallback={otherSeries.map((item) => toRelatedCard(item))} />
+          <PersonalizedRelated
+            storyId={story.id}
+            fallback={otherSeries.map((item) =>
+              toRelatedCard(item, {
+                code: "section",
+                text: `لأنك تقرأ في ${sectionName(story.section)}`,
+              }),
+            )}
+          />
         </div>
       </main>
 
