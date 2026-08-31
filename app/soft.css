@@ -906,6 +906,9 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
    حدّ .topbar السفلي كان يرسم الخط تحت المسطرة لأنها آخر أبنائه. */
 .topbar.has-rail { border-bottom: 0; }
 .series-rail { border-top: 1px solid var(--line); border-bottom: 0; }
+/* حين يظهر شريط الخبر بين الهيدر والمسطرة، يحمل هو فاصل الهيدر
+   بدلًا منه فلا يلتصق الشريط برأس الصفحة. */
+.topbar.has-rail .breaking { border-top: 1px solid var(--line); }
 /* المسطرة تختفي على الجوال، فيعود فاصل الهيدر إلى مكانه. */
 @media (max-width: 640px) {
   .series-rail { display: none; }

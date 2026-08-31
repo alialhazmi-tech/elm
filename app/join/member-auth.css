@@ -1,6 +1,6 @@
 /*
- * صفحة الانضمام — عمود قيمة يشرح ما تفتحه العضوية، وبطاقة النموذج بجانبه.
- * (طبقة «الناعم v2» — الشاشة السادسة في تسليم Claude Design.)
+ * صفحة الانضمام — لوحة واحدة تضم عمود القيمة والنموذج، يفصلهما شعرة.
+ * الهدف أن تُقرأ كجسم مصمَّم واحد لا كعمودين متجاورين.
  */
 
 .member-auth-shell {
@@ -8,93 +8,110 @@
   max-width: 1080px;
   margin: 0 auto;
   box-sizing: border-box;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
-  gap: 64px;
-  align-items: start;
-  padding: 48px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 44px 24px 72px;
 }
+
+.member-auth-panelset {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+/* — عمود القيمة — */
 
 .member-value {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding-top: 8px;
+  gap: 18px;
+  padding: 40px 40px 36px;
   min-width: 0;
+}
+
+.member-auth-kicker {
+  display: block;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .member-value h1 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(30px, 3.4vw, 42px);
+  /* بلا letter-spacing سالب: العربية متصلة والتضييق يفكّ وصلها بصريًا. */
+  font-size: clamp(26px, 2.7vw, 34px);
   font-weight: 800;
-  line-height: 1.3;
-  letter-spacing: -0.02em;
+  line-height: 1.42;
   text-wrap: balance;
   color: var(--ink);
 }
 
 .member-value-dek {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.85;
+  font-size: 15.5px;
+  line-height: 1.9;
   color: var(--ink-2);
-  max-width: 46ch;
+  max-width: 48ch;
 }
 
 .member-perks {
   list-style: none;
-  margin: 8px 0 0;
+  margin: 4px 0 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  display: grid;
+  gap: 18px;
 }
 
 .member-perks li {
-  display: flex;
-  gap: 14px;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 13px;
+  align-items: start;
 }
 
 .member-perk-ico {
-  width: 38px;
-  height: 38px;
-  flex: none;
-  border-radius: 12px;
-  background: var(--surface-3);
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--navy) 8%, var(--surface));
   color: var(--navy);
   display: grid;
   place-items: center;
-  font-size: 16px;
 }
 
+.member-perk-ico svg { width: 17px; height: 17px; display: block; }
+
 .member-perk-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  gap: 3px;
   min-width: 0;
 }
 
 .member-perk-body b {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
+  line-height: 1.6;
   color: var(--ink);
 }
 
 .member-perk-body span {
-  font-size: 13.5px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.75;
   color: var(--ink-2);
 }
 
+/* الاهتمامات: شعرة فاصلة بدل صندوق رمادي ينافس اللوحة الحاضنة. */
 .member-interests-preview {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 18px 20px;
-  border-radius: var(--r-md, 20px);
-  background: var(--surface-2);
+  display: grid;
+  gap: 11px;
+  margin-top: 4px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
 }
 
 .member-interests-lbl {
@@ -106,26 +123,26 @@
 .member-interests-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 7px;
 }
 
 .member-interests-row span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  height: 34px;
-  padding: 0 14px;
+  height: 31px;
+  padding: 0 13px;
   border-radius: 999px;
   background: var(--surface);
   border: 1px solid var(--line);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--ink-2);
 }
 
 .member-interests-row i {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--interest, var(--navy));
 }
@@ -136,30 +153,25 @@
   color: var(--ink-3);
 }
 
+/* — عمود النموذج: لوحة مائلة للرمادي تفصلها شعرة عن عمود القيمة — */
+
 .member-auth-panel {
-  width: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  position: sticky;
-  top: 32px;
+  justify-content: center;
+  gap: 14px;
+  padding: 40px 32px 36px;
+  background: var(--surface-2);
+  border-inline-start: 1px solid var(--line);
 }
 
-.member-auth-kicker {
-  display: block;
-  color: var(--navy);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
+/* البطاقة فقدت إطارها وظلّها: اللوحة الحاضنة تحملهما الآن. */
 .member-auth-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-lg, 24px);
-  box-shadow: 0 10px 30px rgb(16 30 48 / 0.06);
-  padding: 24px 24px 20px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .member-auth-tabs {
@@ -168,9 +180,9 @@
   gap: 4px;
   padding: 4px;
   margin-bottom: 18px;
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--navy) 5%, var(--surface));
+  border: 1px solid var(--line);
   border-radius: 12px;
-  border: 0;
 }
 
 .member-auth-tabs button {
@@ -187,7 +199,7 @@
 .member-auth-tabs button[aria-selected="true"] {
   background: var(--surface);
   color: var(--ink);
-  box-shadow: 0 1px 3px rgb(16 30 48 / 0.08);
+  box-shadow: 0 1px 3px rgb(16 30 48 / 0.09);
 }
 
 .member-auth-form {
@@ -210,18 +222,18 @@
   width: 100%;
   box-sizing: border-box;
   border: 1px solid var(--line-2);
-  background: var(--bg);
+  background: var(--surface);
   color: var(--ink);
   border-radius: 10px;
   padding: 12px 14px;
   font: 500 14px var(--font-text);
   outline: none;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .member-auth-form input:focus {
   border-color: var(--navy);
-  background: var(--surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--navy) 14%, transparent);
 }
 
 .member-auth-form input[dir="ltr"] {
@@ -243,7 +255,7 @@
   padding: 0 18px;
   font: 700 15px var(--font-text);
   cursor: pointer;
-  margin-top: 2px;
+  margin-top: 4px;
   transition: background 0.15s ease;
 }
 
@@ -259,7 +271,7 @@
 .member-auth-error {
   margin: 0;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1px solid color-mix(in srgb, #c62134 28%, var(--line));
   background: color-mix(in srgb, #c62134 8%, var(--surface));
   color: #9f1239;
@@ -267,15 +279,16 @@
   line-height: 1.55;
 }
 
+/* تنبيه بيئي لا تحريري — يبقى مقروءًا دون أن يكون أعلى الصفحة صوتًا. */
 .member-auth-unavailable {
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid color-mix(in srgb, #eda313 35%, var(--line));
-  background: color-mix(in srgb, #eda313 10%, var(--surface));
-  color: #8a6508;
-  font-size: 12.5px;
-  line-height: 1.55;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, #eda313 22%, var(--line));
+  background: color-mix(in srgb, #eda313 7%, var(--surface));
+  color: var(--ink-2);
+  font-size: 11.5px;
+  line-height: 1.6;
 }
 
 .member-auth-terms {
@@ -292,7 +305,7 @@
   gap: 8px;
   align-items: center;
   justify-content: center;
-  margin: 4px 0 0;
+  margin: 0;
   font-size: 12px;
   color: var(--ink-3);
 }
@@ -427,31 +440,37 @@
 /* عمود واحد قبل أن يضيق عمود القيمة: النموذج أولًا، والقيمة تحته. */
 @media (max-width: 1040px) {
   .member-auth-shell {
-    grid-template-columns: 1fr;
-    gap: 32px;
     max-width: 560px;
     padding: 28px 24px 48px;
   }
 
-  .member-auth-panel { position: static; order: -1; }
-  .member-value { padding-top: 0; }
+  .member-auth-panelset { grid-template-columns: 1fr; }
+  .member-auth-panel {
+    order: -1;
+    justify-content: flex-start;
+    padding: 28px 26px;
+    border-inline-start: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .member-value { padding: 28px 26px 30px; }
 }
 
 @media (max-width: 560px) {
   .member-auth-shell {
     padding: 20px 14px 36px;
-    gap: 24px;
+    gap: 12px;
   }
 
-  .member-auth-panel { gap: 12px; }
+  .member-auth-panelset { border-radius: 18px; }
+  .member-auth-panel { gap: 12px; padding: 20px 16px; }
   .member-auth-kicker { font-size: 11px; }
-  .member-value { gap: 16px; }
-  .member-value h1 { font-size: 26px; }
-  .member-value-dek { font-size: 14px; line-height: 1.75; }
+  .member-value { gap: 16px; padding: 20px 16px 24px; }
+  .member-value h1 { font-size: 24px; }
+  .member-value-dek { font-size: 14px; line-height: 1.8; }
+  .member-perks { gap: 15px; }
   .member-perk-body b { font-size: 14px; }
   .member-perk-body span { font-size: 12.5px; }
-  .member-interests-preview { padding: 14px 16px; }
-  .member-auth-card { padding: 16px; border-radius: 18px; }
+  .member-interests-preview { padding-top: 18px; }
   .member-auth-tabs { margin-bottom: 13px; }
   .member-auth-tabs button { min-height: 40px; }
   .member-auth-form { gap: 11px; }
