@@ -22,9 +22,15 @@ test("مسطرة السلاسل خارج الهيدر حتى تلتصق وحده
 });
 
 test("شريط الأخبار يسقط لأحدث مادة إن لم يوجد عاجل سارٍ", async () => {
-  const provider = await read("lib/content/provider.ts");
+  const [provider, chrome] = await Promise.all([
+    read("lib/content/provider.ts"),
+    read("app/_components/site-chrome.tsx"),
+  ]);
   assert.match(provider, /"news-strip"/);
   assert.match(provider, /toStripItem/);
+  assert.match(provider, /seriesOf\(story\)\?\.name \?\? sectionName\(story\.section\)/);
+  assert.match(chrome, /urgent \? "عاجل" : label/);
+  assert.doesNotMatch(chrome, /مستجد/);
 });
 
 test("الهاتف يملك تنقلًا صريحًا بدل إخفاء الأقسام", async () => {
