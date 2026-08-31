@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-08-29T16:29:00.294Z",
+  "generatedAt": "2026-08-31T04:20:57.346Z",
   "mode": "migrate",
-  "movedThisRun": 43,
-  "movedBytes": 7458016,
+  "movedThisRun": 5,
+  "movedBytes": 1604042,
   "skippedUnsupportedFormat": 56,
   "failed": 0,
-  "inBucketTotal": 29040,
+  "inBucketTotal": 29054,
   "externalRemaining": 56,
   "issues": [
     {
