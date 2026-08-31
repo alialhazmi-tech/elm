@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
 import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
+import { BriefListen } from "@/app/_components/home-brief-listen";
 import { homeStream } from "@/lib/content/homeStream";
 import { relativeTimeAr } from "@/lib/format";
 import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
@@ -61,6 +62,13 @@ export default async function Home() {
   });
   const today = brandDate(new Date().toISOString());
 
+  // الموجز الذكي: سطر الثقة يقرأ من أحدث مادة فيه، ومدة الاستماع تُقدَّر من طول العناوين.
+  const briefUpdated = relativeTimeAr(
+    home.brief.map((item) => item.publishedAt).filter(Boolean).sort().at(-1) ?? undefined,
+  );
+  const briefWords = home.brief.reduce((total, item) => total + item.title.trim().split(/\s+/).length, 0);
+  const briefSeconds = Math.min(180, Math.max(30, Math.round((briefWords / 2.5) / 5) * 5));
+
   // «وراء الخبر»: مرتكز + 3 صفوف + سؤال الأسبوع.
   const contextFeatured = home.mosaic[0];
   const contextRows: Story[] = home.mosaic.slice(1, 4);
@@ -76,23 +84,9 @@ export default async function Home() {
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader active="/" activeSeries={home.series[0]?.slug} />
+      <SiteHeader active="/" activeSeries={home.series[0]?.slug} rail />
 
       <main id="main-content" className="wrap home-shell">
-        <nav className="sx-switch home-switch" aria-label="السلاسل">
-          <Link href="/series" className="sx-all">كل السلاسل</Link>
-          {home.series.map((item, index) => (
-            <Link
-              key={item.slug}
-              href={`/series/${item.slug}`}
-              className={index === 0 ? "is-active" : undefined}
-              style={{ "--sc": item.color } as React.CSSProperties}
-            >
-              {item.name}
-            </Link>
-          ))}
-        </nav>
-
         <div className="day-line" aria-label="تاريخ اليوم">
           <time dateTime={riyadhDateISO()}>
             {toLatinDigits(today.hijri)}
@@ -102,7 +96,8 @@ export default async function Home() {
           <span className="live">تغطية مستمرة</span>
         </div>
 
-        {/* الصدارة: لوحة ناعمة — النص يمينًا والصورة يسارًا بلا طبقة داكنة */}
+        {/* الصدارة + موجز العلم الذكي: لوحة ناعمة يمينًا وبطاقة الموجز يسارًا */}
+        <div className="sh-top">
         {hero ? (
           <section className="sh-lead" aria-label="قصة الصدارة" data-story-id={hero.id}>
             <div className="sh-lead-copy">
@@ -135,6 +130,48 @@ export default async function Home() {
           </section>
         )}
 
+        {/* موجز العلم الذكي: خمسة عناوين مرقّمة مع سطري ثقة وشفافية */}
+        {home.brief.length > 0 ? (
+          <aside className="sh-brief" aria-labelledby="brief-title">
+            <i className="sh-brief-spectrum" aria-hidden="true" />
+            <div className="sh-brief-head">
+              <div className="sh-brief-title-row">
+                <h2 id="brief-title">
+                  <span className="spark" aria-hidden="true">✦</span> موجز العلم الذكي
+                </h2>
+                <BriefListen lines={home.brief.map((item) => item.title)} seconds={briefSeconds} />
+              </div>
+              {briefUpdated ? (
+                <span className="sh-brief-trust">
+                  تحديث {briefUpdated} · مُولّد من {toLatinDigits(String(home.briefFrom))} مادة منشورة في أرشيفنا
+                </span>
+              ) : null}
+            </div>
+            <ol className="sh-brief-list">
+              {home.brief.map((item, index) => (
+                <li key={item.href}>
+                  <span className="bno latin-number" dir="ltr" lang="en" aria-hidden="true">
+                    {toLatinDigits(String(index + 1))}
+                  </span>
+                  <div className="bbody">
+                    <span className="kick" style={{ "--kc": item.color } as React.CSSProperties}>
+                      {item.label}
+                      {relativeTimeAr(item.publishedAt) ? (
+                        <span className="sect">· {relativeTimeAr(item.publishedAt)}</span>
+                      ) : null}
+                    </span>
+                    <h3><Link className="story-link" href={item.href}>{item.title}</Link></h3>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="sh-brief-why">
+              لماذا هذه المواد؟ الأكثر تطورًا خلال 24 ساعة عبر الأقسام. كل عنوان يحيل إلى مادته المنشورة.
+            </p>
+          </aside>
+        ) : null}
+        </div>
+
         {/* نبض اليوم + الجديد الآن */}
         {stream && riverItems.length > 0 ? (
           <section aria-label="الجديد الآن">
@@ -162,18 +199,45 @@ export default async function Home() {
           </section>
         ) : null}
 
-        {/* لوحات الأقسام بالتناوب */}
+        {/* اسأل العلم — يلي النهر مباشرة */}
+        <section className="ask-band" aria-labelledby="ask-title">
+          <div className="ask-band-info">
+            <h2 id="ask-title">
+              <span className="spark" aria-hidden="true">✦</span> اسأل العلم
+            </h2>
+            <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا — كل إجابة تحمل روابط مصادرها المنشورة.</p>
+          </div>
+          <div className="ask-band-interactive">
+            <form className="ask-band-form" action="/search" role="search">
+              <input
+                type="search"
+                name="q"
+                placeholder="لماذا ترتفع أسعار التنجستن؟"
+                aria-label="ابحث في العلم"
+                dir="rtl"
+              />
+              <button type="submit">اسأل</button>
+            </form>
+            <p className="ask-suggest">
+              <span className="suggest-lbl">جرّب:</span>
+              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
+              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
+              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
+              <span className="ask-note">الإجابات مولّدة آليًا وتُراجع مصادرها قبل الاعتماد</span>
+            </p>
+          </div>
+        </section>
+
+        {/* لوحات الأقسام: بلوك تحريري — رأس بحد سفلي بلون القسم، ثم مادة قائدة وصفوف */}
         {stream && stream.panels.length > 0 ? (
           <section className="panels" aria-label="الأقسام">
             {stream.panels.map((panel) => (
               <div className="panel" key={panel.slug} style={{ "--pc": panel.color } as React.CSSProperties}>
                 <div className="panel-head">
-                  <div>
-                    <h2><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h2>
-                    <span className="meta">
-                      {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
-                    </span>
-                  </div>
+                  <h2><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h2>
+                  <span className="meta">
+                    {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
+                  </span>
                   <Link className="more" href={`/${panel.slug}`}>كل {panel.name} ←</Link>
                 </div>
                 <div className="panel-body">
@@ -220,34 +284,6 @@ export default async function Home() {
           </section>
         ) : null}
 
-        {/* اسأل العلم */}
-        <section className="ask-band" aria-labelledby="ask-title">
-          <div className="ask-band-info">
-            <h2 id="ask-title">اسأل العلم</h2>
-            <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا مباشرة</p>
-          </div>
-          <div className="ask-band-interactive">
-            <form className="ask-band-form" action="/search" role="search">
-              <input
-                type="search"
-                name="q"
-                placeholder="لماذا ترتفع أسعار التنجستن؟"
-                aria-label="ابحث في العلم"
-                dir="rtl"
-              />
-              <button type="submit">اسأل</button>
-            </form>
-            <p className="ask-suggest">
-              <span className="suggest-lbl">جرّب:</span>
-              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
-              <span aria-hidden="true">·</span>
-              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
-              <span aria-hidden="true">·</span>
-              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-            </p>
-          </div>
-        </section>
-
         {/* وراء الخبر */}
         {contextFeatured || contextRows.length > 0 ? (
           <section className="sh-section" aria-label="وراء الخبر">
@@ -268,7 +304,7 @@ export default async function Home() {
                   {contextFeatured.excerpt ? <p>{trimExcerpt(contextFeatured.excerpt, 150)}</p> : null}
                 </article>
               ) : null}
-              {contextRows.length > 0 ? (
+              {contextRows.length > 0 || home.question ? (
                 <div className="sh-ctx-rows">
                   {contextRows.map((story) => (
                     <article className="sh-ctx-row" key={story.id} data-story-id={story.id}>
@@ -284,21 +320,21 @@ export default async function Home() {
                       </div>
                     </article>
                   ))}
+                  {/* سؤال الأسبوع يختم العمود بدل شريط عرضي أسفل القسم */}
+                  {home.question ? (
+                    <article className="sh-why">
+                      <div className="body">
+                        <span className="kick" style={{ "--kc": "#14a8d6" } as React.CSSProperties}>
+                          {home.question.kick || "لماذا"} <span className="sect">· سؤال الأسبوع</span>
+                        </span>
+                        <h3><Link className="story-link" href={home.question.href}>{home.question.title}</Link></h3>
+                      </div>
+                      <Link className="btn-pill" href={home.question.href}>اقرأ الإجابة</Link>
+                    </article>
+                  ) : null}
                 </div>
               ) : null}
             </div>
-            {home.question ? (
-              <article className="sh-why">
-                <div className="body">
-                  <span className="kick" style={{ "--kc": "#14a8d6" } as React.CSSProperties}>
-                    {home.question.kick || "لماذا"} <span className="sect">· سؤال الأسبوع</span>
-                  </span>
-                  <h3><Link className="story-link" href={home.question.href}>{home.question.title}</Link></h3>
-                  <p>{home.question.text}</p>
-                </div>
-                <Link className="btn-pill" href={home.question.href}>اقرأ الإجابة</Link>
-              </article>
-            ) : null}
           </section>
         ) : null}
 
@@ -330,6 +366,7 @@ export default async function Home() {
         <section className="sh-section" aria-label="السلاسل">
           <div className="section-head">
             <h2>السلاسل</h2>
+            <span className="sub">ثماني طرق لفهم الخبر</span>
             <Link className="more" href="/series">كل السلاسل ←</Link>
           </div>
           <div className="sh-series">

@@ -75,6 +75,8 @@ export type BriefItem = {
 /** حزمة الرئيسية بتوزيع «المنشور»: بنتو + فسيفساء + أرقام + مرئي. */
 export type HomeData = {
   brief: BriefItem[];
+  /** عدد المواد المنشورة التي اختير منها الموجز — سطر الشفافية في «موجز العلم الذكي». */
+  briefFrom: number;
   hero: Story | null;
   minis: Story[];
   dataStory: Story | null;

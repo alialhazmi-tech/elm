@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getBreaking } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
 import { NewsletterForm } from "./newsletter-form";
+import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
 
@@ -57,11 +58,14 @@ async function BreakingBar() {
   const breaking = await getBreaking().catch(() => null);
   if (!breaking) return null;
 
+  // «عاجل» الأحمر يُحجز للساعة الأولى؛ بعدها الخبر «مستجد» بنبضة خضراء هادئة.
+  const { urgent } = breaking;
+
   return (
-    <div className="breaking" role="status" aria-label="خبر عاجل">
+    <div className={urgent ? "breaking" : "breaking is-fresh"} role="status" aria-label={urgent ? "خبر عاجل" : "خبر مستجد"}>
       <div className="breaking-inner">
         <span className="breaking-dot" aria-hidden="true" />
-        <span className="breaking-tag">عاجل</span>
+        <span className="breaking-tag">{urgent ? "عاجل" : "مستجد"}</span>
         <Link className="breaking-title" href={breaking.href}>
           {breaking.title}
         </Link>
@@ -86,7 +90,16 @@ function Caret() {
  * الهيدر: صف واحد رحب — شعار كبير يمينًا، قائمة بأسهم منسدلة هادئة،
  * ويسارًا زر دخول مملوء واحد وأيقونات بسيطة بلا خلفيات.
  */
-export async function SiteHeader({ active, activeSeries }: { active?: string; activeSeries?: string }) {
+export async function SiteHeader({
+  active,
+  activeSeries,
+  rail,
+}: {
+  active?: string;
+  activeSeries?: string;
+  /** مسطرة السلاسل النحيفة تحت الهيدر — الرئيسية وحدها (حلّت محل رقائق home-switch). */
+  rail?: boolean;
+}) {
   const sectionActive = SECTIONS.some((item) => item.href === active);
   const seriesActive = active === "/series";
 
@@ -171,6 +184,7 @@ export async function SiteHeader({ active, activeSeries }: { active?: string; ac
         ))}
       </nav>
       <BreakingBar />
+      {rail ? <SeriesRail series={SERIES.filter((item) => !item.archived).slice(0, 8)} /> : null}
     </header>
   );
 }

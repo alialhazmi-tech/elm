@@ -12,7 +12,7 @@ export function SeriesRail({ series }: { series: Series[] }) {
   return (
     <nav className="series-rail" aria-label="سلاسل العلم">
       <div className="series-rail-inner">
-        <span className="series-rail-label">سلاسل العلم</span>
+        <span className="series-rail-label">السلاسل</span>
         {series.map((item) => (
           <Link
             key={item.slug}

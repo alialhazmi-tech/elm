@@ -235,7 +235,11 @@ export interface BreakingItem {
   title: string;
   href: string;
   until: string;
+  /** الساعة الأولى بعد النشر وحدها تستحق «عاجل»؛ بعدها الخبر «مستجد». */
+  urgent: boolean;
 }
+
+const URGENT_MS = 3_600_000;
 
 /** أحدث مادة «عاجل» سارية الصلاحية — يختفي الشريط وحده بانتهائها. */
 export async function getBreaking(): Promise<BreakingItem | null> {
@@ -260,7 +264,12 @@ export async function getBreaking(): Promise<BreakingItem | null> {
   );
   const story = active[0];
   return story && story.breakingUntil && story.breakingUntil > now
-    ? { title: story.title, href: storyHref(story), until: story.breakingUntil }
+    ? {
+        title: story.title,
+        href: storyHref(story),
+        until: story.breakingUntil,
+        urgent: Boolean(story.publishedAt && Date.parse(now) - Date.parse(story.publishedAt) < URGENT_MS),
+      }
     : null;
 }
 
@@ -642,6 +651,7 @@ function composeHome(articles: Story[], videos: Story[], stories: Story[]): Home
 
   return {
     brief,
+    briefFrom: articles.filter((story) => !isInfographic(story)).length,
     hero,
     minis,
     dataStory,

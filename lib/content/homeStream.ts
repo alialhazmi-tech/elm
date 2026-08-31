@@ -62,7 +62,8 @@ export async function homeStream(exclude: Set<string>): Promise<HomeStream> {
     const unseen = items.filter((s) => !shown.has(s.id));
     const lead = unseen.find((s) => s.image) ?? unseen[0] ?? null;
     if (lead) shown.add(lead.id);
-    const rows = items.filter((s) => s.id !== lead?.id && !shown.has(s.id)).slice(0, 3);
+    // أربعة صفوف بجانب المادة القائدة — عمود اللوحة التحريرية في تصميم «الناعم v2».
+    const rows = items.filter((s) => s.id !== lead?.id && !shown.has(s.id)).slice(0, 4);
     for (const row of rows) shown.add(row.id);
     return {
       slug,
