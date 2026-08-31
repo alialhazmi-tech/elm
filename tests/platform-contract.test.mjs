@@ -28,9 +28,7 @@ test("deduplicates canonical story IDs across the entire homepage", async () => 
 
   assert.ok(ids.length >= 7, "expected hero and section stories");
   assert.equal(new Set(ids).size, ids.length, `duplicate IDs found: ${ids.join(", ")}`);
-  const homeSwitch = html.match(/<nav class="sx-switch home-switch"[\s\S]*?<\/nav>/u);
-  assert.ok(homeSwitch, "شريط السلاسل تحت الهيدر مفقود");
-  assert.equal((homeSwitch[0].match(/href="\/series\/[^"]+"/g) ?? []).length, 8, "بوابة السلاسل الثماني مفقودة");
+  assert.equal((html.match(/class="series-lens"/g) ?? []).length, 8, "بوابة السلاسل الثماني مفقودة");
 });
 
 test("emits the required M0 security headers without temporary domains", async () => {

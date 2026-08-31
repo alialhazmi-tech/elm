@@ -8,7 +8,7 @@ import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
 import { homeStream } from "@/lib/content/homeStream";
 import { relativeTimeAr } from "@/lib/format";
 import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
-import { sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
+import { sectionName, seedContentProvider, seriesDirectory, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
 
 export const revalidate = 120;
@@ -35,7 +35,10 @@ function Kick({ story }: { story: Story }) {
 }
 
 export default async function Home() {
-  const home = await seedContentProvider.getHome();
+  const [home, directory] = await Promise.all([
+    seedContentProvider.getHome(),
+    seriesDirectory().catch(() => ({} as Awaited<ReturnType<typeof seriesDirectory>>)),
+  ]);
   const hero = home.hero;
   // التدفّق: يستبعد ما تعرضه الصدارة و«وراء الخبر» والأكثر قراءة حتى لا يتكرر خبر في الصفحة.
   const shownIds = new Set<string>([hero?.id, ...home.mosaic.map((s) => s.id), ...home.mostRead.map((s) => s.id)].filter((id): id is string => Boolean(id)));
@@ -217,6 +220,34 @@ export default async function Home() {
           </section>
         ) : null}
 
+        {/* اسأل العلم */}
+        <section className="ask-band" aria-labelledby="ask-title">
+          <div className="ask-band-info">
+            <h2 id="ask-title">اسأل العلم</h2>
+            <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا مباشرة</p>
+          </div>
+          <div className="ask-band-interactive">
+            <form className="ask-band-form" action="/search" role="search">
+              <input
+                type="search"
+                name="q"
+                placeholder="لماذا ترتفع أسعار التنجستن؟"
+                aria-label="ابحث في العلم"
+                dir="rtl"
+              />
+              <button type="submit">اسأل</button>
+            </form>
+            <p className="ask-suggest">
+              <span className="suggest-lbl">جرّب:</span>
+              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
+            </p>
+          </div>
+        </section>
+
         {/* وراء الخبر */}
         {contextFeatured || contextRows.length > 0 ? (
           <section className="sh-section" aria-label="وراء الخبر">
@@ -295,6 +326,35 @@ export default async function Home() {
           </section>
         ) : null}
 
+        {/* السلاسل — عمود العلم الفقري، بلاطات بلون كل سلسلة */}
+        <section className="sh-section" aria-label="السلاسل">
+          <div className="section-head">
+            <h2>السلاسل</h2>
+            <Link className="more" href="/series">كل السلاسل ←</Link>
+          </div>
+          <div className="sh-series">
+            {home.series.map((series) => {
+              const entry = directory[series.slug];
+              return (
+                <Link
+                  key={series.slug}
+                  className="series-lens"
+                  href={`/series/${series.slug}`}
+                  style={{ "--sc": series.color } as React.CSSProperties}
+                >
+                  <span className="sname">{series.name}</span>
+                  <span className="slatest">{entry?.latest?.title ?? series.description}</span>
+                  {entry?.count ? (
+                    <span className="scount">{toLatinDigits(String(entry.count))} مادة</span>
+                  ) : (
+                    <span className="scount">{series.description}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
         {/* مرئي وصوتي + الأكثر قراءة */}
         <div className="home-two">
           {home.videos.length > 0 ? (
@@ -330,33 +390,6 @@ export default async function Home() {
             </section>
           ) : null}
         </div>
-
-        <section className="ask-band" aria-labelledby="ask-title">
-          <div className="ask-band-info">
-            <h2 id="ask-title">اسأل العلم</h2>
-            <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا مباشرة</p>
-          </div>
-          <div className="ask-band-interactive">
-            <form className="ask-band-form" action="/search" role="search">
-              <input
-                type="search"
-                name="q"
-                placeholder="لماذا ترتفع أسعار التنجستن؟"
-                aria-label="ابحث في العلم"
-                dir="rtl"
-              />
-              <button type="submit">اسأل</button>
-            </form>
-            <p className="ask-suggest">
-              <span className="suggest-lbl">جرّب:</span>
-              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
-              <span aria-hidden="true">·</span>
-              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
-              <span aria-hidden="true">·</span>
-              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-            </p>
-          </div>
-        </section>
       </main>
 
       <SiteFooter />
