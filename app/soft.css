@@ -902,10 +902,16 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 .series-rail .series-lens:focus-visible { color: var(--ink); }
 .series-rail-all { font-size: 12.5px; color: var(--navy); }
 .series-rail-all:hover { color: var(--navy-deep); }
-/* الفاصل يقع بين الهيدر والمسطرة، ولا فاصل أسفلها.
-   حدّ .topbar السفلي كان يرسم الخط تحت المسطرة لأنها آخر أبنائه. */
+/* الهيدر والمسطرة كتلة كروم واحدة: خلفية السطح لا تذوب في صفحة --bg،
+   وخط سفلي يعيد ظهور الشريط بعدما أُزيل الفاصل من أسفل المسطرة. */
+.topbar,
+.topbar.has-rail { background: var(--surface); }
 .topbar.has-rail { border-bottom: 0; }
-.series-rail { border-top: 1px solid var(--line); border-bottom: 0; }
+.series-rail {
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
 /* حين يظهر شريط الخبر بين الهيدر والمسطرة، يحمل هو فاصل الهيدر
    بدلًا منه فلا يلتصق الشريط برأس الصفحة. */
 .topbar.has-rail .breaking { border-top: 1px solid var(--line); }
