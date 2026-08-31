@@ -138,7 +138,7 @@ body { background: var(--bg); color: var(--ink); }
 }
 .sh-lead-copy { display: flex; flex-direction: column; justify-content: center; gap: 18px; padding: 12px 8px; min-width: 0; }
 .sh-lead h1 { font-family: var(--font-display); font-size: clamp(30px, 3.2vw, 46px); font-weight: 800; line-height: 1.3; text-wrap: pretty; }
-.sh-lead .dek { margin: 0; font-family: var(--font-brief); font-size: 18px; font-weight: 400; line-height: 1.8; color: var(--ink-2); }
+.sh-lead .dek { margin: 0; font-family: var(--font-text); font-size: 18px; font-weight: 400; line-height: 1.8; color: var(--ink-2); }
 .sh-lead-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .btn-pill { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--navy); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; }
 .btn-pill:hover { background: var(--navy-deep); color: #fff; }
@@ -959,7 +959,7 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 .sh-brief-list .bbody { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .sh-brief-list .kick { font-size: 11.5px; gap: 6px; }
 .sh-brief-list .kick::before { display: none; }
-.sh-brief-list h3 { font-family: var(--font-brief); font-size: 14px; font-weight: 500; line-height: 1.65; }
+.sh-brief-list h3 { font-family: var(--font-text); font-size: 14px; font-weight: 500; line-height: 1.65; }
 .sh-brief-why { margin: 0; padding: 12px 20px 16px; border-top: 1px dashed var(--line-2); font-size: 11px; color: var(--ink-3); line-height: 1.7; }
 
 /* — الجديد الآن — */

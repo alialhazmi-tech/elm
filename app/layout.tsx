@@ -1,11 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic, Noto_Naskh_Arabic, Readex_Pro } from "next/font/google";
+import { Alexandria, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 import "./editorial-v2.css";
 import "./soft.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
-// تصميم «المنشور» بخطي Alexandria/Readex — واللوجوتايب الرسمي Noto Kufi 900 وحده.
+// تصميم «المنشور»: العناوين بـ Alexandria، وكل النصوص الفرعية بـ IBM Plex Sans Arabic،
+// واللوجوتايب الرسمي Noto Kufi 900 وحده.
 const displayFont = Alexandria({
   subsets: ["arabic", "latin"],
   weight: ["700", "800"],
@@ -13,18 +14,12 @@ const displayFont = Alexandria({
   display: "swap",
 });
 
-const textFont = Readex_Pro({
+// خط النصوص الفرعية في كل المشروع: المتون والنبذ والميتا والتسميات والأزرار.
+// الأوزان الأربعة كلها مستخدمة فعليًا في الأنماط — 600 كان يقفز إلى 700 سابقًا.
+const textFont = IBM_Plex_Sans_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
+  weight: ["400", "500", "600", "700"],
   variable: "--f-text",
-  display: "swap",
-});
-
-// عناوين «موجز العلم الذكي» بخط IBM Plex Sans Arabic بوزن متوسط — بلا بولد.
-const briefFont = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500"],
-  variable: "--f-brief",
   display: "swap",
 });
 
@@ -33,14 +28,6 @@ const logoFont = Noto_Kufi_Arabic({
   weight: ["900"],
   variable: "--f-logo",
   display: "swap",
-});
-
-const articleFont = Noto_Naskh_Arabic({
-  subsets: ["arabic", "latin"],
-  weight: ["400", "500", "700"],
-  variable: "--f-article",
-  display: "swap",
-  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -91,7 +78,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="ar"
       dir="rtl"
       data-scroll-behavior="smooth"
-      className={`${displayFont.variable} ${textFont.variable} ${briefFont.variable} ${logoFont.variable} ${articleFont.variable}`}
+      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
       suppressHydrationWarning
     >
       <body>

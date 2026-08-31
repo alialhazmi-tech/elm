@@ -46,10 +46,10 @@
     var(--c-absat), var(--c-aghrab), var(--c-efhamha), var(--c-arqam),
     var(--c-shakhsiat), var(--c-limatha), var(--c-mathalaw), var(--c-tarikh));
 
-  --font-display: var(--f-display, 'Alexandria'), var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
-  --font-text: var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
-  --font-article: var(--f-article, "Noto Naskh Arabic"), var(--font-text);
-  --font-brief: var(--f-brief, 'IBM Plex Sans Arabic'), var(--font-text);
+  --font-display: var(--f-display, 'Alexandria'), var(--f-text, 'IBM Plex Sans Arabic'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-text: var(--f-text, 'IBM Plex Sans Arabic'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+  /* متن المقال والنبذ يشتركان الآن مع بقية النصوص الفرعية في خط واحد. */
+  --font-article: var(--font-text);
 }
 
 @media (prefers-color-scheme: dark) {
