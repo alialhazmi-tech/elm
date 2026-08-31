@@ -265,7 +265,6 @@ export default async function Home() {
                       ) : (
                         <LeadHead story={panel.lead} />
                       )}
-                      {panel.lead.excerpt ? <p>{trimExcerpt(panel.lead.excerpt, 140)}</p> : null}
                     </article>
                   ) : null}
                   <div className="panel-rows">
