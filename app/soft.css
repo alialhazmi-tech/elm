@@ -345,7 +345,7 @@ body { background: var(--bg); color: var(--ink); }
 .sx-switch { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
 .sx-switch a {
   display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px;
-  background: var(--surface-2); color: var(--ink); font-size: 14px; font-weight: 600; text-decoration: none;
+  background: var(--surface-2); color: var(--ink); font-size: 14px; font-weight: 400; text-decoration: none;
 }
 .sx-switch a::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--sc, var(--ink-3)); }
 .sx-switch a.sx-all::before { display: none; }
@@ -601,7 +601,8 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 
 /* رقائق السلاسل تحت الهيدر في الرئيسية */
 .home-switch { margin: 4px 0 6px; justify-content: center; }
-.home-switch a { height: 38px; font-size: 14px; }
+.home-switch a { height: 38px; font-size: 14px; font-weight: 400; }
+.home-switch a.is-active { font-weight: 400; }
 @media (max-width: 640px) { .home-switch { justify-content: flex-start; } }
 
 /* ============ مؤشرات المادة — بطاقة واحدة تتقلّب ============ */
