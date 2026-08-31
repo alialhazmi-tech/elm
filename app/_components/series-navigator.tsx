@@ -3,10 +3,9 @@ import Link from "next/link";
 import type { Series } from "@/lib/content/types";
 
 /**
- * مسطرة السلاسل — شريط نحيف بعرض الصفحة تحت الهيدر مباشرة.
- * حلّت محل «بوابة السلاسل» الكحلية الكبيرة: حضور دائم بلا صراخ،
- * ولون السلسلة نقطة دقيقة لا طلاء. صنف الرابط series-lens عقدٌ
- * يفحصه tests/platform-contract.test.mjs (ثمانية روابط).
+ * مسطرة السلاسل — شريط نحيف بعرض الصفحة تحت الهيدر، شقيق له لا ابن.
+ * تلتصق وحدها عند التمرير فيختفي الهيدر ويبقى صف السلاسل.
+ * صنف الرابط series-lens عقدٌ يفحصه tests/platform-contract.test.mjs.
  */
 export function SeriesRail({ series }: { series: Series[] }) {
   return (
