@@ -76,15 +76,16 @@ export default async function Home() {
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
-      <SiteHeader active="/" />
+      <SiteHeader active="/" activeSeries={home.series[0]?.slug} />
 
       <main id="main-content" className="wrap home-shell">
         <nav className="sx-switch home-switch" aria-label="السلاسل">
           <Link href="/series" className="sx-all">كل السلاسل</Link>
-          {home.series.map((item) => (
+          {home.series.map((item, index) => (
             <Link
               key={item.slug}
               href={`/series/${item.slug}`}
+              className={index === 0 ? "is-active" : undefined}
               style={{ "--sc": item.color } as React.CSSProperties}
             >
               {item.name}
