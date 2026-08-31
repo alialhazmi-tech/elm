@@ -35,6 +35,16 @@ function Kick({ story }: { story: Story }) {
   );
 }
 
+// كيكر + عنوان قائدة البلوك — يُركَّب فوق الصورة حين توجد، وتحتها حين لا توجد.
+function LeadHead({ story }: { story: Story }) {
+  return (
+    <>
+      <Kick story={story} />
+      <h3><Link className="story-link" href={storyHref(story)}>{story.title}</Link></h3>
+    </>
+  );
+}
+
 export default async function Home() {
   const [home, directory] = await Promise.all([
     seedContentProvider.getHome(),
@@ -244,12 +254,17 @@ export default async function Home() {
                   {panel.lead ? (
                     <article className="panel-lead" data-story-id={panel.lead.id}>
                       {panel.lead.image ? (
-                        <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
-                          <Image src={panel.lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 420px" />
-                        </Link>
-                      ) : null}
-                      <Kick story={panel.lead} />
-                      <h3><Link className="story-link" href={storyHref(panel.lead)}>{panel.lead.title}</Link></h3>
+                        <div className="panel-lead-media">
+                          <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
+                            <Image src={panel.lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 420px" />
+                          </Link>
+                          <div className="panel-lead-overlay">
+                            <LeadHead story={panel.lead} />
+                          </div>
+                        </div>
+                      ) : (
+                        <LeadHead story={panel.lead} />
+                      )}
                       {panel.lead.excerpt ? <p>{trimExcerpt(panel.lead.excerpt, 140)}</p> : null}
                     </article>
                   ) : null}

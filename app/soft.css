@@ -991,6 +991,28 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 .panel-lead { gap: 10px; }
 .panel-lead .soft-img { aspect-ratio: 16 / 9; border-radius: 18px; }
 .panel-lead h3 { font-size: 21px; }
+
+/* قائدة البلوك: الكيكر والعنوان فوق الصورة على تدرّج داكن يضمن التباين. */
+.panel-lead-media { position: relative; border-radius: 18px; overflow: hidden; }
+.panel-lead-media .soft-img { display: block; border-radius: 0; }
+.panel-lead-overlay {
+  position: absolute; inset-inline: 0; bottom: 0; z-index: 1;
+  display: flex; flex-direction: column; gap: 6px; padding: 48px 16px 14px;
+  /* التدرّج وحده لا يكفي فوق صورة فاتحة، فيسنده ظلّ نصّي خفيف. */
+  background: linear-gradient(to top, rgb(10 16 28 / 0.94), rgb(10 16 28 / 0.74) 34%, rgb(10 16 28 / 0.3) 66%, transparent);
+  pointer-events: none;
+}
+.panel-lead-overlay .story-link { pointer-events: auto; }
+.panel-lead-overlay .kick { color: #fff; text-shadow: 0 1px 3px rgb(0 0 0 / 0.45); }
+/* لون السلسلة قد يكون داكنًا، فيُمزج نحو الأبيض ليبقى ظاهرًا على التدرّج. */
+.panel-lead-overlay .kick::before { background: color-mix(in srgb, var(--kc, #fff) 60%, #fff); }
+.panel-lead-overlay .kick .sect { color: rgb(255 255 255 / 0.74); }
+.panel-lead-overlay h3 {
+  color: #fff; text-shadow: 0 1px 4px rgb(0 0 0 / 0.5);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.panel-lead-overlay .story-link { color: #fff; }
+.panel-lead-overlay .story-link:hover { color: #fff; text-decoration: underline; text-underline-offset: 0.25em; }
 .panel-rows { gap: 0; }
 .panel-row { padding: 13px 0; border-radius: 0; background: transparent; border-bottom: 1px solid var(--line); gap: 3px; }
 .panel-row .kick::before { display: none; }
@@ -1045,6 +1067,9 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
   .panels { gap: 32px; }
   .panel-head { flex-wrap: wrap; }
   .panel-head h2 { font-size: 22px; }
+  .panel-lead-overlay { padding: 40px 13px 12px; gap: 4px; }
+  /* حجم أصغر على الجوال ليتّسع العنوان كاملًا فوق صورة قصيرة. */
+  .panel-lead-overlay h3 { font-size: 17.5px; }
   .ask-note { margin-inline-start: 0; }
   .sh-series { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sh-series a { min-height: 0; }
