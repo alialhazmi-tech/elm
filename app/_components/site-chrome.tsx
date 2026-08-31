@@ -104,7 +104,7 @@ export async function SiteHeader({
   const seriesActive = active === "/series";
 
   return (
-    <header className="topbar">
+    <header className={rail ? "topbar has-rail" : "topbar"}>
       <div className="topbar-inner">
         <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
           <span className="brand-word">العلم</span>
