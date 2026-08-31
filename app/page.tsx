@@ -166,21 +166,21 @@ export default async function Home() {
           <section className="panels" aria-label="الأقسام">
             {stream.panels.map((panel) => (
               <div className="panel" key={panel.slug} style={{ "--pc": panel.color } as React.CSSProperties}>
-                <header className="panel-top">
-                  <h2>
-                    <Link className="story-link" href={`/${panel.slug}`}>
-                      <i className="dot" aria-hidden="true" />
-                      {panel.name}
-                    </Link>
-                  </h2>
+                <div className="panel-head">
+                  <div>
+                    <h2><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h2>
+                    <span className="meta">
+                      {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
+                    </span>
+                  </div>
                   <Link className="more" href={`/${panel.slug}`}>كل {panel.name} ←</Link>
-                </header>
+                </div>
                 <div className="panel-body">
                   {panel.lead ? (
                     <article className="panel-lead" data-story-id={panel.lead.id}>
                       {panel.lead.image ? (
                         <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
-                          <Image src={panel.lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 480px" />
+                          <Image src={panel.lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 420px" />
                         </Link>
                       ) : null}
                       <Kick story={panel.lead} />
