@@ -49,6 +49,7 @@
   --font-display: var(--f-display, 'Alexandria'), var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
   --font-text: var(--f-text, 'Readex Pro'), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
   --font-article: var(--f-article, "Noto Naskh Arabic"), var(--font-text);
+  --font-brief: var(--f-brief, 'IBM Plex Sans Arabic'), var(--font-text);
 }
 
 @media (prefers-color-scheme: dark) {

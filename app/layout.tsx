@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Alexandria, Noto_Kufi_Arabic, Noto_Naskh_Arabic, Readex_Pro } from "next/font/google";
+import { Alexandria, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic, Noto_Naskh_Arabic, Readex_Pro } from "next/font/google";
 import "./globals.css";
 import "./editorial-v2.css";
 import "./soft.css";
@@ -17,6 +17,14 @@ const textFont = Readex_Pro({
   subsets: ["arabic", "latin"],
   weight: ["400", "500", "700"],
   variable: "--f-text",
+  display: "swap",
+});
+
+// عناوين «موجز العلم الذكي» بخط IBM Plex Sans Arabic بوزن متوسط — بلا بولد.
+const briefFont = IBM_Plex_Sans_Arabic({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500"],
+  variable: "--f-brief",
   display: "swap",
 });
 
@@ -83,7 +91,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       lang="ar"
       dir="rtl"
       data-scroll-behavior="smooth"
-      className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable} ${articleFont.variable}`}
+      className={`${displayFont.variable} ${textFont.variable} ${briefFont.variable} ${logoFont.variable} ${articleFont.variable}`}
       suppressHydrationWarning
     >
       <body>
