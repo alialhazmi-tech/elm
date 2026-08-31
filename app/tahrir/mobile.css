@@ -28,16 +28,28 @@
   .th-srow .chips { gap: 5px; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
   .th-pill, .th-serchip, .th-gchip, .th-draft-delete, .th-archive-btn, .th-restore-btn { flex: none; font-size: 9px; padding: 2px 8px; }
 
+  .th-editor-head { padding: 10px 11px; margin-bottom: 8px; border-radius: 11px; }
+  .th-editor-head-copy { width: 100%; }
+  .th-editor-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; gap: 6px; }
+  .th-editor-actions .th-save, .th-editor-actions .th-send { width: 100%; min-height: 40px; padding-inline: 7px; font-size: 10.5px; }
+  .th-editor-message { margin-bottom: 8px; }
   .th-ed-main { padding: 14px 12px 22px; border-radius: 11px; }
+  .th-field-label { font-size: 10px; }
   .th-ed-title { font-size: 18px; line-height: 1.55; }
   .th-ed-sum { font-size: 12px; margin-bottom: 12px; }
-  .th-fullbar { gap: 7px; }
+  .th-fullbar { gap: 7px; flex-wrap: wrap; padding: 10px; }
+  .th-fullbar .copy { min-width: calc(100% - 44px); }
   .th-fullbtn { width: 100%; min-height: 42px; }
   .th-fullbar .hint { min-width: 0; font-size: 9.5px; }
+  .th-full-progress-head { padding-inline: 12px; }
+  .th-full-progress-head .copy span { font-size: 9.5px; }
+  .th-full-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-inline: 12px; }
+  .th-full-progress-foot { padding-inline: 12px; }
   .th-rt-bar { top: 58px; flex-wrap: nowrap; overflow-x: auto; padding-block: 6px; scrollbar-width: none; }
   .th-rt-bar .tb { flex: none; min-height: 34px; padding: 5px 9px; }
   .th-rt-box, .th-ed-body { min-height: 260px; font-size: 14px; }
   .th-ed-side { gap: 8px; }
+  .th-inspector-tabs { position: sticky; top: 58px; z-index: 7; box-shadow: 0 6px 18px rgb(16 30 48 / .08); }
   .th-actions { position: sticky; bottom: 0; z-index: 6; padding: 9px 11px 11px; background: var(--t-surface); box-shadow: 0 -10px 24px rgb(16 30 48 / .08); }
   .th-send, .th-save { min-height: 42px; }
 

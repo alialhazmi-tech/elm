@@ -90,6 +90,20 @@ export interface AiResult {
   usages?: Usage[];
 }
 
+export type FullEditProgressStage =
+  | "accepted"
+  | "body_started"
+  | "pack_started"
+  | "body_ready"
+  | "pack_ready"
+  | "guard_checking"
+  | "complete";
+
+interface EditorialRunOptions {
+  signal?: AbortSignal;
+  onFullEditProgress?: (stage: FullEditProgressStage) => void;
+}
+
 /**
  * فحص مقترح بالحارس — قواعد العنوان للعناوين، وقواعد النص للفقرات
  * (بلا قاعدة طول المتن)، والمتن الكامل بكل القواعد.
@@ -152,14 +166,14 @@ function parseJsonObject(raw: string): Record<string, unknown> {
 
 async function complete(
   anthropic: Anthropic,
-  opts: { model: string; maxTokens: number; tone: string; user: string },
+  opts: { model: string; maxTokens: number; tone: string; user: string; signal?: AbortSignal },
 ): Promise<{ text: string; usage: Usage; stopReason: string | null }> {
   const response = await anthropic.messages.create({
     model: opts.model,
     max_tokens: opts.maxTokens,
     system: systemBlocks(opts.tone),
     messages: [{ role: "user", content: opts.user }],
-  });
+  }, { signal: opts.signal });
   const text = response.content.find((block) => block.type === "text")?.text ?? "";
   return {
     text,
@@ -182,6 +196,7 @@ async function runFullEdit(
   anthropic: Anthropic,
   input: { title: string; body: string },
   settings: AiSettingsData,
+  options: EditorialRunOptions,
 ): Promise<AiResult> {
   const clipped = {
     title: input.title,
@@ -190,18 +205,30 @@ async function runFullEdit(
   const bodyModel = modelFor("full_edit", settings);
   const packModel = settings.models.light;
 
+  options.onFullEditProgress?.("accepted");
+  options.onFullEditProgress?.("body_started");
+  options.onFullEditProgress?.("pack_started");
+
   const [bodyResult, packResult] = await Promise.all([
     complete(anthropic, {
       model: bodyModel,
       maxTokens: 8192,
       tone: settings.tone,
       user: TOOL_PROMPTS.full_edit(clipped),
+      signal: options.signal,
+    }).then((result) => {
+      options.onFullEditProgress?.("body_ready");
+      return result;
     }),
     complete(anthropic, {
       model: packModel,
       maxTokens: 1024,
       tone: settings.tone,
       user: FULL_EDIT_PACK_PROMPT(clipped),
+      signal: options.signal,
+    }).then((result) => {
+      options.onFullEditProgress?.("pack_ready");
+      return result;
     }),
   ]);
 
@@ -238,24 +265,30 @@ async function runFullEdit(
     .filter(Boolean)
     .slice(0, 8);
 
+  options.onFullEditProgress?.("guard_checking");
+
+  const fullEdit: FullEditResult = {
+    title: { text: title, guard: guardCheck(title, "title") },
+    excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment") },
+    body: { text: bodyText, guard: guardCheck(bodyText, "body") },
+    seo: {
+      seoTitle,
+      seoDescription,
+      keywords,
+      guard: guardCheck(`${seoTitle} ${seoDescription} ${keywords.join(" ")}`, "fragment"),
+    },
+    classify: {
+      seriesSlug: pack.seriesSlug ?? null,
+      section: pack.section ?? "news",
+      format: pack.format ?? "news",
+    },
+  };
+
+  options.onFullEditProgress?.("complete");
+
   return {
     suggestions: [],
-    fullEdit: {
-      title: { text: title, guard: guardCheck(title, "title") },
-      excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment") },
-      body: { text: bodyText, guard: guardCheck(bodyText, "body") },
-      seo: {
-        seoTitle,
-        seoDescription,
-        keywords,
-        guard: guardCheck(`${seoTitle} ${seoDescription} ${keywords.join(" ")}`, "fragment"),
-      },
-      classify: {
-        seriesSlug: pack.seriesSlug ?? null,
-        section: pack.section ?? "news",
-        format: pack.format ?? "news",
-      },
-    },
+    fullEdit,
     usage: {
       model: bodyModel,
       inputTokens: bodyResult.usage.inputTokens + packResult.usage.inputTokens,
@@ -269,6 +302,7 @@ export async function runEditorialTool(
   tool: AiTool,
   input: { title: string; body: string; selection?: string },
   settings: AiSettingsData,
+  options: EditorialRunOptions = {},
 ): Promise<AiResult> {
   const anthropic = client();
   if (!anthropic) {
@@ -276,7 +310,7 @@ export async function runEditorialTool(
   }
 
   if (tool === "full_edit") {
-    return runFullEdit(anthropic, input, settings);
+    return runFullEdit(anthropic, input, settings, options);
   }
 
   const model = modelFor(tool, settings);
@@ -285,6 +319,7 @@ export async function runEditorialTool(
     maxTokens: tool === "proofread" ? 8192 : 2048,
     tone: settings.tone,
     user: TOOL_PROMPTS[tool](input),
+    signal: options.signal,
   });
 
   if (stopReason === "max_tokens") {
