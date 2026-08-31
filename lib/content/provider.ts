@@ -241,7 +241,21 @@ export interface BreakingItem {
 
 const URGENT_MS = 3_600_000;
 
-/** أحدث مادة «عاجل» سارية الصلاحية — يختفي الشريط وحده بانتهائها. */
+function toStripItem(story: Story, now: string, flagged: boolean): BreakingItem {
+  return {
+    title: story.title,
+    href: storyHref(story),
+    until: story.breakingUntil ?? story.publishedAt ?? now,
+    urgent: Boolean(
+      flagged && story.publishedAt && Date.parse(now) - Date.parse(story.publishedAt) < URGENT_MS,
+    ),
+  };
+}
+
+/**
+ * شريط الأخبار: العاجل الساري أولًا، وإلا أحدث مادة منشورة حتى لا يختفي الصف.
+ * «عاجل» الأحمر يبقى للساعة الأولى من مادة مُعلَّمة فقط.
+ */
 export async function getBreaking(): Promise<BreakingItem | null> {
   const now = new Date().toISOString();
   const active = await dbOrSeed(
@@ -262,15 +276,27 @@ export async function getBreaking(): Promise<BreakingItem | null> {
         .sort((a, b) => (b.breakingUntil ?? "").localeCompare(a.breakingUntil ?? ""))
         .slice(0, 1),
   );
-  const story = active[0];
-  return story && story.breakingUntil && story.breakingUntil > now
-    ? {
-        title: story.title,
-        href: storyHref(story),
-        until: story.breakingUntil,
-        urgent: Boolean(story.publishedAt && Date.parse(now) - Date.parse(story.publishedAt) < URGENT_MS),
-      }
-    : null;
+  const flagged = active[0];
+  if (flagged && flagged.breakingUntil && flagged.breakingUntil > now) {
+    return toStripItem(flagged, now, true);
+  }
+
+  const latest = await dbOrSeed(
+    "news-strip",
+    30_000,
+    async (db) => {
+      const rows = await db
+        .select(CARD_COLUMNS)
+        .from(storiesTable)
+        .where(PUBLISHED)
+        .orderBy(...RECENT_ORDER)
+        .limit(1);
+      return rows.map(mapRow);
+    },
+    () => seedAll.slice(0, 1),
+  );
+  const story = latest[0];
+  return story ? toStripItem(story, now, false) : null;
 }
 
 /* ============ شرائح جاك والسلاسل المتقاعدة ============ */

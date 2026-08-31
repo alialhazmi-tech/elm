@@ -755,7 +755,14 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 /* تصنيفات السلاسل فوق في كل الصفحات على الجوال؛ على الحاسوب تبقى داخل الرئيسية فقط */
 .top-series-mobile { display: none; }
 @media (max-width: 640px) {
-  .top-series-mobile { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 8px; margin: 0; padding: 0 16px 10px; }
+  .topbar,
+  .topbar.has-rail { position: static; }
+  .top-series-mobile {
+    display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    gap: 8px; margin: 0; padding: 8px 16px 10px;
+    position: sticky; top: 0; z-index: 40;
+    background: var(--surface); border-bottom: 1px solid var(--line);
+  }
   .top-series-mobile::-webkit-scrollbar { display: none; }
   .top-series-mobile a { flex: none; height: 34px; font-size: 13.5px; }
   .home-switch { display: none; }
@@ -902,27 +909,35 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 .series-rail .series-lens:focus-visible { color: var(--ink); }
 .series-rail-all { font-size: 12.5px; color: var(--navy); }
 .series-rail-all:hover { color: var(--navy-deep); }
-/* الهيدر والمسطرة كتلة كروم واحدة: خلفية السطح لا تذوب في صفحة --bg،
-   وخط سفلي يعيد ظهور الشريط بعدما أُزيل الفاصل من أسفل المسطرة. */
+/* الهيدر يمرّ مع الصفحة؛ المسطرة تلتصق وحدها في رأس الشاشة. */
 .topbar,
 .topbar.has-rail { background: var(--surface); }
-.topbar.has-rail { border-bottom: 0; }
+.topbar.has-rail { position: static; border-bottom: 0; }
 .series-rail {
+  position: sticky;
+  top: 0;
+  z-index: 40;
   background: var(--surface);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
-/* حين يظهر شريط الخبر بين الهيدر والمسطرة، يحمل هو فاصل الهيدر
-   بدلًا منه فلا يلتصق الشريط برأس الصفحة. */
-.topbar.has-rail .breaking { border-top: 1px solid var(--line); }
+/* شريط الأخبار صف مستقل بين الهيدر والمسطرة — لا يذوب في سطح الهيدر. */
+.breaking,
+.breaking.is-fresh {
+  background: var(--surface-3);
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
+}
+.breaking-inner { max-width: 1240px; margin: 0 auto; padding: 8px 24px; }
 /* المسطرة تختفي على الجوال، فيعود فاصل الهيدر إلى مكانه. */
 @media (max-width: 640px) {
   .series-rail { display: none; }
   .topbar.has-rail { border-bottom: 1px solid var(--line); }
+  .breaking-inner { padding-inline: 16px; }
 }
 
 /* — شريط «مستجد»: النبضة الخضراء الهادئة تحل محل الأحمر بعد الساعة الأولى — */
-.breaking.is-fresh { background: var(--surface-3); border-top: 0; }
+.breaking.is-fresh { background: var(--surface-3); }
 .breaking.is-fresh .breaking-dot { background: var(--success); box-shadow: 0 0 0 0 rgb(46 184 115 / 0.6); }
 .breaking.is-fresh .breaking-tag { color: var(--navy); font-size: 11.5px; letter-spacing: 0.04em; }
 .breaking.is-fresh .breaking-title { color: var(--ink); }

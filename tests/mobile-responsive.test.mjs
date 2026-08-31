@@ -4,6 +4,29 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
+test("مسطرة السلاسل خارج الهيدر حتى تلتصق وحدها عند التمرير", async () => {
+  const [chrome, css] = await Promise.all([
+    read("app/_components/site-chrome.tsx"),
+    read("app/soft.css"),
+  ]);
+  const headerClose = chrome.indexOf("</header>");
+  const rail = chrome.indexOf("<SeriesRail");
+  const chips = chrome.indexOf("top-series-mobile");
+  const news = chrome.indexOf("<BreakingBar");
+  assert.ok(headerClose > 0 && rail > headerClose, "مسطرة السلاسل يجب أن تخرج من الهيدر");
+  assert.ok(chips > headerClose, "رقائق الجوال يجب أن تخرج من الهيدر");
+  assert.ok(news > headerClose, "شريط الأخبار يجب أن يخرج من الهيدر");
+  assert.match(css, /\.topbar\.has-rail\s*\{[^}]*position:\s*static/);
+  assert.match(css, /\.series-rail\s*\{[^}]*position:\s*sticky/);
+  assert.match(css, /\.breaking,\s*\.breaking\.is-fresh/);
+});
+
+test("شريط الأخبار يسقط لأحدث مادة إن لم يوجد عاجل سارٍ", async () => {
+  const provider = await read("lib/content/provider.ts");
+  assert.match(provider, /"news-strip"/);
+  assert.match(provider, /toStripItem/);
+});
+
 test("الهاتف يملك تنقلًا صريحًا بدل إخفاء الأقسام", async () => {
   const [chrome, css] = await Promise.all([
     read("app/_components/site-chrome.tsx"),
