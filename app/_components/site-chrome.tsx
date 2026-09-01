@@ -2,31 +2,43 @@ import Link from "next/link";
 
 import { getBreaking } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
+import { brandDate, riyadhDateISO, toLatinDigits } from "@/lib/format";
 import { NewsletterForm } from "./newsletter-form";
 import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
 
-/** الأقسام — تحت «الأخبار» في قائمة منسدلة. */
-const SECTIONS = [
+/**
+ * الهيدر من طبقتين (تصميم 2026-09-01):
+ * الصف الأول: الشعار، الأقسام مسطّحة بلا قائمة منسدلة، ثم الأشكال، ثم حقل «ابحث أو اسأل العلم» والثيم والدخول.
+ * الشريط الثاني: «تغطية مستمرة» + العاجل + التاريخ يمينًا، ومسطرة السلاسل الثماني يسارًا — يلتصق وحده عند التمرير.
+ * كان القارئ يقطع أربعة أشرطة (≈188px) قبل أول خبر؛ صار يقطع اثنين (≈108px).
+ */
+
+/** الأقسام السبعة الظاهرة في الصف الأول — «ثقافة» في قائمة الجوال والفوتر. */
+const NAV_SECTIONS = [
   { label: "محليات", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "تقنية", href: "/technology" },
   { label: "علوم", href: "/sciences" },
   { label: "صحة", href: "/health" },
   { label: "رياضة", href: "/sport" },
-  { label: "ثقافة", href: "/culture" },
   { label: "عالم", href: "/world" },
+];
+
+/** الأشكال — بعد فاصل رفيع وبلون أهدأ. */
+const NAV_FORMATS = [
   { label: "إنفوجرافيك", href: "/infographics" },
+  { label: "بودكاست", href: "/podcasts" },
+  { label: "فيديو", href: "/videos" },
 ];
 
 const MOBILE_NAV = [
   { label: "الرئيسية", href: "/" },
   { label: "السلاسل", href: "/series" },
-  { label: "إنفوجرافيك", href: "/infographics" },
-  { label: "بودكاست", href: "/podcasts" },
-  { label: "فيديو", href: "/videos" },
-  ...SECTIONS.filter((item) => item.href !== "/infographics"),
+  ...NAV_FORMATS,
+  ...NAV_SECTIONS,
+  { label: "ثقافة", href: "/culture" },
 ];
 
 const FOOTER_SECTIONS = [
@@ -48,48 +60,60 @@ const FOOTER_FORMATS = [
   { label: "البحث التحريري", href: "/search" },
 ];
 
-
-/**
- * شريط الأخبار: رفيع وساكن بلا زحف. العاجل الساري يتقدّم،
- * وإلا أحدث مادة منشورة حتى يبقى الصف ظاهرًا تحت الهيدر.
- */
-async function BreakingBar() {
-  const breaking = await getBreaking().catch(() => null);
-  if (!breaking) return null;
-
-  // «عاجل» الأحمر يُحجز للساعة الأولى؛ بعدها اسم السلسلة أو التصنيف.
-  const { urgent, label } = breaking;
-  const tag = urgent ? "عاجل" : label;
-
+function SearchIcon({ size = 18 }: { size?: number }) {
   return (
-    <div className={urgent ? "breaking" : "breaking is-fresh"} role="status" aria-label={urgent ? "خبر عاجل" : tag}>
-      <div className="breaking-inner">
-        <span className="breaking-dot" aria-hidden="true" />
-        <span className="breaking-tag">{tag}</span>
-        <Link className="breaking-title" href={breaking.href}>
-          {breaking.title}
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-/**
- * الهيدر: لوح مداد، اللوجوتايب السالب (كلمة «العلم» وحدها —
- * Noto Kufi ‏900)، والنشط بتمييز كحلي فاتح دون أحمر.
- */
-function Caret() {
-  return (
-    <svg className="caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 9l6 6 6-6" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.5-3.5" />
     </svg>
   );
 }
 
 /**
- * الهيدر: صف واحد رحب — شعار كبير يمينًا، قائمة بأسهم منسدلة هادئة،
- * ويسارًا زر دخول مملوء واحد وأيقونات بسيطة بلا خلفيات.
+ * الشريط الثاني: العاجل الساري يتقدّم (أحمر للساعة الأولى من مادة مُعلَّمة)،
+ * وإلا أحدث مادة منشورة تحت «تغطية مستمرة» حتى يبقى الصف حيًا.
+ * التاريخ الهجري والميلادي يجلسان هنا بدل سطر مستقل في الصفحة.
  */
+async function TopStrip({ rail, activeSeries }: { rail?: boolean; activeSeries?: string }) {
+  const breaking = await getBreaking().catch(() => null);
+  const today = brandDate(new Date().toISOString());
+  const urgent = Boolean(breaking?.urgent);
+  const label = breaking?.label ?? "";
+  const tag = urgent ? "عاجل" : label;
+
+  return (
+    <div className={rail ? "topstrip has-rail" : "topstrip"}>
+      <div className="topstrip-inner">
+        <div className={urgent ? "strip-news is-urgent" : "strip-news"} role="status" aria-label={urgent ? "خبر عاجل" : "تغطية مستمرة"}>
+          <span className="strip-live">
+            <span className="strip-dot" aria-hidden="true" />
+            {urgent ? "عاجل" : "تغطية مستمرة"}
+          </span>
+          {breaking ? (
+            <Link className="strip-title" href={breaking.href}>
+              {urgent ? null : (
+                <>
+                  <b className="strip-tag">{tag}</b>
+                  <span aria-hidden="true"> · </span>
+                </>
+              )}
+              {breaking.title}
+            </Link>
+          ) : null}
+          <time className="strip-date" dateTime={riyadhDateISO()}>
+            <span className="hijri">
+              {toLatinDigits(today.hijri)}
+              <span aria-hidden="true"> · </span>
+            </span>
+            {toLatinDigits(today.gregorian)}
+          </time>
+        </div>
+        {rail ? <SeriesRail series={SERIES.filter((item) => !item.archived).slice(0, 8)} active={activeSeries} /> : null}
+      </div>
+    </div>
+  );
+}
+
 export async function SiteHeader({
   active,
   activeSeries,
@@ -97,56 +121,36 @@ export async function SiteHeader({
 }: {
   active?: string;
   activeSeries?: string;
-  /** مسطرة السلاسل تحت الهيدر — الرئيسية وحدها، تلتصق وحدها إذا تحركت الصفحة. */
+  /** مسطرة السلاسل في الشريط الثاني — الرئيسية وحدها. */
   rail?: boolean;
 }) {
-  const sectionActive = SECTIONS.some((item) => item.href === active);
-  const seriesActive = active === "/series";
-
   return (
     <>
-      <header className={rail ? "topbar has-rail" : "topbar"}>
+      <header className="topbar">
         <div className="topbar-inner">
           <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
             <span className="brand-word">العلم</span>
           </Link>
 
           <nav className="topnav" aria-label="التنقل الرئيسي">
-            <div className="nav-item has-menu">
-              <Link href="/politics" className={sectionActive ? "is-active" : undefined} aria-haspopup="true">
-                الأخبار <Caret />
+            {NAV_SECTIONS.map((item) => (
+              <Link key={item.href} href={item.href} className={item.href === active ? "is-active" : undefined}>
+                {item.label}
               </Link>
-              <div className="nav-panel" role="menu">
-                {SECTIONS.filter((item) => item.href !== "/infographics").map((item) => (
-                  <Link key={item.href} href={item.href} role="menuitem" className={item.href === active ? "is-active" : undefined}>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-            <div className="nav-item has-menu">
-              <Link href="/series" className={seriesActive ? "is-active" : undefined} aria-haspopup="true">
-                السلاسل <Caret />
+            ))}
+            <span className="topnav-sep" aria-hidden="true" />
+            {NAV_FORMATS.map((item) => (
+              <Link key={item.href} href={item.href} className={item.href === active ? "is-format is-active" : "is-format"}>
+                {item.label}
               </Link>
-              <div className="nav-panel nav-panel-series" role="menu">
-                {SERIES.map((item) => (
-                  <Link key={item.slug} href={`/series/${item.slug}`} role="menuitem" style={{ "--sc": item.color } as React.CSSProperties}>
-                    <i className="dot" aria-hidden="true" />
-                    <span>{item.name}</span>
-                    <small>{item.description}</small>
-                  </Link>
-                ))}
-                <Link href="/series" role="menuitem" className="nav-all">كل السلاسل ←</Link>
-              </div>
-            </div>
-            <Link href="/infographics" className={active === "/infographics" ? "is-active" : undefined}>إنفوجرافيك</Link>
-            <Link href="/podcasts" className={active === "/podcasts" ? "is-active" : undefined}>بودكاست</Link>
-            <Link href="/videos" className={active === "/videos" ? "is-active" : undefined}>فيديو</Link>
+            ))}
           </nav>
 
           <div className="top-tools">
-            <Link className="icon-btn" href="/search" aria-label="ابحث أو اسأل العلم">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <Link className="ask-field" href="/search" aria-label="ابحث أو اسأل العلم">
+              <SearchIcon />
+              <span className="ask-field-text">ابحث أو اسأل العلم…</span>
+              <kbd aria-hidden="true">⌘K</kbd>
             </Link>
             <ThemeToggle />
             <MemberEntry />
@@ -171,8 +175,9 @@ export async function SiteHeader({
           </div>
         </div>
       </header>
-      <BreakingBar />
       {/* خارج الهيدر حتى يلتصق وحده عند التمرير ولا يُسحب معه */}
+      <TopStrip rail={rail} activeSeries={activeSeries} />
+      {/* رقائق السلاسل على الجوال في كل الصفحات — بديل المسطرة التي تختفي هناك */}
       <nav className="sx-switch top-series-mobile" aria-label="السلاسل">
         <Link href="/series" className="sx-all">كل السلاسل</Link>
         {SERIES.map((item) => (
@@ -186,7 +191,6 @@ export async function SiteHeader({
           </Link>
         ))}
       </nav>
-      {rail ? <SeriesRail series={SERIES.filter((item) => !item.archived).slice(0, 8)} /> : null}
     </>
   );
 }

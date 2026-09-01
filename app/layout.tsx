@@ -3,6 +3,8 @@ import { Alexandria, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic } from "next/font/go
 import "./globals.css";
 import "./editorial-v2.css";
 import "./soft.css";
+import "./header.css";
+import "./home.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
 // تصميم «المنشور»: العناوين بـ Alexandria، وكل النصوص الفرعية بـ IBM Plex Sans Arabic،

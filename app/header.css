@@ -1,0 +1,175 @@
+/* ============================================================
+   الهيدر من طبقتين — تصميم 2026-09-01 (لوحة «رئيسية العلم — التصور المقترح»).
+   تُقرأ بعد soft.css فتغلب طبقات الهيدر السابقة كلها.
+   الصف الأول 68px: شعار + أقسام مسطّحة + أشكال + «ابحث أو اسأل العلم» + ثيم + دخول.
+   الشريط الثاني 40px: تغطية مستمرة/عاجل + التاريخ يمينًا، ومسطرة السلاسل يسارًا؛ يلتصق وحده.
+   ============================================================ */
+
+:root { --page-w: 1240px; }
+
+/* — الصف الأول — */
+.topbar {
+  position: static;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  z-index: auto;
+}
+.topbar-inner {
+  max-width: var(--page-w);
+  min-height: 68px;
+  padding: 0 24px;
+  margin: 0 auto;
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 28px;
+  position: relative;
+}
+.topbar-inner .brand { flex: none; }
+.brand-word { font-size: 34px; color: var(--navy); }
+.topbar-inner .topnav {
+  display: flex; align-items: center; gap: 4px;
+  margin: 0; justify-self: auto; min-width: 0;
+}
+.topbar .topnav > a {
+  display: inline-flex; align-items: center; height: 36px; padding: 0 9px; border-radius: 8px;
+  font-size: 14.5px; font-weight: 600; color: var(--ink); white-space: nowrap; background: transparent;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.topbar .topnav > a:hover { color: var(--navy); background: var(--surface-2); }
+.topbar .topnav > a.is-active { color: var(--navy); font-weight: 700; background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.topbar .topnav > a.is-format { color: var(--ink-2); font-weight: 600; }
+.topbar .topnav > a.is-format:hover, .topbar .topnav > a.is-format.is-active { color: var(--navy); }
+.topbar .topnav .topnav-sep { width: 1px; height: 18px; background: var(--line-2); margin: 0 8px; flex: none; }
+.topbar-inner .top-tools { margin-inline-start: auto; display: flex; align-items: center; gap: 10px; justify-self: auto; flex: none; }
+
+/* حقل «ابحث أو اسأل العلم» — يقود إلى صفحة البحث (تعمل بلا JavaScript) */
+.ask-field {
+  display: inline-flex; align-items: center; gap: 10px; height: 40px; width: clamp(200px, 19vw, 300px);
+  padding: 0 14px; border: 1px solid var(--line-2); border-radius: 999px;
+  background: var(--surface-2); color: var(--ink-3); font-size: 13.5px; font-weight: 500;
+  text-decoration: none; white-space: nowrap; transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.ask-field:hover, .ask-field:focus-visible { border-color: var(--accent); background: var(--surface); color: var(--ink); }
+.ask-field svg { flex: none; color: var(--ink-2); }
+.ask-field-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.ask-field kbd {
+  flex: none; font: 600 10.5px var(--font-text); color: var(--ink-3); direction: ltr;
+  border: 1px solid var(--line-2); border-radius: 6px; padding: 1px 6px; background: var(--surface);
+}
+.topbar .theme-toggle {
+  width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line-2);
+  background: transparent; color: var(--ink-2); font-size: 16px;
+}
+.topbar .theme-toggle:hover { background: var(--surface-2); color: var(--ink); border-color: var(--line-2); }
+.topbar .member-entry {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; min-height: 40px; padding: 0 18px; margin: 0;
+  border: 0; border-radius: 999px; background: var(--navy); color: #fff; font-size: 14px; font-weight: 700;
+}
+.topbar .member-entry:hover { background: var(--navy-deep); color: #fff; opacity: 1; }
+.topbar .member-entry.is-member { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line-2); }
+.topbar .member-entry.is-member:hover { background: var(--line); }
+
+/* — الشريط الثاني — */
+.topstrip {
+  position: sticky; top: 0; z-index: 40;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line-2);
+}
+.topstrip-inner {
+  max-width: var(--page-w); margin: 0 auto; padding: 0 24px; min-height: 40px;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+}
+.strip-news { display: flex; align-items: center; gap: 12px; min-width: 0; font-size: 13px; }
+.strip-live {
+  flex: none; display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap;
+}
+.strip-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); flex: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .strip-dot { animation: strip-pulse 2.2s ease-out infinite; }
+}
+@keyframes strip-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(46 184 115 / 0.55); }
+  70% { box-shadow: 0 0 0 6px rgb(46 184 115 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(46 184 115 / 0); }
+}
+.strip-title {
+  min-width: 0; max-width: 380px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--ink); font-weight: 600; text-decoration: none;
+}
+.strip-title:hover { color: var(--navy); }
+.strip-tag { color: var(--navy); font-weight: 700; }
+.strip-date { flex: none; font-size: 11px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+/* العاجل الأحمر: للساعة الأولى من مادة مُعلَّمة فقط */
+.strip-news.is-urgent .strip-live { color: #c81e3a; }
+.strip-news.is-urgent .strip-dot { background: #e0243f; box-shadow: none; animation: urgent-pulse 1.6s ease-out infinite; }
+@keyframes urgent-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(224 36 63 / 0.5); }
+  70% { box-shadow: 0 0 0 6px rgb(224 36 63 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(224 36 63 / 0); }
+}
+
+/* مسطرة السلاسل داخل الشريط — تُلغى أنماط الشريط المستقل القديم */
+.topstrip .series-rail { position: static; background: transparent; border: 0; flex: none; min-width: 0; }
+.topstrip .series-rail-inner {
+  max-width: none; margin: 0; padding: 0; gap: 16px;
+  display: flex; align-items: center; overflow: visible;
+}
+.topstrip .series-rail .series-lens {
+  flex: none; display: inline-flex; align-items: center; gap: 7px; padding: 0; margin: 0;
+  height: 40px; border: 0; font-size: 13px; font-weight: 600; color: var(--ink-2); white-space: nowrap;
+  transition: color 0.15s ease;
+}
+.topstrip .series-rail .series-lens i { width: 6px; height: 6px; border-radius: 50%; background: var(--sc); flex: none; }
+.topstrip .series-rail .series-lens:hover,
+.topstrip .series-rail .series-lens:focus-visible,
+.topstrip .series-rail .series-lens[aria-current="page"] { color: color-mix(in srgb, var(--sc) 70%, var(--ink)); }
+.topstrip .series-rail-all { flex: none; margin: 0; padding: 0; border: 0; font-size: 13px; font-weight: 700; color: var(--link); white-space: nowrap; }
+.topstrip .series-rail-all:hover { color: var(--navy); }
+
+/* — الاستجابة — */
+@media (max-width: 1280px) {
+  .ask-field { width: 44px; padding: 0; justify-content: center; }
+  .ask-field-text, .ask-field kbd { display: none; }
+  .strip-title { max-width: 300px; }
+}
+@media (max-width: 1180px) {
+  .topbar .topnav .topnav-sep, .topbar .topnav > a.is-format { display: none; }
+}
+@media (max-width: 1100px) {
+  .topbar-inner { min-height: 60px; padding: 0 24px; gap: 16px; }
+  .topbar-inner .topnav { display: none; }
+  .brand-word { font-size: 30px; }
+  /* اللوحي: المسطرة تنزل سطرًا ثانيًا داخل الشريط وتُمرَّر أفقيًا */
+  .topstrip-inner { flex-wrap: wrap; gap: 0 24px; }
+  .strip-news { flex: 1 1 100%; min-height: 40px; }
+  .strip-title { max-width: none; flex: 1; }
+  .topstrip .series-rail { flex: 1 1 100%; border-top: 1px solid var(--line); }
+  .topstrip .series-rail-inner { overflow-x: auto; scrollbar-width: none; gap: 18px; }
+  .topstrip .series-rail-inner::-webkit-scrollbar { display: none; }
+  .topstrip .series-rail .series-lens { height: 36px; }
+  .topstrip .series-rail-all { margin-inline-start: auto; }
+}
+@media (max-width: 640px) {
+  .topbar-inner { min-height: 56px; padding: 0 16px; gap: 8px; }
+  .brand-word { font-size: 28px; }
+  .topbar-inner .top-tools { gap: 8px; }
+  .ask-field { width: 36px; height: 36px; }
+  .topbar .theme-toggle { display: inline-flex; width: 36px; height: 36px; font-size: 15px; }
+  .topbar .member-entry { display: none; }
+  .mnav summary { width: 36px; height: 36px; border-radius: 18px; background: var(--navy); color: #fff; }
+  .mnav summary svg { width: 20px; height: 20px; }
+  .mnav[open] summary { background: var(--navy-deep); }
+  .topstrip { position: static; border-bottom: 1px solid var(--line); }
+  .topstrip .series-rail { display: none; }
+  .strip-news { min-height: 36px; }
+  .topstrip-inner { padding: 0 16px; min-height: 36px; }
+  .strip-news { gap: 8px; font-size: 12.5px; width: 100%; }
+  .strip-live { font-size: 11.5px; }
+  .strip-date { font-size: 11px; }
+  /* التاريخ الهجري يُختصر على الجوال — يبقى الميلادي */
+  .strip-date .hijri { display: none; }
+  .top-series-mobile { padding: 10px 16px; }
+  .top-series-mobile a { height: 32px; font-size: 13px; padding: 0 12px; }
+}
