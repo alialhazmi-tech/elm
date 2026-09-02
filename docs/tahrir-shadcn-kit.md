@@ -1,0 +1,58 @@
+# لوحة «تحرير العلم» فوق Shadcn UI Kit
+
+آخر تحديث: 2026-09-02 — المرحلتان 0 و1 منفذتان على الفرع `feat/tahrir-shadcn-kit`.
+
+## القرار
+
+اعتمد المالك (2026-09-02) إعادة بناء لوحة التحرير فوق **Shadcn UI Kit Dashboard v2** (Next 16 + React 19 +
+Tailwind v4 + shadcn بنمط radix-nova) بعد نموذج مرئي معتمد، مع شرطين:
+
+1. **الهوية تبقى للعلم** — المداد والذهبي وطيف السلاسل وخطا Alexandria وIBM Plex Sans Arabic، بلا خطوط الكِت.
+2. **مخصّص المظهر يُنقل كما هو** — لوحات الكِت الثماني وألوانه الـ17 ونمط الشريط والزوايا والمقياس والوضع
+   والتخطيط، و«هوية العلم» لوحةً افتراضية بجانبها لا بديلًا عنها.
+
+الكِت المرجعي في `shadcn-ui-kit-dashboard-main/` **خارج git والحزمة** (متجاهَل، ومستثنى من tsc وESLint):
+نستنسخ منه ما نحتاج ولا نستورده.
+
+## المعمارية
+
+| الطبقة | الملف | الدور |
+|---|---|---|
+| جذر Tailwind مستقل | `app/tahrir/shadcn.css` | `@import "tailwindcss" source(none)` ومصادر محصورة في `app/tahrir` و`components` و`hooks`؛ يُستورد في `app/tahrir/layout.tsx` فلا يدخل CSS الموقع العام. الجذر العام `app/globals.css` يستثني المجلدات نفسها بـ`@source not`. |
+| لوحتا الأساس | `app/tahrir/presets.css` | `[data-theme-preset="alelm"]` (الافتراضية) و`[data-theme-preset="default"]` (الكِت المحايد) بالوضعين عبر `@variant dark`. |
+| لوحات الكِت | `app/tahrir/themes.css` | نسخة من `app/themes.css` في الكِت بلا كتلة `body` ولا قوائم الخطوط. |
+| طبقة shadcn | `app/tahrir/shadcn-base.css` | نسخة حرفية من `shadcn@4.19.1/dist/tailwind.css` (متغيرات `data-*` وأدوات scroll-fade/shimmer). |
+| متغير الوضع الداكن | `@custom-variant dark` | يقرأ `[data-theme="dark"]` على `<html>` — يكتبه `next-themes` بمفتاح التخزين `alelm-theme` نفسه الذي يقرؤه الموقع العام. |
+| إعدادات المظهر | `lib/tahrir/themes.ts` | القوائم المسموحة، أسماء الكوكيز `tahrir_theme_*` (مسار `/tahrir`)، وقراءة آمنة تُسقط أي قيمة مجهولة. |
+| المزوّد | `components/tahrir/active-theme.tsx` | يطبّق سمات `data-theme-*` على الغلاف `#tahrir-root` (مرسومة على الخادم من الكوكيز فلا وميض) وعلى `<html>` حتى تصل الرموز إلى بوابات Radix، ويزيلها من `<html>` عند مغادرة اللوحة. |
+| مكوّنات UI | `components/ui/*` | 36 مكوّنًا من الكِت، حُوّلت فيها الأصناف الاتجاهية إلى منطقية (`ps-/pe-/ms-/me-/start-/end-`) لتعمل في RTL؛ الأصناف المقترنة بـ`data-side`/اتجاه vaul بقيت فيزيائية عمدًا. |
+| الهيكل | `components/tahrir/*` | `app-sidebar` (يمين، أعداد حية، قائمة المستخدم)، `site-header` (طيّ، فتات، تاريخ، مادة جديدة، الوضع، المخصّص)، `command-palette` (⌘K بـ`event.code` ليعمل على لوحة المفاتيح العربية)، `theme-customizer` (درج على الطرف الأيسر)، `nav.ts` (مصدر واحد للتنقل والفتات). |
+
+## فخاخ مسجلة
+
+- **الترطيب الانتقائي والشريط الجانبي:** وضع `AppSidebar` داخل `<Suspense>` أخّر ترطيبه إلى ما بعد أن يصير
+  `isMobile` صحيحًا على الجوال، فرسم العميل الدُرج حيث رسم الخادم الشريط المكتبي (React #418). الحل: بلا Suspense
+  حول الشريط والهيدر؛ الصفحات ديناميكية فـ`useSearchParams` لا يحتاجه.
+- `useIsMobile` بـ`useSyncExternalStore` (لقطة الخادم `false`) بدل setState في تأثير — قاعدة
+  `react-hooks/set-state-in-effect`.
+- `InputGroupAddon` في الكِت يحمل `onClick` على `div` — أُزيل لقاعدة jsx-a11y.
+- `SidebarInset` صار `div` لا `main` لأن الشاشات تحمل `<main>` خاصًا بها.
+- `ThemeConfig` نوع مشتق من `DEFAULT_THEME as const` يحتاج `-readonly` وإلا رفض tsc الإسناد.
+- الشاشات القديمة (`.th-*`) تتبع اللوحة المختارة عبر جسر رموز في `shadcn.css` (`--t-bg` ← `--background` …)
+  حتى تُنقل في المرحلتين 2 و3.
+
+## المراحل
+
+| # | النطاق | الحالة |
+|---|---|---|
+| 0 | التبعيات، `components/ui`، جذر Tailwind، جسر الرموز، RTL | **منفذة** |
+| 1 | الشريط والهيدر ولوحة الأوامر ومخصّص المظهر، حذف `side-nav.tsx` وقواعد الهيكل القديمة | **منفذة** |
+| 2 | نظرة اليوم + المواد كجدول TanStack بفلاتر وتحديد جماعي | قادمة |
+| 3 | المحرر على Tiptap مع المفتّش الجانبي (التفاصيل/SEO/الحارس/الذكاء) مع الحفاظ على HTML الناتج | قادمة |
+| 4 | بقية الشاشات ثم حذف `tahrir.css` و`mobile.css` | قادمة |
+
+## التحقق
+
+بوابة `npm test` خضراء (lint + typecheck + بناء معزول + 162 اختبارًا + ميزانية 181.7KiB من 200)، ولقطات
+Playwright حقيقية من بناء البوابة ببيانات Neon الحية: مكتبي فاتح/داكن، جوال 390px بالدُرج، المخصّص مفتوحًا،
+لوحة Ocean Breeze، ولوحة الأوامر — بلا أخطاء في الكونسول.

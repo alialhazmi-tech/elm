@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // الكِت المرجعي لا يُفحص: نستنسخ منه ولا نبنيه.
+    "shadcn-ui-kit-dashboard-main/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

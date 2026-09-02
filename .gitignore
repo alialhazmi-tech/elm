@@ -53,3 +53,6 @@ ios/**/xcuserdata/
 migration-audit/url-parity.csv
 migration-audit/*.log
 migration-audit/wp-migrate.checkpoint.json
+
+# كِت shadcn المرجعي — نستنسخ منه ولا نستورده
+shadcn-ui-kit-dashboard-main/
