@@ -21,59 +21,125 @@
 .hm .meta { font-size: 12.5px; color: var(--ink-3); }
 
 /* — ١. الصدارة + موجز العلم — */
-.hm-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 24px; align-items: stretch; }
+.hm-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 380px); gap: 24px; align-items: stretch; }
 .hm-hero {
-  display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); min-height: 480px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden;
+  display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr); min-height: 480px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md, 20px); overflow: hidden;
+  box-shadow: 0 2px 10px -2px rgb(16 30 48 / 0.03), 0 14px 34px -4px rgb(16 30 48 / 0.05);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hm-hero:hover {
+  border-color: color-mix(in srgb, var(--link) 25%, var(--line));
+  box-shadow: 0 4px 16px -2px rgb(16 30 48 / 0.05), 0 20px 44px -4px rgb(16 30 48 / 0.08);
 }
 .hm-hero.is-empty { grid-template-columns: 1fr; min-height: 0; }
-.hm-hero-copy { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 28px 28px 26px; min-width: 0; }
-.hm-hero h1 { font-family: var(--font-display); font-size: clamp(26px, 2.8vw, 40px); font-weight: 800; line-height: 1.3; text-wrap: pretty; }
-.hm-hero .dek { margin: 0; font-family: var(--font-text); font-size: 16px; font-weight: 400; line-height: 1.8; color: var(--ink-2); }
-.hm-hero-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
-.hm-go { font-size: 15px; font-weight: 700; color: var(--link); white-space: nowrap; }
-.hm-go:hover { color: var(--navy); }
-.hm-hero-media { position: relative; display: block; min-height: 100%; background: var(--surface-2); }
-.hm-hero-media img { object-fit: cover; }
+.hm-hero-copy { display: flex; flex-direction: column; justify-content: center; gap: 15px; padding: 32px 32px 28px; min-width: 0; }
+.hm-hero-copy .kick {
+  display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 700;
+  padding: 3.5px 12px; border-radius: 999px;
+  background: color-mix(in srgb, var(--kc, var(--navy)) 12%, transparent);
+  color: var(--kc, var(--navy)); width: fit-content; line-height: 1.4;
+}
+.hm-hero-copy .kick::before { display: none; }
+.hm-hero-copy .kick .sect { color: inherit; opacity: 0.8; font-weight: 500; }
+.hm-hero h1 { font-family: var(--font-display); font-size: clamp(24px, 2.6vw, 36px); font-weight: 800; line-height: 1.35; text-wrap: pretty; margin: 0; }
+.hm-hero h1 .story-link:hover { color: var(--navy); }
+.hm-hero .dek { margin: 0; font-family: var(--font-text); font-size: 15.5px; font-weight: 400; line-height: 1.8; color: var(--ink-2); }
+.hm-hero-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 4px; padding-top: 14px; border-top: 1px solid var(--line); }
+.hm-go {
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 999px;
+  background: var(--surface-2); font-size: 13.5px; font-weight: 700; color: var(--link);
+  white-space: nowrap; text-decoration: none; transition: all 0.2s ease;
+}
+.hm-go:hover { background: var(--link); color: #fff; }
+.hm-hero-media { position: relative; display: block; min-height: 100%; background: var(--surface-2); overflow: hidden; }
+.hm-hero-media img { object-fit: cover; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.hm-hero:hover .hm-hero-media img { transform: scale(1.03); }
 
+/* — موجز العلم — */
 .hm-brief {
   display: flex; flex-direction: column; min-width: 0;
-  background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--gold);
-  border-radius: var(--r-card); padding: 18px 20px 14px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 5%, var(--surface)) 0%, var(--surface) 26%);
+  border: 1px solid color-mix(in srgb, var(--gold) 28%, var(--line));
+  border-radius: var(--r-md, 20px); padding: 22px 22px 16px;
+  box-shadow: 0 2px 10px -2px rgb(16 30 48 / 0.03), 0 14px 34px -4px rgb(16 30 48 / 0.05);
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
-.hm-brief-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
-.hm-brief-head h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
-.hm-brief .spark, .hm-ask .spark { color: var(--gold); font-size: 0.85em; }
+.hm-brief:hover {
+  box-shadow: 0 4px 16px -2px rgb(16 30 48 / 0.05), 0 20px 44px -4px rgb(16 30 48 / 0.08);
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--line));
+}
+.hm-brief-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.hm-brief-head h2 { font-family: var(--font-display); font-size: 19px; font-weight: 800; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.hm-brief .spark, .hm-ask .spark { color: var(--gold); font-size: 0.9em; }
+.brief-listen {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--navy) 15%, transparent); border-radius: 999px;
+  background: color-mix(in srgb, var(--navy) 8%, var(--surface)); color: var(--navy);
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+}
+.brief-listen:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+.brief-listen.is-on { background: var(--navy); color: #fff; border-color: var(--navy); }
+
 .hm-brief-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; flex: 1; }
-.hm-brief-list li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; align-items: start; padding: 12px 0; border-top: 1px solid var(--line); }
-.hm-brief-list li:first-child { border-top: 0; padding-top: 6px; }
-.hm-brief-list .bno { font-size: 13px; font-weight: 800; color: var(--gold-ink); line-height: 1.7; }
+.hm-brief-list li {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; align-items: start;
+  padding: 11px 0; border-top: 1px solid var(--line); transition: background 0.15s ease;
+}
+.hm-brief-list li:first-child { border-top: 0; padding-top: 4px; }
+.hm-brief-list .bno {
+  display: flex; align-items: center; justify-content: center; width: 24px; height: 24px;
+  border-radius: 50%; background: color-mix(in srgb, var(--gold) 14%, var(--surface));
+  color: var(--gold-ink); font-size: 12px; font-weight: 800; line-height: 1; margin-top: 2px; flex: none;
+}
 .hm-brief-list .bbody { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.hm-brief-list .kick { font-size: 12.5px; gap: 6px; }
+.hm-brief-list .kick {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--kc, var(--navy)) 10%, transparent);
+  color: var(--kc, var(--navy)); width: fit-content; line-height: 1.4;
+}
 .hm-brief-list .kick::before { display: none; }
-.hm-brief-list h3 { font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1.55; }
+.hm-brief-list h3 { font-family: var(--font-display); font-size: 15px; font-weight: 700; line-height: 1.5; margin: 0; }
+.hm-brief-list .story-link { transition: color 0.15s ease; }
+.hm-brief-list li:hover .story-link { color: var(--link); }
 .hm-brief-foot { margin: auto 0 0; padding-top: 12px; border-top: 1px dashed var(--line-2); font-size: 11px; line-height: 1.7; color: var(--ink-3); }
 
 /* — ٢. حزام السلاسل الثماني — */
 .hm-series { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
 .hm-series .series-lens {
-  display: flex; flex-direction: column; gap: 10px; min-height: 150px; min-width: 0;
-  padding: 16px 16px 14px; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--sc);
-  border-radius: var(--r-card); color: var(--ink); text-decoration: none;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: flex; flex-direction: column; gap: 10px; min-height: 152px; min-width: 0;
+  padding: 18px 18px 16px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sc) 8%, var(--surface)) 0%, var(--surface) 42%);
+  border: 1px solid var(--line); border-radius: var(--r-md, 18px); color: var(--ink); text-decoration: none;
+  box-shadow: 0 2px 8px -2px rgb(16 30 48 / 0.03), 0 10px 24px -4px rgb(16 30 48 / 0.04);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.hm-series .series-lens:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.hm-series .series-lens:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--sc) 40%, var(--line));
+  box-shadow: 0 4px 16px -2px color-mix(in srgb, var(--sc) 20%, transparent), 0 16px 36px -4px rgb(16 30 48 / 0.08);
+}
 .hm-series .sname {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-  font-family: var(--font-display); font-size: 20px; font-weight: 800; line-height: 1.3;
-  color: color-mix(in srgb, var(--sc) 70%, var(--ink));
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-family: var(--font-display); font-size: 19px; font-weight: 800; line-height: 1.3;
+  color: color-mix(in srgb, var(--sc) 75%, var(--ink));
 }
-.hm-series .sname small { font-family: var(--font-text); font-size: 12px; font-weight: 500; color: var(--ink-3); white-space: nowrap; }
+.hm-series .sname small {
+  font-family: var(--font-text); font-size: 11.5px; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px;
+  background: color-mix(in srgb, var(--sc) 12%, var(--surface));
+  color: color-mix(in srgb, var(--sc) 80%, var(--ink)); white-space: nowrap;
+}
 .hm-series .slatest {
-  flex: 1; font-size: 14px; font-weight: 600; line-height: 1.65; color: var(--ink);
+  flex: 1; font-size: 13.5px; font-weight: 500; line-height: 1.65; color: var(--ink-2);
   display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
 }
-.hm-series .sgo { font-size: 13px; font-weight: 700; color: color-mix(in srgb, var(--sc) 70%, var(--ink)); }
+.hm-series .sgo {
+  font-size: 12.5px; font-weight: 700; color: color-mix(in srgb, var(--sc) 85%, var(--ink));
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.hm-series .series-lens:hover .sgo span { transform: translateX(-3px); transition: transform 0.2s ease; }
 
 /* — ٣. اسأل العلم — لوح كحلي بحد ذهبي خافت — */
 .hm-ask {
