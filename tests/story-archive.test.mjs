@@ -23,18 +23,22 @@ test("أرشفة المادة تخفيها بالحالة ولا تحذف الم
 });
 
 test("واجهة المواد تعرض تاب المؤرشفة وسبب الأرشفة وتتطلب سببًا", async () => {
-  const [page, controls, provider] = await Promise.all([
+  const [page, table, actions, provider] = await Promise.all([
     read("app/tahrir/(app)/stories/page.tsx"),
-    read("app/tahrir/_components/archive-controls.tsx"),
+    read("components/tahrir/stories/stories-table.tsx"),
+    read("components/tahrir/stories/story-actions.tsx"),
     read("lib/content/provider.ts"),
   ]);
-  assert.match(page, /href\("archived"\)/);
-  assert.match(page, /مؤرشفة/);
+  assert.match(page, /key: "archived", label: "مؤرشفة"/);
   assert.match(page, /archiveEvents\.get/);
-  assert.match(page, /ArchiveStoryButton/);
-  assert.match(page, /RestoreStoryButton/);
-  assert.match(controls, /سبب الأرشفة/);
-  assert.match(controls, /\/api\/tahrir\/story\/archive/);
+  // الأرشفة والاستعادة للمعتمدين فقط، ولا أرشفة لمسودة ولا لمؤرشفة.
+  assert.match(table, /canArchive && row\.status !== "draft" && row\.status !== "archived"/);
+  assert.match(table, /canArchive && row\.status === "archived"/);
+  assert.match(table, /kind: "restore"/);
+  // الحوار يطلب سببًا ولا يفعّل زر الأرشفة بدونه.
+  assert.match(actions, /سبب الأرشفة/);
+  assert.match(actions, /\/api\/tahrir\/story\/archive/);
+  assert.match(actions, /disabled=\{busy \|\| reason\.trim\(\)\.length === 0\}/);
   assert.match(provider, /invalidateCorpus/);
   assert.match(provider, /eq\(storiesTable\.status, "published"\)/);
 });

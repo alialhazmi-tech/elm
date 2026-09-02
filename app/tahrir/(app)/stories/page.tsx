@@ -1,188 +1,201 @@
 import Link from "next/link";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
-import { SERIES } from "@/lib/content/series";
-import { SECTION_NAMES } from "@/lib/content/seed";
+import { StoriesTable } from "@/components/tahrir/stories/stories-table";
+import { StoriesToolbar } from "@/components/tahrir/stories/toolbar";
+import type { StoryTableRow } from "@/components/tahrir/stories/types";
+import { Button } from "@/components/ui/button";
 import { stripHtmlToText } from "@/lib/content/html";
+import { SECTION_NAMES } from "@/lib/content/seed";
+import { ALL_SERIES } from "@/lib/content/series";
 import { runPolicyGuard } from "@/lib/policy";
 import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
   ACTIVE_STATUSES,
   bodiesFor,
+  countPage,
   latestArchiveEvents,
   listPage,
   statusCounts,
   STATUS_LABELS,
   type StoryStatus,
 } from "@/lib/tahrir/service";
-import { ArchiveStoryButton, RestoreStoryButton } from "../../_components/archive-controls";
-import { DeleteDraftButton } from "../../_components/delete-draft-button";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "المواد" };
 export const dynamic = "force-dynamic";
 
 const PER_PAGE = 30;
-const STATUS_PILLS: Record<StoryStatus, string> = {
-  published: "pub",
-  review: "rev",
-  scheduled: "sch",
-  draft: "dft",
-  archived: "arc",
-};
-const seriesBySlug = new Map<string, (typeof SERIES)[number]>(
-  SERIES.map((series) => [series.slug, series]),
-);
-
 const VALID_STATUSES = new Set<string>([...ACTIVE_STATUSES, "archived"]);
+const seriesBySlug = new Map<string, (typeof ALL_SERIES)[number]>(ALL_SERIES.map((series) => [series.slug, series]));
 
-const archiveWhen = (iso: string) =>
+const when = (iso: string, withTime = false) =>
   new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
     day: "numeric",
-    month: "long",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
+    month: "short",
+    ...(withTime ? { hour: "2-digit", minute: "2-digit", hour12: false } : {}),
+    timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
+
+function updatedLabel(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const today = new Date().toISOString().slice(0, 10);
+  return iso.startsWith(today) ? `اليوم ${when(iso, true).split(" ").pop()}` : when(iso);
+}
+
+function guardFor(title: string, body: string, surface: "design" | undefined) {
+  const report = runPolicyGuard({ title, body: stripHtmlToText(body), surface });
+  if (report.counts.blocking > 0) return { tone: "block" as const, label: `${report.counts.blocking} قاطع` };
+  if (report.counts.warning > 0) return { tone: "warn" as const, label: `${report.counts.warning} تحذير` };
+  return { tone: "ok" as const, label: "سليم" };
+}
 
 export default async function StoriesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; p?: string }>;
+  searchParams: Promise<{ status?: string; p?: string; q?: string; series?: string }>;
 }) {
   const params = await searchParams;
   const session = await getSession();
   const canArchive = session ? APPROVER_ROLES.includes(session.role) : false;
-  const status = VALID_STATUSES.has(params.status ?? "")
-    ? (params.status as StoryStatus)
-    : undefined;
+  const status = VALID_STATUSES.has(params.status ?? "") ? (params.status as StoryStatus) : undefined;
   const page = Math.max(1, Number(params.p) || 1);
+  const q = (params.q ?? "").trim().slice(0, 80);
+  const seriesSlug = params.series && seriesBySlug.has(params.series) ? params.series : "";
+  const filters = { q: q || undefined, seriesSlug: seriesSlug || undefined };
+  const hasFilters = Boolean(filters.q || filters.seriesSlug);
 
-  const [counts, rows] = await Promise.all([statusCounts(), listPage(status, page, PER_PAGE)]);
+  const [counts, rows, filteredCount] = await Promise.all([
+    statusCounts(),
+    listPage(status, page, PER_PAGE, filters),
+    hasFilters ? countPage(status, filters) : Promise.resolve(null),
+  ]);
   const archivedCount = counts.archived ?? 0;
   const activeTotal = Object.entries(counts).reduce(
     (sum, [key, count]) => (key === "archived" ? sum : sum + count),
     0,
   );
-  const filteredTotal = status ? (counts[status] ?? 0) : activeTotal;
-  const totalPages = Math.max(1, Math.ceil(filteredTotal / PER_PAGE));
-  const archiveEvents =
-    status === "archived" ? await latestArchiveEvents(rows.map((row) => row.id)) : new Map();
-
-  const bodies = await bodiesFor(rows.map((row) => row.id));
+  const total = filteredCount ?? (status ? (counts[status] ?? 0) : activeTotal);
+  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  const [archiveEvents, bodies] = await Promise.all([
+    status === "archived" ? latestArchiveEvents(rows.map((row) => row.id)) : new Map(),
+    bodiesFor(rows.map((row) => row.id)),
+  ]);
 
   const href = (targetStatus?: string, targetPage = 1) => {
     const query = new URLSearchParams();
     if (targetStatus) query.set("status", targetStatus);
+    if (q) query.set("q", q);
+    if (seriesSlug) query.set("series", seriesSlug);
     if (targetPage > 1) query.set("p", String(targetPage));
     const suffix = query.toString();
     return `/tahrir/stories${suffix ? `?${suffix}` : ""}`;
   };
 
+  const tableRows: StoryTableRow[] = rows.map((story) => {
+    const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
+    const content = bodies.get(story.id);
+    const archived = archiveEvents.get(story.id);
+    const meta =
+      story.status === "archived" && archived
+        ? `أُرشفت ${when(archived.at, true)}${archived.actor ? ` · ${archived.actor}` : ""} — ${archived.reason}`
+        : [story.authorName || null, SECTION_NAMES[story.section] ?? story.section].filter(Boolean).join(" · ");
+    return {
+      id: story.id,
+      title: story.title,
+      meta,
+      series: series ? { name: series.name, color: series.color } : null,
+      guard: content
+        ? guardFor(content.title, content.body, story.format === "jakalelm" ? "design" : undefined)
+        : { tone: "ok", label: "—" },
+      status: story.status,
+      statusLabel: STATUS_LABELS[story.status as StoryStatus] ?? story.status,
+      updated: updatedLabel(story.updatedAt ?? story.publishedAt),
+      href: editorHref(story),
+      publicHref: story.status === "published" ? `/${story.section}/${story.id}/${story.slug}` : null,
+      isJak: story.format === "jakalelm",
+    };
+  });
+
+  const chips: Array<{ key: string | undefined; label: string; count: number }> = [
+    { key: undefined, label: "الكل", count: activeTotal },
+    ...ACTIVE_STATUSES.map((key) => ({ key, label: STATUS_LABELS[key], count: counts[key] ?? 0 })),
+    { key: "archived", label: "مؤرشفة", count: archivedCount },
+  ];
+  const from = total === 0 ? 0 : (page - 1) * PER_PAGE + 1;
+  const to = Math.min(total, page * PER_PAGE);
+  const pageWindow = Array.from({ length: totalPages }, (_, index) => index + 1).filter(
+    (number) => number === 1 || number === totalPages || Math.abs(number - page) <= 1,
+  );
+
   return (
-    <main className="th-screen">
-      <div className="th-filters">
-        <Link className={`th-fch ${!status ? "on" : ""}`} href={href()}>
-          الكل <b>{activeTotal}</b>
-        </Link>
-        {ACTIVE_STATUSES.map((key) => (
-          <Link key={key} className={`th-fch ${status === key ? "on" : ""}`} href={href(key)}>
-            {STATUS_LABELS[key]} <b>{counts[key] ?? 0}</b>
-          </Link>
-        ))}
-        <Link className={`th-fch ${status === "archived" ? "on" : ""}`} href={href("archived")}>
-          مؤرشفة <b>{archivedCount}</b>
-        </Link>
+    <main className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="font-display text-xl font-extrabold">المواد</h1>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {activeTotal} مادة نشطة · {archivedCount} مؤرشفة
+        </span>
+        <div className="ms-auto">
+          <StoriesToolbar q={q} series={seriesSlug} />
+        </div>
       </div>
 
-      {rows.length === 0 && (
-        <div className="th-panel">
-          <div className="th-empty">لا مواد بهذه الحالة.</div>
-        </div>
-      )}
-
-      {rows.map((story) => {
-        const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
-        const content = bodies.get(story.id);
-        const report = content
-          ? runPolicyGuard({
-              id: story.id,
-              title: content.title,
-              body: stripHtmlToText(content.body),
-              surface: story.format === "jakalelm" ? "design" : undefined,
-            })
-          : null;
-        const chip = !report
-          ? { cls: "ok", label: "—" }
-          : report.counts.blocking > 0
-            ? { cls: "block", label: `${report.counts.blocking} قاطع` }
-            : report.counts.warning > 0
-              ? { cls: "warn", label: `${report.counts.warning} تحذير` }
-              : { cls: "ok", label: "سليم" };
-        const storyStatus = story.status as StoryStatus;
-        const archived = archiveEvents.get(story.id);
-
-        return (
-          <div
-            key={story.id}
-            className="th-srow"
-            style={{ "--sc": series?.color ?? "var(--t-line2)" } as React.CSSProperties}
-          >
-            <span className="rail" aria-hidden="true" />
-            <Link className="th-srow-main" href={editorHref(story)}>
-              <span className="t" style={{ display: "block" }}>
-                {story.title}
-              </span>
-              <span className="m" style={{ display: "block" }}>
-                {storyStatus === "archived" && archived ? (
-                  <>
-                    أُرشفت {archiveWhen(archived.at)}
-                    {archived.actor ? ` · ${archived.actor}` : ""} — السبب: {archived.reason}
-                  </>
-                ) : (
-                  <>
-                    {story.authorName || SECTION_NAMES[story.section] || story.section} · حُدّثت{" "}
-                    {(story.updatedAt ?? story.publishedAt ?? "").slice(0, 10) || "—"}
-                  </>
-                )}
-              </span>
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0">
+        {chips.map((chip) => {
+          const active = chip.key === status;
+          return (
+            <Link
+              key={chip.label}
+              href={href(chip.key)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 font-display text-xs font-semibold whitespace-nowrap transition-colors",
+                active
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
+              )}
+            >
+              {chip.label}
+              <b className={cn("tabular-nums", active ? "text-primary" : "text-muted-foreground/80")}>{chip.count}</b>
             </Link>
-            <span className="chips">
-              {series ? <span className="th-serchip">{series.name}</span> : null}
-              {story.format === "jakalelm" ? <span className="th-report-badge">▦ جاك العلم</span> : null}
-              <span className={`th-gchip ${chip.cls}`}>{chip.label}</span>
-              <span className={`th-pill ${STATUS_PILLS[storyStatus] ?? "dft"}`}>
-                {STATUS_LABELS[storyStatus] ?? story.status}
-              </span>
-              {storyStatus === "draft" ? <DeleteDraftButton id={story.id} title={story.title} /> : null}
-              {canArchive && storyStatus !== "draft" && storyStatus !== "archived" ? (
-                <ArchiveStoryButton id={story.id} title={story.title} />
-              ) : null}
-              {canArchive && storyStatus === "archived" ? (
-                <RestoreStoryButton id={story.id} title={story.title} />
-              ) : null}
-            </span>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
-      {totalPages > 1 && (
-        <div className="th-filters" style={{ marginTop: 14, justifyContent: "center" }}>
-          {page > 1 && (
-            <Link className="th-fch" href={href(status, page - 1)}>
-              → الأحدث
-            </Link>
-          )}
-          <span className="th-fch on">
-            صفحة {page} من {totalPages}
-          </span>
-          {page < totalPages && (
-            <Link className="th-fch" href={href(status, page + 1)}>
-              الأقدم ←
-            </Link>
-          )}
-        </div>
-      )}
+      <StoriesTable rows={tableRows} canArchive={canArchive} />
+
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <span className="tabular-nums">
+          {from}–{to} من {total}
+          {hasFilters ? " (مرشّحة)" : ""}
+        </span>
+        {totalPages > 1 ? (
+          <nav aria-label="ترقيم الصفحات" className="ms-auto flex items-center gap-1">
+            <Button asChild size="sm" variant="outline" disabled={page <= 1} className={cn(page <= 1 && "pointer-events-none opacity-50")}>
+              <Link href={href(status, page - 1)} aria-label="الصفحة السابقة">
+                <ChevronRightIcon data-icon="inline-start" />
+                الأحدث
+              </Link>
+            </Button>
+            {pageWindow.map((number, index) => (
+              <span key={number} className="contents">
+                {index > 0 && pageWindow[index - 1] !== number - 1 ? <span className="px-1">…</span> : null}
+                <Button asChild size="sm" variant={number === page ? "default" : "outline"} className="min-w-8 tabular-nums">
+                  <Link href={href(status, number)} aria-current={number === page ? "page" : undefined}>
+                    {number}
+                  </Link>
+                </Button>
+              </span>
+            ))}
+            <Button asChild size="sm" variant="outline" className={cn(page >= totalPages && "pointer-events-none opacity-50")}>
+              <Link href={href(status, page + 1)} aria-label="الصفحة التالية">
+                الأقدم
+                <ChevronLeftIcon data-icon="inline-end" />
+              </Link>
+            </Button>
+          </nav>
+        ) : null}
+      </div>
     </main>
   );
 }

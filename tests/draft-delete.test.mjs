@@ -12,12 +12,15 @@ test("حذف المواد مقيد بالمسودات ويزيل بيانات ج
 });
 
 test("واجهة المواد تعرض الحذف للمسودة فقط وتتطلب تأكيدًا صريحًا", async () => {
-  const [page, button] = await Promise.all([
-    readFile(new URL("../app/tahrir/(app)/stories/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/tahrir/_components/delete-draft-button.tsx", import.meta.url), "utf8"),
+  const [table, actions] = await Promise.all([
+    readFile(new URL("../components/tahrir/stories/stories-table.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../components/tahrir/stories/story-actions.tsx", import.meta.url), "utf8"),
   ]);
-  assert.match(page, /storyStatus === "draft" \? <DeleteDraftButton/);
-  assert.match(button, /window\.confirm/);
-  assert.match(button, /method: "DELETE"/);
-  assert.match(button, /لا يمكن التراجع/);
+  // الحذف لا يظهر إلا للمسودات — في قائمة الصف وفي الشريط الجماعي.
+  assert.match(table, /row\.status === "draft" \? \(\s*<DropdownMenuItem variant="destructive"/);
+  assert.match(table, /const drafts = selectedRows\.filter\(\(row\) => row\.status === "draft"\)/);
+  // التأكيد حوار AlertDialog صريح لا تنفيذ فوري، والطلب DELETE على مسار المادة.
+  assert.match(actions, /AlertDialogAction/);
+  assert.match(actions, /call\("\/api\/tahrir\/story", "DELETE"/);
+  assert.match(actions, /لا يمكن التراجع/);
 });

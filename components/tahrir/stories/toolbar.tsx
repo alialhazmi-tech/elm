@@ -1,0 +1,99 @@
+"use client";
+
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { SearchIcon, XIcon } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ARCHIVED_SERIES, SERIES } from "@/lib/content/series";
+
+/** بحث بالعنوان (مؤجل 350ms) وتصفية بالسلسلة — كلاهما في الاستعلام حتى تبقى الروابط قابلة للمشاركة. */
+export function StoriesToolbar({ q, series }: { q: string; series: string }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [value, setValue] = useState(q);
+
+  const navigate = (patch: Record<string, string | null>) => {
+    const next = new URLSearchParams(params.toString());
+    for (const [key, entry] of Object.entries(patch)) {
+      if (entry) next.set(key, entry);
+      else next.delete(key);
+    }
+    next.delete("p");
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+  };
+
+  useEffect(() => {
+    if (value.trim() === q) return;
+    const timer = setTimeout(() => navigate({ q: value.trim() || null }), 350);
+    return () => clearTimeout(timer);
+    // navigate يعتمد على params/pathname وهما ثابتان أثناء الكتابة؛ إعادة الإنشاء تُلغي المؤقت بلا داعٍ.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, q]);
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <div className="relative">
+        <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          placeholder="ابحث بالعنوان…"
+          aria-label="بحث في المواد"
+          className="w-56 bg-card ps-8 pe-7 sm:w-64"
+        />
+        {value ? (
+          <Button
+            type="button"
+            size="icon-xs"
+            variant="ghost"
+            aria-label="مسح البحث"
+            className="absolute top-1/2 end-1 -translate-y-1/2"
+            onClick={() => setValue("")}
+          >
+            <XIcon />
+          </Button>
+        ) : null}
+      </div>
+      <Select value={series || "all"} onValueChange={(next) => navigate({ series: next === "all" ? null : next })}>
+        <SelectTrigger className="w-40 bg-card" aria-label="تصفية بالسلسلة">
+          <SelectValue placeholder="كل السلاسل" />
+        </SelectTrigger>
+        <SelectContent align="end">
+          <SelectItem value="all">كل السلاسل</SelectItem>
+          <SelectGroup>
+            <SelectLabel>السلاسل</SelectLabel>
+            {SERIES.map((item) => (
+              <SelectItem key={item.slug} value={item.slug}>
+                <span className="size-2 shrink-0 rounded-[2px]" style={{ background: item.color }} />
+                {item.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+          <SelectGroup>
+            <SelectLabel>متقاعدة</SelectLabel>
+            {ARCHIVED_SERIES.map((item) => (
+              <SelectItem key={item.slug} value={item.slug}>
+                <span className="size-2 shrink-0 rounded-[2px]" style={{ background: item.color }} />
+                {item.name}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
