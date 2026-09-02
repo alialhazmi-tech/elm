@@ -1,6 +1,6 @@
 /** طبقة بيانات «تحرير العلم»: استعلامات اللوحة، حفظ المسودات، سير الاعتماد، وسجل التدقيق. */
 
-import { and, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, ne, sql, type SQL } from "drizzle-orm";
 
 import { auditLog, stories, users } from "@/db/schema";
 import { stripHtmlToText } from "@/lib/content/html";
@@ -448,22 +448,72 @@ export async function statusCounts(): Promise<Record<string, number>> {
   return Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
 }
 
+/** مرشّحات قائمة المواد فوق الحالة: بحث في العنوان وسلسلة بعينها. */
+export interface StoryFilters {
+  q?: string;
+  seriesSlug?: string;
+}
+
+/** يحوّل نص البحث إلى نمط ILIKE آمن — يهرب محارف النمط ويحصر الطول. */
+function titlePattern(q: string): string {
+  const cleaned = q.trim().slice(0, 80).replace(/[\\%_]/g, (char) => `\\${char}`);
+  return `%${cleaned}%`;
+}
+
+function pageWhere(status: StoryStatus | undefined, filters: StoryFilters): SQL {
+  const clauses: SQL[] = [status ? eq(stories.status, status) : ne(stories.status, "archived")];
+  if (filters.q?.trim()) clauses.push(ilike(stories.title, titlePattern(filters.q)));
+  if (filters.seriesSlug) clauses.push(eq(stories.seriesSlug, filters.seriesSlug));
+  return and(...clauses)!;
+}
+
 /** صفحة واحدة من المواد — أعمدة خفيفة فقط. */
 export async function listPage(
   status: StoryStatus | undefined,
   page: number,
   perPage: number,
+  filters: StoryFilters = {},
 ): Promise<StoryLite[]> {
   const db = requireDb();
-  const query = db
+  return db
     .select(LITE_COLUMNS)
     .from(stories)
+    .where(pageWhere(status, filters))
     .orderBy(recencyOrder)
     .limit(perPage)
     .offset(Math.max(0, page - 1) * perPage);
-  return status
-    ? query.where(eq(stories.status, status))
-    : query.where(ne(stories.status, "archived"));
+}
+
+/** عدد المواد المطابقة للمرشّحات نفسها — لترقيم صحيح عند البحث أو تصفية السلسلة. */
+export async function countPage(
+  status: StoryStatus | undefined,
+  filters: StoryFilters = {},
+): Promise<number> {
+  const db = requireDb();
+  const [row] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(stories)
+    .where(pageWhere(status, filters));
+  return Number(row?.count ?? 0);
+}
+
+/** المنشور يوميًا لآخر N يومًا (بتوقيت UTC للتاريخ المخزّن) — للمنحنى الصغير في نظرة اليوم؛ الأيام الخالية صفر. */
+export async function publishedPerDay(days = 14): Promise<Array<{ day: string; count: number }>> {
+  const db = requireDb();
+  const start = new Date(Date.now() - (days - 1) * 86_400_000).toISOString().slice(0, 10);
+  const rows = await db
+    .select({
+      day: sql<string>`substr(${stories.publishedAt}, 1, 10)`,
+      count: sql<number>`count(*)`,
+    })
+    .from(stories)
+    .where(and(eq(stories.status, "published"), gteText(stories.publishedAt, start)))
+    .groupBy(sql`substr(${stories.publishedAt}, 1, 10)`);
+  const bySlug = new Map(rows.map((row) => [row.day, Number(row.count)]));
+  return Array.from({ length: days }, (_, index) => {
+    const day = new Date(Date.now() - (days - 1 - index) * 86_400_000).toISOString().slice(0, 10);
+    return { day, count: bySlug.get(day) ?? 0 };
+  });
 }
 
 /** أحدث مواد حالة معينة — للنظرة والجدولة، خفيفة. */
