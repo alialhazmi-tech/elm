@@ -1,9 +1,44 @@
 {
-  "generatedAt": "2026-08-31T04:20:58.050Z",
-  "startedAt": "2026-08-31T04:20:57.413Z",
-  "mode": "verify-only",
-  "wordpressPublished": 29135,
-  "targetNumericIds": 29135,
-  "targetPublished": 29135,
-  "coveragePercent": 100
+  "generatedAt": "2026-09-02T18:13:06.106Z",
+  "startedAt": "2026-09-02T18:12:07.366Z",
+  "mode": "incremental-since-2026-08-31T00:00:00",
+  "wordpressPublished": 26,
+  "targetNumericIds": 29160,
+  "targetPublished": 29160,
+  "coveragePercent": 112153.85,
+  "runStats": {
+    "imported": 26,
+    "urlIdentical": 26,
+    "urlNeedsRedirect": 0,
+    "withSeries": 23,
+    "withImage": 26,
+    "withAuthor": 0,
+    "sections": {
+      "varieties": 1,
+      "politics": 7,
+      "world": 1,
+      "health": 4,
+      "infographics": 1,
+      "sport": 4,
+      "art": 1,
+      "technology": 4,
+      "business": 1,
+      "sciences": 1,
+      "economy": 1
+    },
+    "formats": {
+      "news": 22,
+      "infographics": 3,
+      "videos": 1
+    },
+    "series": {
+      "shakhsiat": 3,
+      "bel-arqam": 7,
+      "aghrab": 2,
+      "absat": 4,
+      "limatha": 3,
+      "matha-baad": 4
+    }
+  },
+  "failures": []
 }
