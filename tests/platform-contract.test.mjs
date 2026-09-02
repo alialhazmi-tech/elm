@@ -49,6 +49,8 @@ test("emits the required M0 security headers without temporary domains", async (
   }
 
   assert.match(headers["Content-Security-Policy"], /frame-ancestors 'none'/);
+  // مشغّل يوتيوب لمواد الفيديو — النسخة الخاصة بالخصوصية فقط.
+  assert.match(headers["Content-Security-Policy"], /frame-src https:\/\/www\.youtube-nocookie\.com/);
   assert.doesNotMatch(headers["Content-Security-Policy"], /allorigins|stage2?\.jakelelm/i);
 });
 

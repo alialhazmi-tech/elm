@@ -1,44 +1,51 @@
 {
-  "generatedAt": "2026-09-02T18:13:06.106Z",
-  "startedAt": "2026-09-02T18:12:07.366Z",
-  "mode": "incremental-since-2026-08-31T00:00:00",
-  "wordpressPublished": 26,
+  "generatedAt": "2026-09-02T18:58:12.856Z",
+  "startedAt": "2026-09-02T18:48:29.442Z",
+  "mode": "full",
+  "wordpressPublished": 687,
   "targetNumericIds": 29160,
   "targetPublished": 29160,
-  "coveragePercent": 112153.85,
+  "coveragePercent": 4244.54,
   "runStats": {
-    "imported": 26,
-    "urlIdentical": 26,
-    "urlNeedsRedirect": 0,
-    "withSeries": 23,
-    "withImage": 26,
+    "imported": 687,
+    "urlIdentical": 680,
+    "urlNeedsRedirect": 7,
+    "withSeries": 530,
+    "withImage": 684,
     "withAuthor": 0,
     "sections": {
-      "varieties": 1,
-      "politics": 7,
-      "world": 1,
-      "health": 4,
-      "infographics": 1,
-      "sport": 4,
-      "art": 1,
-      "technology": 4,
-      "business": 1,
-      "sciences": 1,
-      "economy": 1
+      "art": 27,
+      "varieties": 106,
+      "world": 49,
+      "technology": 57,
+      "health": 19,
+      "economy": 32,
+      "ksa": 43,
+      "politics": 147,
+      "sport": 19,
+      "current-events": 55,
+      "culture": 40,
+      "business": 62,
+      "sciences": 31
     },
     "formats": {
-      "news": 22,
-      "infographics": 3,
-      "videos": 1
+      "videos": 687
     },
     "series": {
-      "shakhsiat": 3,
-      "bel-arqam": 7,
-      "aghrab": 2,
-      "absat": 4,
-      "limatha": 3,
-      "matha-baad": 4
-    }
+      "shakhsiat": 39,
+      "limatha": 79,
+      "bel-tarikh": 131,
+      "efhamha-sah": 34,
+      "absat": 103,
+      "bel-arqam": 30,
+      "aghrab": 60,
+      "muwaththaq": 14,
+      "qalu": 11,
+      "matha-law": 11,
+      "matha-baad": 18
+    },
+    "videos": 687,
+    "videosWithUrl": 666
   },
   "failures": []
 }

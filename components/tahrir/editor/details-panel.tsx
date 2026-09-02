@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { videoEmbedUrl, youtubeIdFrom } from "@/lib/content/video";
 import { cn } from "@/lib/utils";
 
 export interface DetailsPanelProps {
@@ -35,6 +36,8 @@ export interface DetailsPanelProps {
   recentMedia: Array<{ url: string; filename: string }>;
   slug: string;
   onSlug: (value: string) => void;
+  videoUrl: string;
+  onVideoUrl: (value: string) => void;
   pinned: boolean;
   onPinned: (value: boolean) => void;
   breakingUntil: string | null;
@@ -136,6 +139,32 @@ export function DetailsPanel(props: DetailsPanelProps) {
             ) : null}
           </Section>
         </>
+      ) : null}
+
+      {props.format === "videos" ? (
+        <Section title="رابط الفيديو (يوتيوب)">
+          <Input
+            dir="ltr"
+            placeholder="https://www.youtube.com/watch?v=…"
+            value={props.videoUrl}
+            onChange={(event) => props.onVideoUrl(event.target.value)}
+            aria-invalid={props.videoUrl.trim() !== "" && !youtubeIdFrom(props.videoUrl)}
+          />
+          {props.videoUrl.trim() && !youtubeIdFrom(props.videoUrl) ? (
+            <div className="text-[11px] text-(--t-block)">يُقبل رابط يوتيوب فقط (مشاهدة أو youtu.be أو تضمين).</div>
+          ) : null}
+          {youtubeIdFrom(props.videoUrl) ? (
+            <iframe
+              src={videoEmbedUrl(props.videoUrl) ?? undefined}
+              title="معاينة الفيديو"
+              loading="lazy"
+              allow="encrypted-media; picture-in-picture"
+              allowFullScreen
+              className="aspect-video w-full rounded-md border bg-black"
+            />
+          ) : null}
+          <div className="text-[10px] text-muted-foreground">يُحفظ رابط الفيديو وحده بلا قائمة تشغيل — القارئ يبقى في المادة.</div>
+        </Section>
       ) : null}
 
       <Section title="الشكل">

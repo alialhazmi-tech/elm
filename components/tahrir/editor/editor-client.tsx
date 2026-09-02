@@ -39,6 +39,7 @@ interface EditorInitial {
   seoTitle: string;
   seoDescription: string;
   keywords: string[];
+  videoUrl: string | null;
   archiveEvent?: { at: string; actor: string; reason: string } | null;
 }
 
@@ -128,6 +129,7 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
   const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
   const [seoDescription, setSeoDescription] = useState(initial?.seoDescription ?? "");
   const [keywords, setKeywords] = useState<string[]>(initial?.keywords ?? []);
+  const [videoUrl, setVideoUrl] = useState(initial?.videoUrl ?? "");
   const [seoBusy, setSeoBusy] = useState(false);
   const [imageUploadBusy, setImageUploadBusy] = useState(false);
   const [imageUploadMessage, setImageUploadMessage] = useState("");
@@ -397,7 +399,7 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
     const response = await fetch("/api/tahrir/story", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id || undefined, title, excerpt, body: richRef.current?.getHtml() ?? body, section, slug, seriesSlug, image: image || null, format, seoTitle, seoDescription, keywords, pinned, breakingUntil }),
+      body: JSON.stringify({ id: id || undefined, title, excerpt, body: richRef.current?.getHtml() ?? body, section, slug, seriesSlug, image: image || null, format, seoTitle, seoDescription, keywords, pinned, breakingUntil, videoUrl: videoUrl.trim() || null }),
     }).catch(() => null);
     setBusy(false);
 
@@ -656,6 +658,11 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
                   recentMedia={recentMedia}
                   slug={slug}
                   onSlug={setSlug}
+                  videoUrl={videoUrl}
+                  onVideoUrl={(value) => {
+                    markDraftChanged();
+                    setVideoUrl(value);
+                  }}
                   pinned={pinned}
                   onPinned={setPinned}
                   breakingUntil={breakingUntil}
