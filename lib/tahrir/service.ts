@@ -269,6 +269,57 @@ export async function listMedia(): Promise<MediaRow[]> {
   return db.select().from(media).orderBy(desc(media.createdAt));
 }
 
+export type MediaFilter = "all" | "ok" | "pending";
+
+function mediaWhere(filter: MediaFilter, q: string | undefined): SQL | undefined {
+  const clauses: SQL[] = [];
+  if (filter === "ok") clauses.push(eq(media.rightsCleared, 1));
+  if (filter === "pending") clauses.push(eq(media.rightsCleared, 0));
+  if (q?.trim()) clauses.push(ilike(media.filename, titlePattern(q)));
+  return clauses.length ? and(...clauses) : undefined;
+}
+
+/** صفحة من مكتبة الوسائط — المكتبة ~29 ألف صورة فلا تُجلب دفعة واحدة أبدًا. */
+export async function listMediaPage(
+  filter: MediaFilter,
+  page: number,
+  perPage: number,
+  q?: string,
+): Promise<MediaRow[]> {
+  const db = requireDb();
+  const query = db.select().from(media).orderBy(desc(media.createdAt)).limit(perPage).offset(Math.max(0, page - 1) * perPage);
+  const where = mediaWhere(filter, q);
+  return where ? query.where(where) : query;
+}
+
+/** عدّادات المكتبة بضربة واحدة: الكل، موثقة الحقوق، بانتظار التوثيق — مع مرشّح البحث إن وُجد. */
+export async function countMedia(q?: string): Promise<Record<MediaFilter, number>> {
+  const db = requireDb();
+  const query = db
+    .select({ rightsCleared: media.rightsCleared, count: sql<number>`count(*)` })
+    .from(media)
+    .groupBy(media.rightsCleared);
+  const where = mediaWhere("all", q);
+  const rows = await (where ? query.where(where) : query);
+  const ok = Number(rows.find((row) => row.rightsCleared === 1)?.count ?? 0);
+  const pending = Number(rows.find((row) => row.rightsCleared !== 1)?.count ?? 0);
+  return { all: ok + pending, ok, pending };
+}
+
+/** أحدث الصور لمصغّرات المحرر وجاك العلم وتوليد الصور — بحدّ صغير بدل المكتبة كلها. */
+export async function listRecentMedia(options: {
+  rightsCleared?: boolean;
+  aiGenerated?: boolean;
+  limit: number;
+}): Promise<MediaRow[]> {
+  const db = requireDb();
+  const clauses: SQL[] = [];
+  if (options.rightsCleared !== undefined) clauses.push(eq(media.rightsCleared, options.rightsCleared ? 1 : 0));
+  if (options.aiGenerated !== undefined) clauses.push(eq(media.aiGenerated, options.aiGenerated ? 1 : 0));
+  const query = db.select().from(media).orderBy(desc(media.createdAt)).limit(options.limit);
+  return clauses.length ? query.where(and(...clauses)!) : query;
+}
+
 export async function addMedia(row: Omit<MediaRow, "createdAt">, actor: string) {
   const db = requireDb();
   await db.insert(media).values({ ...row, createdAt: new Date().toISOString() });

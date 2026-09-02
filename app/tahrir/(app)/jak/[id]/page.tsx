@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
 import { getJakSource, listSlides } from "@/lib/tahrir/jak";
-import { getStory, latestArchiveEvents, listMedia } from "@/lib/tahrir/service";
+import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { JakEditor } from "@/components/tahrir/jak/jak-editor";
 
 export const metadata = { title: "جاك العلم" };
@@ -18,14 +18,11 @@ export default async function JakEditPage({ params }: { params: Promise<{ id: st
   const [slides, source, mediaRows] = await Promise.all([
     listSlides(id).catch(() => []),
     getJakSource(id).catch(() => ""),
-    listMedia().catch(() => []),
+    listRecentMedia({ rightsCleared: true, limit: 8 }).catch(() => []),
   ]);
   const archiveEvent =
     story.status === "archived" ? (await latestArchiveEvents([story.id])).get(story.id) : undefined;
-  const recentMedia = mediaRows
-    .filter((row) => row.rightsCleared === 1)
-    .slice(0, 8)
-    .map((row) => ({ url: row.url, filename: row.filename }));
+  const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
 
