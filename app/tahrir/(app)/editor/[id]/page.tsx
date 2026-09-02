@@ -2,7 +2,7 @@ import { SERIES } from "@/lib/content/series";
 import { redirect } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
-import { getStory, latestArchiveEvents, listMedia } from "@/lib/tahrir/service";
+import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { EditorClient } from "@/components/tahrir/editor/editor-client";
 
 export const metadata = { title: "المحرر" };
@@ -16,11 +16,8 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const archiveEvent = story?.status === "archived"
     ? (await latestArchiveEvents([story.id])).get(story.id)
     : undefined;
-  const mediaRows = await listMedia().catch(() => []);
-  const recentMedia = mediaRows
-    .filter((row) => row.rightsCleared === 1)
-    .slice(0, 6)
-    .map((row) => ({ url: row.url, filename: row.filename }));
+  const mediaRows = await listRecentMedia({ rightsCleared: true, limit: 6 }).catch(() => []);
+  const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
 
