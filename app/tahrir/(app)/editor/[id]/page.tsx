@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
 import { getStory, latestArchiveEvents, listMedia } from "@/lib/tahrir/service";
-import { EditorClient } from "../../../_components/editor-client";
+import { EditorClient } from "@/components/tahrir/editor/editor-client";
 
 export const metadata = { title: "المحرر" };
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
 
   return (
-    <main className="th-screen">
+    <main>
       <EditorClient
         role={session?.role ?? "editor"}
         recentMedia={recentMedia}

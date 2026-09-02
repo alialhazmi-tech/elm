@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const editorPath = new URL("../app/tahrir/_components/editor-client.tsx", import.meta.url);
+const editorPath = new URL("../components/tahrir/editor/editor-client.tsx", import.meta.url);
+const guardPanelPath = new URL("../components/tahrir/editor/guard-panel.tsx", import.meta.url);
 const guardRoutePath = new URL("../app/api/tahrir/guard/route.ts", import.meta.url);
 
 test("الحارس الحي والخادم يفحصان النص والصورة ونوع المادة بالمدخلات نفسها", async () => {
@@ -17,10 +18,10 @@ test("الحارس الحي والخادم يفحصان النص والصورة 
 });
 
 test("واجهة الحارس لا تفتح بوابة الاعتماد قبل اكتمال الفحص", async () => {
-  const editor = await readFile(editorPath, "utf8");
+  const [editor, guardPanel] = await Promise.all([readFile(editorPath, "utf8"), readFile(guardPanelPath, "utf8")]);
 
   assert.match(editor, /const gateOpen = !guardBusy && report\?\.canRequestApproval === true/);
-  assert.match(editor, /جارٍ فحص المادة/);
+  assert.match(guardPanel, /جارٍ فحص المادة/);
   assert.match(editor, /await runGuard\(title, bodyText\(\), image, format\)/);
   assert.match(editor, /data\.blocking\.join\("، "\)/);
   assert.doesNotMatch(editor, /report \? report\.canRequestApproval : true/);
