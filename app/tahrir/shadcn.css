@@ -1,0 +1,113 @@
+/*
+  «تحرير العلم» فوق shadcn — جذر Tailwind مستقل عن الموقع العام.
+  يمسح app/tahrir وcomponents وhooks فقط، فلا تدخل أدواته حزمة الرئيسية ولا تمس ميزانيتها.
+  الرموز تُعرَّف تحت سمة اللوحة [data-theme-preset] (على الغلاف #tahrir-root وعلى <html> بعد الترطيب
+  لتصل إلى بوابات Radix) — و«هوية العلم» هي اللوحة الافتراضية، ولوحات الكِت في themes.css.
+*/
+@import "tailwindcss" source(none);
+@source "./";
+@source "../../components";
+@source "../../hooks";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@import "tw-animate-css";
+@import "./shadcn-base.css";
+/* هوية العلم ولوحة الكِت المحايدة، ثم لوحات الكِت الثماني والألوان الـ17 والزوايا والمقياس. */
+@import "./presets.css";
+@import "./themes.css";
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  /* خطوط العلم لا خطوط الكِت: Alexandria للعناوين وIBM Plex Sans Arabic للنصوص. */
+  --font-sans: var(--f-text), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-display: var(--f-display), var(--f-text), "SF Arabic", sans-serif;
+}
+
+@layer base {
+  [data-theme-preset] *,
+  .th * {
+    @apply border-border outline-ring/50;
+  }
+
+  .font-display {
+    font-weight: 700;
+  }
+
+  [data-slot="button"],
+  [data-slot="dialog-trigger"],
+  [data-slot="dropdown-menu-item"],
+  [data-slot="command-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="dropdown-menu-trigger"],
+  [data-slot="popover-trigger"],
+  [data-slot="tooltip-trigger"],
+  [data-slot="sheet-trigger"],
+  [data-slot="tabs-trigger"],
+  [data-slot="collapsible-trigger"] {
+    @apply cursor-pointer!;
+  }
+}
+
+/* ===== جسر الرموز القديمة: شاشات المرحلة الأولى (.th-*) تتبع اللوحة المختارة حتى تُنقل ===== */
+.th,
+:root[data-theme="dark"] .th {
+  --t-bg: var(--background);
+  --t-surface: var(--card);
+  --t-surface2: var(--muted);
+  --t-ink: var(--foreground);
+  --t-line: var(--border);
+  --t-line2: var(--input);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .th {
+    --t-bg: var(--background);
+    --t-surface: var(--card);
+    --t-surface2: var(--muted);
+    --t-ink: var(--foreground);
+    --t-line: var(--border);
+    --t-line2: var(--input);
+  }
+}
+/* الحشو صار من غلاف المحتوى في الهيكل الجديد؛ الشاشة نفسها تملأ العرض المتاح. */
+.th .th-screen {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}

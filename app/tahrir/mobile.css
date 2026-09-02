@@ -1,11 +1,6 @@
 /* طبقة الهاتف للوحة التحرير — ملف مستقل يُحمّل بعد الأساس لتجاوز الأنماط المضمّنة بأمان. */
 @media screen and (max-width: 700px) {
   .th { font-size: 13px; }
-  .th-top { min-height: 58px; padding: 9px 12px; gap: 9px; }
-  .th-burger { width: 38px; height: 38px; border-radius: 10px; }
-  .th-crumb { min-width: 0; font-size: 13px; line-height: 1.35; }
-  .th-crumb small { max-width: 145px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .th-new { min-height: 38px; display: inline-flex; align-items: center; padding: 6px 11px; font-size: 11px; }
   .th-screen { padding: 13px 12px 28px; }
 
   .th-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
@@ -71,8 +66,5 @@
 }
 
 @media screen and (max-width: 380px) {
-  .th-crumb small { display: none; }
-  .th-new { font-size: 0; width: 38px; padding: 0; justify-content: center; }
-  .th-new::before { content: "+"; font-size: 20px; }
   .th-screen { padding-inline: 10px; }
 }

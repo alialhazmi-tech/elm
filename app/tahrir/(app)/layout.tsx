@@ -1,9 +1,11 @@
-import Link from "next/link";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { AppSidebar } from "@/components/tahrir/app-sidebar";
+import { SiteHeader } from "@/components/tahrir/site-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getSession } from "@/lib/tahrir/auth";
 import { promoteDueScheduled, statusCounts } from "@/lib/tahrir/service";
-import { LogoutButton, MenuButton, NavBackdrop, SideNav } from "../_components/side-nav";
 
 const ROLE_LABELS: Record<string, string> = {
   editor: "محرر",
@@ -21,8 +23,14 @@ export default async function TahrirAppLayout({
   // (revalidatePath يرفض العمل أثناء رندر مكوّن خادم مثل هذا الـlayout).
   await promoteDueScheduled().catch(() => []);
   const counts = await statusCounts().catch(() => ({}) as Record<string, number>);
-  const reviewCount = counts.review ?? 0;
-  const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+  const total = Object.entries(counts).reduce(
+    (sum, [key, value]) => (key === "archived" ? sum : sum + value),
+    0,
+  );
+
+  const store = await cookies();
+  const sidebarState = store.get("sidebar_state")?.value;
+  const defaultOpen = sidebarState === undefined || sidebarState === "true";
 
   const today = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
     weekday: "long",
@@ -32,37 +40,31 @@ export default async function TahrirAppLayout({
   }).format(new Date());
 
   return (
-    <div className="th-app">
-      <aside className="th-side">
-        <div className="th-brand">
-          <div className="w">العلم</div>
-          <div className="t">المعرفة بسلاسة</div>
-          <span className="badge">تحرير العلم · لوحة التحكم</span>
+    <SidebarProvider
+      defaultOpen={defaultOpen}
+      style={
+        {
+          "--sidebar-width": "16rem",
+          "--header-height": "3.5rem",
+          "--content-padding": "1.5rem",
+        } as React.CSSProperties
+      }
+    >
+      {/* بلا Suspense حول الشريط والهيدر: الترطيب الانتقائي يؤخّر الحدود المعلّقة فيهيدرها العميل بعد أن
+          يصير isMobile صحيحًا على الجوال، فيرسم الدُرج حيث رسم الخادم الشريط المكتبي — تعارض ترطيب. */}
+      <AppSidebar
+        user={{
+          displayName: session.displayName,
+          roleLabel: ROLE_LABELS[session.role] ?? session.role,
+        }}
+        counts={{ total, review: counts.review ?? 0, scheduled: counts.scheduled ?? 0 }}
+      />
+      <SidebarInset>
+        <SiteHeader today={today} />
+        <div className="@container/main flex flex-1 flex-col p-4 md:p-(--content-padding) xl:group-data-[theme-content-layout=centered]/layout:mx-auto xl:group-data-[theme-content-layout=centered]/layout:w-full xl:group-data-[theme-content-layout=centered]/layout:max-w-7xl">
+          {children}
         </div>
-        <SideNav reviewCount={reviewCount} total={total} />
-        <div className="th-user">
-          <div className="av">{session.displayName.slice(0, 1)}</div>
-          <div>
-            <div className="nm">{session.displayName}</div>
-            <div className="rl">{ROLE_LABELS[session.role] ?? session.role}</div>
-          </div>
-          <LogoutButton />
-        </div>
-      </aside>
-      <NavBackdrop />
-      <div className="th-main">
-        <div className="th-top">
-          <MenuButton />
-          <div className="th-crumb">
-            تحرير العلم
-            <small>{today}</small>
-          </div>
-          <Link className="th-new" href="/tahrir/editor/new">
-            + مادة جديدة
-          </Link>
-        </div>
-        {children}
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

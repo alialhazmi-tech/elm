@@ -42,37 +42,8 @@
 .th button { font-family: inherit; cursor: pointer; }
 .th :is(button, a, input, textarea, select):focus-visible { outline: 2px solid var(--t-gold); outline-offset: 2px; }
 
-.th-app { display: grid; grid-template-columns: 236px 1fr; min-height: 100vh; }
 
-/* ===== الشريط الجانبي — مداد دائمًا ===== */
-.th-side { background: var(--t-midad); color: var(--t-side-ink); display: flex; flex-direction: column; padding: 22px 0 16px; position: sticky; top: 0; height: 100vh; }
-.th-brand { padding: 0 22px 18px; border-bottom: 1px solid rgb(255 255 255 / .08); }
-.th-brand .w { font-family: var(--f-logo), var(--f-display); font-weight: 900; font-size: 25px; color: #fff; line-height: 1.2; }
-.th-brand .t { font-size: 11px; color: var(--t-side-ink2); margin-top: 2px; }
-.th-brand .badge { display: inline-block; margin-top: 10px; font-family: var(--f-display); font-weight: 600; font-size: 11px; color: var(--t-gold); background: rgb(245 185 46 / .12); border: 1px solid rgb(245 185 46 / .3); padding: 2px 10px; border-radius: 999px; }
-.th-nav { padding: 14px 12px; display: flex; flex-direction: column; gap: 2px; flex: 1; overflow-y: auto; }
-.th-nav .sec { font-size: 10px; color: var(--t-side-ink2); letter-spacing: .08em; padding: 12px 12px 4px; }
-.th-nav a { display: flex; align-items: center; gap: 10px; color: var(--t-side-ink); text-decoration: none; font-size: 13.5px; padding: 8px 12px; border-radius: 8px; }
-.th-nav a:hover { background: rgb(255 255 255 / .06); color: #fff; }
-.th-nav a.on { background: rgb(255 255 255 / .1); color: #fff; box-shadow: inset 2px 0 0 0 var(--t-gold); font-weight: 600; }
-.th-nav a .ic { width: 17px; text-align: center; opacity: .85; }
-.th-nav a .n { margin-inline-start: auto; font-family: var(--f-display); font-size: 10.5px; font-weight: 700; background: var(--t-gold); color: #1a1503; min-width: 19px; text-align: center; border-radius: 999px; padding: 0 5px; }
-.th-user { margin: 0 12px; padding: 10px 12px; border-top: 1px solid rgb(255 255 255 / .08); display: flex; align-items: center; gap: 10px; }
-.th-user .av { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--t-gold), #f26a1b); color: #1a1503; font-family: var(--f-display); font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; flex: none; }
-.th-user .nm { font-size: 12.5px; color: #fff; font-weight: 600; line-height: 1.4; }
-.th-user .rl { font-size: 10.5px; color: var(--t-side-ink2); }
-.th-user .out { margin-inline-start: auto; background: none; border: 1px solid rgb(255 255 255 / .18); color: var(--t-side-ink2); border-radius: 7px; font-size: 10.5px; padding: 3px 9px; }
-.th-user .out:hover { color: #fff; border-color: rgb(255 255 255 / .4); }
 
-/* ===== الأعمدة ===== */
-.th-main { display: flex; flex-direction: column; min-width: 0; }
-.th-top { display: flex; align-items: center; gap: 14px; padding: 14px 26px; background: var(--t-surface); border-bottom: 1px solid var(--t-line); position: sticky; top: 0; z-index: 20; }
-.th-crumb { font-family: var(--f-display); font-weight: 700; font-size: 15px; }
-.th-crumb small { color: var(--t-ink3); font-weight: 400; font-size: 11.5px; display: block; }
-.th-new { margin-inline-start: auto; font-family: var(--f-display); font-weight: 700; font-size: 13px; background: var(--t-gold); color: #1a1503; border: 0; border-radius: 999px; padding: 8px 18px; box-shadow: 0 3px 10px rgb(245 185 46 / .35); text-decoration: none; white-space: nowrap; }
-.th-new:hover { filter: brightness(1.05); }
-.th-burger { display: none; border: 1px solid var(--t-line2); background: var(--t-surface); color: var(--t-ink); border-radius: 9px; width: 36px; height: 36px; font-size: 16px; line-height: 1; align-items: center; justify-content: center; flex: none; }
-.th-backdrop { display: none; }
 .th-screen { padding: 26px; max-width: 1230px; width: 100%; margin: 0 auto; }
 
 /* ===== نظرة اليوم ===== */
@@ -279,40 +250,12 @@
 .th-login-card .go { width: 100%; margin-top: 20px; font-family: var(--f-display); font-weight: 800; font-size: 14px; background: var(--t-gold); color: #1a1503; border: 0; border-radius: 10px; padding: 11px; }
 .th-login-card .err { color: var(--t-block); font-size: 12px; margin-top: 10px; min-height: 18px; }
 
-@media (max-width: 1000px) {
-  .th-app { grid-template-columns: 1fr; }
-  /* الشريط الجانبي دُرجًا: يفتحه زر ☰ وتغلقه الخلفية المعتمة أو أي تنقّل */
-  .th-side {
-    position: fixed; inset-block: 0; inset-inline-start: 0;
-    width: min(300px, 84vw); height: 100dvh; z-index: 60;
-    transform: translateX(100%); visibility: hidden;
-    transition: transform .25s ease, visibility 0s linear .25s;
-  }
-  body.th-nav-open .th-side {
-    transform: none; visibility: visible; box-shadow: 0 0 70px rgb(0 0 0 / .5);
-    transition: transform .25s ease;
-  }
-  .th-backdrop {
-    display: block; position: fixed; inset: 0; z-index: 55;
-    background: rgb(8 14 26 / .5); opacity: 0; pointer-events: none; transition: opacity .25s ease;
-  }
-  body.th-nav-open .th-backdrop { opacity: 1; pointer-events: auto; }
-  .th-burger { display: inline-flex; }
-  .th-tiles { grid-template-columns: repeat(2, 1fr); }
-  .th-cols, .th-ed { grid-template-columns: 1fr; }
-  .th-ed-side { position: static; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .th-side, .th-backdrop { transition: none; }
   .th-full-progress::before, .th-ai-orb, .th-full-steps .step.active::before { animation: none; }
 }
 
 /* ===== الجوال — قياسات مضغوطة ===== */
 @media (max-width: 700px) {
-  .th-top { padding: 10px 14px; gap: 10px; }
-  .th-crumb { font-size: 13.5px; }
-  .th-crumb small { font-size: 10.5px; }
-  .th-new { font-size: 12px; padding: 7px 14px; }
   .th-screen { padding: 16px 14px 28px; }
   .th-hello { margin-bottom: 14px; gap: 8px; }
   .th-hello h1 { font-size: 18px; }
