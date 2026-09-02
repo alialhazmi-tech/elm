@@ -1,15 +1,18 @@
+import { GuardChip, SeriesTag } from "@/components/tahrir/badges";
+import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
+import { ArchiveToggle, ProposalDecision, ProposalForm } from "@/components/tahrir/series/series-client";
+import { Card } from "@/components/ui/card";
 import { ARCHIVED_SERIES, SERIES } from "@/lib/content/series";
 import { getSession } from "@/lib/tahrir/auth";
 import { listProposals, listSeriesRows, seriesDistribution } from "@/lib/tahrir/service";
-import { ArchiveToggle, ProposalDecision, ProposalForm } from "../../_components/series-client";
 
 export const metadata = { title: "السلاسل" };
 export const dynamic = "force-dynamic";
 
-const PROPOSAL_LABELS: Record<string, { label: string; cls: string }> = {
-  pending: { label: "بانتظار القرار", cls: "warn" },
-  accepted: { label: "مقبول — تفعيله إصدار تقني", cls: "ok" },
-  rejected: { label: "مرفوض", cls: "block" },
+const PROPOSAL_LABELS: Record<string, { label: string; tone: "ok" | "warn" | "block" }> = {
+  pending: { label: "بانتظار القرار", tone: "warn" },
+  accepted: { label: "مقبول — تفعيله إصدار تقني", tone: "ok" },
+  rejected: { label: "مرفوض", tone: "block" },
 };
 
 export default async function SeriesPage() {
@@ -31,103 +34,81 @@ export default async function SeriesPage() {
   const maxWeek = Math.max(1, ...withCounts.map((series) => series.week));
 
   return (
-    <main className="th-screen">
-      <div className="th-cols" style={{ gridTemplateColumns: "1.5fr 1fr", marginTop: 0 }}>
-        <div>
-          <div className="th-sergrid">
+    <main className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h1 className="font-display text-xl font-extrabold">السلاسل</h1>
+        <span className="text-xs text-muted-foreground">ثماني سلاسل حية وأرشيف بمفتاح ظهور</span>
+      </div>
+      <div className="grid items-start gap-3 lg:grid-cols-[1.5fr_1fr]">
+        <div className="grid gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {withCounts.map((series) => (
-              <div
-                className="th-sercard"
-                key={series.slug}
-                style={{ "--sc": series.color } as React.CSSProperties}
-              >
-                <div className="sh">
-                  <span className="nm">{series.name}</span>
-                  <span className="ct">{series.count} مادة</span>
+              <Card key={series.slug} className="gap-0 overflow-hidden py-0">
+                <div className="h-1" style={{ background: series.color }} />
+                <div className="grid gap-1 p-3">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display text-[13.5px] font-bold">{series.name}</span>
+                    <span className="ms-auto text-[11px] text-muted-foreground tabular-nums">{series.count} مادة</span>
+                  </div>
+                  <div className="text-[11.5px] leading-relaxed text-muted-foreground">{series.description}</div>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-muted" title={`${series.week} هذا الأسبوع`}>
+                    <i className="block h-full rounded-full" style={{ width: `${(series.week / maxWeek) * 100}%`, background: series.color }} />
+                  </div>
+                  <div className="text-[10.5px] text-muted-foreground tabular-nums">{series.week} هذا الأسبوع</div>
                 </div>
-                <div className="ds">{series.description}</div>
-                <div className="wk" title={`${series.week} هذا الأسبوع`}>
-                  <i style={{ width: `${(series.week / maxWeek) * 100}%` }} />
-                </div>
-              </div>
+              </Card>
             ))}
           </div>
-          <div style={{ fontSize: 10.5, color: "var(--t-ink3)", marginTop: 10, lineHeight: 1.8 }}>
-            أسماء السلاسل وألوانها جزء من هوية الموقع المفحوصة بالعقود — تعديلها أو تفعيل سلسلة
-            مقبولة يمر كإصدار تقني، لا من اللوحة.
-          </div>
-
-          <div className="th-panel" style={{ marginTop: 14 }}>
-            <div className="hd">
-              <h2>أرشيف السلاسل — صفحات حية بمفتاح ظهور</h2>
-            </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            أسماء السلاسل وألوانها جزء من هوية الموقع المفحوصة بالعقود — تعديلها أو تفعيل سلسلة مقبولة يمر كإصدار تقني، لا
+            من اللوحة.
+          </p>
+          <Panel title="أرشيف السلاسل — صفحات حية بمفتاح ظهور">
             {ARCHIVED_SERIES.map((series) => {
               const hidden = hiddenBySlug.get(series.slug) ?? true;
               const count = bySlug.get(series.slug)?.total ?? 0;
               return (
-                <div className="th-qrow" key={series.slug}>
-                  <span
-                    className="th-serchip"
-                    style={{ "--sc": series.color } as React.CSSProperties}
-                  >
-                    {series.name}
-                  </span>
-                  <span className="t">
+                <div key={series.slug} className="flex flex-wrap items-center gap-3 border-b px-4 py-2.5 last:border-0">
+                  <SeriesTag name={series.name} color={series.color} className="text-foreground" />
+                  <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
                     {series.description} · {count} مادة
                   </span>
-                  {hidden ? (
-                    <span className="th-gchip warn">مخفية من الفهرس</span>
-                  ) : (
-                    <span className="th-gchip ok">ظاهرة في الفهرس</span>
-                  )}
-                  {canToggle && <ArchiveToggle slug={series.slug} hidden={hidden} />}
+                  <GuardChip tone={hidden ? "warn" : "ok"} label={hidden ? "مخفية من الفهرس" : "ظاهرة في الفهرس"} />
+                  {canToggle ? <ArchiveToggle slug={series.slug} hidden={hidden} /> : null}
                 </div>
               );
             })}
-            <div className="th-audlock">
+            <p className="border-t px-4 py-2 text-[11px] text-muted-foreground">
               الإخفاء يرفع السلسلة من فهرس /series فقط — صفحتها وموادها وروابطها تبقى حية دائمًا.
-            </div>
-          </div>
+            </p>
+          </Panel>
         </div>
-
-        <div>
-          <div className="th-panel">
-            <div className="hd">
-              <h2>اقتراح سلسلة جديدة</h2>
-            </div>
+        <div className="grid gap-3">
+          <Panel title="اقتراح سلسلة جديدة">
             <ProposalForm />
-          </div>
-
-          {proposals.length > 0 && (
-            <div className="th-panel" style={{ marginTop: 14 }}>
-              <div className="hd">
-                <h2>المقترحات</h2>
-              </div>
-              {proposals.map((proposal) => {
-                const meta = PROPOSAL_LABELS[proposal.status] ?? PROPOSAL_LABELS.pending;
-                return (
-                  <div className="th-prop" key={proposal.id}>
-                    <div className="ph">
-                      {proposal.name}
-                      <span className={`th-gchip ${meta.cls} st`}>{meta.label}</span>
-                    </div>
-                    <div className="pd">
-                      <b>القيمة:</b> {proposal.valueCase} · <b>الفجوة:</b> {proposal.gapCase} ·{" "}
-                      <b>الأثر:</b> {proposal.impactCase}
-                      <br />
-                      اقترحها {proposal.proposedBy} — {proposal.createdAt.slice(0, 10)}
-                      {session?.role === "chief" && proposal.status === "pending" && (
-                        <>
-                          {" · "}
-                          <ProposalDecision id={proposal.id} />
-                        </>
-                      )}
-                    </div>
+          </Panel>
+          <Panel title="المقترحات">
+            {proposals.length === 0 ? <PanelEmpty>لا مقترحات بعد.</PanelEmpty> : null}
+            {proposals.map((proposal) => {
+              const meta = PROPOSAL_LABELS[proposal.status] ?? PROPOSAL_LABELS.pending;
+              return (
+                <div key={proposal.id} className="grid gap-1.5 border-b px-4 py-3 last:border-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="text-[13px]">{proposal.name}</b>
+                    <GuardChip tone={meta.tone} label={meta.label} />
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <div className="text-[11.5px] leading-relaxed text-muted-foreground">
+                    <b className="text-foreground">القيمة:</b> {proposal.valueCase} · <b className="text-foreground">الفجوة:</b> {proposal.gapCase} ·{" "}
+                    <b className="text-foreground">الأثر:</b> {proposal.impactCase}
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                    اقترحها {proposal.proposedBy} — {proposal.createdAt.slice(0, 10)}
+                    {session?.role === "chief" && proposal.status === "pending" ? <ProposalDecision id={proposal.id} /> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </Panel>
         </div>
       </div>
     </main>

@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { SeriesTag, StatusPill } from "@/components/tahrir/badges";
+import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
+import { TodayTimeline, type TimelineItem } from "@/components/tahrir/overview/today-timeline";
 import { SERIES } from "@/lib/content/series";
 import { editorHref } from "@/lib/tahrir/routes";
 import { listLatestByStatus, promoteDueScheduled } from "@/lib/tahrir/service";
@@ -7,23 +10,25 @@ import { listLatestByStatus, promoteDueScheduled } from "@/lib/tahrir/service";
 export const metadata = { title: "جدولة النشر" };
 export const dynamic = "force-dynamic";
 
-const seriesBySlug = new Map<string, (typeof SERIES)[number]>(
-  SERIES.map((series) => [series.slug, series]),
-);
+const seriesBySlug = new Map<string, (typeof SERIES)[number]>(SERIES.map((series) => [series.slug, series]));
 
 const hourOf = (iso: string) =>
   new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
 
 const dayOf = (iso: string) =>
   new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
     weekday: "long",
+    day: "numeric",
+    month: "short",
     hour: "2-digit",
     minute: "2-digit",
     hour12: false,
+    timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
 
 export default async function SchedulePage() {
@@ -35,94 +40,77 @@ export default async function SchedulePage() {
   ]);
 
   const todayIso = new Date().toISOString().slice(0, 10);
-  const todayItems = [
-    ...latestPublished.filter((row) => (row.publishedAt ?? "").startsWith(todayIso)),
-    ...scheduled.filter((row) => (row.scheduledAt ?? "").startsWith(todayIso)),
+  const todayItems: TimelineItem[] = [
+    ...latestPublished
+      .filter((row) => (row.publishedAt ?? "").startsWith(todayIso))
+      .map((row) => ({ row, at: row.publishedAt!, state: "done" as const })),
+    ...scheduled
+      .filter((row) => (row.scheduledAt ?? "").startsWith(todayIso))
+      .map((row) => ({ row, at: row.scheduledAt!, state: "later" as const })),
   ]
-    .map((row) => ({
-      row,
-      at: row.status === "scheduled" ? row.scheduledAt! : row.publishedAt!,
-    }))
-    .sort((a, b) => a.at.localeCompare(b.at));
+    .sort((a, b) => a.at.localeCompare(b.at))
+    .map((entry, index, all) => {
+      const series = entry.row.seriesSlug ? seriesBySlug.get(entry.row.seriesSlug) : undefined;
+      return {
+        id: entry.row.id,
+        time: hourOf(entry.at),
+        title: entry.row.title,
+        href: editorHref(entry.row),
+        state:
+          entry.state === "later" && all.findIndex((other) => other.state === "later") === index ? "next" : entry.state,
+        meta: `${entry.state === "done" ? "نُشرت" : "مجدولة · تُنشر تلقائيًا"}${series ? ` · ${series.name}` : ""}`,
+      };
+    });
 
   const upcoming = scheduled
     .filter((row) => !(row.scheduledAt ?? "").startsWith(todayIso))
     .sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""));
 
   return (
-    <main className="th-screen">
-      <div className="th-cols" style={{ gridTemplateColumns: "1.5fr 1fr", marginTop: 0 }}>
-        <div className="th-panel">
-          <div className="hd">
-            <h2>جدول اليوم</h2>
-            <Link className="mr" href="/tahrir/stories?status=scheduled">
-              كل المجدول ←
-            </Link>
-          </div>
-          {todayItems.length === 0 && (
-            <div className="th-empty">لا نشر ولا جدولة اليوم بعد — الجدولة من داخل المحرر.</div>
+    <main className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h1 className="font-display text-xl font-extrabold">جدولة النشر</h1>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {scheduled.length} مادة مجدولة · {todayItems.length} في جدول اليوم
+        </span>
+      </div>
+      <div className="grid items-start gap-3 lg:grid-cols-[1.5fr_1fr]">
+        <Panel title="جدول اليوم" href="/tahrir/stories?status=scheduled" hrefLabel="كل المجدول">
+          {todayItems.length === 0 ? (
+            <PanelEmpty>لا نشر ولا جدولة اليوم بعد — الجدولة من داخل المحرر.</PanelEmpty>
+          ) : (
+            <TodayTimeline items={todayItems} />
           )}
-          <div className="th-tl">
-            {todayItems.map(({ row, at }) => {
+        </Panel>
+        <div className="grid gap-3">
+          <Panel title="القادم بعد اليوم">
+            {upcoming.length === 0 ? <PanelEmpty>لا مواد مجدولة لاحقًا.</PanelEmpty> : null}
+            {upcoming.slice(0, 12).map((row) => {
               const series = row.seriesSlug ? seriesBySlug.get(row.seriesSlug) : undefined;
               return (
-                <div
-                  className="th-tlrow filled"
+                <Link
                   key={row.id}
-                  style={{ "--sc": series?.color ?? "var(--t-navy)" } as React.CSSProperties}
+                  href={editorHref(row)}
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 border-b px-4 py-2.5 last:border-0 hover:bg-muted/60"
                 >
-                  <span className="tm">{hourOf(at)}</span>
-                  <div className="cell">
-                    <Link className="th-tlcard" href={editorHref(row)}>
-                      <span className="t">{row.title}</span>
-                      {series && (
-                        <span
-                          className="th-serchip"
-                          style={{ "--sc": series.color } as React.CSSProperties}
-                        >
-                          {series.name}
-                        </span>
-                      )}
-                      {row.status === "published" ? (
-                        <span className="th-gchip ok">نُشرت</span>
-                      ) : (
-                        <span className="th-pill sch">مجدولة</span>
-                      )}
-                    </Link>
-                  </div>
-                </div>
+                  <StatusPill status="scheduled" label={dayOf(row.scheduledAt!)} />
+                  <span className="grid min-w-0 leading-tight">
+                    <span className="truncate text-[13px] font-semibold">{row.title}</span>
+                    {series ? <SeriesTag name={series.name} color={series.color} className="mt-0.5" /> : null}
+                  </span>
+                </Link>
               );
             })}
-          </div>
-        </div>
-
-        <div>
-          <div className="th-panel">
-            <div className="hd">
-              <h2>القادم بعد اليوم</h2>
-            </div>
-            {upcoming.length === 0 && <div className="th-empty">لا مواد مجدولة لاحقًا.</div>}
-            {upcoming.slice(0, 8).map((row) => (
-              <Link className="th-qrow" key={row.id} href={editorHref(row)}>
-                <span className="th-pill sch">{dayOf(row.scheduledAt!)}</span>
-                <span className="t">{row.title}</span>
-              </Link>
-            ))}
-          </div>
-
-          <div className="th-panel" style={{ marginTop: 14 }}>
-            <div className="hd">
-              <h2>كيف تعمل الجدولة</h2>
-            </div>
-            <div className="th-rythm">
-              الجدولة من المحرر ومن صلاحية <b>المعتمدين</b> — الحارس يفحص المادة عند الجدولة،
-              ثم يفحصها <b>ثانية لحظة الموعد</b>: السليمة تُنشر آليًا، وأي مخالفة قاطعة توقف
-              النشر وتعيدها للاعتماد مع تدوين السبب في السجل.
-              <br />
-              النبضة تعمل مع نشاط اللوحة، وللدقة الكاملة اربط مراقبًا خارجيًا بـ
-              <b> /api/tahrir/tick</b> كل دقائق.
-            </div>
-          </div>
+          </Panel>
+          <Panel title="كيف تعمل الجدولة">
+            <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+              الجدولة من المحرر ومن صلاحية <b className="text-foreground">المعتمدين</b> — الحارس يفحص المادة عند الجدولة، ثم
+              يفحصها <b className="text-foreground">ثانية لحظة الموعد</b>: السليمة تُنشر آليًا، وأي مخالفة قاطعة توقف النشر
+              وتعيدها للاعتماد مع تدوين السبب في السجل. النبضة تعمل مع نشاط اللوحة، وللدقة الكاملة اربط مراقبًا خارجيًا بـ
+              <code className="mx-1 rounded bg-muted px-1 font-mono text-[11px]" dir="ltr">/api/tahrir/tick</code>
+              كل دقائق.
+            </p>
+          </Panel>
         </div>
       </div>
     </main>

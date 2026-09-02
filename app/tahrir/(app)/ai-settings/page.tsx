@@ -1,7 +1,10 @@
+import { AiSettingsClient } from "@/components/tahrir/ai/ai-settings-client";
+import { GuardChip } from "@/components/tahrir/badges";
+import { Panel } from "@/components/tahrir/overview/panel";
+import { Progress } from "@/components/ui/progress";
 import { keyStatus, loadAiSettings } from "@/lib/ai/settings";
 import { usageTotals } from "@/lib/ai/usage";
 import { getSession } from "@/lib/tahrir/auth";
-import { AiSettingsClient } from "../../_components/ai-settings-client";
 
 export const metadata = { title: "إعدادات الذكاء" };
 export const dynamic = "force-dynamic";
@@ -12,100 +15,70 @@ export default async function AiSettingsPage() {
   const session = await getSession();
   const [settings, totals] = await Promise.all([loadAiSettings(), usageTotals()]);
   const keys = keyStatus();
+  const providers: Array<[string, string, string, boolean, string]> = [
+    ["النصوص — Claude (Anthropic)", "التحرير والعناوين والتدقيق", settings.models.editorial, keys.anthropic, "ANTHROPIC_API_KEY"],
+    ["المهام الخفيفة — Claude Haiku", "التصنيف السريع — أرخص 10×", settings.models.light, keys.anthropic, "ANTHROPIC_API_KEY"],
+    ["التحرير الشامل — Claude Sonnet", "أسرع من Opus لإعادة تحرير المتن، مع Haiku للحقول المساعدة", settings.models.fast, keys.anthropic, "ANTHROPIC_API_KEY"],
+    ["الصور — مزود التوليد", "الأنماط الثلاثة: حقيقي/توضيحي/رسومي", settings.models.image, keys.image, "GEMINI_API_KEY"],
+  ];
+  const dayPct = Math.min(100, (totals.todayCents / (settings.caps.dailyUsd * 100)) * 100);
+  const monthPct = Math.min(100, (totals.monthCents / (settings.caps.monthlyUsd * 100)) * 100);
 
   return (
-    <main className="th-screen">
-      <div className="th-cols" style={{ gridTemplateColumns: "1.4fr 1fr", marginTop: 0 }}>
-        <div>
-          <div className="th-panel">
-            <div className="hd">
-              <h2>المزودون والمفاتيح</h2>
-            </div>
-            <div className="th-set-row">
-              <div>
-                <div className="sn">النصوص — Claude (Anthropic)</div>
-                <div className="sd">التحرير والعناوين والتدقيق</div>
+    <main className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h1 className="font-display text-xl font-extrabold">إعدادات الذكاء</h1>
+        <span className="text-xs text-muted-foreground">المزودون والأدوات والسقوف — التعديل قرار رئيس التحرير</span>
+      </div>
+      <div className="grid items-start gap-3 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-3">
+          <Panel title="المزودون والمفاتيح">
+            {providers.map(([name, desc, model, ready, envKey]) => (
+              <div key={name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-2.5 last:border-0 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+                <div className="min-w-0">
+                  <div className="text-[12.5px] font-semibold">{name}</div>
+                  <div className="text-[11px] text-muted-foreground">{desc}</div>
+                </div>
+                <code className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground sm:inline" dir="ltr">
+                  {model}
+                </code>
+                <GuardChip tone={ready ? "ok" : "block"} label={ready ? "المفتاح مضبوط" : `أضف ${envKey}`} />
               </div>
-              <span className="th-set-model">{settings.models.editorial}</span>
-              <span className={`th-keychip ${keys.anthropic ? "ok" : "miss"}`}>
-                {keys.anthropic ? "المفتاح مضبوط" : "أضف ANTHROPIC_API_KEY"}
-              </span>
-            </div>
-            <div className="th-set-row">
-              <div>
-                <div className="sn">المهام الخفيفة — Claude Haiku</div>
-                <div className="sd">التصنيف السريع — أرخص 10×</div>
-              </div>
-              <span className="th-set-model">{settings.models.light}</span>
-              <span className={`th-keychip ${keys.anthropic ? "ok" : "miss"}`}>
-                {keys.anthropic ? "المفتاح نفسه" : "المفتاح نفسه"}
-              </span>
-            </div>
-            <div className="th-set-row">
-              <div>
-                <div className="sn">التحرير الشامل — Claude Sonnet</div>
-                <div className="sd">أسرع من Opus لإعادة تحرير المتن، مع Haiku للحقول المساعدة</div>
-              </div>
-              <span className="th-set-model">{settings.models.fast}</span>
-              <span className={`th-keychip ${keys.anthropic ? "ok" : "miss"}`}>
-                {keys.anthropic ? "المفتاح نفسه" : "المفتاح نفسه"}
-              </span>
-            </div>
-            <div className="th-set-row">
-              <div>
-                <div className="sn">الصور — مزود التوليد</div>
-                <div className="sd">الأنماط الثلاثة: حقيقي/توضيحي/رسومي</div>
-              </div>
-              <span className="th-set-model">{settings.models.image}</span>
-              <span className={`th-keychip ${keys.image ? "ok" : "miss"}`}>
-                {keys.image ? "المفتاح مضبوط" : "أضف GEMINI_API_KEY"}
-              </span>
-            </div>
-          </div>
-
+            ))}
+          </Panel>
           <AiSettingsClient initial={settings} isChief={session?.role === "chief"} />
         </div>
-
-        <div>
-          <div className="th-panel">
-            <div className="hd">
-              <h2>سقوف الكلفة — يوقف الخادم تجاوزها</h2>
-            </div>
-            <div className="th-budgetbar">
-              <div className="bl">
-                <span>اليوم ({totals.todayCalls} استدعاء)</span>
-                <b>
-                  {usd(totals.todayCents)} من ${settings.caps.dailyUsd}
-                </b>
+        <div className="grid gap-3">
+          <Panel title="سقوف الكلفة — يوقف الخادم تجاوزها">
+            <div className="grid gap-4 p-4">
+              <div className="grid gap-1.5">
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="text-muted-foreground">اليوم ({totals.todayCalls} استدعاء)</span>
+                  <b className="tabular-nums" dir="ltr">
+                    {usd(totals.todayCents)} / ${settings.caps.dailyUsd}
+                  </b>
+                </div>
+                <Progress value={dayPct} aria-label="استهلاك اليوم" />
               </div>
-              <div className="bb">
-                <i style={{ width: `${Math.min(100, (totals.todayCents / (settings.caps.dailyUsd * 100)) * 100)}%` }} />
-              </div>
-            </div>
-            <div className="th-budgetbar">
-              <div className="bl">
-                <span>الشهر</span>
-                <b>
-                  {usd(totals.monthCents)} من ${settings.caps.monthlyUsd}
-                </b>
-              </div>
-              <div className="bb">
-                <i style={{ width: `${Math.min(100, (totals.monthCents / (settings.caps.monthlyUsd * 100)) * 100)}%` }} />
+              <div className="grid gap-1.5">
+                <div className="flex items-baseline justify-between text-xs">
+                  <span className="text-muted-foreground">الشهر</span>
+                  <b className="tabular-nums" dir="ltr">
+                    {usd(totals.monthCents)} / ${settings.caps.monthlyUsd}
+                  </b>
+                </div>
+                <Progress value={monthPct} aria-label="استهلاك الشهر" />
               </div>
             </div>
-          </div>
-
-          <div className="th-panel" style={{ marginTop: 14 }}>
-            <div className="hd">
-              <h2>كيف يعمل النظام</h2>
-            </div>
-            <div className="th-rythm">
-              المساعد يقترح ولا ينشر: كل مخرج يُفحص <b>بحارس السياسة</b> على الخادم قبل عرضه،
-              والدستور التحريري و«نبرة العلم» يُحقنان في كل استدعاء، والإدراج بنقرة المحرر
-              ويُدوَّن في <b>سجل التدقيق</b> مع كلفته. السقوف تُفرض من الخادم — عند بلوغها يتوقف
-              الذكاء ولا يتوقف التحرير.
-            </div>
-          </div>
+          </Panel>
+          <Panel title="كيف يعمل النظام">
+            <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+              المساعد يقترح ولا ينشر: كل مخرج يُفحص <b className="text-foreground">بحارس السياسة</b> على الخادم قبل عرضه، والدستور
+              التحريري و«نبرة العلم» يُحقنان في كل استدعاء، والإدراج بنقرة المحرر ويُدوَّن في{" "}
+              <b className="text-foreground">سجل التدقيق</b> مع كلفته. السقوف تُفرض من الخادم — عند بلوغها يتوقف الذكاء ولا يتوقف
+              التحرير.
+            </p>
+          </Panel>
         </div>
       </div>
     </main>

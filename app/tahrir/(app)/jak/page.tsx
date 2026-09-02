@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { StatusPill } from "@/components/tahrir/badges";
+import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
 import { listLatestByFormat, listMedia, STATUS_LABELS, type StoryStatus } from "@/lib/tahrir/service";
-import { JakEditor } from "../../_components/jak-editor";
+import { JakEditor } from "@/components/tahrir/jak/jak-editor";
 
 export const metadata = { title: "جاك العلم" };
 export const dynamic = "force-dynamic";
@@ -23,34 +25,32 @@ export default async function JakNewPage() {
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
 
   return (
-    <main className="th-screen">
-      <section className="th-panel" style={{ marginBottom: 16 }}>
-        <div className="hd">
-          <h2>مواد جاك العلم</h2>
-          <span className="mr">{jakStories.length} مادة محفوظة</span>
-        </div>
+    <main className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h1 className="font-display text-xl font-extrabold">جاك العلم</h1>
+        <span className="text-xs text-muted-foreground tabular-nums">{jakStories.length} مادة محفوظة</span>
+      </div>
+      <Panel title="مواد جاك العلم">
         {jakStories.length === 0 ? (
-          <div className="th-empty">لا توجد مواد جاك محفوظة بعد — أنشئ أول مادة من النموذج أدناه.</div>
+          <PanelEmpty>لا توجد مواد جاك محفوظة بعد — أنشئ أول مادة من النموذج أدناه.</PanelEmpty>
         ) : (
           jakStories.map((story) => (
-            <Link className="th-srow" key={story.id} href={`/tahrir/jak/${story.id}`}>
-              <span className="rail" aria-hidden="true" />
-              <span style={{ minWidth: 0 }}>
-                <span className="t" style={{ display: "block" }}>{story.title}</span>
-                <span className="m" style={{ display: "block" }}>
+            <Link
+              key={story.id}
+              href={`/tahrir/jak/${story.id}`}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-2.5 last:border-0 hover:bg-muted/60"
+            >
+              <span className="grid min-w-0 leading-tight">
+                <span className="truncate text-[13px] font-semibold">{story.title}</span>
+                <span className="text-[11px] text-muted-foreground">
                   {SECTION_NAMES[story.section] || story.section} · حُدّثت {(story.updatedAt ?? story.publishedAt ?? "").slice(0, 10) || "—"}
                 </span>
               </span>
-              <span className="chips">
-                <span className="th-report-badge">▦ جاك العلم</span>
-                <span className={`th-pill ${story.status === "published" ? "pub" : story.status === "review" ? "rev" : story.status === "scheduled" ? "sch" : "dft"}`}>
-                  {STATUS_LABELS[story.status as StoryStatus] ?? story.status}
-                </span>
-              </span>
+              <StatusPill status={story.status} label={STATUS_LABELS[story.status as StoryStatus] ?? story.status} />
             </Link>
           ))
         )}
-      </section>
+      </Panel>
       <JakEditor
         role={session?.role ?? "editor"}
         sections={sections}
