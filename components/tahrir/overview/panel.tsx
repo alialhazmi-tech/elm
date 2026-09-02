@@ -42,8 +42,8 @@ export function PanelHeader({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center gap-3 border-b px-4 py-3", className)}>
-      <h2 className="font-display text-[13.5px] font-bold">{title}</h2>
+    <div className={cn("flex items-center gap-3 border-b border-border/80 bg-muted/25 px-4 py-3", className)}>
+      <h2 className="font-display text-[13.5px] font-bold text-foreground tracking-tight">{title}</h2>
       {href ? (
         <Link href={href} className="ms-auto inline-flex items-center gap-1 text-xs font-semibold text-(--t-sug) hover:underline">
           {hrefLabel ?? "الكل"}
@@ -57,5 +57,5 @@ export function PanelHeader({
 }
 
 export function PanelEmpty({ children }: { children: React.ReactNode }) {
-  return <div className="px-4 py-6 text-center text-xs text-muted-foreground">{children}</div>;
+  return <div className="flex flex-col items-center justify-center gap-1.5 px-4 py-8 text-center text-xs text-muted-foreground">{children}</div>;
 }

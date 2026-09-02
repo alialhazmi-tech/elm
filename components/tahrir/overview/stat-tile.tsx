@@ -35,17 +35,17 @@ export function StatTile({
   color?: string;
 }) {
   return (
-    <Card className="gap-0 py-0">
-      <CardContent className="grid grid-cols-[1fr_auto] items-end gap-x-3 gap-y-0.5 px-4 py-3.5">
-        <span className="col-span-2 text-xs text-muted-foreground">{label}</span>
-        <span className="font-display text-[26px] leading-none font-extrabold tabular-nums">{value}</span>
+    <Card className="gap-0 py-0 transition-all duration-150 hover:shadow-sm hover:border-border">
+      <CardContent className="grid grid-cols-[1fr_auto] items-end gap-x-3 gap-y-1 p-4">
+        <span className="col-span-2 text-xs font-medium text-muted-foreground">{label}</span>
+        <span className="font-display text-[28px] leading-none font-extrabold tracking-tight tabular-nums">{value}</span>
         {series ? <Sparkline values={series} color={color} /> : <span />}
         <span
           className={cn(
-            "col-span-2 mt-1 text-[11px] text-muted-foreground",
-            tone === "ok" && "text-(--t-ok)",
-            tone === "warn" && "text-(--t-warn)",
-            tone === "block" && "text-(--t-block)",
+            "col-span-2 mt-1 text-[11.5px] text-muted-foreground",
+            tone === "ok" && "font-semibold text-(--t-ok)",
+            tone === "warn" && "font-semibold text-(--t-warn)",
+            tone === "block" && "font-semibold text-(--t-block)",
           )}
         >
           {hint}

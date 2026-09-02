@@ -140,7 +140,7 @@
     --primary-950: oklch(0.2741 0.1016 9.26);
     --primary-1000: oklch(0.1861 0.0693 10.39);
 
-    --background: var(--color-white);
+    --background: var(--base-50);
     --foreground: var(--base-800);
     --card: var(--color-white);
     --card-foreground: var(--base-800);
@@ -362,7 +362,7 @@
     --secondary-950: oklch(0.2641 0.0836 34.57);
     --secondary-1000: oklch(0.1726 0.0534 33.77);
 
-    --background: var(--color-white);
+    --background: var(--base-50);
     --foreground: var(--base-800);
     --card: var(--color-white);
     --card-foreground: var(--base-800);
@@ -578,7 +578,7 @@
     --secondary-950: oklch(0.257 0.0788 281.29);
     --secondary-1000: oklch(0.191 0.0482 282.97);
 
-    --background: var(--color-white);
+    --background: var(--base-50);
     --foreground: var(--base-800);
     --card: var(--color-white);
     --card-foreground: var(--base-800);

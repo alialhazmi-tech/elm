@@ -19,7 +19,7 @@ export function TodayTimeline({ items }: { items: TimelineItem[] }) {
         <Link
           key={item.id}
           href={item.href}
-          className="grid grid-cols-[44px_12px_1fr] items-start gap-x-2.5 py-1.5 hover:bg-muted/60"
+          className="grid grid-cols-[44px_12px_1fr] items-start gap-x-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/50"
         >
           <span className="pt-0.5 font-display text-xs font-bold text-muted-foreground tabular-nums">{item.time}</span>
           <span

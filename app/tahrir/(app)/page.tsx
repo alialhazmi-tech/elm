@@ -179,7 +179,7 @@ export default async function OverviewPage() {
               <Link
                 key={story.id}
                 href={editorHref(story)}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-2.5 last:border-0 hover:bg-muted/60 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
               >
                 <GuardChip tone={chip.tone} label={chip.label} />
                 <span className="truncate text-[13px] font-semibold">{story.title}</span>
@@ -191,14 +191,14 @@ export default async function OverviewPage() {
               </Link>
             );
           })}
-          <PanelHeader title="آخر ما نُشر" href="/tahrir/schedule" hrefLabel="الجدولة" className="border-t" />
+          <PanelHeader title="آخر ما نُشر" href="/tahrir/schedule" hrefLabel="الجدولة" className="border-t border-border/80" />
           {latestPublished.map((story) => {
             const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
             return (
               <Link
                 key={story.id}
                 href={editorHref(story)}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-2.5 last:border-0 hover:bg-muted/60 sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
               >
                 <StatusPill status="published" label="منشور" />
                 <span className="truncate text-[13px] font-semibold">{story.title}</span>

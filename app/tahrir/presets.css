@@ -1,7 +1,7 @@
 /* لوحتا الأساس: «هوية العلم» (الافتراضية) ولوحة الكِت المحايدة — تُستورد قبل themes.css. */
 /* ===== هوية العلم — مداد وذهبي وطيف السلاسل ===== */
 [data-theme-preset="alelm"] {
-  --background: #f2f5fa;
+  --background: #edf1f7;
   --foreground: #101e30;
   --card: #ffffff;
   --card-foreground: #101e30;
@@ -9,15 +9,15 @@
   --popover-foreground: #101e30;
   --primary: #f5b92e;
   --primary-foreground: #1a1503;
-  --secondary: #eef2f8;
+  --secondary: #e2e9f3;
   --secondary-foreground: #12284b;
-  --muted: #eef2f8;
-  --muted-foreground: #5a6b84;
-  --accent: #e8eef7;
+  --muted: #e4ebf5;
+  --muted-foreground: #556680;
+  --accent: #e0e8f4;
   --accent-foreground: #101e30;
   --destructive: #b42318;
-  --border: #e3e9f2;
-  --input: #d3dce9;
+  --border: #dbe3ee;
+  --input: #cfd9e7;
   --ring: #f5b92e;
   --chart-1: #3d7ef7;
   --chart-2: #14a8d6;
@@ -35,21 +35,21 @@
   --sidebar-ring: #f5b92e;
 
   @variant dark {
-    --background: #070e1b;
+    --background: #080f1d;
     --foreground: #e8eef7;
-    --card: #101c30;
+    --card: #0f1c32;
     --card-foreground: #e8eef7;
-    --popover: #101c30;
+    --popover: #0f1c32;
     --popover-foreground: #e8eef7;
-    --secondary: #16233a;
+    --secondary: #16243d;
     --secondary-foreground: #e8eef7;
-    --muted: #16233a;
+    --muted: #152239;
     --muted-foreground: #9fb0c7;
-    --accent: #1a2a45;
+    --accent: #192a48;
     --accent-foreground: #e8eef7;
     --destructive: #f08a7d;
-    --border: #1d2b44;
-    --input: #25365a;
+    --border: #1d2e4d;
+    --input: #253960;
     --sidebar: #0b1a33;
     --sidebar-border: rgb(255 255 255 / 0.08);
   }
@@ -57,7 +57,7 @@
 
 /* ===== لوحة الكِت الافتراضية (محايدة) — كما في globals.css الأصلي ===== */
 [data-theme-preset="default"] {
-  --background: oklch(1 0 0);
+  --background: oklch(0.968 0.003 250);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -65,15 +65,15 @@
   --popover-foreground: oklch(0.145 0 0);
   --primary: oklch(0.205 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --secondary: oklch(0.94 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
+  --muted: oklch(0.94 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.94 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
+  --border: oklch(0.89 0 0);
+  --input: oklch(0.89 0 0);
   --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -91,23 +91,23 @@
   --sidebar-ring: oklch(0.708 0 0);
 
   @variant dark {
-    --background: oklch(0.145 0 0);
+    --background: oklch(0.125 0 0);
     --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
+    --card: oklch(0.185 0 0);
     --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
+    --popover: oklch(0.185 0 0);
     --popover-foreground: oklch(0.985 0 0);
     --primary: oklch(0.922 0 0);
     --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
+    --secondary: oklch(0.24 0 0);
     --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
+    --muted: oklch(0.24 0 0);
     --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
+    --accent: oklch(0.24 0 0);
     --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
+    --border: oklch(1 0 0 / 12%);
+    --input: oklch(1 0 0 / 18%);
     --ring: oklch(0.556 0 0);
     --sidebar: oklch(0.205 0 0);
     --sidebar-foreground: oklch(75.721% 0.00009 271.152);

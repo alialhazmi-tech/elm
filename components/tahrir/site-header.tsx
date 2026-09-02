@@ -28,7 +28,7 @@ export function SiteHeader({ today }: { today: string }) {
   const title = pageTitleFor(pathname, status);
 
   return (
-    <header className="sticky top-0 z-40 flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur-md md:rounded-t-xl">
+    <header className="sticky top-0 z-40 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border/80 bg-background/90 backdrop-blur-md md:rounded-t-xl">
       <div className="flex w-full items-center gap-1 px-3 sm:px-4 lg:gap-2">
         <Button
           onClick={toggleSidebar}
