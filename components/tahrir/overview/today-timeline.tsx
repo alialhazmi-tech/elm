@@ -11,31 +11,50 @@ export interface TimelineItem {
   meta: string;
 }
 
-/** جدول اليوم: وقت، عقدة (منشورة خضراء / القادمة بلون الهوية / لاحقة فارغة)، ثم العنوان والحالة. */
+/**
+ * جدول اليوم: وقت، عقدة على خط عمودي (منشورة خضراء / القادمة بلون الهوية بنبضة خفيفة / لاحقة فارغة)،
+ * ثم العنوان والحالة. القادمة تُبرز بخلفية خفيفة لأنها ما يهم الآن.
+ */
 export function TodayTimeline({ items }: { items: TimelineItem[] }) {
   return (
-    <div className="grid px-4 py-2">
+    <ol className="relative grid px-4 py-2.5">
+      <span aria-hidden className="absolute inset-y-4 start-[calc(1rem+54px+7px)] w-px bg-border" />
       {items.map((item) => (
-        <Link
-          key={item.id}
-          href={item.href}
-          className="grid grid-cols-[44px_12px_1fr] items-start gap-x-2.5 rounded-lg px-2 py-1.5 transition-colors hover:bg-muted/50"
-        >
-          <span className="pt-0.5 font-display text-xs font-bold text-muted-foreground tabular-nums">{item.time}</span>
-          <span
-            aria-hidden
+        <li key={item.id}>
+          <Link
+            href={item.href}
             className={cn(
-              "mt-1.5 size-2.5 rounded-full border-2 border-input bg-card",
-              item.state === "done" && "border-(--t-ok) bg-(--t-ok)",
-              item.state === "next" && "border-primary bg-primary",
+              "grid grid-cols-[46px_16px_minmax(0,1fr)] items-start gap-x-2.5 rounded-lg px-2 py-2 transition-colors outline-none hover:bg-muted/50 focus-visible:bg-muted/50",
+              item.state === "next" && "bg-primary/8",
             )}
-          />
-          <span className="grid min-w-0 leading-tight">
-            <span className="truncate text-[12.5px] font-semibold">{item.title}</span>
-            <span className="text-[11px] text-muted-foreground">{item.meta}</span>
-          </span>
-        </Link>
+          >
+            <span
+              className={cn(
+                "pt-0.5 font-display text-[13px] font-bold tabular-nums",
+                item.state === "done" ? "text-muted-foreground" : "text-foreground",
+              )}
+            >
+              {item.time}
+            </span>
+            <span className="relative flex h-5 items-center justify-center">
+              <span
+                aria-hidden
+                className={cn(
+                  "relative z-10 size-3 rounded-full border-2 border-input bg-card",
+                  item.state === "done" && "border-(--t-ok) bg-(--t-ok)",
+                  item.state === "next" && "border-primary bg-primary ring-4 ring-primary/20",
+                )}
+              />
+            </span>
+            <span className="grid min-w-0 leading-tight">
+              <span className={cn("truncate text-sm font-semibold", item.state === "done" ? "text-foreground/85" : "text-foreground")}>
+                {item.title}
+              </span>
+              <span className="text-xs text-muted-foreground">{item.meta}</span>
+            </span>
+          </Link>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }
