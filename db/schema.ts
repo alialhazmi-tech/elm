@@ -138,15 +138,54 @@ export const seriesProposals = pgTable("series_proposals", {
   createdAt: text("created_at").notNull(),
 });
 
-/** مستخدمو لوحة «تحرير العلم» — الأدوار: editor | approver | chief. */
+/** أدوار لوحة «تحرير العلم» — الأربعة النظامية تُزرع ولا تُحذف، وما بعدها يُنشأ من الشاشة. */
+export const roles = pgTable("roles", {
+  id: text("id").primaryKey(),
+  label: text("label").notNull(),
+  description: text("description").notNull().default(""),
+  /** الدور النظامي محمي من الحذف، ومسؤول النظام محمي من سحب صلاحيته الشاملة. */
+  isSystem: integer("is_system").notNull().default(0),
+  position: integer("position").notNull().default(0),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
+/** صف واحد لكل صلاحية ممنوحة لدور — إلغاء صلاحية = حذف صف. المفاتيح من lib/tahrir/permissions.ts. */
+export const rolePermissions = pgTable("role_permissions", {
+  roleId: text("role_id").notNull(),
+  permissionKey: text("permission_key").notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.roleId, table.permissionKey] }),
+]);
+
+/** استثناء فردي فوق الدور: منح صلاحية لعضو بعينه أو منعه منها دون دور جديد. */
+export const userPermissions = pgTable("user_permissions", {
+  userId: text("user_id").notNull(),
+  permissionKey: text("permission_key").notNull(),
+  /** allow | deny */
+  effect: text("effect").notNull().default("allow"),
+}, (table) => [
+  primaryKey({ columns: [table.userId, table.permissionKey] }),
+]);
+
+/** مستخدمو لوحة «تحرير العلم» — الدور مفتاح في roles، والحالة active | suspended. */
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   displayName: text("display_name").notNull(),
+  email: text("email").notNull().default(""),
   role: text("role").notNull().default("editor"),
   /** PBKDF2-SHA256: صيغة salt:iterations:hash بترميز hex. */
   passwordHash: text("password_hash").notNull(),
+  status: text("status").notNull().default("active"),
+  suspendedAt: text("suspended_at"),
+  suspendedBy: text("suspended_by"),
+  suspendReason: text("suspend_reason").notNull().default(""),
+  lastLoginAt: text("last_login_at"),
+  /** كلمة مرور مؤقتة (عضو جديد أو إعادة تعيين) — يُجبر على تغييرها قبل دخول اللوحة. */
+  mustChangePassword: integer("must_change_password").notNull().default(0),
   createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at"),
 });
 
 /** سجل تدقيق غير قابل للتعديل: كل فعل تحريري يُدوَّن. */

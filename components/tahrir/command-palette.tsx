@@ -15,15 +15,18 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 
-import { NAV_GROUPS } from "./nav";
+import { NAV_GROUPS, type NavGroup } from "./nav";
 
 /** لوحة الأوامر ⌘K — تنقّل بين الشاشات وإجراءات سريعة؛ الاختصار بـ code لا key ليعمل على لوحة المفاتيح العربية. */
 export function CommandPalette({
   open,
   onOpenChange,
+  groups = NAV_GROUPS,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** المجموعات المرشّحة بصلاحيات العضو — الافتراضي الكاملة. */
+  groups?: NavGroup[];
 }) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -70,7 +73,7 @@ export function CommandPalette({
             <span>تبديل الوضع الفاتح والداكن</span>
           </CommandItem>
         </CommandGroup>
-        {NAV_GROUPS.map((group) => (
+        {groups.map((group) => (
           <Fragment key={group.title}>
             <CommandSeparator />
             <CommandGroup heading={group.title}>

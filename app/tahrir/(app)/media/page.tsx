@@ -1,5 +1,5 @@
 import { MediaClient } from "@/components/tahrir/media/media-client";
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { countMedia, listMediaPage, type MediaFilter } from "@/lib/tahrir/service";
 
 export const metadata = { title: "الوسائط" };
@@ -14,7 +14,7 @@ export default async function MediaPage({
   searchParams: Promise<{ f?: string; p?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const session = await getSession();
+  const actor = await loadActor();
   const filter = (FILTERS.has(params.f ?? "") ? params.f : "all") as MediaFilter;
   const page = Math.max(1, Number(params.p) || 1);
   const q = (params.q ?? "").trim().slice(0, 80);
@@ -33,7 +33,7 @@ export default async function MediaPage({
         <span className="text-xs text-muted-foreground tabular-nums">{q ? `${counts.all} صورة تطابق «${q}»` : `${counts.all} صورة في المكتبة`}</span>
       </div>
       <MediaClient
-        canClear={session ? APPROVER_ROLES.includes(session.role) : false}
+        canClear={actor?.can("media.rights") ?? false}
         filter={filter}
         q={q}
         counts={counts}

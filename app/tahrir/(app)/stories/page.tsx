@@ -9,7 +9,7 @@ import { stripHtmlToText } from "@/lib/content/html";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { ALL_SERIES } from "@/lib/content/series";
 import { runPolicyGuard } from "@/lib/policy";
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
   ACTIVE_STATUSES,
@@ -57,8 +57,8 @@ export default async function StoriesPage({
   searchParams: Promise<{ status?: string; p?: string; q?: string; series?: string }>;
 }) {
   const params = await searchParams;
-  const session = await getSession();
-  const canArchive = session ? APPROVER_ROLES.includes(session.role) : false;
+  const actor = await loadActor();
+  const canArchive = actor?.can("story.archive") ?? false;
   const status = VALID_STATUSES.has(params.status ?? "") ? (params.status as StoryStatus) : undefined;
   const page = Math.max(1, Number(params.p) || 1);
   const q = (params.q ?? "").trim().slice(0, 80);

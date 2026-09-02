@@ -9,6 +9,8 @@ import {
   LayersIcon,
   ListIcon,
   PenLineIcon,
+  ShieldCheckIcon,
+  UsersIcon,
   ChartNoAxesColumnIcon,
   SparklesIcon,
   Settings2Icon,
@@ -31,6 +33,8 @@ export interface NavItem {
   match?: string | null;
   /** قيمة status في الاستعلام التي تنقل التمييز إلى هذا البند (الاعتماد). */
   status?: string;
+  /** الصلاحية اللازمة لظهور البند — غيابها يعني ظهوره لكل عضو فعّال. الإخفاء تحسين تجربة؛ الفحص الملزم في API. */
+  permission?: string;
 }
 
 export interface NavGroup {
@@ -45,9 +49,10 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "نظرة اليوم", href: "/tahrir", icon: LayoutDashboardIcon, exact: true },
       { title: "المواد", href: "/tahrir/stories", icon: ListIcon, badge: "total" },
       { title: "المحرر", href: "/tahrir/editor/new", icon: PenLineIcon, match: "/tahrir/editor" },
-      { title: "الجدولة", href: "/tahrir/schedule", icon: CalendarClockIcon, badge: "scheduled" },
+      { title: "الجدولة", href: "/tahrir/schedule", icon: CalendarClockIcon, badge: "scheduled", permission: "story.schedule" },
       {
         title: "الاعتماد",
+        permission: "story.approve",
         href: "/tahrir/stories?status=review",
         icon: CheckCheckIcon,
         badge: "review",
@@ -60,27 +65,43 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "المحتوى",
     items: [
-      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon },
+      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage" },
       { title: "السلاسل", href: "/tahrir/series", icon: LayersIcon },
-      { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon },
+      { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon, permission: "media.upload" },
     ],
   },
   {
     title: "الذكاء الاصطناعي",
     items: [
-      { title: "استوديو الإنفوجرافيك", href: "/tahrir/infographics", icon: BarChart3Icon },
-      { title: "توليد الصور", href: "/tahrir/ai-images", icon: SparklesIcon },
-      { title: "إعدادات الذكاء", href: "/tahrir/ai-settings", icon: Settings2Icon },
+      { title: "استوديو الإنفوجرافيك", href: "/tahrir/infographics", icon: BarChart3Icon, permission: "ai.infographic" },
+      { title: "توليد الصور", href: "/tahrir/ai-images", icon: SparklesIcon, permission: "ai.image" },
+      { title: "إعدادات الذكاء", href: "/tahrir/ai-settings", icon: Settings2Icon, permission: "ai.settings" },
     ],
   },
   {
     title: "المنصة",
     items: [
-      { title: "الإحصاءات", href: "/tahrir/stats", icon: ChartNoAxesColumnIcon },
-      { title: "سجل التدقيق", href: "/tahrir/audit", icon: FileClockIcon },
+      { title: "الإحصاءات", href: "/tahrir/stats", icon: ChartNoAxesColumnIcon, permission: "stats.view" },
+      { title: "سجل التدقيق", href: "/tahrir/audit", icon: FileClockIcon, permission: "audit.view" },
+    ],
+  },
+  {
+    title: "الإدارة",
+    items: [
+      { title: "الأعضاء", href: "/tahrir/members", icon: UsersIcon, permission: "users.view" },
+      { title: "الأدوار والصلاحيات", href: "/tahrir/roles", icon: ShieldCheckIcon, permission: "roles.manage" },
     ],
   },
 ];
+
+/** المجموعات المرئية لعضو بصلاحياته — المجموعة الفارغة تختفي كاملة. */
+export function navGroupsFor(allowed: string[]): NavGroup[] {
+  const set = new Set(allowed);
+  const can = (permission?: string) => !permission || set.has("*") || set.has(permission);
+  return NAV_GROUPS.map((group) => ({ ...group, items: group.items.filter((item) => can(item.permission)) })).filter(
+    (group) => group.items.length > 0,
+  );
+}
 
 const matchPrefix = (item: NavItem) => item.match ?? item.href.split("?")[0];
 

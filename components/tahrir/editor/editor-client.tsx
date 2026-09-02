@@ -45,7 +45,8 @@ interface EditorInitial {
 type InspectorTab = "details" | "seo" | "guard" | "ai";
 
 interface Props {
-  role: string;
+  /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
+  canApprove: boolean;
   series: Array<{ slug: string; name: string; color: string }>;
   sections: Array<[string, string]>;
   recentMedia: Array<{ url: string; filename: string }>;
@@ -108,7 +109,7 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * محرر المادة — المنطق (الحارس الحي، الحفظ، سير الاعتماد، التحرير الشامل المبثوث) كما هو منذ المرحلة
  * الأولى؛ الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ role, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ canApprove, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -491,7 +492,6 @@ export function EditorClient({ role, series, sections, recentMedia, initial }: P
   const titleWords = wordCount(title);
   const blocking = report?.counts.blocking ?? 0;
   const gateOpen = !guardBusy && report?.canRequestApproval === true;
-  const canApprove = role === "approver" || role === "chief";
   const publicHref = status === "published" && id && slug ? `/${section}/${id}/${slug}` : null;
 
   return (

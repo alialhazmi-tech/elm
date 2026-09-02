@@ -4,15 +4,14 @@ import { buildDynamicInfographic, generateInfographicPlan } from "@/lib/ai/infog
 import { type InfographicThemeId } from "@/lib/ai/infographic-types";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { audit } from "@/lib/tahrir/service";
 
 /** توليد مخطط إنفوجرافيك تفاعلي ذكي من نص أو موضوع */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "الجلسة منتهية، يرجى تسجيل الدخول." }, { status: 401 });
-  }
+  const access = await requirePermission("ai.infographic");
+  if (!access.ok) return access.response;
+  const session = access.actor;
 
   const input = (await request.json().catch(() => null)) as {
     text?: string;

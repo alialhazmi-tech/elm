@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { addProposal, decideProposal } from "@/lib/tahrir/service";
 
 /** رفع مقترح سلسلة جديدة — بشروط الدستور الثلاثة. */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requirePermission("series.propose");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const input = (await request.json().catch(() => null)) as {
     name?: string;
@@ -36,11 +37,9 @@ export async function POST(request: Request) {
 
 /** قرار رئيس التحرير في مقترح: قبول (تفعيله التقني إصدار لاحق) أو رفض. */
 export async function PATCH(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
-  if (session.role !== "chief") {
-    return NextResponse.json({ error: "قرار المقترحات لرئيس التحرير." }, { status: 403 });
-  }
+  const gate = await requirePermission("series.decide", "قرار المقترحات لرئيس التحرير.");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id, decision } = (await request.json().catch(() => ({}))) as {
     id?: string;

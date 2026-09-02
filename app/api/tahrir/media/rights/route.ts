@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { setMediaRights } from "@/lib/tahrir/service";
 
 /** توثيق حقوق صورة أو سحبه — من صلاحية المعتمدين (الدستور §12). */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
-  if (!APPROVER_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "توثيق الحقوق من صلاحية المعتمدين." }, { status: 403 });
-  }
+  const gate = await requirePermission("media.rights", "توثيق الحقوق من صلاحية المعتمدين.");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id, rightsCleared, flags } = (await request.json().catch(() => ({}))) as {
     id?: string;

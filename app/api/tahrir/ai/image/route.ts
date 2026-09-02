@@ -4,15 +4,16 @@ import { generateImages, IMAGE_STYLES } from "@/lib/ai/images";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, logUsage } from "@/lib/ai/usage";
 import { putStoredImage } from "@/lib/storage/images";
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { addMedia, audit } from "@/lib/tahrir/service";
 
 /** كلفة تقديرية لكل صورة بالسنت — تُحتسب ضمن السقوف نفسها. */
 const IMAGE_COST_CENTS = 4;
 
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const access = await requirePermission("ai.image");
+  if (!access.ok) return access.response;
+  const session = access.actor;
 
   const input = (await request.json().catch(() => null)) as {
     prompt?: string;

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { blockingFindings } from "@/lib/policy/report";
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
 
 /**
@@ -11,8 +11,9 @@ import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
  * أي مخالفة قاطعة تعيد 422 وتمنع الإرسال مهما تحايلت الواجهة.
  */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requirePermission("story.submit");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id } = (await request.json().catch(() => ({}))) as { id?: string };
   const story = id ? await getStory(id) : null;

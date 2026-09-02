@@ -16,7 +16,7 @@ test("أرشفة المادة تخفيها بالحالة ولا تحذف الم
   assert.match(service, /if \(story\.status === "draft"\) return "is-draft"/);
   assert.match(service, /status: "archived"/);
   assert.match(service, /status: "draft"/);
-  assert.match(archiveRoute, /APPROVER_ROLES/);
+  assert.match(archiveRoute, /requirePermission\("story\.archive"/);
   assert.match(archiveRoute, /archiveStory/);
   assert.match(restoreRoute, /restoreArchived/);
   assert.match(deleteRoute, /الحذف النهائي متاح للمسودات فقط/);

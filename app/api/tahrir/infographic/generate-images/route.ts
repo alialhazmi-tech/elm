@@ -5,17 +5,16 @@ import { type InfographicData } from "@/lib/ai/infographic-types";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, logUsage } from "@/lib/ai/usage";
 import { putStoredImage } from "@/lib/storage/images";
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { addMedia, audit } from "@/lib/tahrir/service";
 
 /**
  * توليد الصور الحقيقية للإنفوجرافيك عبر Gemini (Nano Banana) أو OpenAI DALL-E 3
  */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) {
-    return NextResponse.json({ error: "الجلسة منتهية، يرجى تسجيل الدخول." }, { status: 401 });
-  }
+  const access = await requirePermission("ai.infographic");
+  if (!access.ok) return access.response;
+  const session = access.actor;
 
   const input = (await request.json().catch(() => null)) as {
     infographic?: InfographicData;

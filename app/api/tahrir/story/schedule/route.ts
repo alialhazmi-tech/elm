@@ -3,17 +3,15 @@ import { NextResponse } from "next/server";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { blockingFindings } from "@/lib/policy/report";
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { getStory, scheduleStory } from "@/lib/tahrir/service";
 
 /** جدولة النشر — للمعتمدين؛ الحارس يفحص عند الجدولة وسيفحص ثانية لحظة الموعد. */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
-  if (!APPROVER_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "الجدولة من صلاحية المعتمدين." }, { status: 403 });
-  }
+  const gate = await requirePermission("story.schedule", "الجدولة من صلاحية المعتمدين.");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id, scheduledAt } = (await request.json().catch(() => ({}))) as {
     id?: string;

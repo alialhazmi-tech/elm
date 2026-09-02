@@ -4,7 +4,7 @@ import { Panel } from "@/components/tahrir/overview/panel";
 import { Progress } from "@/components/ui/progress";
 import { keyStatus, loadAiSettings } from "@/lib/ai/settings";
 import { usageTotals } from "@/lib/ai/usage";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 
 export const metadata = { title: "إعدادات الذكاء" };
 export const dynamic = "force-dynamic";
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 export default async function AiSettingsPage() {
-  const session = await getSession();
+  const actor = await loadActor();
   const [settings, totals] = await Promise.all([loadAiSettings(), usageTotals()]);
   const keys = keyStatus();
   const providers: Array<[string, string, string, boolean, string]> = [
@@ -46,7 +46,7 @@ export default async function AiSettingsPage() {
               </div>
             ))}
           </Panel>
-          <AiSettingsClient initial={settings} isChief={session?.role === "chief"} />
+          <AiSettingsClient initial={settings} isChief={actor?.can("ai.settings") ?? false} />
         </div>
         <div className="grid gap-3">
           <Panel title="سقوف الكلفة — يوقف الخادم تجاوزها">

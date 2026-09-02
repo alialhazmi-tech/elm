@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { stripHtmlToText } from "@/lib/content/html";
 import { runPolicyGuard } from "@/lib/policy";
 import { blockingFindings } from "@/lib/policy/report";
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
 
@@ -12,11 +12,9 @@ import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
  * الحارس يُفحص هنا أيضًا: صلاحية النشر لا تعلو على المخالفات القاطعة.
  */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
-  if (!APPROVER_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "الاعتماد من صلاحية المعتمدين فقط." }, { status: 403 });
-  }
+  const gate = await requirePermission("story.publish", "الاعتماد من صلاحية المعتمدين فقط.");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id } = (await request.json().catch(() => ({}))) as { id?: string };
   const story = id ? await getStory(id) : null;

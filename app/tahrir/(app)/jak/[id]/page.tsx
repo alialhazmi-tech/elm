@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { SECTION_NAMES } from "@/lib/content/seed";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { getJakSource, listSlides } from "@/lib/tahrir/jak";
 import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { JakEditor } from "@/components/tahrir/jak/jak-editor";
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function JakEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const actor = await loadActor();
   const story = await getStory(id).catch(() => null);
   if (!story || story.format !== "jakalelm") notFound();
 
@@ -29,7 +29,7 @@ export default async function JakEditPage({ params }: { params: Promise<{ id: st
   return (
     <main className="flex flex-col gap-3">
       <JakEditor
-        role={session?.role ?? "editor"}
+        canApprove={actor?.can("story.publish") ?? false}
         sections={sections}
         recentMedia={recentMedia}
         initial={{
