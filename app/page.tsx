@@ -123,15 +123,32 @@ function CardsPanel({ panel }: { panel: SectionPanel }) {
   );
 }
 
-/** الإيقاع الثالث — عمود مضغوط: رأس القسم وأربعة صفوف بلا صور. */
+/** الإيقاع الثالث — بطاقة قسم أنيقة وناعمة: مادة قائدة بمصغّر صورة + صفوف فرعية. */
 function ListPanel({ panel }: { panel: SectionPanel }) {
-  const rows = [panel.lead, ...panel.rows].filter((s): s is Story => s !== null).slice(0, 4);
+  const lead = panel.lead ?? panel.rows[0] ?? null;
+  const secondary = (panel.lead ? panel.rows : panel.rows.slice(1)).slice(0, 3);
   return (
     <section className="hm-list" aria-label={panel.name} style={{ "--pc": panel.color } as React.CSSProperties}>
       <SectionHead title={panel.name} href={`/${panel.slug}`} />
-      <div className="hm-rows">
-        {rows.map((story) => <Row key={story.id} story={story} />)}
-      </div>
+      {lead ? (
+        <article className="hm-list-lead" data-story-id={lead.id}>
+          {lead.image ? (
+            <Link className="hm-list-lead-media" href={storyHref(lead)} aria-hidden="true" tabIndex={-1}>
+              <Image src={lead.image} alt="" fill sizes="(max-width: 640px) 100vw, 240px" />
+            </Link>
+          ) : null}
+          <div className="hm-list-lead-body">
+            <Kick story={lead} />
+            <h3><Link className="story-link" href={storyHref(lead)}>{lead.title}</Link></h3>
+            {lead.excerpt ? <p className="hm-list-lead-dek">{trimExcerpt(lead.excerpt, 100)}</p> : null}
+          </div>
+        </article>
+      ) : null}
+      {secondary.length > 0 ? (
+        <div className="hm-rows">
+          {secondary.map((story) => <Row key={story.id} story={story} />)}
+        </div>
+      ) : null}
     </section>
   );
 }
