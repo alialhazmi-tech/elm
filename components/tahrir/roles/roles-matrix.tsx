@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckIcon, CopyPlusIcon, LockIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, CopyPlusIcon, LockIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,13 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -129,42 +122,49 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
 
       <Card className="gap-0 overflow-hidden py-0">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] border-collapse text-sm">
+          <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-card">
-              <tr className="border-b">
-                <th className="px-4 py-2.5 text-start font-display text-xs font-semibold text-muted-foreground">الصلاحية</th>
+              <tr className="border-b border-border/80 bg-muted/20">
+                <th className="w-80 min-w-[240px] px-4 py-3 text-start font-display text-xs font-semibold text-foreground">الصلاحية</th>
                 {roles.map((role) => (
-                  <th key={role.id} className="min-w-28 px-2 py-2.5 text-center align-top">
-                    <div className="grid justify-items-center gap-0.5">
-                      <span className="inline-flex items-center gap-1 font-display text-xs font-bold">
-                        {role.id === ADMIN_ROLE ? <LockIcon className="size-3 text-(--t-warn)" /> : null}
+                  <th key={role.id} className="w-32 min-w-[110px] border-s border-border/50 px-2 py-3 text-center align-top">
+                    <div className="grid justify-items-center gap-1">
+                      <span className="inline-flex items-center gap-1 font-display text-xs font-bold text-foreground">
+                        {role.id === ADMIN_ROLE ? <LockIcon className="size-3 text-amber-500" /> : null}
                         {role.label}
                       </span>
-                      <span className="text-[10.5px] text-muted-foreground tabular-nums">{role.members} عضو</span>
+                      <span className="inline-block rounded-full bg-muted/70 px-2 py-0.2 text-[10px] font-medium text-muted-foreground tabular-nums">
+                        {role.members} عضو
+                      </span>
                       {role.id !== ADMIN_ROLE ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="icon-xs" variant="ghost" aria-label={`إجراءات ${role.label}`}>
-                              <MoreHorizontalIcon />
+                        <div className="mt-0.5 flex items-center gap-0.5">
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            className="size-5 text-muted-foreground hover:text-foreground"
+                            title="تعديل الاسم والوصف"
+                            aria-label={`تعديل ${role.label}`}
+                            onClick={() => setDialog({ kind: "rename", role })}
+                          >
+                            <PencilIcon className="size-3" />
+                          </Button>
+                          {!role.isSystem ? (
+                            <Button
+                              size="icon-xs"
+                              variant="ghost"
+                              className="size-5 text-muted-foreground hover:text-destructive disabled:opacity-30"
+                              disabled={role.members > 0}
+                              title={role.members > 0 ? "لا يمكن حذف دور به أعضاء" : "حذف الدور"}
+                              aria-label={`حذف ${role.label}`}
+                              onClick={() => setDialog({ kind: "delete", role })}
+                            >
+                              <Trash2Icon className="size-3" />
                             </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="center" className="w-44">
-                            <DropdownMenuItem onSelect={() => setDialog({ kind: "rename", role })}>
-                              <PencilIcon />
-                              الاسم والوصف
-                            </DropdownMenuItem>
-                            {!role.isSystem ? (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem variant="destructive" disabled={role.members > 0} onSelect={() => setDialog({ kind: "delete", role })}>
-                                  <Trash2Icon />
-                                  حذف الدور
-                                </DropdownMenuItem>
-                              </>
-                            ) : null}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : null}
+                          ) : null}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">شاملة</span>
+                      )}
                     </div>
                   </th>
                 ))}
@@ -276,16 +276,22 @@ function GroupRows({
   return (
     <>
       <tr>
-        <th colSpan={columnCount} className="bg-muted/60 px-4 py-1.5 text-start font-display text-[11px] font-bold tracking-wide text-muted-foreground">
+        <th
+          colSpan={columnCount}
+          className="border-y border-border/80 bg-muted/35 px-4 py-2 text-start font-display text-xs font-bold tracking-wide text-foreground"
+        >
           {group.label}
         </th>
       </tr>
       {group.permissions.map((permission) => (
-        <tr key={permission.key} className="border-b last:border-0 hover:bg-muted/30">
-          <th scope="row" className="px-4 py-2 text-start font-normal">
-            <div className="text-[13px]">{permission.label}</div>
-            <div className="text-[10.5px] text-muted-foreground" title={permission.description}>
-              <code dir="ltr" className="font-mono">{permission.key}</code>
+        <tr key={permission.key} className="border-b border-border/50 last:border-0 transition-colors hover:bg-muted/30">
+          <th scope="row" className="w-80 min-w-[240px] px-4 py-2.5 text-start font-normal">
+            <div className="text-[13px] font-semibold text-foreground">{permission.label}</div>
+            <div className="text-[11px] leading-tight text-muted-foreground" title={permission.description}>
+              {permission.description ? <span className="block">{permission.description}</span> : null}
+              <code dir="ltr" className="mt-0.5 inline-block rounded bg-muted/70 px-1 py-0.2 font-mono text-[10px] text-muted-foreground/90">
+                {permission.key}
+              </code>
             </div>
           </th>
           {roles.map((role) => {
@@ -293,16 +299,24 @@ function GroupRows({
             const checked = has(role.id, permission.key);
             const cell = `${role.id}:${permission.key}`;
             return (
-              <td key={role.id} className={cn("px-2 py-2 text-center", locked && "bg-(--t-warn-bg)/40")}>
+              <td
+                key={role.id}
+                className={cn(
+                  "w-32 min-w-[110px] border-s border-border/50 px-2 py-2 text-center align-middle",
+                  locked && "bg-amber-500/[0.04]",
+                )}
+              >
                 {locked ? (
                   <CheckIcon aria-label="شاملة" className="mx-auto size-4 text-(--t-ok)" />
                 ) : (
-                  <Checkbox
-                    aria-label={`${permission.label} — ${role.label}`}
-                    checked={checked}
-                    disabled={pending === cell}
-                    onCheckedChange={(value) => onToggle(role.id, permission.key, value === true)}
-                  />
+                  <div className="flex items-center justify-center">
+                    <Checkbox
+                      aria-label={`${permission.label} — ${role.label}`}
+                      checked={checked}
+                      disabled={pending === cell}
+                      onCheckedChange={(value) => onToggle(role.id, permission.key, value === true)}
+                    />
+                  </div>
                 )}
               </td>
             );

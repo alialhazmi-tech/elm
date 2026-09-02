@@ -4,17 +4,15 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   KeyRoundIcon,
-  MoreHorizontalIcon,
-  PauseCircleIcon,
   PencilIcon,
-  PlayCircleIcon,
   RefreshCwIcon,
+  SearchIcon,
   SlidersHorizontalIcon,
   UserPlusIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { GuardChip } from "@/components/tahrir/badges";
+import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,13 +26,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -134,58 +125,74 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
+            <SearchIcon className="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(event) => setQ(event.target.value)}
+              placeholder="ابحث بالاسم أو البريد…"
+              className="h-8 w-52 bg-card ps-8 text-xs sm:w-60"
+              aria-label="بحث في الأعضاء"
+            />
+          </div>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger size="sm" className="h-8 w-36 bg-card text-xs" aria-label="تصفية بالدور">
+              <SelectValue placeholder="كل الأدوار" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الأدوار</SelectItem>
+              {roles.map((role) => (
+                <SelectItem key={role.id} value={role.id}>
+                  {role.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="inline-flex rounded-lg border border-border/80 bg-muted/30 p-0.5">
+            {(
+              [
+                ["all", "الكل"],
+                ["active", "فعّال"],
+                ["suspended", "معلّق"],
+              ] as Array<[Filter, string]>
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                className={cn(
+                  "rounded-md px-2.5 py-1 font-display text-xs font-semibold transition-colors",
+                  filter === key
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+                onClick={() => setFilter(key)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {can.manage ? (
-          <Button size="sm" onClick={() => setAction({ kind: "create" })}>
-            <UserPlusIcon data-icon="inline-start" />
+          <Button size="sm" className="h-8 font-display font-bold shadow-xs" onClick={() => setAction({ kind: "create" })}>
+            <UserPlusIcon data-icon="inline-start" className="size-3.5" />
             إضافة عضو
           </Button>
         ) : null}
-        <div className="inline-flex gap-1">
-          {(
-            [
-              ["all", "الكل"],
-              ["active", "فعّال"],
-              ["suspended", "معلّق"],
-            ] as Array<[Filter, string]>
-          ).map(([key, label]) => (
-            <Button key={key} size="xs" variant={filter === key ? "default" : "outline"} onClick={() => setFilter(key)}>
-              {label}
-            </Button>
-          ))}
-        </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger size="sm" className="w-40" aria-label="تصفية بالدور">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">كل الأدوار</SelectItem>
-            {roles.map((role) => (
-              <SelectItem key={role.id} value={role.id}>
-                {role.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
-          value={q}
-          onChange={(event) => setQ(event.target.value)}
-          placeholder="ابحث بالاسم أو البريد…"
-          className="h-8 w-56 text-xs"
-          aria-label="بحث في الأعضاء"
-        />
       </div>
 
       <Card className="gap-0 overflow-hidden py-0">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>العضو</TableHead>
-              <TableHead className="hidden md:table-cell">الدور</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="hidden lg:table-cell">آخر دخول</TableHead>
-              <TableHead className="hidden xl:table-cell">أُضيف</TableHead>
-              <TableHead className="w-10" />
+            <TableRow className="border-b border-border/80 bg-muted/20 hover:bg-muted/20">
+              <TableHead className="ps-4 font-display text-xs font-semibold">العضو</TableHead>
+              <TableHead className="w-40 hidden font-display text-xs font-semibold md:table-cell">الدور</TableHead>
+              <TableHead className="w-48 font-display text-xs font-semibold">الحالة</TableHead>
+              <TableHead className="w-36 hidden font-display text-xs font-semibold lg:table-cell">آخر دخول</TableHead>
+              <TableHead className="w-28 hidden font-display text-xs font-semibold xl:table-cell">أُضيف</TableHead>
+              <TableHead className="w-36 pe-4 font-display text-xs font-semibold text-start">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -199,8 +206,8 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
             {visible.map((member) => {
               const isMe = member.id === me;
               return (
-                <TableRow key={member.id} className={cn(member.status === "suspended" && "opacity-70")}>
-                  <TableCell>
+                <TableRow key={member.id} className={cn("transition-colors hover:bg-muted/30", member.status === "suspended" && "opacity-75")}>
+                  <TableCell className="ps-4 py-2.5">
                     <div className="flex items-center gap-2.5">
                       <Avatar className="size-8">
                         <AvatarFallback className="font-display text-xs font-bold">{member.displayName.slice(0, 1)}</AvatarFallback>
@@ -216,73 +223,102 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="w-40 hidden py-2.5 md:table-cell">
                     <span className={cn("font-display text-xs font-semibold", member.role === ADMIN_ROLE && "text-(--t-warn)")}>{member.roleLabel}</span>
                     {member.overrides.length > 0 ? (
-                      <span className="ms-1.5 text-[10.5px] text-muted-foreground tabular-nums" title="استثناءات فردية">
-                        +{member.overrides.length} استثناء
+                      <span className="ms-1.5 inline-block rounded bg-muted/70 px-1 py-0.2 text-[10px] text-muted-foreground tabular-nums" title="استثناءات فردية">
+                        +{member.overrides.length}
                       </span>
                     ) : null}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <GuardChip tone={member.status === "active" ? "ok" : "block"} label={member.status === "active" ? "فعّال" : "معلّق"} />
-                      {member.mustChangePassword ? <GuardChip tone="warn" label="كلمة مؤقتة" /> : null}
-                    </div>
-                    {member.status === "suspended" && member.suspendReason ? (
-                      <div className="mt-0.5 max-w-56 truncate text-[10.5px] text-muted-foreground" title={member.suspendReason}>
-                        {member.suspendReason}
+                  <TableCell className="w-48 py-2.5">
+                    <div className="flex items-center gap-2.5">
+                      {can.suspend ? (
+                        <Switch
+                          checked={member.status === "active"}
+                          disabled={isMe || busy}
+                          aria-label={member.status === "active" ? `تعليق عضوية ${member.displayName}` : `استئناف عضوية ${member.displayName}`}
+                          title={
+                            isMe
+                              ? "لا يمكنك تعليق حسابك الحالي"
+                              : member.status === "active"
+                                ? "انقر لتعليق العضوية"
+                                : "انقر لاستئناف العضوية"
+                          }
+                          onCheckedChange={(checked) => {
+                            if (!checked) {
+                              setAction({ kind: "suspend", member });
+                            } else {
+                              setAction({ kind: "reactivate", member });
+                            }
+                          }}
+                        />
+                      ) : null}
+                      <div className="grid leading-tight">
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              "text-xs font-semibold",
+                              member.status === "active" ? "text-(--t-ok)" : "text-muted-foreground",
+                            )}
+                          >
+                            {member.status === "active" ? "فعّال" : "معلّق"}
+                          </span>
+                          {member.mustChangePassword ? (
+                            <span className="rounded-full bg-amber-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                              مؤقتة
+                            </span>
+                          ) : null}
+                        </div>
+                        {member.status === "suspended" && member.suspendReason ? (
+                          <span className="max-w-36 truncate text-[10px] text-muted-foreground" title={member.suspendReason}>
+                            {member.suspendReason}
+                          </span>
+                        ) : null}
                       </div>
-                    ) : null}
+                    </div>
                   </TableCell>
-                  <TableCell className="hidden text-xs text-muted-foreground tabular-nums whitespace-nowrap lg:table-cell">{when(member.lastLoginAt)}</TableCell>
-                  <TableCell className="hidden text-xs text-muted-foreground tabular-nums whitespace-nowrap xl:table-cell">{member.createdAt.slice(0, 10)}</TableCell>
-                  <TableCell className="pe-2">
-                    {can.manage || can.suspend || can.overrides ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="icon-xs" variant="ghost" aria-label={`إجراءات ${member.displayName}`}>
-                            <MoreHorizontalIcon />
+                  <TableCell className="w-36 hidden py-2.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap lg:table-cell">{when(member.lastLoginAt)}</TableCell>
+                  <TableCell className="w-28 hidden py-2.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap xl:table-cell">{member.createdAt.slice(0, 10)}</TableCell>
+                  <TableCell className="w-36 pe-4 py-2.5">
+                    <div className="flex items-center gap-1">
+                      {can.manage ? (
+                        <>
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            title="تعديل الاسم والبريد والدور"
+                            aria-label={`تعديل ${member.displayName}`}
+                            onClick={() => setAction({ kind: "edit", member })}
+                          >
+                            <PencilIcon className="size-3.5" />
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52">
-                          {can.manage ? (
-                            <>
-                              <DropdownMenuItem onSelect={() => setAction({ kind: "edit", member })}>
-                                <PencilIcon />
-                                الاسم والبريد والدور
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onSelect={() => setAction({ kind: "password", member })}>
-                                <KeyRoundIcon />
-                                كلمة مرور مؤقتة
-                              </DropdownMenuItem>
-                            </>
-                          ) : null}
-                          {can.overrides && member.role !== ADMIN_ROLE ? (
-                            <DropdownMenuItem onSelect={() => setAction({ kind: "overrides", member })}>
-                              <SlidersHorizontalIcon />
-                              استثناءات فردية
-                            </DropdownMenuItem>
-                          ) : null}
-                          {can.suspend && !isMe ? (
-                            <>
-                              <DropdownMenuSeparator />
-                              {member.status === "active" ? (
-                                <DropdownMenuItem variant="destructive" onSelect={() => setAction({ kind: "suspend", member })}>
-                                  <PauseCircleIcon />
-                                  تعليق العضوية
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem onSelect={() => setAction({ kind: "reactivate", member })}>
-                                  <PlayCircleIcon />
-                                  استئناف العضوية
-                                </DropdownMenuItem>
-                              )}
-                            </>
-                          ) : null}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : null}
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            title="توليد كلمة مرور مؤقتة"
+                            aria-label={`كلمة مرور مؤقتة لـ ${member.displayName}`}
+                            onClick={() => setAction({ kind: "password", member })}
+                          >
+                            <KeyRoundIcon className="size-3.5" />
+                          </Button>
+                        </>
+                      ) : null}
+                      {can.overrides && member.role !== ADMIN_ROLE ? (
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="استثناءات الصلاحيات الفردية"
+                          aria-label={`استثناءات ${member.displayName}`}
+                          onClick={() => setAction({ kind: "overrides", member })}
+                        >
+                          <SlidersHorizontalIcon className="size-3.5" />
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
