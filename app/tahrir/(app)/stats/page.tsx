@@ -4,13 +4,33 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { stripHtmlToText } from "@/lib/content/html";
 import { SERIES } from "@/lib/content/series";
 import { runPolicyGuard } from "@/lib/policy";
-import { bodiesFor, listAudit, listLatestByStatus, listPage, publishedPerDay, seriesDistribution, statusCounts } from "@/lib/tahrir/service";
+import {
+  bodiesFor,
+  formatDistribution,
+  listAudit,
+  listLatestByStatus,
+  listPage,
+  publishedPerDay,
+  readingTimeDistribution,
+  seriesDistribution,
+  statusCounts,
+  topAuthors,
+} from "@/lib/tahrir/service";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "الإحصاءات" };
 export const dynamic = "force-dynamic";
 
 const DAY_NAMES = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+
+const FORMAT_NAMES: Record<string, { label: string; color: string }> = {
+  news: { label: "أخبار", color: "var(--primary)" },
+  infographics: { label: "إنفوجرافيك", color: "#3b82f6" },
+  videos: { label: "فيديو", color: "#ef4444" },
+  reports: { label: "تقارير", color: "#10b981" },
+  podcasts: { label: "بودكاست", color: "#8b5cf6" },
+  jakalelm: { label: "جاك العلم", color: "#f59e0b" },
+};
 
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
@@ -33,12 +53,15 @@ function Bars({ rows, max }: { rows: Array<{ label: string; count: number; color
 }
 
 export default async function StatsPage() {
-  const [counts, audit, recentPublished, distribution, perDay] = await Promise.all([
+  const [counts, audit, recentPublished, distribution, perDay, formats, authors, readingTime] = await Promise.all([
     statusCounts().catch(() => ({}) as Record<string, number>),
     listAudit(500).catch(() => []),
     listLatestByStatus("published", 400).catch(() => []),
     seriesDistribution().catch(() => []),
     publishedPerDay(14).catch(() => []),
+    formatDistribution().catch(() => []),
+    topAuthors(6).catch(() => []),
+    readingTimeDistribution().catch(() => ({ quick: 0, medium: 0, long: 0 })),
   ]);
 
   // إيقاع النشر آخر 14 يومًا حسب اليوم — من أحدث المنشور (خفيف بلا متون).
@@ -70,6 +93,30 @@ export default async function StatsPage() {
   const maxSeries = Math.max(1, ...seriesCounts.map((series) => series.count));
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
   const guardBlocks = audit.filter((row) => row.action === "schedule:blocked" || row.action.startsWith("series:proposal")).length;
+
+  const formatRows = formats.map((f) => {
+    const meta = FORMAT_NAMES[f.format] ?? { label: f.format, color: "var(--t-sug)" };
+    return {
+      label: meta.label,
+      count: f.count,
+      color: meta.color,
+    };
+  });
+  const maxFormat = Math.max(1, ...formatRows.map((r) => r.count));
+
+  const authorRows = authors.map((a) => ({
+    label: a.authorName,
+    count: a.count,
+    color: "var(--primary)",
+  }));
+  const maxAuthor = Math.max(1, ...authorRows.map((r) => r.count));
+
+  const readingRows = [
+    { label: "سريعة (< 3 د)", count: readingTime.quick, color: "var(--t-ok)" },
+    { label: "متوسطة (3–5 د)", count: readingTime.medium, color: "var(--t-sug)" },
+    { label: "مطولة (> 5 د)", count: readingTime.long, color: "var(--t-warn)" },
+  ];
+  const maxReading = Math.max(1, ...readingRows.map((r) => r.count));
 
   return (
     <main className="flex flex-col gap-3">
@@ -137,6 +184,28 @@ export default async function StatsPage() {
             </div>
           </Panel>
         </div>
+      </div>
+
+      <div className="grid items-start gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <Panel title="توزيع أشكال المحتوى" aside="المنشور">
+          {formatRows.length === 0 ? (
+            <div className="px-4 py-6 text-center text-xs text-muted-foreground">لا بيانات لأشكال المحتوى</div>
+          ) : (
+            <Bars rows={formatRows} max={maxFormat} />
+          )}
+        </Panel>
+
+        <Panel title="أكثر الكُتّاب إنتاجًا" aside="المواد المنشورة">
+          {authorRows.length === 0 ? (
+            <div className="px-4 py-6 text-center text-xs text-muted-foreground">لا كُتّاب مسجلون</div>
+          ) : (
+            <Bars rows={authorRows} max={maxAuthor} />
+          )}
+        </Panel>
+
+        <Panel title="أزمنة القراءة للمواد" aside="حسب دقائق القراءة">
+          <Bars rows={readingRows} max={maxReading} />
+        </Panel>
       </div>
     </main>
   );

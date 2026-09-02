@@ -633,3 +633,58 @@ export async function seriesDistribution(): Promise<
 function gteText(column: typeof stories.publishedAt, value: string) {
   return sql`${column} >= ${value}`;
 }
+
+/** توزيع أشكال المحتوى للمواد المنشورة: [format, count]. */
+export async function formatDistribution(): Promise<Array<{ format: string; count: number }>> {
+  const db = requireDb();
+  const rows = await db
+    .select({
+      format: stories.format,
+      count: sql<number>`count(*)`,
+    })
+    .from(stories)
+    .where(eq(stories.status, "published"))
+    .groupBy(stories.format)
+    .orderBy(desc(sql`count(*)`));
+  return rows.map((row) => ({
+    format: row.format || "news",
+    count: Number(row.count),
+  }));
+}
+
+/** أكثر الكُتّاب إنتاجًا للمواد المنشورة. */
+export async function topAuthors(limit = 6): Promise<Array<{ authorName: string; count: number }>> {
+  const db = requireDb();
+  const rows = await db
+    .select({
+      authorName: stories.authorName,
+      count: sql<number>`count(*)`,
+    })
+    .from(stories)
+    .where(and(eq(stories.status, "published"), ne(stories.authorName, "")))
+    .groupBy(stories.authorName)
+    .orderBy(desc(sql`count(*)`))
+    .limit(limit);
+  return rows.map((row) => ({
+    authorName: row.authorName,
+    count: Number(row.count),
+  }));
+}
+
+/** توزيع أزمنة القراءة للمواد المنشورة: سريعة (< 3 د)، متوسطة (3-5 د)، مطولة (> 5 د). */
+export async function readingTimeDistribution(): Promise<{ quick: number; medium: number; long: number }> {
+  const db = requireDb();
+  const [row] = await db
+    .select({
+      quick: sql<number>`count(*) filter (where ${stories.readingMinutes} < 3)`,
+      medium: sql<number>`count(*) filter (where ${stories.readingMinutes} >= 3 and ${stories.readingMinutes} <= 5)`,
+      long: sql<number>`count(*) filter (where ${stories.readingMinutes} > 5)`,
+    })
+    .from(stories)
+    .where(eq(stories.status, "published"));
+  return {
+    quick: Number(row?.quick ?? 0),
+    medium: Number(row?.medium ?? 0),
+    long: Number(row?.long ?? 0),
+  };
+}

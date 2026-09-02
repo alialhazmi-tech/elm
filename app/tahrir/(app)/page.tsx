@@ -60,7 +60,7 @@ export default async function OverviewPage() {
       publishedPerDay(14).catch(() => []),
       listLatestByStatus("review", 6).catch(() => []),
       listLatestByStatus("published", 5).catch(() => []),
-      listLatestByStatus("draft", 1).catch(() => []),
+      listLatestByStatus("draft", 5).catch(() => []),
       listLatestByStatus("scheduled", 40).catch(() => []),
       seriesDistribution().catch(() => []),
     ]);
@@ -109,6 +109,11 @@ export default async function OverviewPage() {
           : entry.state,
       meta: entry.meta,
     }));
+
+  const upcomingScheduled = scheduled
+    .filter((row) => (row.scheduledAt ?? "") > todayIso && !(row.scheduledAt ?? "").startsWith(todayIso))
+    .sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""))
+    .slice(0, 5);
 
   const firstName = actor?.displayName.split(" ")[0] ?? "";
   const scheduledToday = timeline.filter((item) => item.state !== "done").length;
@@ -170,46 +175,72 @@ export default async function OverviewPage() {
       </div>
 
       <div className="grid items-start gap-3 lg:grid-cols-[1.55fr_1fr]">
-        <Panel title="بانتظار الاعتماد" href="/tahrir/stories?status=review" hrefLabel="كل القائمة">
-          {review.length === 0 ? <PanelEmpty>لا مواد بانتظار الاعتماد الآن.</PanelEmpty> : null}
-          {review.map((story) => {
-            const chip = reviewChips.get(story.id)!;
-            const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
-            return (
-              <Link
-                key={story.id}
-                href={editorHref(story)}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
-              >
-                <GuardChip tone={chip.tone} label={chip.label} />
-                <span className="truncate text-[13px] font-semibold">{story.title}</span>
-                {series ? <SeriesTag name={series.name} color={series.color} className="hidden sm:inline-flex" /> : <span className="hidden sm:inline" />}
-                <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                  {story.authorName || "—"}
-                  {relativeTimeAr(story.updatedAt ?? undefined) ? ` · ${relativeTimeAr(story.updatedAt ?? undefined)}` : ""}
-                </span>
-              </Link>
-            );
-          })}
-          <PanelHeader title="آخر ما نُشر" href="/tahrir/schedule" hrefLabel="الجدولة" className="border-t border-border/80" />
-          {latestPublished.map((story) => {
-            const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
-            return (
-              <Link
-                key={story.id}
-                href={editorHref(story)}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
-              >
-                <StatusPill status="published" label="منشور" />
-                <span className="truncate text-[13px] font-semibold">{story.title}</span>
-                {series ? <SeriesTag name={series.name} color={series.color} className="hidden sm:inline-flex" /> : <span className="hidden sm:inline" />}
-                <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
-                  {story.publishedAt ? (story.publishedAt.startsWith(todayIso) ? riyadhTime(story.publishedAt) : story.publishedAt.slice(0, 10)) : "—"}
-                </span>
-              </Link>
-            );
-          })}
-        </Panel>
+        <div className="grid gap-3">
+          <Panel title="بانتظار الاعتماد" href="/tahrir/stories?status=review" hrefLabel="كل القائمة">
+            {review.length === 0 ? <PanelEmpty>لا مواد بانتظار الاعتماد الآن.</PanelEmpty> : null}
+            {review.map((story) => {
+              const chip = reviewChips.get(story.id)!;
+              const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
+              return (
+                <Link
+                  key={story.id}
+                  href={editorHref(story)}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                >
+                  <GuardChip tone={chip.tone} label={chip.label} />
+                  <span className="truncate text-[13px] font-semibold">{story.title}</span>
+                  {series ? <SeriesTag name={series.name} color={series.color} className="hidden sm:inline-flex" /> : <span className="hidden sm:inline" />}
+                  <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                    {story.authorName || "—"}
+                    {relativeTimeAr(story.updatedAt ?? undefined) ? ` · ${relativeTimeAr(story.updatedAt ?? undefined)}` : ""}
+                  </span>
+                </Link>
+              );
+            })}
+            <PanelHeader title="آخر ما نُشر" href="/tahrir/schedule" hrefLabel="الجدولة" className="border-t border-border/80" />
+            {latestPublished.map((story) => {
+              const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
+              return (
+                <Link
+                  key={story.id}
+                  href={editorHref(story)}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[auto_minmax(0,1fr)_auto_auto]"
+                >
+                  <StatusPill status="published" label="منشور" />
+                  <span className="truncate text-[13px] font-semibold">{story.title}</span>
+                  {series ? <SeriesTag name={series.name} color={series.color} className="hidden sm:inline-flex" /> : <span className="hidden sm:inline" />}
+                  <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
+                    {story.publishedAt ? (story.publishedAt.startsWith(todayIso) ? riyadhTime(story.publishedAt) : story.publishedAt.slice(0, 10)) : "—"}
+                  </span>
+                </Link>
+              );
+            })}
+          </Panel>
+
+          <Panel title="المسودات قيد التحرير" href="/tahrir/stories?status=draft" hrefLabel="كل المسودات" aside={`${counts.draft ?? 0} مسودة`}>
+            {latestDraft.length === 0 ? (
+              <PanelEmpty>لا مسودات قيد التحرير حاليًا.</PanelEmpty>
+            ) : (
+              latestDraft.map((story) => {
+                const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
+                return (
+                  <Link
+                    key={story.id}
+                    href={editorHref(story)}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors sm:grid-cols-[minmax(0,1fr)_auto_auto]"
+                  >
+                    <span className="truncate text-[13px] font-semibold">{story.title || "مسودة بلا عنوان"}</span>
+                    {series ? <SeriesTag name={series.name} color={series.color} className="hidden sm:inline-flex" /> : <span className="hidden sm:inline" />}
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                      {story.authorName || "—"}
+                      {story.updatedAt && relativeTimeAr(story.updatedAt) ? ` · ${relativeTimeAr(story.updatedAt)}` : ""}
+                    </span>
+                  </Link>
+                );
+              })
+            )}
+          </Panel>
+        </div>
 
         <div className="grid gap-3">
           <Panel title="السلاسل — توزيع المواد">
@@ -236,6 +267,32 @@ export default async function OverviewPage() {
               <PanelEmpty>لا نشر ولا جدولة اليوم بعد — الجدولة من داخل المحرر.</PanelEmpty>
             ) : (
               <TodayTimeline items={timeline} />
+            )}
+          </Panel>
+
+          <Panel title="المجدول للأيام القادمة" href="/tahrir/schedule" hrefLabel="الجدولة" aside={`${upcomingScheduled.length} مواد`}>
+            {upcomingScheduled.length === 0 ? (
+              <PanelEmpty>لا مواد مجدولة لما بعد اليوم.</PanelEmpty>
+            ) : (
+              upcomingScheduled.map((story) => {
+                const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
+                const dateStr = story.scheduledAt ? story.scheduledAt.slice(0, 10) : "—";
+                return (
+                  <Link
+                    key={story.id}
+                    href={editorHref(story)}
+                    className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border/70 px-4 py-2.5 last:border-0 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="truncate text-[12.5px] font-semibold">{story.title}</span>
+                      {series ? <SeriesTag name={series.name} color={series.color} className="hidden sm:inline-flex" /> : null}
+                    </div>
+                    <span className="text-[11px] text-muted-foreground tabular-nums whitespace-nowrap">
+                      {dateStr}
+                    </span>
+                  </Link>
+                );
+              })
             )}
           </Panel>
         </div>
