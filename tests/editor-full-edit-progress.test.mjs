@@ -5,11 +5,12 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("التحرير الشامل يبث مراحله الفعلية ويحمي تعديلات المسودة", async () => {
-  const [editorial, route, editor, css] = await Promise.all([
+  const [editorial, route, editor, fullEdit, css] = await Promise.all([
     read("lib/ai/editorial.ts"),
     read("app/api/tahrir/ai/assist/route.ts"),
-    read("app/tahrir/_components/editor-client.tsx"),
-    read("app/tahrir/tahrir.css"),
+    read("components/tahrir/editor/editor-client.tsx"),
+    read("components/tahrir/editor/full-edit.tsx"),
+    read("app/tahrir/shadcn.css"),
   ]);
 
   assert.match(editorial, /onFullEditProgress\?\.\("body_started"\)/);
@@ -25,11 +26,12 @@ test("التحرير الشامل يبث مراحله الفعلية ويحمي 
 
   assert.match(editor, /response\.body\.getReader\(\)/);
   assert.match(editor, /fullEditStale/);
-  assert.match(editor, /التطبيق متوقف لحماية تعديلاتك/);
-  assert.match(editor, /role="tablist"/);
-  assert.match(editor, /th-full-progress/);
+  assert.match(fullEdit, /التطبيق متوقف لحماية تعديلاتك/);
+  // المفتّش تبويبات shadcn (Tabs/TabsList تعطي role="tablist" وقت التشغيل).
+  assert.match(editor, /<TabsList/);
+  assert.match(fullEdit, /th-full-progress/);
 
-  assert.match(css, /@keyframes th-ai-shimmer/);
+  assert.match(css, /@keyframes tahrir-shimmer/);
   assert.match(css, /prefers-reduced-motion: reduce/);
-  assert.match(css, /\.th-inspector-tabs/);
+  assert.match(css, /\.th-ai-shimmer/);
 });

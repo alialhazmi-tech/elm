@@ -27,9 +27,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-import { countLabel, type StoryTableRow } from "./types";
+import { countLabel } from "./types";
 
-export type StoryAction = { kind: "archive" | "restore" | "delete"; rows: StoryTableRow[] };
+/** الحد الأدنى الذي تحتاجه الحوارات — يعمل من الجدول ومن المحرر. */
+export type ActionRow = { id: string; title: string };
+
+export type StoryAction = { kind: "archive" | "restore" | "delete"; rows: ActionRow[] };
 
 const REASON_CHIPS = [
   "خطأ وقائعي يحتاج تصحيحًا",

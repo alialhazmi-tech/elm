@@ -111,3 +111,28 @@
   max-width: none;
   margin: 0;
 }
+
+/* ===== متن المحرر (Tiptap) — طباعة تحريرية تطابق ما يراه القارئ ===== */
+.tahrir-body {
+  min-height: 320px;
+  font-size: 15px;
+  line-height: 2;
+  color: var(--foreground);
+}
+.tahrir-body h2 { font-family: var(--f-display); font-size: 18px; font-weight: 800; margin: 18px 0 6px; }
+.tahrir-body h3 { font-family: var(--f-display); font-size: 15.5px; font-weight: 700; margin: 14px 0 4px; }
+.tahrir-body p { margin: 0 0 12px; }
+.tahrir-body blockquote { margin: 12px 0; padding: 8px 14px; border-inline-start: 3px solid var(--primary); background: var(--muted); border-radius: 8px; }
+.tahrir-body ul, .tahrir-body ol { margin: 0 0 12px; padding-inline-start: 22px; }
+.tahrir-body ul { list-style: disc; }
+.tahrir-body ol { list-style: decimal; }
+.tahrir-body li p { margin: 0; }
+.tahrir-body a { color: var(--t-sug); text-decoration: underline; }
+.tahrir-body p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted-foreground); float: right; height: 0; pointer-events: none; }
+.tahrir-body ::selection { background: color-mix(in srgb, var(--primary) 35%, transparent); }
+/* وميض التحليل الذكي — حفاظًا على عقد الحركة نفسه (th-ai-shimmer) مع احترام تقليل الحركة. */
+.th-ai-shimmer { background-image: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--primary) 18%, transparent) 50%, transparent 100%); background-size: 200% 100%; animation: tahrir-shimmer 1.6s linear infinite; }
+@keyframes tahrir-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.th-ai-orb { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent); animation: th-ai-orb 1.4s ease-out infinite; }
+@keyframes th-ai-orb { to { box-shadow: 0 0 0 10px transparent; } }
+@media (prefers-reduced-motion: reduce) { .th-ai-shimmer, .th-ai-orb { animation: none; } }
