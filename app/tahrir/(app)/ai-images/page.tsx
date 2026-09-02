@@ -1,14 +1,16 @@
 import { AiImagesClient } from "@/components/tahrir/ai/ai-images-client";
 import { Panel } from "@/components/tahrir/overview/panel";
 import { keyStatus, loadAiSettings } from "@/lib/ai/settings";
-import { listMedia } from "@/lib/tahrir/service";
+import { listRecentMedia } from "@/lib/tahrir/service";
 
 export const metadata = { title: "توليد الصور" };
 export const dynamic = "force-dynamic";
 
 export default async function AiImagesPage() {
-  const [settings, media] = await Promise.all([loadAiSettings(), listMedia().catch(() => [])]);
-  const recent = media.filter((row) => row.aiGenerated === 1).slice(0, 6);
+  const [settings, recent] = await Promise.all([
+    loadAiSettings(),
+    listRecentMedia({ aiGenerated: true, limit: 6 }).catch(() => []),
+  ]);
 
   return (
     <main className="flex flex-col gap-3">

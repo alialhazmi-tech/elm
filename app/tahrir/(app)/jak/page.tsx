@@ -4,7 +4,7 @@ import { StatusPill } from "@/components/tahrir/badges";
 import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
-import { listLatestByFormat, listMedia, STATUS_LABELS, type StoryStatus } from "@/lib/tahrir/service";
+import { listLatestByFormat, listRecentMedia, STATUS_LABELS, type StoryStatus } from "@/lib/tahrir/service";
 import { JakEditor } from "@/components/tahrir/jak/jak-editor";
 
 export const metadata = { title: "جاك العلم" };
@@ -14,13 +14,10 @@ export const dynamic = "force-dynamic";
 export default async function JakNewPage() {
   const session = await getSession();
   const [mediaRows, jakStories] = await Promise.all([
-    listMedia().catch(() => []),
+    listRecentMedia({ rightsCleared: true, limit: 8 }).catch(() => []),
     listLatestByFormat("jakalelm", 30).catch(() => []),
   ]);
-  const recentMedia = mediaRows
-    .filter((row) => row.rightsCleared === 1)
-    .slice(0, 8)
-    .map((row) => ({ url: row.url, filename: row.filename }));
+  const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
 
