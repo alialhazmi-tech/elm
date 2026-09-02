@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { ThemeProvider } from "next-themes";
 
-import "./tahrir.css";
-import "./mobile.css";
 import "./shadcn.css";
 
 import { ActiveThemeProvider } from "@/components/tahrir/active-theme";

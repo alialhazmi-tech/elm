@@ -1,7 +1,11 @@
-import { SERIES } from "@/lib/content/series";
+import { Panel } from "@/components/tahrir/overview/panel";
+import { StatTile } from "@/components/tahrir/overview/stat-tile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { stripHtmlToText } from "@/lib/content/html";
+import { SERIES } from "@/lib/content/series";
 import { runPolicyGuard } from "@/lib/policy";
-import { bodiesFor, listAudit, listLatestByStatus, listPage, seriesDistribution, statusCounts } from "@/lib/tahrir/service";
+import { bodiesFor, listAudit, listLatestByStatus, listPage, publishedPerDay, seriesDistribution, statusCounts } from "@/lib/tahrir/service";
+import { cn } from "@/lib/utils";
 
 export const metadata = { title: "الإحصاءات" };
 export const dynamic = "force-dynamic";
@@ -12,12 +16,29 @@ function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
 }
 
+function Bars({ rows, max }: { rows: Array<{ label: string; count: number; color: string }>; max: number }) {
+  return (
+    <div className="grid gap-2 px-4 py-3">
+      {rows.map((row) => (
+        <div key={row.label} className="grid grid-cols-[84px_1fr_auto] items-center gap-2.5 text-xs">
+          <span className="truncate">{row.label}</span>
+          <span className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <i className="block h-full rounded-full" style={{ width: `${(row.count / max) * 100}%`, background: row.color }} />
+          </span>
+          <b className="min-w-6 text-start font-display text-[11.5px] text-muted-foreground tabular-nums">{row.count}</b>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function StatsPage() {
-  const [counts, audit, recentPublished, distribution] = await Promise.all([
+  const [counts, audit, recentPublished, distribution, perDay] = await Promise.all([
     statusCounts().catch(() => ({}) as Record<string, number>),
     listAudit(500).catch(() => []),
     listLatestByStatus("published", 400).catch(() => []),
     seriesDistribution().catch(() => []),
+    publishedPerDay(14).catch(() => []),
   ]);
 
   // إيقاع النشر آخر 14 يومًا حسب اليوم — من أحدث المنشور (خفيف بلا متون).
@@ -30,8 +51,7 @@ export default async function StatsPage() {
   const maxDay = Math.max(1, ...byDay.map((day) => day.count));
 
   // الحارس على أحدث 100 مادة — عينة حية بدل مسح الأرشيف كله في كل زيارة.
-  const GUARD_SAMPLE = 100;
-  const samplePage = await listPage(undefined, 1, GUARD_SAMPLE).catch(() => []);
+  const samplePage = await listPage(undefined, 1, 100).catch(() => []);
   const sampleBodies = await bodiesFor(samplePage.map((row) => row.id));
   const guardTotals = { blocking: 0, warning: 0, suggestion: 0, clean: 0 };
   for (const [, content] of sampleBodies) {
@@ -44,124 +64,78 @@ export default async function StatsPage() {
   const maxGuard = Math.max(1, guardTotals.blocking, guardTotals.warning, guardTotals.suggestion);
 
   const totalsBySlug = new Map(distribution.map((row) => [row.seriesSlug, row.total]));
-  const seriesCounts = SERIES.map((series) => ({
-    ...series,
-    count: totalsBySlug.get(series.slug) ?? 0,
-  })).sort((a, b) => b.count - a.count);
+  const seriesCounts = SERIES.map((series) => ({ ...series, count: totalsBySlug.get(series.slug) ?? 0 })).sort(
+    (a, b) => b.count - a.count,
+  );
   const maxSeries = Math.max(1, ...seriesCounts.map((series) => series.count));
-  const published = { length: counts.published ?? 0 };
-  const rows = { length: Object.values(counts).reduce((sum, value) => sum + value, 0) };
-
-  const guardBlocks = audit.filter(
-    (row) => row.action === "schedule:blocked" || row.action.startsWith("series:proposal"),
-  ).length;
+  const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+  const guardBlocks = audit.filter((row) => row.action === "schedule:blocked" || row.action.startsWith("series:proposal")).length;
 
   return (
-    <main className="th-screen">
-      <div className="th-statnote">
-        ◈ مؤشرات القراء (الزيارات، زمن القراءة، الاكتمال) تتفعل مع القياس الميداني RUM عند النشر
-        الإنتاجي على Cloudflare — لا نعرض أرقامًا غير مقاسة. ما تراه أدناه محسوب من قاعدة البيانات
-        والحارس مباشرة.
+    <main className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h1 className="font-display text-xl font-extrabold">الإحصاءات</h1>
+        <span className="text-xs text-muted-foreground">محسوبة من قاعدة البيانات والحارس مباشرة</span>
       </div>
-
-      <div className="th-tiles">
-        <div className="th-tile">
-          <div className="lb">مواد منشورة</div>
-          <div className="v">{published.length}</div>
-          <div className="tr">من إجمالي {rows.length}</div>
-        </div>
-        <div className="th-tile">
-          <div className="lb">نُشر آخر 14 يومًا</div>
-          <div className="v">{recent.length}</div>
-          <div className="tr">{(recent.length / 14).toFixed(1)} مادة يوميًا</div>
-        </div>
-        <div className="th-tile">
-          <div className="lb">مواد سليمة من الحارس</div>
-          <div className="v">{guardTotals.clean}</div>
-          <div className="tr up">من أحدث 100</div>
-        </div>
-        <div className="th-tile">
-          <div className="lb">قراء الآن</div>
-          <div className="v th-pending">بانتظار RUM</div>
-          <div className="tr">يتفعل مع الإنتاج</div>
-        </div>
+      <Alert>
+        <AlertDescription>
+          مؤشرات القراء (الزيارات، زمن القراءة، الاكتمال) تتفعل مع القياس الميداني RUM عند النشر الإنتاجي على Cloudflare — لا
+          نعرض أرقامًا غير مقاسة.
+        </AlertDescription>
+      </Alert>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <StatTile label="مواد منشورة" value={counts.published ?? 0} hint={`من إجمالي ${total}`} />
+        <StatTile
+          label="نُشر آخر 14 يومًا"
+          value={recent.length}
+          hint={`${(recent.length / 14).toFixed(1)} مادة يوميًا`}
+          series={perDay.map((day) => day.count)}
+          color="var(--t-ok)"
+        />
+        <StatTile label="مواد سليمة من الحارس" value={guardTotals.clean} hint="من أحدث 100" tone="ok" />
+        <StatTile label="قراء الآن" value={0} hint="بانتظار RUM — يتفعل مع الإنتاج" />
       </div>
-
-      <div className="th-cols">
-        <div className="th-panel">
-          <div className="hd">
-            <h2>إيقاع النشر — آخر 14 يومًا بالأيام</h2>
-          </div>
-          <div className="th-cadence">
+      <div className="grid items-start gap-3 lg:grid-cols-[1.55fr_1fr]">
+        <Panel title="إيقاع النشر — آخر 14 يومًا بالأيام">
+          <div className="grid h-40 grid-cols-7 items-end gap-2 px-4 pt-4 pb-2">
             {byDay.map((day) => (
-              <div className={`cb ${day.count === maxDay && day.count > 0 ? "peak" : ""}`} key={day.name}>
-                <i style={{ height: `${(day.count / maxDay) * 78}%` }} title={String(day.count)} />
-                <span>{day.name}</span>
+              <div key={day.name} className="grid h-full grid-rows-[1fr_auto] gap-1.5 text-center">
+                <div className="flex items-end justify-center">
+                  <i
+                    title={String(day.count)}
+                    className={cn("block w-full max-w-9 rounded-t-md", day.count === maxDay && day.count > 0 ? "bg-primary" : "bg-(--t-sug)/60")}
+                    style={{ height: `${Math.max(4, (day.count / maxDay) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[10.5px] text-muted-foreground">{day.name}</span>
               </div>
             ))}
           </div>
-          <div className="hd" style={{ borderTop: "1px solid var(--t-line)" }}>
-            <h2>توزيع المنشور على السلاسل</h2>
-          </div>
-          <div className="th-serbars">
-            {seriesCounts.map((series) => (
-              <div
-                className="th-serb"
-                key={series.slug}
-                style={{ "--sc": series.color } as React.CSSProperties}
-              >
-                <span>{series.name}</span>
-                <span className="bar">
-                  <i style={{ width: `${(series.count / maxSeries) * 100}%` }} />
-                </span>
-                <b>{series.count}</b>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <div className="th-panel">
-            <div className="hd">
-              <h2>حارس السياسة — أحدث 100 مادة</h2>
+          <div className="border-t px-4 py-2.5 font-display text-[13px] font-bold">توزيع المنشور على السلاسل</div>
+          <Bars rows={seriesCounts.map((series) => ({ label: series.name, count: series.count, color: series.color }))} max={maxSeries} />
+        </Panel>
+        <div className="grid gap-3">
+          <Panel title="حارس السياسة — أحدث 100 مادة">
+            <Bars
+              rows={[
+                { label: "قاطعة", count: guardTotals.blocking, color: "var(--t-block)" },
+                { label: "تحذيرات", count: guardTotals.warning, color: "var(--t-warn)" },
+                { label: "مقترحات", count: guardTotals.suggestion, color: "var(--t-sug)" },
+              ]}
+              max={maxGuard}
+            />
+          </Panel>
+          <Panel title="نشاط اللوحة">
+            <div className="grid gap-1 px-4 py-3 text-xs text-muted-foreground">
+              <span>
+                أحداث مسجلة: <b className="text-foreground tabular-nums">{audit.length}</b> (آخر 500)
+              </span>
+              <span>
+                قرارات حوكمة (منع حارس + مقترحات): <b className="text-foreground tabular-nums">{guardBlocks}</b>
+              </span>
+              <span>التفصيل الكامل في سجل التدقيق.</span>
             </div>
-            <div className="th-serbars">
-              <div className="th-serb" style={{ "--sc": "var(--t-block)" } as React.CSSProperties}>
-                <span>قاطعة</span>
-                <span className="bar">
-                  <i style={{ width: `${(guardTotals.blocking / maxGuard) * 100}%` }} />
-                </span>
-                <b>{guardTotals.blocking}</b>
-              </div>
-              <div className="th-serb" style={{ "--sc": "var(--t-warn)" } as React.CSSProperties}>
-                <span>تحذيرات</span>
-                <span className="bar">
-                  <i style={{ width: `${(guardTotals.warning / maxGuard) * 100}%` }} />
-                </span>
-                <b>{guardTotals.warning}</b>
-              </div>
-              <div className="th-serb" style={{ "--sc": "var(--t-sug)" } as React.CSSProperties}>
-                <span>مقترحات</span>
-                <span className="bar">
-                  <i style={{ width: `${(guardTotals.suggestion / maxGuard) * 100}%` }} />
-                </span>
-                <b>{guardTotals.suggestion}</b>
-              </div>
-            </div>
-          </div>
-
-          <div className="th-panel" style={{ marginTop: 14 }}>
-            <div className="hd">
-              <h2>نشاط اللوحة</h2>
-            </div>
-            <div className="th-rythm">
-              أحداث مسجلة: <b>{audit.length}</b> (آخر 500)
-              <br />
-              قرارات حوكمة (منع حارس + مقترحات): <b>{guardBlocks}</b>
-              <br />
-              التفصيل الكامل في <b>سجل التدقيق</b>.
-            </div>
-          </div>
+          </Panel>
         </div>
       </div>
     </main>

@@ -85,32 +85,32 @@
   }
 }
 
-/* ===== جسر الرموز القديمة: شاشات المرحلة الأولى (.th-*) تتبع اللوحة المختارة حتى تُنقل ===== */
-.th,
+/* ===== رموز اللوحة الدلالية (كانت في tahrir.css) — تقرؤها الشارات وحالات الحارس في كل اللوحات ===== */
+.th {
+  --t-block: #b42318; --t-block-bg: #fdf1ef;
+  --t-warn: #92610a; --t-warn-bg: #fdf6e7;
+  --t-sug: #2b5c9e; --t-sug-bg: #eef4fc;
+  --t-ok: #0e7a5f; --t-ok-bg: #ecf8f3;
+  font-family: var(--f-text), "SF Arabic", sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--foreground);
+}
 :root[data-theme="dark"] .th {
-  --t-bg: var(--background);
-  --t-surface: var(--card);
-  --t-surface2: var(--muted);
-  --t-ink: var(--foreground);
-  --t-line: var(--border);
-  --t-line2: var(--input);
+  --t-block: #f08a7d; --t-block-bg: #33161a;
+  --t-warn: #e5b567; --t-warn-bg: #31250e;
+  --t-sug: #8fb4e8; --t-sug-bg: #152740;
+  --t-ok: #5ec9a8; --t-ok-bg: #132b22;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .th {
-    --t-bg: var(--background);
-    --t-surface: var(--card);
-    --t-surface2: var(--muted);
-    --t-ink: var(--foreground);
-    --t-line: var(--border);
-    --t-line2: var(--input);
+    --t-block: #f08a7d; --t-block-bg: #33161a;
+    --t-warn: #e5b567; --t-warn-bg: #31250e;
+    --t-sug: #8fb4e8; --t-sug-bg: #152740;
+    --t-ok: #5ec9a8; --t-ok-bg: #132b22;
   }
 }
-/* الحشو صار من غلاف المحتوى في الهيكل الجديد؛ الشاشة نفسها تملأ العرض المتاح. */
-.th .th-screen {
-  padding: 0;
-  max-width: none;
-  margin: 0;
-}
+.th :is(button, a, input, textarea, select):focus-visible { outline-offset: 2px; }
 
 /* ===== متن المحرر (Tiptap) — طباعة تحريرية تطابق ما يراه القارئ ===== */
 .tahrir-body {

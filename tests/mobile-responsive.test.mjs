@@ -61,17 +61,20 @@ test("قوائم المواد على الهاتف بطاقات أفقية كثي
 });
 
 test("العضوية ولوحة التحرير لهما قواعد هاتف مستقلة", async () => {
-  const [join, welcome, feed, layout, tahrir] = await Promise.all([
+  const [join, welcome, feed, layout, editor, table] = await Promise.all([
     read("app/join/member-auth.css"),
     read("app/welcome/welcome.css"),
     read("app/for-you/for-you.css"),
     read("app/tahrir/layout.tsx"),
-    read("app/tahrir/mobile.css"),
+    read("components/tahrir/editor/editor-client.tsx"),
+    read("components/tahrir/stories/stories-table.tsx"),
   ]);
   assert.match(join, /font-size:\s*16px/);
   assert.match(welcome, /\.interest-grid label\s*\{\s*min-height:\s*98px/);
   assert.match(feed, /grid-template-columns:\s*minmax\(0, 1fr\) 112px/);
-  assert.match(layout, /import "\.\/mobile\.css"/);
-  assert.match(tahrir, /@media screen and \(max-width: 700px\)/);
-  assert.match(tahrir, /\.th-ed[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
+  // اللوحة على جذر Tailwind مستقل؛ الاستجابة بأصناف نقاط التوقف لا بملف CSS للهاتف.
+  assert.match(layout, /import "\.\/shadcn\.css"/);
+  assert.doesNotMatch(layout, /mobile\.css|tahrir\.css/);
+  assert.match(editor, /xl:grid-cols-\[minmax\(0,1fr\)_340px\]/);
+  assert.match(table, /md:hidden/);
 });

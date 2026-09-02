@@ -4,7 +4,7 @@ import { SECTION_NAMES } from "@/lib/content/seed";
 import { getSession } from "@/lib/tahrir/auth";
 import { getJakSource, listSlides } from "@/lib/tahrir/jak";
 import { getStory, latestArchiveEvents, listMedia } from "@/lib/tahrir/service";
-import { JakEditor } from "../../../_components/jak-editor";
+import { JakEditor } from "@/components/tahrir/jak/jak-editor";
 
 export const metadata = { title: "جاك العلم" };
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export default async function JakEditPage({ params }: { params: Promise<{ id: st
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
 
   return (
-    <main className="th-screen">
+    <main className="flex flex-col gap-3">
       <JakEditor
         role={session?.role ?? "editor"}
         sections={sections}
