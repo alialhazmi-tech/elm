@@ -1,3 +1,4 @@
+import { Bars } from "@/components/tahrir/overview/bars";
 import { Panel } from "@/components/tahrir/overview/panel";
 import { StatTile } from "@/components/tahrir/overview/stat-tile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -34,22 +35,6 @@ const FORMAT_NAMES: Record<string, { label: string; color: string }> = {
 
 function daysAgoIso(days: number): string {
   return new Date(Date.now() - days * 86_400_000).toISOString();
-}
-
-function Bars({ rows, max }: { rows: Array<{ label: string; count: number; color: string }>; max: number }) {
-  return (
-    <div className="grid gap-2 px-4 py-3">
-      {rows.map((row) => (
-        <div key={row.label} className="grid grid-cols-[84px_1fr_auto] items-center gap-2.5 text-xs">
-          <span className="truncate">{row.label}</span>
-          <span className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <i className="block h-full rounded-full" style={{ width: `${(row.count / max) * 100}%`, background: row.color }} />
-          </span>
-          <b className="min-w-6 text-start font-display text-[11.5px] text-muted-foreground tabular-nums">{row.count}</b>
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export default async function StatsPage() {
