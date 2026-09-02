@@ -52,6 +52,8 @@ export type Story = {
   /** عاجل حتى هذا الوقت (ISO) — بعده يختفي الشريط تلقائيًا. */
   breakingUntil?: string;
   image?: string;
+  /** رابط يوتيوب لمواد شكل «فيديو» — يُعرض مشغّلًا مضمَّنًا بدل الصورة البارزة. */
+  videoUrl?: string;
   publishedAt?: string;
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح». */
   factCheck?: FactCheck;

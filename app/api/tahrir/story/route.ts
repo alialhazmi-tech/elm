@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
+import { normalizeVideoUrl } from "@/lib/content/video";
 import { canEditStory, requireActor } from "@/lib/tahrir/access";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { audit, deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
     keywords?: string[];
     pinned?: boolean;
     breakingUntil?: string | null;
+    videoUrl?: string | null;
   } | null;
 
   if (!input?.title?.trim()) {
@@ -66,6 +68,8 @@ export async function POST(request: Request) {
       seoTitle: input.seoTitle?.trim().slice(0, 90) ?? "",
       seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",
       keywords,
+      // رابط الفيديو يُقبل يوتيوب فقط ويُخزَّن بصيغته القياسية؛ أي قيمة أخرى تُمسح.
+      ...(input.videoUrl !== undefined ? { videoUrl: normalizeVideoUrl(input.videoUrl) } : {}),
       ...(session.can("story.publish")
         ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
         : {}),

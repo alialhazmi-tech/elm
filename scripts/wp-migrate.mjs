@@ -8,6 +8,7 @@
  *   node --env-file=.env.local scripts/wp-migrate.mjs --since=2026-08-20T00:00:00 # مزامنة تزايدية بالمعدَّل بعد تاريخ
  *   node --env-file=.env.local scripts/wp-migrate.mjs --verify-only    # مطابقة الأعداد دون سحب
  *   node --env-file=.env.local scripts/wp-migrate.mjs --ids=264148,999  # سحب معرفات بأعيانها
+ *   node --env-file=.env.local scripts/wp-migrate.mjs --posttype=59 --reset  # تعبئة مواد شكل واحد (59 = الفيديو) بروابطها
  *     (لمواد نُشرت بتاريخ تعديل قديم فتفلت من modified_after — يرصدها التدقيق كمفقودة)
  *
  * الضمانات (نفس عقد بروفة M-1):
@@ -25,6 +26,7 @@
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { findVideoUrlInText, normalizeVideoUrl } from "../lib/content/video.ts";
 
 import { neon } from "@neondatabase/serverless";
 
@@ -41,6 +43,7 @@ const value = (name) => args.find((a) => a.startsWith(`--${name}=`))?.split("=")
 const LIMIT = Number(value("limit") ?? Infinity);
 const IDS = (value("ids") ?? "").split(",").map((part) => part.trim()).filter(Boolean);
 const SINCE = value("since") ?? null;
+const POSTTYPE = value("posttype") ?? null;
 const RESET = flag("reset");
 const DRY_RUN = flag("dry-run");
 const VERIFY_ONLY = flag("verify-only");
@@ -176,7 +179,8 @@ const VALID_SECTIONS = new Set([
 /* ============ نقطة التوقف ============ */
 
 async function readCheckpoint() {
-  if (RESET || SINCE) return null;
+  // التشغيلات المرشَّحة (بتاريخ أو بشكل) لا تقرأ نقطة توقف الأرشيف الكامل ولا تكتبها.
+  if (RESET || SINCE || POSTTYPE) return null;
   try {
     return JSON.parse(await readFile(CHECKPOINT_PATH, "utf8"));
   } catch {
@@ -188,12 +192,26 @@ async function writeCheckpoint(state) {
   await writeFile(CHECKPOINT_PATH, `${JSON.stringify(state, null, 2)}\n`);
 }
 
+const ALELM_API = "https://dash.alelm.net/wp-json/alelm-api/v1";
+
+/** رابط يوتيوب المخزَّن في الموقع القديم — يُعاد قياسيًا بلا قائمة تشغيل، أو null. */
+async function fetchVideoUrl(postId) {
+  try {
+    const { data } = await fetchWithRetry(`${ALELM_API}/single-post?id=${postId}`);
+    const raw = data?.data?.video_url ?? data?.data?.video_embed_url ?? null;
+    return normalizeVideoUrl(raw);
+  } catch (error) {
+    await log(`  تعذر جلب رابط فيديو ${postId}: ${String(error).slice(0, 80)}`);
+    return null;
+  }
+}
+
 /* ============ العدّ والتحقق ============ */
 
 async function wordpressTotal() {
   const url = SINCE
-    ? `${BASE}/posts?per_page=1&_fields=id&modified_after=${encodeURIComponent(SINCE)}`
-    : `${BASE}/posts?per_page=1&_fields=id`;
+    ? `${BASE}/posts?per_page=1&_fields=id&modified_after=${encodeURIComponent(SINCE)}${POSTTYPE ? `&posttype=${POSTTYPE}` : ""}`
+    : `${BASE}/posts?per_page=1&_fields=id${POSTTYPE ? `&posttype=${POSTTYPE}` : ""}`;
   const { response } = await fetchWithRetry(url);
   return Number(response.headers.get("x-wp-total") ?? 0);
 }
@@ -274,7 +292,7 @@ async function main() {
 
   const FIELDS = "id,slug,link,title,content,excerpt,date_gmt,modified_gmt,categories,tags,posttype,featured_media,author";
   const order = SINCE ? "orderby=modified&order=asc" : "orderby=id&order=asc";
-  const sinceParam = SINCE ? `&modified_after=${encodeURIComponent(SINCE)}` : "";
+  const sinceParam = (SINCE ? `&modified_after=${encodeURIComponent(SINCE)}` : "") + (POSTTYPE ? `&posttype=${POSTTYPE}` : "");
 
   while (offset < target) {
     const pageUrl = IDS.length
@@ -318,6 +336,13 @@ async function main() {
         const words = body.split(/\s+/).filter(Boolean).length;
         const image = mediaById.get(post.featured_media) ?? null;
         const authorName = authorsById.get(post.author) ?? "";
+        // رابط يوتيوب لا يظهر في REST القياسي؛ واجهة الموقع القديم الخاصة تعيده لكل مادة على حدة.
+        // حقل الفيديو أولًا، ثم رابط يوتيوب داخل المتن (مواد قديمة حُفظ رابطها في النص).
+        const videoUrl = format === "videos"
+          ? (await fetchVideoUrl(post.id)) ?? findVideoUrlInText(post.content?.rendered ?? "")
+          : null;
+        if (format === "videos") stats.videos = (stats.videos ?? 0) + 1;
+        if (videoUrl) stats.videosWithUrl = (stats.videosWithUrl ?? 0) + 1;
 
         const ourPath = `/${section}/${id}/${encodeURIComponent(slug)}`;
         const wpPath = link.pathname.replace(/\/$/, "");
@@ -328,19 +353,20 @@ async function main() {
           queries.push(sql`
             insert into stories (id, slug, section, title, excerpt, eyebrow, reading_minutes,
                                  series_slug, image, published_at, status, body, author_name,
-                                 updated_at, format)
+                                 updated_at, format, video_url)
             values (${id}, ${slug}, ${section}, ${cleanTitle(post.title?.rendered ?? "")},
                     ${cleanExcerpt(post.excerpt?.rendered ?? "")}, ${""},
                     ${Math.min(15, Math.max(1, Math.round(words / 200)))},
                     ${seriesSlug}, ${image}, ${post.date_gmt ? post.date_gmt + "Z" : null},
                     ${"published"}, ${body}, ${authorName},
-                    ${post.modified_gmt ? post.modified_gmt + "Z" : null}, ${format})
+                    ${post.modified_gmt ? post.modified_gmt + "Z" : null}, ${format}, ${videoUrl})
             on conflict (id) do update set
               slug = excluded.slug, section = excluded.section, title = excluded.title,
               excerpt = excluded.excerpt, series_slug = excluded.series_slug,
               image = excluded.image, published_at = excluded.published_at,
               body = excluded.body, author_name = excluded.author_name,
-              updated_at = excluded.updated_at, format = excluded.format`);
+              updated_at = excluded.updated_at, format = excluded.format,
+              video_url = coalesce(excluded.video_url, stories.video_url)`);
         }
 
         stats.imported += 1;
@@ -375,7 +401,7 @@ async function main() {
 
     offset += posts.length;
     imported = (checkpoint?.imported ?? 0) + stats.imported;
-    if (!SINCE && !IDS.length) {
+    if (!SINCE && !IDS.length && !POSTTYPE) {
       await writeCheckpoint({
         offset,
         imported,
@@ -396,6 +422,7 @@ async function main() {
   await log(`بسلسلة: ${stats.withSeries} · بصورة: ${stats.withImage} · بمؤلف: ${stats.withAuthor} · إخفاقات: ${failures.length}`);
   await log(`الأقسام: ${JSON.stringify(stats.sections)}`);
   await log(`الأشكال: ${JSON.stringify(stats.formats)}`);
+  if (stats.videos) await log(`فيديو: ${stats.videos} — منها برابط يوتيوب: ${stats.videosWithUrl ?? 0}`);
   if (failures.length > 0) {
     await log(`أول الإخفاقات: ${JSON.stringify(failures.slice(0, 5))}`);
   }

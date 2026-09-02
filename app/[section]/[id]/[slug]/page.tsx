@@ -14,6 +14,7 @@ import {
   PersonalizedRelated,
 } from "@/app/_components/article-experience";
 import { ReadingProgress } from "@/app/_components/reading-progress";
+import { videoEmbedUrl } from "@/lib/content/video";
 import { brandDate, formatArticleDek, formatReadingBrief, formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
@@ -176,6 +177,8 @@ export default async function ArticlePage({ params }: Params) {
   // تحت العنوان: الجملة الأولى (الخلاصة). صندوق «قبل القراءة» يظهر فقط حين يضيف الموجز الكامل شيئًا يُذكر.
   const dek = readingBrief;
   const fullExcerpt = formatArticleDek(story.excerpt);
+  // مواد الفيديو: المشغّل يحل محل الصورة البارزة في الرأس (الصورة تبقى للبطاقات والمشاركة).
+  const videoEmbed = story.format === "videos" ? videoEmbedUrl(story.videoUrl) : null;
   const showBrief = fullExcerpt.length > readingBrief.length + 80;
   // الجانب: التالي في السلسلة نفسها (حتى 3)، والذيل: مواد من سلاسل أخرى.
   const sameSeries = series ? related.filter((item) => item.series === series.slug).slice(0, 3) : [];
@@ -243,7 +246,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             </header>
           ) : (
-            <header className={`sa-head${isInfographicStory || !story.image ? " no-media" : ""}`}>
+            <header className={`sa-head${(isInfographicStory || !story.image) && !videoEmbed ? " no-media" : ""}`}>
               <div className="sa-head-copy">
                 <div className="sa-head-top">
                   <nav className="breadcrumb" aria-label="مسار التصفح">
@@ -277,7 +280,19 @@ export default async function ArticlePage({ params }: Params) {
                   <ArticleSaveButton storyId={story.id} joinHref={joinHref} />
                 </div>
               </div>
-              {story.image && !isInfographicStory ? (
+              {videoEmbed ? (
+                <figure className="sa-media sa-video">
+                  <iframe
+                    src={videoEmbed}
+                    title={story.title}
+                    loading="lazy"
+                    allow="accelerometer; encrypted-media; picture-in-picture; web-share"
+                    allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    style={{ aspectRatio: "16 / 9", width: "100%", border: 0, display: "block", background: "#000" }}
+                  />
+                </figure>
+              ) : story.image && !isInfographicStory ? (
                 <figure className="sa-media">
                   <div className="soft-img">
                     <Image

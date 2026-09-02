@@ -16,6 +16,8 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  // مواد الفيديو تضمّن مشغّل يوتيوب بالنسخة الخاصة بالخصوصية فقط — لا إطارات أخرى.
+  "frame-src https://www.youtube-nocookie.com",
   "img-src 'self' data: blob: https://dash.alelm.net",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.

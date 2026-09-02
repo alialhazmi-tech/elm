@@ -157,6 +157,7 @@ const CARD_COLUMNS = {
   keywords: storiesTable.keywords,
   pinned: storiesTable.pinned,
   breakingUntil: storiesTable.breakingUntil,
+  videoUrl: storiesTable.videoUrl,
 } as const;
 
 type CardRow = {
@@ -177,6 +178,7 @@ type CardRow = {
   keywords: unknown;
   pinned: number;
   breakingUntil: string | null;
+  videoUrl: string | null;
   body?: string | null;
 };
 
@@ -200,6 +202,7 @@ function mapRow(row: CardRow): Story {
     keywords: Array.isArray(row.keywords) ? (row.keywords as string[]) : undefined,
     pinned: row.pinned === 1,
     breakingUntil: row.breakingUntil ?? undefined,
+    videoUrl: row.videoUrl || undefined,
   });
 }
 

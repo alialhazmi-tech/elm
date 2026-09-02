@@ -46,6 +46,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 seoTitle: story.seoTitle ?? "",
                 seoDescription: story.seoDescription ?? "",
                 keywords: Array.isArray(story.keywords) ? (story.keywords as string[]) : [],
+                videoUrl: story.videoUrl ?? null,
                 archiveEvent: archiveEvent ?? null,
               }
             : null

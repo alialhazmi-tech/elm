@@ -74,6 +74,8 @@ export interface DraftInput {
   seoTitle?: string;
   seoDescription?: string;
   keywords?: string[];
+  /** رابط يوتيوب لمواد الفيديو — null يمسحه. */
+  videoUrl?: string | null;
   /** undefined = لا تغيير — التثبيت والعاجل من صلاحية المعتمدين فقط. */
   pinned?: boolean;
   breakingUntil?: string | null;
@@ -92,6 +94,7 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
     ...(input.seoTitle !== undefined ? { seoTitle: input.seoTitle || null } : {}),
     ...(input.seoDescription !== undefined ? { seoDescription: input.seoDescription || null } : {}),
     ...(input.keywords !== undefined ? { keywords: input.keywords } : {}),
+    ...(input.videoUrl !== undefined ? { videoUrl: input.videoUrl || null } : {}),
   };
   // دقائق القراءة من نص المتن الفعلي — 200 كلمة/دقيقة بين 1 و15.
   const words = stripHtmlToText(input.body).split(/\s+/u).filter(Boolean).length;

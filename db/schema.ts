@@ -47,6 +47,8 @@ export const stories = pgTable("stories", {
   seoDescription: text("seo_description"),
   /** كلمات مفتاحية: مصفوفة نصوص jsonb — تتولد بالذكاء وتُحرر يدويًا. */
   keywords: jsonb("keywords"),
+  /** رابط يوتيوب لمواد شكل «فيديو» (رابط المشاهدة القياسي بلا قائمة تشغيل) — يُسحب من alelm-api ويُحرر من اللوحة. */
+  videoUrl: text("video_url"),
 }, (table) => [
   index("stories_status_idx").on(table.status),
   index("stories_published_at_idx").on(table.publishedAt),
