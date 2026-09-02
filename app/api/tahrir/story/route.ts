@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { canEditStory, requireActor } from "@/lib/tahrir/access";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
-import { audit, deleteDraft, saveDraft } from "@/lib/tahrir/service";
+import { audit, deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
 
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requireActor();
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const input = (await request.json().catch(() => null)) as {
     id?: string;
@@ -31,6 +32,11 @@ export async function POST(request: Request) {
   }
 
   const id = input.id?.trim() || crypto.randomUUID();
+  // مادة جديدة تحتاج story.create؛ القائمة يحررها صاحبها بـ edit.own أو أي عضو بـ edit.any.
+  const existing = input.id?.trim() ? await getStory(id).catch(() => null) : null;
+  if (!canEditStory(session, existing)) {
+    return NextResponse.json({ error: existing ? "لا تملك صلاحية تحرير هذه المادة." : "ليست لديك صلاحية إنشاء مادة." }, { status: 403 });
+  }
   // متن المحرر الغني يُنقّى عند الحفظ — والعرض ينقّي ثانية (القاعدة ليست مصدر ثقة).
   const rawBody = input.body ?? "";
   const body = looksLikeHtml(rawBody) ? sanitizeBodyHtml(rawBody) : rawBody;
@@ -60,7 +66,7 @@ export async function POST(request: Request) {
       seoTitle: input.seoTitle?.trim().slice(0, 90) ?? "",
       seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",
       keywords,
-      ...(APPROVER_ROLES.includes(session.role)
+      ...(session.can("story.publish")
         ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
         : {}),
     },
@@ -74,11 +80,16 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requireActor();
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id } = (await request.json().catch(() => ({}))) as { id?: string };
   if (!id?.trim()) return NextResponse.json({ error: "معرف المسودة مطلوب." }, { status: 400 });
+  const existing = await getStory(id.trim()).catch(() => null);
+  if (existing && !canEditStory(session, existing)) {
+    return NextResponse.json({ error: "لا تملك صلاحية حذف هذه المسودة." }, { status: 403 });
+  }
 
   const result = await deleteDraft(id.trim(), session.username);
   if (result === "not-found") {

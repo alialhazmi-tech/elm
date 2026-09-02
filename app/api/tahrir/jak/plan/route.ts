@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { runJakPlan } from "@/lib/ai/jak";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { audit } from "@/lib/tahrir/service";
 import type { JakCanvas } from "@/lib/tahrir/jak";
 
@@ -12,8 +12,9 @@ import type { JakCanvas } from "@/lib/tahrir/jak";
  * الخطة اقتراح يُعاد للواجهة فقط — لا يُحفظ ولا يُنشر شيء من هنا.
  */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const access = await requirePermission("jak.manage");
+  if (!access.ok) return access.response;
+  const session = access.actor;
 
   const input = (await request.json().catch(() => null)) as {
     title?: string;

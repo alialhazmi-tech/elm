@@ -23,12 +23,12 @@ export function LoginForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username: form.get("username"), password: form.get("password") }),
     }).catch(() => null);
+    const data = await response?.json().catch(() => null);
     if (response?.ok) {
-      router.replace("/tahrir");
+      router.replace(data?.mustChangePassword ? "/tahrir/password" : "/tahrir");
       router.refresh();
       return;
     }
-    const data = await response?.json().catch(() => null);
     setError(data?.error ?? "تعذر الاتصال بالخادم.");
     setBusy(false);
   }

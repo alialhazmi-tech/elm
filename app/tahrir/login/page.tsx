@@ -2,12 +2,16 @@ import { redirect } from "next/navigation";
 
 import { LoginForm } from "@/components/tahrir/login-form";
 import { Card } from "@/components/ui/card";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 
 export const metadata = { title: "الدخول" };
 
+export const dynamic = "force-dynamic";
+
 export default async function LoginPage() {
-  if (await getSession()) redirect("/tahrir");
+  // loadActor لا getSession: كوكي عضو معلّق تبقى موقّعة، فلا نعيده إلى اللوحة التي ستعيده إلينا.
+  const actor = await loadActor();
+  if (actor) redirect(actor.mustChangePassword ? "/tahrir/password" : "/tahrir");
 
   return (
     <div className="grid min-h-svh place-items-center bg-sidebar p-4 [padding-top:max(2rem,env(safe-area-inset-top))]">

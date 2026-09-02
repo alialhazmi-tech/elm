@@ -58,7 +58,8 @@ interface SlideGuard {
 type EditorSlide = JakSlide & { guard?: SlideGuard };
 
 interface Props {
-  role: string;
+  /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
+  canApprove: boolean;
   sections: Array<[string, string]>;
   recentMedia: Array<{ url: string; filename: string }>;
   initial: {
@@ -132,7 +133,7 @@ const MessageAlert = ({ message }: { message: { kind: "ok" | "err"; text: string
     </Alert>
   ) : null;
 
-export function JakEditor({ role, sections, recentMedia, initial }: Props) {
+export function JakEditor({ canApprove, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -159,7 +160,6 @@ export function JakEditor({ role, sections, recentMedia, initial }: Props) {
   const [blockers, setBlockers] = useState<Array<{ ruleId: string; message: string; excerpt?: string }>>([]);
   const [action, setAction] = useState<StoryAction | null>(null);
 
-  const canApprove = role === "approver" || role === "chief";
   const err = (text: string) => setMessage({ kind: "err", text });
   const ok = (text: string) => setMessage({ kind: "ok", text });
 

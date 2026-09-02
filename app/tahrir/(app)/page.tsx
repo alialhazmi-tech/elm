@@ -8,7 +8,7 @@ import { stripHtmlToText } from "@/lib/content/html";
 import { SERIES } from "@/lib/content/series";
 import { relativeTimeAr } from "@/lib/format";
 import { runPolicyGuard } from "@/lib/policy";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
   bodiesFor,
@@ -51,7 +51,7 @@ function guardChip(title: string, body: string): { tone: "ok" | "warn" | "block"
 }
 
 export default async function OverviewPage() {
-  const session = await getSession();
+  const actor = await loadActor();
   const todayIso = new Date().toISOString().slice(0, 10);
   const [counts, todayCount, perDay, review, latestPublished, latestDraft, scheduled, distribution] =
     await Promise.all([
@@ -110,7 +110,7 @@ export default async function OverviewPage() {
       meta: entry.meta,
     }));
 
-  const firstName = session?.displayName.split(" ")[0] ?? "";
+  const firstName = actor?.displayName.split(" ")[0] ?? "";
   const scheduledToday = timeline.filter((item) => item.state !== "done").length;
   const subtitle = [
     todayCount > 0 ? `${todayCount} مواد نُشرت اليوم` : "لم يُنشر شيء بعد اليوم",

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { putStoredImage } from "@/lib/storage/images";
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { readImageMeta } from "@/lib/tahrir/imageMeta";
 import { addMedia } from "@/lib/tahrir/service";
 
@@ -18,8 +18,9 @@ const EXT: Record<string, string> = {
  * غير موثقة دائمًا (الدستور §12) حتى يوثقها معتمد.
  */
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requirePermission("media.upload");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { normalizeSlide } from "@/lib/ai/jak";
 import { getJakSource, listSlides, replaceSlides, type JakSlide } from "@/lib/tahrir/jak";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
@@ -8,8 +8,8 @@ import { getStory } from "@/lib/tahrir/service";
 
 /** شرائح مادة جاك — جلبها وحفظها (استبدال المجموعة كاملة + مزامنة إسقاط المتن). */
 export async function GET(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requirePermission("jak.manage");
+  if (!gate.ok) return gate.response;
 
   const storyId = new URL(request.url).searchParams.get("storyId") ?? "";
   if (!storyId) return NextResponse.json({ error: "storyId مطلوب." }, { status: 400 });
@@ -19,8 +19,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requirePermission("jak.manage");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const input = (await request.json().catch(() => null)) as {
     storyId?: string;

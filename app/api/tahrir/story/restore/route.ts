@@ -1,14 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { APPROVER_ROLES, getSession } from "@/lib/tahrir/auth";
+import { requirePermission } from "@/lib/tahrir/access";
 import { restoreArchived } from "@/lib/tahrir/service";
 
 export async function POST(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
-  if (!APPROVER_ROLES.includes(session.role)) {
-    return NextResponse.json({ error: "الاستعادة من صلاحية المعتمدين ورئيس التحرير." }, { status: 403 });
-  }
+  const gate = await requirePermission("story.restore", "الاستعادة من صلاحية المعتمدين ورئيس التحرير.");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const { id } = (await request.json().catch(() => ({}))) as { id?: string };
   if (!id?.trim()) return NextResponse.json({ error: "معرف المادة مطلوب." }, { status: 400 });

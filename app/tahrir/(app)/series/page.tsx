@@ -3,7 +3,7 @@ import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
 import { ArchiveToggle, ProposalDecision, ProposalForm } from "@/components/tahrir/series/series-client";
 import { Card } from "@/components/ui/card";
 import { ARCHIVED_SERIES, SERIES } from "@/lib/content/series";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { listProposals, listSeriesRows, seriesDistribution } from "@/lib/tahrir/service";
 
 export const metadata = { title: "السلاسل" };
@@ -16,7 +16,7 @@ const PROPOSAL_LABELS: Record<string, { label: string; tone: "ok" | "warn" | "bl
 };
 
 export default async function SeriesPage() {
-  const session = await getSession();
+  const actor = await loadActor();
   const [distribution, proposals, seriesRows] = await Promise.all([
     seriesDistribution().catch(() => []),
     listProposals().catch(() => []),
@@ -24,7 +24,8 @@ export default async function SeriesPage() {
   ]);
   const bySlug = new Map(distribution.map((row) => [row.seriesSlug, row]));
   const hiddenBySlug = new Map(seriesRows.map((row) => [row.slug, row.hidden === 1]));
-  const canToggle = session?.role === "approver" || session?.role === "chief";
+  const canToggle = actor?.can("series.visibility") ?? false;
+  const canDecide = actor?.can("series.decide") ?? false;
 
   const withCounts = SERIES.map((series) => ({
     ...series,
@@ -103,7 +104,7 @@ export default async function SeriesPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
                     اقترحها {proposal.proposedBy} — {proposal.createdAt.slice(0, 10)}
-                    {session?.role === "chief" && proposal.status === "pending" ? <ProposalDecision id={proposal.id} /> : null}
+                    {canDecide && proposal.status === "pending" ? <ProposalDecision id={proposal.id} /> : null}
                   </div>
                 </div>
               );

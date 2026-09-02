@@ -1,7 +1,7 @@
 import { SERIES } from "@/lib/content/series";
 import { redirect } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { EditorClient } from "@/components/tahrir/editor/editor-client";
 
@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const session = await getSession();
+  const actor = await loadActor();
   const story = id === "new" ? null : await getStory(id).catch(() => null);
   if (story?.format === "jakalelm") redirect(`/tahrir/jak/${story.id}`);
   const archiveEvent = story?.status === "archived"
@@ -24,7 +24,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   return (
     <main>
       <EditorClient
-        role={session?.role ?? "editor"}
+        canApprove={actor?.can("story.publish") ?? false}
         recentMedia={recentMedia}
         series={SERIES.map(({ slug, name, color }) => ({ slug, name, color }))}
         sections={sections}

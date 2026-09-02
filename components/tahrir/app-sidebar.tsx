@@ -37,12 +37,14 @@ import { cn } from "@/lib/utils";
 
 import { useThemeConfig } from "./active-theme";
 import { CommandPalette } from "./command-palette";
-import { isNavActive, NAV_GROUPS, type NavBadgeKey } from "./nav";
+import { isNavActive, navGroupsFor, type NavBadgeKey } from "./nav";
 import { useLogout } from "./use-logout";
 
 export interface SidebarUser {
   displayName: string;
   roleLabel: string;
+  /** مفاتيح صلاحيات العضو — ترشّح القوائم فلا يرى بابًا مغلقًا. */
+  permissions: string[];
 }
 
 export type NavCounts = Record<NavBadgeKey, number>;
@@ -54,6 +56,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
   const { theme } = useThemeConfig();
   const { isMobile, setOpenMobile } = useSidebar();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const groups = navGroupsFor(user.permissions);
   const closeMobile = () => {
     if (isMobile) setOpenMobile(false);
   };
@@ -107,7 +110,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
         </SidebarHeader>
 
         <SidebarContent>
-          {NAV_GROUPS.map((group) => (
+          {groups.map((group) => (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -154,7 +157,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
         </SidebarFooter>
         <SidebarRail />
       </Sidebar>
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} groups={groups} />
     </>
   );
 }

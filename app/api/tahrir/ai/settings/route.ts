@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 
 import { keyStatus, loadAiSettings, saveAiSettings, type AiSettingsData } from "@/lib/ai/settings";
 import { usageTotals } from "@/lib/ai/usage";
-import { getSession } from "@/lib/tahrir/auth";
+import { requireActor, requirePermission } from "@/lib/tahrir/access";
 import { audit } from "@/lib/tahrir/service";
 
 export async function GET() {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
+  const gate = await requireActor();
+  if (!gate.ok) return gate.response;
 
   const [settings, totals] = await Promise.all([loadAiSettings(), usageTotals()]);
   return NextResponse.json({ settings, totals, keys: keyStatus() });
@@ -15,11 +15,9 @@ export async function GET() {
 
 /** تعديل الإعدادات — لرئيس التحرير؛ بندا الحوكمة (الدستور والحارس) ليسا إعدادات أصلًا. */
 export async function PATCH(request: Request) {
-  const session = await getSession();
-  if (!session) return NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 });
-  if (session.role !== "chief") {
-    return NextResponse.json({ error: "إعدادات الذكاء قرار رئيس التحرير." }, { status: 403 });
-  }
+  const gate = await requirePermission("ai.settings", "إعدادات الذكاء قرار رئيس التحرير.");
+  if (!gate.ok) return gate.response;
+  const session = gate.actor;
 
   const incoming = (await request.json().catch(() => null)) as Partial<AiSettingsData> | null;
   if (!incoming) return NextResponse.json({ error: "طلب غير صالح." }, { status: 400 });

@@ -6,7 +6,8 @@
 export const SESSION_COOKIE = "alelm_tahrir";
 export const SESSION_HOURS = 12;
 
-export type Role = "editor" | "approver" | "chief";
+/** معرّف الدور كما في جدول roles — الصلاحيات الفعلية تُحلّ من القاعدة في lib/tahrir/access.ts لا من الرمز. */
+export type Role = string;
 
 export interface Session {
   userId: string;
@@ -15,9 +16,6 @@ export interface Session {
   role: Role;
   exp: number;
 }
-
-/** الأدوار المخولة باعتماد المواد ونشرها. */
-export const APPROVER_ROLES: Role[] = ["approver", "chief"];
 
 const encoder = new TextEncoder();
 

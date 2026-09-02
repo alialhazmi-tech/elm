@@ -4,20 +4,16 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/tahrir/app-sidebar";
 import { SiteHeader } from "@/components/tahrir/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getSession } from "@/lib/tahrir/auth";
+import { loadActor } from "@/lib/tahrir/access";
 import { promoteDueScheduled, statusCounts } from "@/lib/tahrir/service";
-
-const ROLE_LABELS: Record<string, string> = {
-  editor: "محرر",
-  approver: "معتمد",
-  chief: "رئيس التحرير",
-};
 
 export default async function TahrirAppLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const session = await getSession();
-  if (!session) redirect("/tahrir/login");
+  // الفاعل يُحلّ من القاعدة عند كل طلب: التعليق وتغيير الدور يسريان فورًا، والرمز يحمل الهوية فقط.
+  const actor = await loadActor();
+  if (!actor) redirect("/tahrir/login");
+  if (actor.mustChangePassword) redirect("/tahrir/password");
 
   // النشر التلقائي هنا يبطل نفسه خلال 300 ثانية عبر ISR — الإبطال الفوري في /api/tahrir/tick فقط
   // (revalidatePath يرفض العمل أثناء رندر مكوّن خادم مثل هذا الـlayout).
@@ -54,8 +50,9 @@ export default async function TahrirAppLayout({
           يصير isMobile صحيحًا على الجوال، فيرسم الدُرج حيث رسم الخادم الشريط المكتبي — تعارض ترطيب. */}
       <AppSidebar
         user={{
-          displayName: session.displayName,
-          roleLabel: ROLE_LABELS[session.role] ?? session.role,
+          displayName: actor.displayName,
+          roleLabel: actor.roleLabel,
+          permissions: [...actor.permissions],
         }}
         counts={{ total, review: counts.review ?? 0, scheduled: counts.scheduled ?? 0 }}
       />
