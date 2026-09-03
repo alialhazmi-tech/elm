@@ -303,3 +303,129 @@
   .sh-ctx-row .soft-img { width: 100%; height: auto; aspect-ratio: 16 / 10; }
   .sh-why { flex-direction: column; align-items: flex-start; }
 }
+
+/* ============================================================
+   طبقة الراحة البصرية (2026-09-03): الصفحة كانت بيضاء بالكامل لأن
+   soft.css يجعل الأرضية والسطح لونًا واحدًا. هنا الرئيسية تنال أرضية
+   مصبوغة، بطاقات بيضاء تطفو فوقها، شريطان كاملا العرض (الجديد الآن،
+   بالأرقام)، ولوحات الأقسام بصبغة لون كل قسم. الهيدر يبقى أبيض فيبرز.
+   ============================================================ */
+body:has(.home-shell) {
+  --home-ground: #f1f4f9;
+  --home-card: #ffffff;
+  --home-line: #dfe6f0;
+  --home-band: #e6ecf6;
+  --home-band-2: #eaf1fb;
+  --home-figures-a: #1f4fa3;
+  --home-figures-b: #12284b;
+  background: var(--home-ground);
+}
+:root[data-theme="dark"] body:has(.home-shell) {
+  --home-ground: #0a1120;
+  --home-card: #121d31;
+  --home-line: #22304a;
+  --home-band: #0e1829;
+  --home-band-2: #10203a;
+  --home-figures-a: #1e4a94;
+  --home-figures-b: #0e1f3f;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) body:has(.home-shell) {
+    --home-ground: #0a1120;
+    --home-card: #121d31;
+    --home-line: #22304a;
+    --home-band: #0e1829;
+    --home-band-2: #10203a;
+    --home-figures-a: #1e4a94;
+    --home-figures-b: #0e1f3f;
+  }
+}
+
+/* الهيدر والمسطرة: سطح أبيض فوق أرضية مصبوغة، بظل خفيف يفصلهما عن الصفحة */
+body:has(.home-shell) .series-rail {
+  border-bottom-color: var(--home-line);
+  box-shadow: 0 10px 28px -18px rgb(16 30 48 / 0.28);
+}
+
+/* الصدارة: لوحة بتدرج أزرق شاحب؛ الموجز: بطاقة بيضاء بإطار */
+.sh-lead {
+  background: linear-gradient(135deg, var(--home-band-2) 0%, var(--home-card) 78%);
+  border: 1px solid var(--home-line);
+}
+.sh-lead-media { background: var(--home-band); }
+.sh-brief {
+  background: var(--home-card);
+  border-color: var(--home-line);
+  box-shadow: 0 1px 2px rgb(16 30 48 / 0.04), 0 14px 36px -24px rgb(16 30 48 / 0.25);
+}
+.sh-brief-list li { border-top-color: var(--home-line); }
+
+/* الجديد الآن: شريط كامل العرض بلون أعمق قليلًا من الأرضية */
+.sh-stream {
+  margin-top: 44px;
+  padding: 26px 0 30px;
+  background: var(--home-band);
+  box-shadow: 0 0 0 100vmax var(--home-band);
+  clip-path: inset(0 -100vmax);
+}
+.sh-stream .pulse { margin-top: 0; }
+.pulse-line i { background: color-mix(in srgb, var(--navy) 18%, var(--home-card)); }
+.river-card { background: var(--home-card); border: 1px solid var(--home-line); }
+.river-img { background: var(--home-band); }
+
+/* اسأل العلم: لوحة زرقاء شاحبة بإطار وتوهج ناعم */
+.ask-band {
+  background:
+    radial-gradient(70% 140% at 100% 0%, color-mix(in srgb, var(--navy) 14%, transparent), transparent 60%),
+    var(--surface-3);
+  border: 1px solid color-mix(in srgb, var(--navy) 16%, var(--home-line));
+}
+.ask-band-form { background: var(--home-card); border: 1px solid var(--home-line); }
+
+/* لوحات الأقسام: تبقى كتلًا تحريرية شفافة فوق الأرضية (لا بطاقة ولا إطار)؛
+   الفاصل هو رأس القسم بخطه الملون وسطور الصفوف فقط. */
+.panels { gap: 44px; }
+.panel-row { border-bottom-color: var(--home-line); }
+.panel-row:last-child { border-bottom: 0; }
+
+/* وراء الخبر: صفوف بيضاء تطفو، وسؤال الأسبوع بلوحة زرقاء شاحبة */
+.sh-ctx-row { background: var(--home-card); border: 1px solid var(--home-line); }
+.sh-ctx-rows .sh-why { background: var(--surface-3); border: 1px solid color-mix(in srgb, var(--navy) 16%, var(--home-line)); }
+.soft-img { background: var(--home-band); }
+
+/* بالأرقام: شريط كحلي كامل العرض يكسر الفاتح ويمنح الأرقام وزنها */
+.sh-figures {
+  margin-top: 56px;
+  padding: 36px 0 40px;
+  color: #fff;
+  background: radial-gradient(55% 150% at 50% -30%, var(--home-figures-a) 0%, var(--home-figures-b) 62%);
+  box-shadow: 0 0 0 100vmax var(--home-figures-b);
+  clip-path: inset(0 -100vmax);
+}
+.sh-figures .section-head h2 { color: #fff; }
+.sh-figures .section-head .sub { color: rgb(255 255 255 / 0.66); }
+.sh-figures .figure-cell {
+  background: rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.14);
+  backdrop-filter: blur(2px);
+}
+.sh-figures .figure-cell .v { color: #fff; }
+.sh-figures .figure-cell p { color: #eef3fb; }
+.sh-figures .figure-cell .src { color: rgb(255 255 255 / 0.7); }
+.sh-figures .figure-cell .src:hover { color: #fff; }
+.sh-figures + .sh-section { margin-top: 56px; }
+
+/* السلاسل: البلاطات فوق الأرضية المصبوغة تحتاج نسبة لون أعلى قليلًا */
+.sh-series a { background: color-mix(in srgb, var(--sc) 12%, var(--home-card)); border: 1px solid color-mix(in srgb, var(--sc) 18%, var(--home-line)); }
+.sh-series a:hover { background: color-mix(in srgb, var(--sc) 19%, var(--home-card)); }
+
+/* الأكثر قراءة والتذييل: بطاقات بيضاء بإطار بدل الرمادي المطابق للأرضية */
+.most-read { background: var(--home-card); border: 1px solid var(--home-line); }
+.most-read-list li + li { border-top: 1px solid var(--home-line); }
+body:has(.home-shell) .footer-shell { background: var(--home-card); border: 1px solid var(--home-line); }
+
+@media (max-width: 640px) {
+  .sh-stream { margin-top: 32px; padding: 20px 0 22px; }
+  .sh-figures { margin-top: 40px; padding: 26px 0 28px; }
+  .sh-figures + .sh-section { margin-top: 40px; }
+}

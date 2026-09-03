@@ -184,7 +184,7 @@ export default async function Home() {
 
         {/* نبض اليوم + الجديد الآن */}
         {stream && riverItems.length > 0 ? (
-          <section aria-label="الجديد الآن">
+          <section className="sh-stream" aria-label="الجديد الآن">
             <div className="pulse">
               <div className="pulse-copy">
                 <h2>الجديد الآن</h2>
@@ -354,7 +354,7 @@ export default async function Home() {
 
         {/* بالأرقام */}
         {home.numbers.length > 0 ? (
-          <section className="sh-section" aria-label="بالأرقام">
+          <section className="sh-section sh-figures" aria-label="بالأرقام">
             <div className="section-head">
               <h2>بالأرقام</h2>
               <span className="sub">كل رقم يحيل إلى مصدره</span>
