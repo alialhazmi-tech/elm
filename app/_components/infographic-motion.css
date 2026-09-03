@@ -52,6 +52,11 @@
   border-color: var(--info-accent, #22d3ee);
   box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 24px 0 var(--info-glow, rgba(6, 182, 212, 0.35));
 }
+@media (hover: hover) and (pointer: fine) {
+  button.info-glass:hover {
+    transform: translateY(-6px);
+  }
+}
 
 /* الزوايا التقنية المتوهجة (Corner Brackets) */
 .info-tech-corners::before,
@@ -62,7 +67,7 @@
   height: 10px;
   border-color: var(--info-accent, #22d3ee);
   pointer-events: none;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease;
 }
 .info-tech-corners::before {
   top: 6px;
@@ -103,9 +108,11 @@
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.info-glass:hover .info-cutout-glow {
-  opacity: 0.65;
-  transform: scale(1.25);
+@media (hover: hover) and (pointer: fine) {
+  .info-glass:hover .info-cutout-glow {
+    opacity: 0.65;
+    transform: scale(1.25);
+  }
 }
 
 /* دمج الصورة وعزل الخلفية بنمط screen + mask */
@@ -121,8 +128,10 @@
   display: block;
 }
 
-.info-glass:hover .info-cutout-asset {
-  transform: scale(1.08) translateY(-4px);
+@media (hover: hover) and (pointer: fine) {
+  .info-glass:hover .info-cutout-asset {
+    transform: scale(1.06) translateY(-4px);
+  }
 }
 
 /* حركات الطفو والنبض المائي للأسماك والعناصر */
@@ -222,7 +231,7 @@
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid var(--info-accent, #22d3ee);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
   position: relative;
 }
 
@@ -272,4 +281,54 @@
   background: linear-gradient(90deg, var(--info-accent, #22d3ee), #10b981);
   box-shadow: 0 0 12px var(--info-accent, #22d3ee);
   transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* نافذة التفاصيل: الخلفية تتلاشى واللوحة تنبثق من 0.97 — لا شيء يظهر من العدم */
+.info-modal-backdrop {
+  animation: info-fade-in 0.2s ease-out;
+}
+.info-modal-panel {
+  animation: info-pop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes info-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes info-pop-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* تقليل الحركة: نُطفئ الطفو والفقاعات والنبض ونُبقي التلاشي واللون */
+@media (prefers-reduced-motion: reduce) {
+  .info-anim-bob,
+  .info-anim-drift,
+  .info-anim-pulse {
+    animation: none;
+  }
+  .info-bubble {
+    display: none;
+  }
+  .info-container {
+    transition: none;
+  }
+  .info-glass,
+  .info-cutout-asset,
+  .info-cutout-glow,
+  .info-depth-dot {
+    transition-property: border-color, box-shadow, opacity, background;
+  }
+  button.info-glass:hover,
+  .info-glass:hover .info-cutout-asset,
+  .info-glass:hover .info-cutout-glow,
+  .info-depth-dot:hover,
+  .info-depth-dot.active {
+    transform: none;
+  }
+  .info-modal-panel {
+    animation-name: info-fade-in;
+  }
+  .info-vision-fill {
+    transition: none;
+  }
 }

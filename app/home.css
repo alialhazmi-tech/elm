@@ -49,12 +49,15 @@
 .hm-go {
   display: inline-flex; align-items: center; gap: 6px; padding: 6px 16px; border-radius: 999px;
   background: var(--surface-2); font-size: 13.5px; font-weight: 700; color: var(--link);
-  white-space: nowrap; text-decoration: none; transition: all 0.2s ease;
+  white-space: nowrap; text-decoration: none; transition: background 0.2s ease, color 0.2s ease, transform 160ms ease-out;
 }
 .hm-go:hover { background: var(--link); color: #fff; }
+.hm-go:active { transform: scale(0.97); }
 .hm-hero-media { position: relative; display: block; min-height: 100%; background: var(--surface-2); overflow: hidden; }
-.hm-hero-media img { object-fit: cover; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-.hm-hero:hover .hm-hero-media img { transform: scale(1.03); }
+.hm-hero-media img { object-fit: cover; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .hm-hero:hover .hm-hero-media img { transform: scale(1.03); }
+}
 
 /* — موجز العلم — */
 .hm-brief {
@@ -76,9 +79,10 @@
   flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
   border: 1px solid color-mix(in srgb, var(--navy) 15%, transparent); border-radius: 999px;
   background: color-mix(in srgb, var(--navy) 8%, var(--surface)); color: var(--navy);
-  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.2s ease;
+  font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 160ms ease-out;
 }
 .brief-listen:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+.brief-listen:active { transform: scale(0.97); }
 .brief-listen.is-on { background: var(--navy); color: #fff; border-color: var(--navy); }
 
 .hm-brief-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; flex: 1; }
@@ -115,10 +119,12 @@
   box-shadow: 0 2px 8px -2px rgb(16 30 48 / 0.03), 0 10px 24px -4px rgb(16 30 48 / 0.04);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease, border-color 0.22s ease;
 }
-.hm-series .series-lens:hover {
-  transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--sc) 40%, var(--line));
-  box-shadow: 0 4px 16px -2px color-mix(in srgb, var(--sc) 20%, transparent), 0 16px 36px -4px rgb(16 30 48 / 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .hm-series .series-lens:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--sc) 40%, var(--line));
+    box-shadow: 0 4px 16px -2px color-mix(in srgb, var(--sc) 20%, transparent), 0 16px 36px -4px rgb(16 30 48 / 0.08);
+  }
 }
 .hm-series .sname {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -139,7 +145,9 @@
   font-size: 12.5px; font-weight: 700; color: color-mix(in srgb, var(--sc) 85%, var(--ink));
   display: inline-flex; align-items: center; gap: 4px;
 }
-.hm-series .series-lens:hover .sgo span { transform: translateX(-3px); transition: transform 0.2s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .hm-series .series-lens:hover .sgo span { transform: translateX(-3px); transition: transform 0.2s ease; }
+}
 
 /* — ٣. اسأل العلم — لوح كحلي بحد ذهبي خافت — */
 .hm-ask {
@@ -164,9 +172,10 @@
 .hm-ask-form input::placeholder { color: #6b7788; }
 .hm-ask-form button {
   flex: none; height: 42px; padding: 0 22px; border: 0; border-radius: 999px;
-  background: var(--navy-deep); color: #fff; font: 700 14px var(--font-text); cursor: pointer; transition: background 0.15s ease;
+  background: var(--navy-deep); color: #fff; font: 700 14px var(--font-text); cursor: pointer; transition: background 0.15s ease, transform 160ms ease-out;
 }
 .hm-ask-form button:hover { background: var(--navy); }
+.hm-ask-form button:active { transform: scale(0.97); }
 .hm-ask-suggest { margin: 12px 0 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 12.5px; color: var(--head-ink-2); padding-inline-start: 6px; }
 .hm-ask-suggest .lbl { font-weight: 500; }
 .hm-ask-suggest a { color: #fff; border: 1px solid rgb(255 255 255 / 0.2); border-radius: 999px; padding: 3px 12px; text-decoration: none; transition: border-color 0.15s ease; }
@@ -252,7 +261,7 @@
   border-radius: 999px;
   background: var(--surface-2);
   color: var(--ink-2);
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease;
   text-decoration: none;
 }
 .hm-list .hm-head .more:hover {
@@ -279,10 +288,12 @@
 }
 .hm-list-lead-media img {
   object-fit: cover;
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.hm-list-lead:hover .hm-list-lead-media img {
-  transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+  .hm-list-lead:hover .hm-list-lead-media img {
+    transform: scale(1.05);
+  }
 }
 .hm-list-lead-body {
   display: flex;

@@ -103,7 +103,10 @@
 .strip-date { flex: none; font-size: 11px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
 /* العاجل الأحمر: للساعة الأولى من مادة مُعلَّمة فقط */
 .strip-news.is-urgent .strip-live { color: #c81e3a; }
-.strip-news.is-urgent .strip-dot { background: #e0243f; box-shadow: none; animation: urgent-pulse 1.6s ease-out infinite; }
+.strip-news.is-urgent .strip-dot { background: #e0243f; box-shadow: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .strip-news.is-urgent .strip-dot { animation: urgent-pulse 1.6s ease-out infinite; }
+}
 @keyframes urgent-pulse {
   0% { box-shadow: 0 0 0 0 rgb(224 36 63 / 0.5); }
   70% { box-shadow: 0 0 0 6px rgb(224 36 63 / 0); }

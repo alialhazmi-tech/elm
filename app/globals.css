@@ -388,10 +388,6 @@ a.story-link:hover { color: var(--link); }
 }
 .ctx-featured .ctx-media img {
   object-fit: cover;
-  transition: transform 0.4s ease;
-}
-.ctx-featured:hover .ctx-media img {
-  transform: scale(1.03);
 }
 .ctx-featured h3 {
   font-size: 22px;
@@ -498,8 +494,10 @@ a.story-link:hover { color: var(--link); }
   font-size: 13px;
   transition: transform 0.2s ease;
 }
-.why-action:hover .why-arrow {
-  transform: translateX(-4px);
+@media (hover: hover) and (pointer: fine) {
+  .why-action:hover .why-arrow {
+    transform: translateX(-4px);
+  }
 }
 
 /* ============ بطاقة الفسيفساء (صفحات الأقسام والسلاسل والبحث) ============ */
@@ -722,7 +720,11 @@ a.story-link:hover { color: var(--link); }
   justify-content: flex-start;
   padding: 16px;
   overflow-y: auto;
-  animation: fadeIn 0.2s ease;
+  animation: elm-fade-in 0.2s ease-out;
+}
+@keyframes elm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .infographic-lightbox-backdrop {
   position: fixed;
@@ -1138,12 +1140,14 @@ a.story-link:hover { color: var(--link); }
   .m-card {
     transition: box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
   }
-  .m-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
   .lead .lead-media img, .ctx-featured .ctx-media img {
-    transition: transform 0.5s ease;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .lead:hover .lead-media img,
-.ctx-featured:hover .ctx-media img { transform: scale(1.03); }
+  @media (hover: hover) and (pointer: fine) {
+    .m-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+    .lead:hover .lead-media img,
+    .ctx-featured:hover .ctx-media img { transform: scale(1.03); }
+  }
 }
 
 /* أيقونة تبديل الثيم — تُختار عبر CSS فلا يحتاج المكوّن حالة */

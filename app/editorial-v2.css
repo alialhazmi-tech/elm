@@ -260,8 +260,10 @@ body {
   overflow: visible;
 }
 .m-media { display: block; overflow: hidden; border-radius: 7px; background: var(--surface-2); }
-.m-card .c-img { width: 100%; height: 220px; border-radius: 0; transition: transform .5s ease; }
-.m-card:hover .c-img { transform: scale(1.025); }
+.m-card .c-img { width: 100%; height: 220px; border-radius: 0; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .m-card:hover .c-img { transform: scale(1.025); }
+}
 .m-body { padding: 15px 0 0; gap: 8px; }
 .m-kick { color: var(--ink-3); font-size: 11px; }
 .m-card h3 { font-size: 18px; line-height: 1.55; }
@@ -523,8 +525,10 @@ body {
   border-radius: 50%;
   background: var(--surface-2);
 }
-.podcast-tile-cover img { object-fit: cover; transition: transform .45s ease; }
-.podcast-tile:hover .podcast-tile-cover img { transform: scale(1.035); }
+.podcast-tile-cover img { object-fit: cover; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+@media (hover: hover) and (pointer: fine) {
+  .podcast-tile:hover .podcast-tile-cover img { transform: scale(1.035); }
+}
 .podcast-tile-copy { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; }
 .podcast-tile-index { color: var(--ink-3); font-size: 11px; }
 .podcast-tile h2 { margin-top: 5px; font-size: 29px; }
