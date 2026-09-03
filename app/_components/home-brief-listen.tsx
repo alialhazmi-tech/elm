@@ -51,9 +51,21 @@ export function BriefListen({ lines, seconds }: { lines: string[]; seconds: numb
       className={speaking ? "brief-listen is-on" : "brief-listen"}
       onClick={speaking ? stop : play}
       aria-pressed={speaking}
+      aria-label={speaking ? "إيقاف الاستماع للموجز" : `استمع للموجز الصوتي الذكي في ${seconds} ثانية`}
+      title={speaking ? "إيقاف الاستماع" : `استمع للموجز الصوتي (${seconds} ث)`}
     >
-      <span aria-hidden="true">{speaking ? "⏸" : "▶"}</span>
-      {speaking ? "إيقاف" : `استمع · ${seconds} ث`}
+      <span className="bl-icon" aria-hidden="true">
+        {speaking ? (
+          <span className="bl-waves">
+            <i className="bl-bar" />
+            <i className="bl-bar" />
+            <i className="bl-bar" />
+          </span>
+        ) : (
+          <span className="bl-play">▶</span>
+        )}
+      </span>
+      <span className="bl-text">{speaking ? "إيقاف" : `استمع · ${seconds} ث`}</span>
     </button>
   );
 }

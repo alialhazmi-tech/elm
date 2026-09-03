@@ -6,6 +6,7 @@ import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
 import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
 import { BriefListen } from "@/app/_components/home-brief-listen";
+import { HomeAskBand } from "@/app/_components/home-ask-band";
 import { homeStream } from "@/lib/content/homeStream";
 import { relativeTimeAr } from "@/lib/format";
 import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
@@ -210,33 +211,7 @@ export default async function Home() {
         ) : null}
 
         {/* اسأل العلم — يلي النهر مباشرة */}
-        <section className="ask-band" aria-labelledby="ask-title">
-          <div className="ask-band-info">
-            <h2 id="ask-title">
-              <span className="spark" aria-hidden="true">✦</span> اسأل العلم
-            </h2>
-            <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا — كل إجابة تحمل روابط مصادرها المنشورة.</p>
-          </div>
-          <div className="ask-band-interactive">
-            <form className="ask-band-form" action="/search" role="search">
-              <input
-                type="search"
-                name="q"
-                placeholder="لماذا ترتفع أسعار التنجستن؟"
-                aria-label="ابحث في العلم"
-                dir="rtl"
-              />
-              <button type="submit">اسأل</button>
-            </form>
-            <p className="ask-suggest">
-              <span className="suggest-lbl">جرّب:</span>
-              <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
-              <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
-              <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-              <span className="ask-note">الإجابات مولّدة آليًا وتُراجع مصادرها قبل الاعتماد</span>
-            </p>
-          </div>
-        </section>
+        <HomeAskBand />
 
         {/* لوحات الأقسام: بلوك تحريري — رأس بحد سفلي بلون القسم، ثم مادة قائدة وصفوف */}
         {stream && stream.panels.length > 0 ? (
