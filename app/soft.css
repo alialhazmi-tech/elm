@@ -113,8 +113,9 @@ body { background: var(--bg); color: var(--ink); }
 
 /* ============ الرئيسية ============ */
 
-.btn-pill { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--navy); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; }
+.btn-pill { display: inline-flex; align-items: center; height: 44px; padding: 0 20px; border-radius: 999px; background: var(--navy); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none; transition: background 0.15s ease, color 0.15s ease, transform 160ms ease-out; }
 .btn-pill:hover { background: var(--navy-deep); color: #fff; }
+.btn-pill:active { transform: scale(0.97); }
 
 /* ============ صفحة المادة ============ */
 .article-shell { max-width: 1240px; padding: 10px 24px 40px; }

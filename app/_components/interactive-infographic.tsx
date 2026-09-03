@@ -99,9 +99,15 @@ function AnimatedCounter({
   prefix?: string;
   suffix?: string;
 }) {
-  const [current, setCurrent] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
+  const numRef = useRef<HTMLSpanElement>(null);
   const [started, setStarted] = useState(false);
+  const fractionDigits = target % 1 !== 0 ? decimals : 0;
+  const format = (value: number) =>
+    value.toLocaleString("en-US", {
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: decimals,
+    });
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -118,34 +124,36 @@ function AnimatedCounter({
     return () => observer.disconnect();
   }, []);
 
+  // العدّ يكتب النص مباشرة في العنصر عبر requestAnimationFrame بدل إعادة رسم المكوّن ~110 مرة.
   useEffect(() => {
     if (!started) return;
-    let start = 0;
-    const duration = 1800;
-    const stepTime = 16;
-    const steps = duration / stepTime;
-    const increment = target / steps;
-
-    const interval = setInterval(() => {
-      start += increment;
-      if (start >= target) {
-        setCurrent(target);
-        clearInterval(interval);
-      } else {
-        setCurrent(Number(start.toFixed(decimals)));
-      }
-    }, stepTime);
-
-    return () => clearInterval(interval);
+    const el = numRef.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) {
+      el.textContent = format(target);
+      return;
+    }
+    const duration = 1400;
+    let frame = 0;
+    let startAt = 0;
+    const tick = (now: number) => {
+      if (!startAt) startAt = now;
+      const t = Math.min((now - startAt) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3); // ease-out: يبدأ سريعًا ويهدأ عند الرقم
+      el.textContent = format(target * eased);
+      if (t < 1) frame = requestAnimationFrame(tick);
+      else el.textContent = format(target);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [started, target, decimals]);
 
   return (
     <span ref={ref} className="tabular-nums font-bold" dir="ltr">
       {prefix}
-      {current.toLocaleString("en-US", {
-        minimumFractionDigits: target % 1 !== 0 ? decimals : 0,
-        maximumFractionDigits: decimals,
-      })}
+      <span ref={numRef}>{format(0)}</span>
       {suffix && <span className="mr-1 text-sm font-normal opacity-85">{suffix}</span>}
     </span>
   );
@@ -169,7 +177,7 @@ function AssetVisual({ item, accentColor }: { item: InfographicShowcaseItem; acc
       <div className="info-cutout-glow" style={{ background: accentColor }} />
       <svg
         viewBox="0 0 120 80"
-        className="w-36 h-28 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] transition-transform duration-500 group-hover:scale-110"
+        className="w-36 h-28 drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)] transition-transform duration-300 group-hover:scale-105"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -293,10 +301,10 @@ export function InteractiveInfographic({
 
       {/* شريط التحكم العلوي */}
       {enableControls && (
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-black/40 border-b border-white/10 px-4 py-2.5 flex items-center justify-between text-xs transition-all">
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-black/40 border-b border-white/10 px-4 py-2.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-3">
             <span className="font-bold flex items-center gap-1.5" style={{ color: theme.accentColor }}>
-              <span className="inline-block w-2 h-2 rounded-full animate-ping" style={{ background: theme.accentColor }} />
+              <span className="inline-block w-2 h-2 rounded-full animate-ping motion-reduce:animate-none" style={{ background: theme.accentColor }} />
               استوديو الإنفوجرافيك التفاعلي
             </span>
             <span className="hidden sm:inline text-white/40">|</span>
@@ -313,7 +321,7 @@ export function InteractiveInfographic({
                     key={tId}
                     title={conf.name}
                     onClick={() => handleThemeChange(tId)}
-                    className={`px-2 py-1 rounded transition-all flex items-center gap-1 ${
+                    className={`px-2 py-1 rounded transition-[background-color,opacity] duration-150 flex items-center gap-1 ${
                       activeTheme === tId ? "bg-white/20 font-bold shadow" : "opacity-60 hover:opacity-100"
                     }`}
                   >
@@ -327,7 +335,7 @@ export function InteractiveInfographic({
             {/* زر الصوت */}
             <button
               onClick={() => setSoundOn(synthInstance.toggle())}
-              className={`px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+              className={`px-2.5 py-1.5 rounded-lg border transition-colors duration-150 flex items-center gap-1.5 ${
                 soundOn ? "bg-cyan-500/20 border-cyan-400 text-cyan-300" : "bg-white/5 border-white/10 text-white/60 hover:text-white"
               }`}
               title="مؤثرات صوتية محيطية"
@@ -408,7 +416,7 @@ export function InteractiveInfographic({
                   { cx: 355, cy: 45, label: "الجبيل" },
                 ].map((pt, idx) => (
                   <g key={idx}>
-                    <circle cx={pt.cx} cy={pt.cy} r="5" fill={theme.accentColor} className="animate-pulse" />
+                    <circle cx={pt.cx} cy={pt.cy} r="5" fill={theme.accentColor} className="animate-pulse motion-reduce:animate-none" />
                     <circle cx={pt.cx} cy={pt.cy} r="9" stroke={theme.accentColor} strokeWidth="1" opacity="0.5" />
                     <text x={pt.cx} y={pt.cy - 12} fill="#ffffff" fontSize="10" textAnchor="middle" fontWeight="bold">
                       {pt.label}
@@ -478,7 +486,7 @@ export function InteractiveInfographic({
                     key={cat}
                     onClick={() => setSelectedCategory(cat)}
                     type="button"
-                    className="px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer"
+                    className="px-4 py-1.5 rounded-full text-xs font-bold transition-[background-color,color,box-shadow] duration-150 cursor-pointer"
                     style={{
                       background: isActive ? theme.accentColor : "rgba(255,255,255,0.08)",
                       color: isActive ? "#021224" : "#ffffff",
@@ -500,7 +508,7 @@ export function InteractiveInfographic({
                 type="button"
                 key={item.id}
                 onClick={() => setActiveItem(item)}
-                className="info-glass p-6 rounded-2xl flex flex-col justify-between cursor-pointer group hover:-translate-y-2 transition-all duration-300 text-right w-full"
+                className="info-glass p-6 rounded-2xl flex flex-col justify-between cursor-pointer group text-right w-full"
               >
                 <div className="w-full">
                   <div className="flex items-center justify-between text-xs text-white/60 mb-2">
@@ -605,7 +613,7 @@ export function InteractiveInfographic({
               <button
                 type="button"
                 onClick={() => setVisionMode("current")}
-                className="px-5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer"
+                className="px-5 py-1.5 rounded-full text-xs font-bold transition-[background-color,color,box-shadow] duration-150 cursor-pointer"
                 style={{
                   background: visionMode === "current" ? "#ffffff" : "transparent",
                   color: visionMode === "current" ? "#021224" : "rgba(255,255,255,0.8)",
@@ -617,7 +625,7 @@ export function InteractiveInfographic({
               <button
                 type="button"
                 onClick={() => setVisionMode("2030")}
-                className="px-5 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer"
+                className="px-5 py-1.5 rounded-full text-xs font-black transition-[background-color,color,box-shadow] duration-150 cursor-pointer"
                 style={{
                   background: visionMode === "2030" ? "#10b981" : "transparent",
                   color: visionMode === "2030" ? "#021224" : "rgba(255,255,255,0.8)",
@@ -685,7 +693,7 @@ export function InteractiveInfographic({
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn"
+          className="info-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
         >
           <button
             type="button"
@@ -694,7 +702,7 @@ export function InteractiveInfographic({
             onClick={() => setActiveItem(null)}
           />
           <div
-            className="info-glass max-w-md w-full p-6 rounded-3xl relative border border-cyan-400/40 shadow-2xl z-10"
+            className="info-modal-panel info-glass max-w-md w-full p-6 rounded-3xl relative border border-cyan-400/40 shadow-2xl z-10"
           >
             <button
               type="button"

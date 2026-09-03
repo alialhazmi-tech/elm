@@ -131,7 +131,7 @@ export function TransparentCutout({ src, alt, className = "", glowColor }: Trans
       {/* هالة التوهج المائية الحيوية خلف الكائن */}
       {glowColor && (
         <div
-          className="absolute w-28 h-28 rounded-full pointer-events-none transition-transform duration-500 group-hover:scale-125"
+          className="absolute w-28 h-28 rounded-full pointer-events-none transition-transform duration-300 group-hover:scale-120"
           style={{
             background: glowColor,
             filter: "blur(32px)",
@@ -145,7 +145,7 @@ export function TransparentCutout({ src, alt, className = "", glowColor }: Trans
       <img
         src={processedSrc || src}
         alt={alt}
-        className={`max-w-[88%] max-h-36 object-contain relative z-10 drop-shadow-[0_16px_28px_rgba(0,0,0,0.8)] transition-all duration-500 group-hover:scale-110 ${className} ${
+        className={`max-w-[88%] max-h-36 object-contain relative z-10 drop-shadow-[0_16px_28px_rgba(0,0,0,0.8)] transition-[transform,opacity] duration-300 group-hover:scale-105 ${className} ${
           loading ? "opacity-0" : "opacity-100"
         }`}
         style={{
