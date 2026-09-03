@@ -4,37 +4,33 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-test("الشريط الثاني (العاجل + مسطرة السلاسل) خارج الهيدر حتى يلتصق وحده عند التمرير", async () => {
+test("مسطرة السلاسل وشريط الأخبار خارج الهيدر حتى تلتصق المسطرة وحدها", async () => {
   const [chrome, css] = await Promise.all([
     read("app/_components/site-chrome.tsx"),
     read("app/header.css"),
   ]);
   const headerClose = chrome.indexOf("</header>");
-  const strip = chrome.indexOf("<TopStrip");
+  const rail = chrome.indexOf("<SeriesRail");
   const chips = chrome.indexOf("top-series-mobile");
-  assert.ok(headerClose > 0 && strip > headerClose, "الشريط الثاني يجب أن يخرج من الهيدر");
-  assert.ok(chips > strip, "رقائق الجوال تلي الشريط الثاني خارج الهيدر");
-  // الهيدر من طبقتين: الصف الأول يمرّ مع الصفحة، والشريط الثاني وحده يلتصق، والمسطرة داخله لا شريط مستقل.
-  assert.match(css, /\.topbar\s*\{[^}]*position:\s*static/);
-  assert.match(css, /\.topstrip\s*\{[^}]*position:\s*sticky/);
-  assert.match(css, /\.topstrip \.series-rail\s*\{[^}]*position:\s*static/);
-  // العاجل والتاريخ في الشريط نفسه — لا سطر تاريخ مستقل في الرئيسية ولا شريط أخبار منفصل.
-  assert.match(chrome, /className="strip-date"/);
-  assert.doesNotMatch(chrome, /<BreakingBar/);
+  const news = chrome.indexOf("<BreakingBar");
+  assert.ok(headerClose > 0 && rail > headerClose, "مسطرة السلاسل يجب أن تخرج من الهيدر");
+  assert.ok(chips > headerClose, "رقائق الجوال يجب أن تخرج من الهيدر");
+  assert.ok(news > headerClose, "شريط الأخبار يجب أن يخرج من الهيدر");
+  assert.match(css, /\.topbar\.has-rail\s*\{[^}]*position:\s*static/);
+  assert.match(css, /\.series-rail\s*\{[^}]*position:\s*sticky/);
+  assert.match(css, /\.breaking,\s*\.breaking\.is-fresh/);
   const home = await read("app/page.tsx");
-  assert.doesNotMatch(home, /day-line/);
+  assert.match(home, /day-line/);
 });
 
-test("شريط الأخبار يسقط لأحدث مادة إن لم يوجد عاجل سارٍ", async () => {
+test("شريط الأخبار يسقط لأحدث مادة إن لم يوجد عاجل سارٍ ويوسم مستجد", async () => {
   const [provider, chrome] = await Promise.all([
     read("lib/content/provider.ts"),
     read("app/_components/site-chrome.tsx"),
   ]);
   assert.match(provider, /"news-strip"/);
   assert.match(provider, /toStripItem/);
-  assert.match(provider, /seriesOf\(story\)\?\.name \?\? sectionName\(story\.section\)/);
-  assert.match(chrome, /urgent \? "عاجل" : label/);
-  assert.doesNotMatch(chrome, /مستجد/);
+  assert.match(chrome, /urgent \? "عاجل" : "مستجد"/);
 });
 
 test("الهاتف يملك تنقلًا صريحًا بدل إخفاء الأقسام", async () => {
