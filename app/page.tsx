@@ -213,71 +213,12 @@ export default async function Home() {
         {/* اسأل العلم — يلي النهر مباشرة */}
         <HomeAskBand />
 
-        {/* لوحات الأقسام: بلوك تحريري — رأس بحد سفلي بلون القسم، ثم مادة قائدة وصفوف */}
-        {stream && stream.panels.length > 0 ? (
-          <section className="panels" aria-label="الأقسام">
-            {stream.panels.map((panel) => (
-              <div className="panel" key={panel.slug} style={{ "--pc": panel.color } as React.CSSProperties}>
-                <div className="panel-head">
-                  <h2><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h2>
-                  <span className="meta">
-                    {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
-                  </span>
-                  <Link className="more" href={`/${panel.slug}`}>كل {panel.name} ←</Link>
-                </div>
-                <div className="panel-body">
-                  {panel.lead ? (
-                    <article className="panel-lead" data-story-id={panel.lead.id}>
-                      {panel.lead.image ? (
-                        <div className="panel-lead-media">
-                          <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
-                            <Image src={panel.lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 420px" />
-                          </Link>
-                          <div className="panel-lead-overlay">
-                            <LeadHead story={panel.lead} />
-                          </div>
-                        </div>
-                      ) : (
-                        <LeadHead story={panel.lead} />
-                      )}
-                    </article>
-                  ) : null}
-                  <div className="panel-rows">
-                    {panel.rows.map((story) => (
-                      <article className="panel-row" key={story.id} data-story-id={story.id}>
-                        <Kick story={story} />
-                        <h3><Link className="story-link" href={storyHref(story)}>{story.title}</Link></h3>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </section>
-        ) : null}
-
-        {/* معرض الإنفوجرافيك */}
-        {stream && stream.infographics.length > 0 ? (
-          <section className="sh-section" aria-label="إنفوجرافيك">
-            <div className="section-head">
-              <h2>إنفوجرافيك</h2>
-              <span className="sub">البيانات مرسومة</span>
-              <Link className="more" href="/infographics">كل الإنفوجرافيك ←</Link>
-            </div>
-            <InfographicGallery
-              items={stream.infographics.map((story) => ({
-                id: story.id, href: storyHref(story), title: story.title, image: story.image as string,
-                kick: seriesOf(story)?.name ?? sectionName(story.section),
-              }))}
-            />
-          </section>
-        ) : null}
-
-        {/* وراء الخبر */}
+        {/* وراء الخبر — جوهر المنتج، يأتي قبل تدفق الأقسام العام. */}
         {contextFeatured || contextRows.length > 0 ? (
           <section className="sh-section" aria-label="وراء الخبر">
             <div className="section-head">
               <h2>وراء الخبر</h2>
+              <span className="sub">قراءة أهدأ للصورة الكاملة</span>
               <Link className="more" href="/politics">الأرشيف ←</Link>
             </div>
             <div className="sh-context">
@@ -324,6 +265,72 @@ export default async function Home() {
                 </div>
               ) : null}
             </div>
+          </section>
+        ) : null}
+
+        {/* الأقسام — شبكة تحريرية واضحة بدل سلسلة طويلة من الكتل المتشابهة. */}
+        {stream && stream.panels.length > 0 ? (
+          <section className="panels" aria-labelledby="sections-title">
+            <div className="section-head panels-overview">
+              <h2 id="sections-title">في الأقسام</h2>
+              <span className="sub">أحدث القصص مرتبة حسب المجال</span>
+            </div>
+            <div className="panels-grid">
+              {stream.panels.map((panel) => (
+                <div className="panel" key={panel.slug} style={{ "--pc": panel.color } as React.CSSProperties}>
+                  <div className="panel-head">
+                    <h3><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h3>
+                    <span className="meta">
+                      {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
+                    </span>
+                    <Link className="more" href={`/${panel.slug}`} aria-label={`كل مواد ${panel.name}`}>كل القسم ←</Link>
+                  </div>
+                  <div className="panel-body">
+                    {panel.lead ? (
+                      <article className="panel-lead" data-story-id={panel.lead.id}>
+                        {panel.lead.image ? (
+                          <div className="panel-lead-media">
+                            <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
+                              <Image src={panel.lead.image} alt="" fill sizes="(max-width: 720px) 100vw, 560px" />
+                            </Link>
+                            <div className="panel-lead-overlay">
+                              <LeadHead story={panel.lead} />
+                            </div>
+                          </div>
+                        ) : (
+                          <LeadHead story={panel.lead} />
+                        )}
+                      </article>
+                    ) : null}
+                    <div className="panel-rows">
+                      {panel.rows.map((story) => (
+                        <article className="panel-row" key={story.id} data-story-id={story.id}>
+                          <Kick story={story} />
+                          <h3><Link className="story-link" href={storyHref(story)}>{story.title}</Link></h3>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {/* معرض الإنفوجرافيك */}
+        {stream && stream.infographics.length > 0 ? (
+          <section className="sh-section sh-infographics" aria-label="إنفوجرافيك">
+            <div className="section-head">
+              <h2>إنفوجرافيك</h2>
+              <span className="sub">البيانات مرسومة</span>
+              <Link className="more" href="/infographics">كل الإنفوجرافيك ←</Link>
+            </div>
+            <InfographicGallery
+              items={stream.infographics.map((story) => ({
+                id: story.id, href: storyHref(story), title: story.title, image: story.image as string,
+                kick: seriesOf(story)?.name ?? sectionName(story.section),
+              }))}
+            />
           </section>
         ) : null}
 
