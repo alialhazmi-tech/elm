@@ -81,7 +81,7 @@ export default async function Home() {
   const briefWords = home.brief.reduce((total, item) => total + item.title.trim().split(/\s+/).length, 0);
   const briefSeconds = Math.min(180, Math.max(30, Math.round((briefWords / 2.5) / 5) * 5));
 
-  // «وراء الخبر»: مرتكز + 3 صفوف + سؤال الأسبوع.
+  // «وراء الخبر»: مرتكز + 3 صفوف تحريرية.
   const contextFeatured = home.mosaic[0];
   const contextRows: Story[] = home.mosaic.slice(1, 4);
 
@@ -115,7 +115,6 @@ export default async function Home() {
             className="sh-lead"
             aria-label="قصة الصدارة"
             data-story-id={hero.id}
-            style={{ "--hc": seriesOf(hero)?.color } as React.CSSProperties}
           >
             <div className="sh-lead-copy">
               <Kick story={hero} />
@@ -239,7 +238,7 @@ export default async function Home() {
                   {contextFeatured.excerpt ? <p>{trimExcerpt(contextFeatured.excerpt, 150)}</p> : null}
                 </article>
               ) : null}
-              {contextRows.length > 0 || home.question ? (
+              {contextRows.length > 0 ? (
                 <div className="sh-ctx-rows">
                   {contextRows.map((story) => (
                     <article className="sh-ctx-row" key={story.id} data-story-id={story.id}>
@@ -255,18 +254,6 @@ export default async function Home() {
                       </div>
                     </article>
                   ))}
-                  {/* سؤال الأسبوع يختم العمود بدل شريط عرضي أسفل القسم */}
-                  {home.question ? (
-                    <article className="sh-why">
-                      <div className="body">
-                        <span className="kick" style={{ "--kc": "#14a8d6" } as React.CSSProperties}>
-                          {home.question.kick || "لماذا"} <span className="sect">سؤال الأسبوع</span>
-                        </span>
-                        <h3><Link className="story-link" href={home.question.href}>{home.question.title}</Link></h3>
-                      </div>
-                      <Link className="btn-pill" href={home.question.href}>اقرأ الإجابة</Link>
-                    </article>
-                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -430,7 +417,7 @@ export default async function Home() {
         </div>
       </main>
 
-      <SeriesSpectrum series={home.series} className="home-spectrum" />
+      <SeriesSpectrum className="home-spectrum" />
       <SiteFooter />
 
       <script

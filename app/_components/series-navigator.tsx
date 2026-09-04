@@ -2,18 +2,9 @@ import Link from "next/link";
 
 import type { Series } from "@/lib/content/types";
 
-/**
- * خط الطيف: ثماني شرائح بلون كل سلسلة — علامة الهوية، تظهر مرتين
- * (تحت الهيدر وقبل التذييل) بدل أي تدرج لوني عام.
- */
-export function SeriesSpectrum({ series, className }: { series: Series[]; className?: string }) {
-  return (
-    <div className={className ? `series-spectrum ${className}` : "series-spectrum"} aria-hidden="true">
-      {series.map((item) => (
-        <i key={item.slug} style={{ "--c": item.color } as React.CSSProperties} />
-      ))}
-    </div>
-  );
+/** فاصل رمادي هادئ يظهر تحت الهيدر وقبل التذييل. */
+export function SeriesSpectrum({ className }: { className?: string }) {
+  return <div className={className ? `series-spectrum ${className}` : "series-spectrum"} aria-hidden="true" />;
 }
 
 /**
@@ -25,7 +16,7 @@ export function SeriesSpectrum({ series, className }: { series: Series[]; classN
 export function SeriesRail({ series }: { series: Series[] }) {
   return (
     <nav className="series-rail" aria-label="سلاسل العلم">
-      <SeriesSpectrum series={series} />
+      <SeriesSpectrum />
       <div className="series-rail-inner">
         <span className="series-rail-label">السلاسل</span>
         {series.map((item) => (
