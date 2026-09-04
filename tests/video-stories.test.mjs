@@ -42,7 +42,7 @@ test("مادة الفيديو تُعرض مشغّلًا واسعًا تحت ال
   assert.match(styles, /\.sa-video iframe \{[^}]*width: 100%;[^}]*aspect-ratio: 16 \/ 9;/);
   assert.match(provider, /section === "videos"[\s\S]*or\(eq\(storiesTable\.section, section\), eq\(storiesTable\.format, "videos"\)\)/);
   assert.match(provider, /section === "videos" \? isVideo\(story\) : story\.section === section/);
-  assert.match(config, /"frame-src https:\/\/www\.youtube-nocookie\.com"/);
+  assert.match(config, /"frame-src https:\/\/www\.youtube-nocookie\.com https:\/\/www\.googletagmanager\.com"/);
   assert.doesNotMatch(config, /frame-src[^"]*youtube\.com[^-]/);
   // الحفظ يقبل يوتيوب فقط، والهجرة تسحب الرابط من واجهة الموقع القديم الخاصة.
   assert.match(route, /const videoUrl = normalizeVideoUrl\(input\.videoUrl\)/);

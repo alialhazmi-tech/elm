@@ -9,6 +9,24 @@ const htmlPath = new URL(`../${DIST}/server/app/index.html`, import.meta.url);
 const routesPath = new URL(`../${DIST}/routes-manifest.json`, import.meta.url);
 const ogPath = new URL(`../${DIST}/server/app/brand/share.jpg.body`, import.meta.url);
 
+test("places the approved GTM loader in head and its no-script fallback before authored body content", async () => {
+  const html = await readFile(htmlPath, "utf8");
+  const head = html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? "";
+  const loaders = [...head.matchAll(/<script id="google-tag-manager">([\s\S]*?)<\/script>/g)];
+  assert.equal(loaders.length, 1);
+  assert.match(loaders[0][1], /https:\/\/www\.googletagmanager\.com\/gtm\.js\?id=/);
+  assert.match(loaders[0][1], /'dataLayer','GTM-MLB68TX2'/);
+  // Next.js may prepend its own empty Suspense boundary before authored body content.
+  const body = html.slice(html.indexOf("<body")).replace('<div hidden=""><!--$--><!--/$--></div>', "");
+  assert.match(body, /<body[^>]*><noscript><iframe[^>]*src="https:\/\/www\.googletagmanager\.com\/ns\.html\?id=GTM-MLB68TX2"[^>]*height="0"[^>]*width="0"[^>]*style="display:none;visibility:hidden"/);
+  const routes = JSON.parse(await readFile(routesPath, "utf8"));
+  const csp = routes.headers[0].headers.find(header => header.key === "Content-Security-Policy").value;
+  for (const directive of ["script-src", "frame-src", "img-src", "connect-src"]) {
+    const sources = csp.split("; ").find(value => value.startsWith(`${directive} `));
+    assert.ok(sources?.split(" ").includes("https://www.googletagmanager.com"), `${directive} blocks GTM`);
+  }
+});
+
 test("renders Arabic RTL metadata with the approved knowledge positioning", async () => {
   const html = await readFile(htmlPath, "utf8");
 
@@ -98,17 +116,18 @@ test("production CSP never leaks the development eval and websocket allowances",
 
   // التطوير يحتاج unsafe-eval وws: لأجل React وHMR؛ الإنتاج يجب أن يبقى صارمًا.
   assert.doesNotMatch(csp, /unsafe-eval/, "unsafe-eval تسرّب إلى بناء الإنتاج");
-  assert.match(csp, /connect-src 'self'(;|$)/, "connect-src يجب أن يكون 'self' وحده في الإنتاج");
+  const connect = csp.split("; ").find(value => value.startsWith("connect-src "));
+  assert.equal(connect, "connect-src 'self' https://www.googletagmanager.com https://www.google.com https://*.google-analytics.com https://*.analytics.google.com");
 });
 
 test("keeps the M0 homepage and social card deliberately small", async () => {
   const html = await readFile(htmlPath);
   // العقد يقيس ما يعبر الشبكة فعلًا — كالميزانية المضغوطة لـJS (قرار المالك 2026-08-28).
-  // سقف 25KiB يشمل روابط التواصل التسعة وميتا المشاركة؛ يبقى قياسًا لحجم النقل المضغوط.
+  // سقف 26KiB يشمل روابط التواصل وميتا المشاركة وكود GTM؛ يبقى قياسًا لحجم النقل المضغوط.
   const compressed = gzipSync(html, { level: 6 }).length;
   const { width, height, format, hasAlpha } = await sharp(await readFile(ogPath)).metadata();
 
-  assert.ok(compressed < 25 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 25KiB`);
+  assert.ok(compressed < 26 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 26KiB`);
   assert.deepEqual({ width, height }, { width: 1200, height: 630 });
   assert.equal(format, "jpeg");
   assert.equal(hasAlpha, false);

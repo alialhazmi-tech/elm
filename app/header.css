@@ -230,9 +230,8 @@
   :root:not([data-theme="light"]) .brand-mark img { filter: none; }
 }
 
-/* ألوان PNG المعتمد كما هي؛ الكحلي يحفظ وضوح الشعار الأبيض في المظهرين. */
-.brand-mark-official { padding: 3px 8px; border-radius: 8px; background: #23345d; }
-.brand-mark-official img { height: 54px; filter: none; }
+/* PNG شفاف: أسود في المظهر الفاتح، ولونه الأبيض الأصلي في المظهر الداكن. */
+.brand-mark-official img { height: 54px; filter: brightness(0); }
 @media (max-width: 640px) {
   .brand-mark-official img { height: 44px; }
 }
