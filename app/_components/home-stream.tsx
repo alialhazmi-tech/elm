@@ -77,7 +77,7 @@ export function NewsRiver({ initial, exclude }: { initial: RiverItem[]; exclude:
               <div className="river-body">
                 <span className="kick" style={{ "--kc": item.color ?? undefined } as React.CSSProperties}>
                   {item.kick}
-                  {item.when ? <span className="sect">· {item.when}</span> : null}
+                  {item.when ? <span className="sect">{item.when}</span> : null}
                   {fresh ? <i className="live-dot" aria-label="نُشرت خلال الساعة" /> : null}
                 </span>
                 <h3><Link className="story-link" href={item.href}>{item.title}</Link></h3>

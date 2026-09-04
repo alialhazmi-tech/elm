@@ -102,7 +102,7 @@ export function VideoCard({ story }: { story: Story }) {
         ) : null}
         <span className="dur">{formatReadingMinutes(story.readingMinutes)}</span>
       </div>
-      <span className="kicker">مرئي · فيديوجرافيك</span>
+      <span className="kicker">مرئي <span className="sect">فيديوجرافيك</span></span>
       <h3>
         <Link className="story-link" href={storyHref(story)}>{story.title}</Link>
       </h3>

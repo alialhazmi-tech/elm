@@ -28,7 +28,7 @@ export function HomeAskBand() {
         <h2 id="ask-title">
           <span className="spark" aria-hidden="true">✦</span> اسأل العلم
         </h2>
-        <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا — كل إجابة تحمل روابط مصادرها المنشورة.</p>
+        <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا، وكل إجابة تحمل روابط مصادرها المنشورة.</p>
       </div>
       <div className="ask-band-interactive">
         <form className="ask-band-form" action="/search" role="search">
