@@ -33,6 +33,29 @@ test("deduplicates canonical story IDs across the entire homepage", async () => 
   assert.equal((html.match(/class="series-rail-inner"/g) ?? []).length, 1, "مسطرة السلاسل مفقودة من الهيدر");
 });
 
+test("الرئيسية لا تعرض بطاقة سؤال الأسبوع", async () => {
+  const html = await readFile(htmlPath, "utf8");
+
+  assert.doesNotMatch(html, /class="sh-why"/);
+  assert.doesNotMatch(html, /سؤال الأسبوع/);
+});
+
+test("الخبر البارز والفاصلان يستخدمون ألوانًا محايدة", async () => {
+  const [homeCss, headerCss, navigator] = await Promise.all([
+    readFile(new URL("../app/home.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/header.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/_components/series-navigator.tsx", import.meta.url), "utf8"),
+  ]);
+  const divider = navigator.slice(
+    navigator.indexOf("export function SeriesSpectrum"),
+    navigator.indexOf("export function SeriesRail"),
+  );
+
+  assert.match(homeCss, /\.sh-lead\s*\{[^}]*background:\s*var\(--surface-2\);[^}]*border:\s*1px solid var\(--line\);/s);
+  assert.match(headerCss, /\.series-spectrum\s*\{[^}]*height:\s*1px;[^}]*background:\s*var\(--line\);/s);
+  assert.doesNotMatch(divider, /item\.color|<i key=/);
+});
+
 test("emits the required M0 security headers without temporary domains", async () => {
   const routes = JSON.parse(await readFile(routesPath, "utf8"));
   const headers = Object.fromEntries(routes.headers[0].headers.map(({ key, value }) => [key, value]));

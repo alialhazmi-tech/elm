@@ -145,9 +145,8 @@
   border-top: 0;
   border-bottom: 1px solid var(--line);
 }
-/* خط الطيف: ثماني شرائح بلون كل سلسلة — علامة الهوية */
-.series-spectrum { display: grid; grid-template-columns: repeat(8, 1fr); height: 4px; }
-.series-spectrum i { display: block; background: var(--c); }
+/* فاصل هادئ بين الهيدر والمحتوى، ويتكرر قبل التذييل. */
+.series-spectrum { height: 1px; background: var(--line); }
 .series-rail-inner {
   max-width: 1240px; margin: 0 auto; padding: 0 24px;
   display: flex; align-items: center; gap: 2px;
