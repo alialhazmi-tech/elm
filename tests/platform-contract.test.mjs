@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 import test from "node:test";
+import sharp from "sharp";
 
 const DIST = process.env.NEXT_DIST_DIR ?? ".next";
 const htmlPath = new URL(`../${DIST}/server/app/index.html`, import.meta.url);
 const routesPath = new URL(`../${DIST}/routes-manifest.json`, import.meta.url);
-const ogPath = new URL("../public/og.png", import.meta.url);
+const ogPath = new URL(`../${DIST}/server/app/brand/share.jpg.body`, import.meta.url);
 
 test("renders Arabic RTL metadata with the approved knowledge positioning", async () => {
   const html = await readFile(htmlPath, "utf8");
@@ -103,12 +104,12 @@ test("production CSP never leaks the development eval and websocket allowances",
 test("keeps the M0 homepage and social card deliberately small", async () => {
   const html = await readFile(htmlPath);
   // العقد يقيس ما يعبر الشبكة فعلًا — كالميزانية المضغوطة لـJS (قرار المالك 2026-08-28).
-  // الخام 109KB بعد تصميم «الطبعة التحريرية»، لكنه 17KiB مضغوطًا مقابل 601KB في الموقع القديم.
+  // سقف 25KiB يشمل روابط التواصل التسعة وميتا المشاركة؛ يبقى قياسًا لحجم النقل المضغوط.
   const compressed = gzipSync(html, { level: 6 }).length;
-  const png = await readFile(ogPath);
-  const width = png.readUInt32BE(16);
-  const height = png.readUInt32BE(20);
+  const { width, height, format, hasAlpha } = await sharp(await readFile(ogPath)).metadata();
 
-  assert.ok(compressed < 24 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 24KiB`);
+  assert.ok(compressed < 25 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 25KiB`);
   assert.deepEqual({ width, height }, { width: 1200, height: 630 });
+  assert.equal(format, "jpeg");
+  assert.equal(hasAlpha, false);
 });

@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { brandSharingImage } from "@/lib/brand-sharing-image";
 import { seedContentProvider } from "@/lib/content/provider";
 import { getStoredImage } from "@/lib/storage/images";
 import { readSharingResponse, sharingImageSource, sharingJpeg } from "@/lib/sharing-image";
 
 export const runtime = "nodejs";
 const cache = new Map<string, { bytes: Buffer; expires: number }>();
-let fallback: Promise<Buffer> | undefined;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ filename: string }> }) {
   const { filename } = await params;
@@ -35,8 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
   }
   if (!bytes) {
     isFallback = true;
-    fallback ??= readFile(join(process.cwd(), "public", "og.png")).then(sharingJpeg).catch(error => { fallback = undefined; throw error; });
-    bytes = await fallback;
+    bytes = await brandSharingImage();
   }
   return new Response(new Uint8Array(bytes), { headers: {
     "Content-Type": "image/jpeg",

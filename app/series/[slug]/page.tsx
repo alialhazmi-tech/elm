@@ -101,8 +101,10 @@ export default async function SeriesPage({ params, searchParams }: Props) {
             </div>
             {lead ? (
               <div className="sx-lead" data-story-id={lead.id}>
-                <span className="meta">أحدث مادة · {sectionName(lead.section)}</span>
-                <h2><Link className="story-link" href={storyHref(lead)}>{lead.title}</Link></h2>
+                <div className="sx-lead-heading">
+                  <span className="meta">أحدث مادة · {sectionName(lead.section)}</span>
+                  <h2><Link className="story-link" href={storyHref(lead)}>{lead.title}</Link></h2>
+                </div>
                 {lead.excerpt ? <p>{lead.excerpt.slice(0, 160)}{lead.excerpt.length > 160 ? "…" : ""}</p> : null}
                 <div className="sx-lead-actions">
                   <Link className="btn-pill" href={storyHref(lead)}>اقرأ المادة</Link>

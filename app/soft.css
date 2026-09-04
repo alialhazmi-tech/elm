@@ -282,7 +282,7 @@ body { background: var(--bg); color: var(--ink); }
 .sx-switch a.is-active::before { background: #fff; }
 
 .sx-hero {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 560px); gap: 28px; align-items: stretch;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 540px); gap: 28px; align-items: stretch;
   padding: 28px; border-radius: var(--r-panel);
   background: color-mix(in srgb, var(--sc, var(--navy)) 10%, var(--surface));
 }
@@ -293,6 +293,7 @@ body { background: var(--bg); color: var(--ink); }
 .sx-hero h1 { font-family: var(--font-display); font-size: clamp(40px, 5vw, 64px); font-weight: 800; line-height: 1.15; color: color-mix(in srgb, var(--sc, var(--navy)) 78%, var(--ink)); }
 .sx-hero .meta { margin: 0; }
 .sx-lead { display: flex; flex-direction: column; gap: 10px; padding-top: 22px; border-top: 1px solid color-mix(in srgb, var(--sc, var(--navy)) 22%, transparent); }
+.sx-lead-heading { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .sx-lead h2 { font-family: var(--font-display); font-size: clamp(22px, 2.2vw, 30px); font-weight: 700; line-height: 1.4; text-wrap: pretty; }
 .sx-lead p { margin: 0; font-size: 16px; line-height: 1.75; color: var(--ink-2); }
 .sx-lead-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 6px; }
@@ -339,7 +340,7 @@ body { background: var(--bg); color: var(--ink); }
 .hub-count { margin: 0; padding: 0; border: 0; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
 
 @media (max-width: 1040px) {
-  .sx-hero { grid-template-columns: 1fr; padding: 18px; }
+  .sx-hero { grid-template-columns: minmax(0, 1fr); padding: 18px; }
   .sx-hero-copy { order: 2; padding: 6px 4px; }
   .sx-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hub-hero { flex-direction: column; align-items: flex-start; margin-inline: 24px; }
@@ -495,6 +496,13 @@ body { background: var(--bg); color: var(--ink); }
 .ft-compose-msg.is-ok { color: var(--success); }
 .ft-compose-msg.is-err { color: #c0392b; }
 .ft-compose button:disabled { opacity: 0.45; }
+.ft-social { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 24px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--line); }
+.ft-social-links { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.ft-social-links a { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 50%; background: var(--surface); color: var(--ink-2); text-decoration: none; }
+.ft-social-links a:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+.ft-social-links a:focus-visible { outline: 2px solid var(--navy); outline-offset: 4px; }
+.ft-social-icon { display: block; width: 20px; height: 20px; background: currentColor; mask-size: contain; mask-repeat: no-repeat; mask-position: center; -webkit-mask-size: contain; -webkit-mask-repeat: no-repeat; -webkit-mask-position: center; }
+.ft-social + .footer-legal { margin-top: 24px; }
 .footer-legal { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-3); }
 .ft-legal-left a { color: var(--ink-3); text-decoration: none; }
 .ft-legal-left a:hover { color: var(--navy); }
@@ -801,10 +809,11 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
 @media (max-width: 1040px) {
   .sx-hero-copy { display: contents; }
   .sx-hero-top { order: 1; padding: 6px 4px 0; }
-  .sx-hero-media { order: 2; }
-  .sx-lead { order: 3; padding: 4px 4px 6px; border-top: 0; }
-  .sx-lead::before { content: "أحدث مادة"; display: block; font-size: 12px; font-weight: 700; color: color-mix(in srgb, var(--sc, var(--navy)) 78%, var(--ink)); margin-bottom: 2px; }
-  .sx-lead > .meta:first-child { display: none; }
+  .sx-lead { display: contents; }
+  .sx-lead-heading { order: 2; padding-inline: 4px; }
+  .sx-hero-media { order: 3; }
+  .sx-lead > p { order: 4; padding-inline: 4px; }
+  .sx-lead-actions { order: 5; padding: 0 4px 6px; margin-top: 0; }
 }
 
 /* جانب المادة على الجوال: بطاقة المؤشرات لا تُقص، والأدوات شبكة 2×2 حقًا */
@@ -1011,7 +1020,6 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 
 /* ============ صفحة السلسلة ============ */
 .sx-switch a { height: 38px; font-size: 13.5px; }
-.sx-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 540px); }
 .sx-hero h1 { font-size: clamp(38px, 4.8vw, 60px); }
 .sx-lead h2 { font-size: clamp(22px, 2.1vw, 26px); }
 .sx-lead p { font-size: 15.5px; }
