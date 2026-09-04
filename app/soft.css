@@ -1,21 +1,21 @@
 /*
  * العلم — طبقة «الناعم» (2026-08-29)
- * الأسلوب: ورق بارد، كحلي للأفعال، زعفران نادر للشرارات، وطيف معدني للسلاسل.
+ * الأسلوب: أبيض نظيف، كحلي للأفعال، زعفران نادر للشرارات، وطيف معدني للسلاسل.
  * التوزيع خاص بالعلم. (أنماط الرئيسية والهيدر انتقلت إلى home.css وheader.css — تصميم 2026-09-01.)
  * تُحمَّل بعد globals/editorial-v2 فتغلبهما.
  */
 
 :root,
 :root[data-theme="light"] {
-  --bg: #f8f9fb;
+  --bg: #faf9f5;
   --surface: #ffffff;
-  --surface-2: #f4f6f9;
-  --surface-3: #eef3f8;
-  --ink: #101e30;
-  --ink-2: #4e5f78;
-  --ink-3: #5a6677;
-  --line: #e8edf3;
-  --line-2: #c5cedb;
+  --surface-2: #f3efe8;
+  --surface-3: #eae4d9;
+  --ink: #141c24;
+  --ink-2: #465362;
+  --ink-3: #6e7c8b;
+  --line: #e8e2d8;
+  --line-2: #d4ccc0;
   --navy: #1a4282;
   --navy-deep: #14356a;
   --navy-rgb: 26 66 130;
@@ -439,6 +439,7 @@ body { background: var(--bg); color: var(--ink); }
 .footer-shell { max-width: none; padding: 40px 40px 24px; border-radius: var(--r-panel); background: var(--surface-2); }
 .footer-grid { display: grid; grid-template-columns: 1.1fr 0.9fr 1.1fr 1.4fr; gap: 36px; }
 .ft-col { display: flex; flex-direction: column; gap: 14px; }
+.ft-brand { color: var(--ink); display: inline-flex; align-items: center; text-decoration: none; width: fit-content; }
 .ft-brand-word { font-family: var(--f-logo), var(--font-display); font-weight: 900; font-size: 34px; color: var(--ink); text-decoration: none; line-height: 1; }
 .ft-tagline { margin: 0; font-size: 14px; line-height: 1.8; color: var(--ink-2); max-width: 32ch; }
 .ft-pills { display: none; }
