@@ -5,6 +5,7 @@ import "./editorial-v2.css";
 import "./soft.css";
 import "./header.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
+import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 
 // العناوين بـ Alexandria، والنصوص بـ IBM Plex Sans Arabic،
 // والكوفي لمسميات السلاسل. اللوقو الرسمي أصل هندسي في BrandMark.
@@ -38,27 +39,13 @@ export const metadata: Metadata = {
     default: "العلم | المعرفة وراء الخبر",
     template: "%s | العلم",
   },
-  description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
+  description: SITE_DESCRIPTION,
   applicationName: "العلم",
   authors: [{ name: "فريق تحرير العلم" }],
   creator: "العلم",
   publisher: "العلم",
   formatDetection: { email: false, address: false, telephone: false },
-  openGraph: {
-    type: "website",
-    locale: "ar_SA",
-    siteName: "العلم",
-    title: "العلم | المعرفة وراء الخبر",
-    description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
-    url: "/",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "العلم - المعرفة وراء الخبر" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "العلم | المعرفة وراء الخبر",
-    description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
-    images: ["/og.png"],
-  },
+  ...sharingMetadata({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: "/" }),
   icons: {
     icon: [
       { url: "/brand/alelm-icon.png", type: "image/png", sizes: "64x64" },

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharingMetadata } from "@/lib/sharing";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -38,6 +39,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   return {
     title,
     description: series.description,
+    ...sharingMetadata({ title, description: series.description, path: page > 1 ? `/series/${series.slug}?p=${page}` : `/series/${series.slug}` }),
     alternates: {
       canonical: page > 1 ? `/series/${series.slug}?p=${page}` : `/series/${series.slug}`,
     },

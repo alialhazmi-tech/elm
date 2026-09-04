@@ -1,0 +1,38 @@
+import assert from "node:assert/strict";
+
+const base = process.argv[2];
+if (!base || !/^https?:\/\//.test(base)) throw new Error("Usage: node scripts/verify-sharing.mjs https://your-public-site");
+const origin = new URL(base).origin;
+const home = await fetch(origin, { signal: AbortSignal.timeout(20000) });
+assert.equal(home.status, 200);
+const homeHtml = await home.text();
+const article = [...homeHtml.matchAll(/href="([^"?#]+)"/g)].map(x => x[1]).find(x => /^\/[^/]+\/\d+\//.test(x));
+assert.ok(article, "Homepage must contain a real article to verify");
+const images = new Set();
+const results = [];
+for (const agent of ["WhatsApp/2.24.1", "facebookexternalhit/1.1", "Twitterbot/1.0"]) {
+  for (const path of ["/", article, "/politics", "/series", "/series/absat"]) {
+    const response = await fetch(new URL(path, origin), { headers: { "User-Agent": agent }, signal: AbortSignal.timeout(20000) });
+    assert.equal(response.status, 200, `${path}: page unavailable`);
+    const html = await response.text();
+    const head = html.split("</head>")[0];
+    const meta = new Map([...head.matchAll(/<meta (?:property|name)="((?:og|twitter):[^"]+)" content="([^"]*)"/g)].map(x => [x[1], x[2].replaceAll("&amp;", "&")]));
+    for (const key of ["og:title", "og:description", "og:url", "og:image", "og:site_name", "og:locale", "twitter:title", "twitter:description", "twitter:image", "twitter:card"]) assert.ok(meta.get(key), `${agent} ${path}: missing ${key} in head`);
+    assert.equal(meta.get("og:title"), meta.get("twitter:title"));
+    assert.equal(meta.get("og:description"), meta.get("twitter:description"));
+    assert.equal(meta.get("og:image"), meta.get("twitter:image"));
+    assert.equal(new URL(meta.get("og:url")).origin, origin, "Sharing URL points to another deployment");
+    assert.equal(meta.get("og:locale"), "ar_SA");
+    const image = meta.get("og:image");
+    if (!images.has(image)) {
+      const asset = await fetch(image, { headers: { "User-Agent": agent }, signal: AbortSignal.timeout(20000) });
+      assert.equal(asset.status, 200, "Sharing image unavailable");
+      assert.match(asset.headers.get("content-type") ?? "", /^image\//, "Sharing image URL returned non-image content");
+      assert.ok((await asset.arrayBuffer()).byteLength > 100, "Sharing image is empty");
+      images.add(image);
+    }
+    results.push({ agent, path, title: meta.get("og:title"), image });
+  }
+}
+assert.notEqual(results[0].title, results[1].title, "Article must not inherit the homepage title");
+console.log(JSON.stringify({ checked: results.length, imageAssets: images.size, results }, null, 2));

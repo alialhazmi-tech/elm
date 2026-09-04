@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharingMetadata } from "@/lib/sharing";
 import Image from "next/image";
 import { readingOutline } from "@/lib/content/reading-outline";
 import Link from "next/link";
@@ -67,12 +68,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     keywords: story.keywords?.length ? story.keywords : undefined,
     // canonical واحد دائمًا من الرابط المحفوظ — لا يعكس معاملات طلب غير قانونية.
     alternates: { canonical: storyHref(story) },
-    openGraph: {
-      type: "article",
-      title: seoTitle,
-      description: seoDescription,
-      images: story.image ? [{ url: story.image }] : undefined,
-    },
+    ...sharingMetadata({ type: "article", title: seoTitle, description: seoDescription,
+      path: storyHref(story), image: story.image, publishedTime: story.publishedAt }),
   };
 }
 

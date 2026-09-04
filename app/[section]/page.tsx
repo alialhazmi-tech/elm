@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharingMetadata } from "@/lib/sharing";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { Pagination } from "@/app/_components/pagination";
@@ -35,14 +36,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title,
     description: getSectionDescription(section),
     alternates: { canonical: page > 1 ? `/${section}?p=${page}` : `/${section}` },
-    openGraph: {
-      title,
-      description: getSectionDescription(section),
-      url: `https://alelm.net/${section}`,
-      siteName: "العلم",
-      locale: "ar_SA",
-      type: "website",
-    },
+    ...sharingMetadata({ title, description: getSectionDescription(section), path: page > 1 ? `/${section}?p=${page}` : `/${section}` }),
   };
 }
 

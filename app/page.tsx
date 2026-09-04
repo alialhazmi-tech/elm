@@ -1,4 +1,5 @@
 import "./home.css";
+import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,9 +18,9 @@ import { storyHref, type Story } from "@/lib/content/types";
 export const revalidate = 120;
 
 export const metadata: Metadata = {
-  title: "العلم | المعرفة وراء الخبر",
-  description:
-    "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر عبر السلاسل والبيانات والفيديو والبودكاست.",
+  title: { absolute: SITE_TITLE },
+  description: SITE_DESCRIPTION,
+  ...sharingMetadata({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: "/" }),
   alternates: { canonical: "/" },
 };
 

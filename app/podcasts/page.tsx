@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharingMetadata } from "@/lib/sharing";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
   title: "بودكاست العلم",
   description: "برامج العلم الصوتية: الغبوق، ملامح، عتمة، وتقرير — استمع مباشرة أو عبر قناة العلم.",
   alternates: { canonical: "/podcasts" },
+  ...sharingMetadata({ title: "بودكاست العلم", description: "برامج العلم الصوتية: الغبوق، ملامح، عتمة، وتقرير — استمع مباشرة أو عبر قناة العلم.", path: "/podcasts" }),
 };
 
 export default async function PodcastsPage() {
