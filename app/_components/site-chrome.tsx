@@ -1,8 +1,9 @@
 import Link from "next/link";
 
-import { getBreaking } from "@/lib/content/provider";
+import { getNewsStrip } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
 import { NewsletterForm } from "./newsletter-form";
+import { NewsStrip } from "./news-strip";
 import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
@@ -50,27 +51,11 @@ const FOOTER_FORMATS = [
 
 
 /**
- * شريط الأخبار: رفيع وساكن بلا زحف. العاجل الساري يتقدّم،
- * وإلا أحدث مادة منشورة حتى يبقى الصف ظاهرًا تحت الهيدر.
+ * شريط الأخبار: العاجل الساري يتقدّم، ثم تتناوب أحدث المواد المنشورة.
  */
 async function BreakingBar() {
-  const breaking = await getBreaking().catch(() => null);
-  if (!breaking) return null;
-
-  // «عاجل» الأحمر يُحجز للساعة الأولى؛ بعدها وسم «مستجد» بنبضة خضراء هادئة.
-  const { urgent } = breaking;
-
-  return (
-    <div className={urgent ? "breaking" : "breaking is-fresh"} role="status" aria-label={urgent ? "خبر عاجل" : "خبر مستجد"}>
-      <div className="breaking-inner">
-        <span className="breaking-dot" aria-hidden="true" />
-        <span className="breaking-tag">{urgent ? "عاجل" : "مستجد"}</span>
-        <Link className="breaking-title" href={breaking.href}>
-          {breaking.title}
-        </Link>
-      </div>
-    </div>
-  );
+  const items = await getNewsStrip(5).catch(() => []);
+  return <NewsStrip items={items.map(({ title, href, urgent }) => ({ title, href, urgent }))} />;
 }
 
 /**
@@ -255,7 +240,7 @@ export function SiteFooter() {
           <div className="ft-col ft-col-newsletter">
             <h3 className="ft-head">نشرة «ما وراء العناوين»</h3>
             <p className="ft-newsletter-sub">
-              موجز أسبوعي يختصر أهم ما نشره محررونا في بريدك — بقراءة هادئة بلا إعلانات.
+              ابقَ قريبًا من المعرفة؛ أبرز مواد «العلم» تصلك أسبوعيًا عبر البريد.
             </p>
             <NewsletterForm source="footer" />
           </div>
@@ -264,8 +249,6 @@ export function SiteFooter() {
         <div className="footer-legal">
           <div className="ft-legal-right">
             <span>© {year} العلم — جميع الحقوق محفوظة</span>
-            <span className="ft-sep" aria-hidden="true">·</span>
-            <span>المحتوى من مواد منشورة · المصدر النهائي «تحرير العلم»</span>
           </div>
           <div className="ft-legal-left">
             <Link href="/about">من نحن</Link>

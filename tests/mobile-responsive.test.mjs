@@ -23,14 +23,23 @@ test("مسطرة السلاسل وشريط الأخبار خارج الهيدر 
   assert.match(home, /day-line/);
 });
 
-test("شريط الأخبار يسقط لأحدث مادة إن لم يوجد عاجل سارٍ ويوسم مستجد", async () => {
-  const [provider, chrome] = await Promise.all([
+test("شريط الأخبار يتناوب بين أحدث المواد ويقدّم العاجل الساري", async () => {
+  const [provider, chrome, strip, route] = await Promise.all([
     read("lib/content/provider.ts"),
     read("app/_components/site-chrome.tsx"),
+    read("app/_components/news-strip.tsx"),
+    read("app/api/content/news-strip/route.ts"),
   ]);
-  assert.match(provider, /"news-strip"/);
-  assert.match(provider, /toStripItem/);
-  assert.match(chrome, /urgent \? "عاجل" : "مستجد"/);
+  assert.match(provider, /export async function getNewsStrip/);
+  assert.match(provider, /Promise\.all\(\[getBreaking\(\), listRecent\(safeLimit \+ 1\)\]\)/);
+  assert.match(chrome, /getNewsStrip\(5\)/);
+  assert.match(strip, /current\.urgent \? "عاجل" : "الأحدث"/);
+  assert.match(strip, /window\.setInterval/);
+  assert.match(strip, /fetch\("\/api\/content\/news-strip"/);
+  assert.match(strip, /prefers-reduced-motion: reduce/);
+  assert.match(route, /getNewsStrip\(5\)/);
+  assert.match(route, /s-maxage=30/);
+  assert.doesNotMatch(`${chrome}\n${strip}`, /مستجد/u);
 });
 
 test("الهاتف يملك تنقلًا صريحًا بدل إخفاء الأقسام", async () => {
