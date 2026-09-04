@@ -28,7 +28,7 @@ import { runConfiguredPolicyGuard, type GuardControls } from "@/lib/policy";
 import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
-  bodiesFor,
+  listPageForReview,
   countMedia,
   listLatestByStatus,
   publishedPerDay,
@@ -94,19 +94,15 @@ export default async function OverviewPage() {
       statusCounts().catch(() => ({}) as Record<string, number>),
       publishedTodayCount().catch(() => 0),
       publishedPerDay(14).catch(() => []),
-      listLatestByStatus("review", 6).catch(() => []),
+      listPageForReview("review", 1, 6).catch(() => []),
       listLatestByStatus("published", 12).catch(() => []),
       listLatestByStatus("draft", 5).catch(() => []),
       listLatestByStatus("scheduled", 40).catch(() => []),
       seriesDistribution().catch(() => []),
       countMedia().catch(() => ({ all: 0, ok: 0, pending: 0 })),
     ]);
-  const reviewBodies = await bodiesFor(review.map((row) => row.id));
   const reviewChips = new Map(
-    review.map((row) => {
-      const content = reviewBodies.get(row.id);
-      return [row.id, content ? guardChip(content.title, content.body, settings.governance) : { tone: "ok" as const, label: "—", blocking: 0 }];
-    }),
+    review.map((row) => [row.id, guardChip(row.title, row.body, settings.governance)] as const),
   );
   const blockingInReview = [...reviewChips.values()].filter((chip) => chip.blocking > 0).length;
 

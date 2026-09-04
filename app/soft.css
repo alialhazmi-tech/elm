@@ -719,7 +719,7 @@ body .pp-bar { border: 0; border-radius: 22px; background: color-mix(in srgb, va
   .topbar-inner { padding: 10px 16px; min-height: 64px; gap: 8px; }
   .brand-word { font-size: 30px; }
   .member-entry { display: none; }
-  .theme-toggle { display: none; }
+  .topbar .theme-toggle { display: inline-flex; width: 44px; height: 44px; flex-shrink: 0; }
 }
 
 /* قائمة الجوال/اللوحي: زر واحد يفتح لوحة كاملة */
@@ -1071,3 +1071,12 @@ body .pp-list { display: flex; flex-direction: column; }
   .sx-hero h1 { font-size: 38px; }
   .m-stat { font-size: 19px; }
 }
+
+/* أهداف لمس واضحة مع الحفاظ على النقاط الصغيرة بصريًا. */
+.ins-dots { gap: 0; align-items: center; }
+.ins-dots button { width: 32px; height: 44px; background: transparent; display: inline-flex; align-items: center; justify-content: center; }
+.ins-dots button::after { content: ""; width: 8px; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--ins-ink) 25%, var(--surface)); }
+.ins-dots button.is-on { width: 40px; background: transparent; }
+.ins-dots button.is-on::after { width: 24px; background: var(--ins-ink); }
+.ins-arrows button { width: 44px; height: 44px; }
+.ins-sample { font-size: 12px; }

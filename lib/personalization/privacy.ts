@@ -1,6 +1,6 @@
 import { and, eq, ne } from "drizzle-orm";
 
-import { memberEvents, memberProfiles, memberStoryStats, memberTopicScores } from "@/db/schema";
+import { storyReadingSessions, memberEvents, memberProfiles, memberStoryStats, memberTopicScores } from "@/db/schema";
 import { getDb } from "@/lib/db";
 
 export async function setPersonalizationEnabled(memberId: string, enabled: boolean) {
@@ -27,6 +27,7 @@ export async function clearBehavioralData(memberId: string) {
   const db = getDb();
   if (!db) throw new Error("MEMBERSHIP_DATABASE_UNAVAILABLE");
   await db.batch([
+    db.delete(storyReadingSessions).where(eq(storyReadingSessions.memberId, memberId)),
     db.delete(memberEvents).where(eq(memberEvents.memberId, memberId)),
     db.delete(memberStoryStats).where(eq(memberStoryStats.memberId, memberId)),
     db.delete(memberTopicScores).where(and(eq(memberTopicScores.memberId, memberId), ne(memberTopicScores.source, "explicit"))),

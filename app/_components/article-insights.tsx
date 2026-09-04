@@ -3,7 +3,7 @@
 /**
  * مؤشرات المادة — بطاقة واحدة بأربعة وجوه تتقلّب: معدل القراءة، إكمال القراءة،
  * التفاعل الإجمالي، ونسبة التفاعل. النقاط مؤشر تنقّل، والسحب واللمس يعملان،
- * وتدور تلقائيًا حتى يتدخل القارئ. الأرقام من قراءات الأعضاء المجمّعة.
+ * وتدور تلقائيًا حتى يتدخل القارئ. الأرقام من قراءات الزوار المجمّعة.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -73,12 +73,28 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
   const trackRef = useRef<HTMLDivElement>(null);
   const userTouched = useRef(false);
 
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    fetch(`/api/content/insights?storyId=${encodeURIComponent(storyId)}`)
-      .then((response) => (response.ok ? response.json() : null))
-      .then((json) => setData(json && typeof json.readers === "number" ? (json as StoryInsights) : EMPTY))
-      .catch(() => setData(EMPTY));
-  }, [storyId]);
+    const controller = new AbortController();
+    const load = async () => {
+      try {
+        const response = await fetch(`/api/content/insights?storyId=${encodeURIComponent(storyId)}`, { signal: controller.signal, cache: "no-store" });
+        if (!response.ok) throw new Error("INSIGHTS_UNAVAILABLE");
+        const json = await response.json();
+        if (typeof json.readers !== "number") throw new Error("INVALID_INSIGHTS");
+        setData(json as StoryInsights);
+        setFailed(false);
+      } catch {
+        if (!controller.signal.aborted) setFailed(true);
+      }
+    };
+    void load();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 60_000);
+    return () => { controller.abort(); window.clearInterval(timer); };
+  }, [storyId, attempt]);
 
   const goTo = useCallback((next: number, smooth = true) => {
     const track = trackRef.current;
@@ -87,7 +103,12 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
     const target = ((next % count) + count) % count;
     const child = track.children[target] as HTMLElement | undefined;
     if (!child) return;
-    track.scrollTo({ left: child.offsetLeft, behavior: smooth ? "smooth" : "auto" });
+    const rtl = getComputedStyle(track).direction === "rtl";
+    const first = track.children[0].getBoundingClientRect();
+    const rect = child.getBoundingClientRect();
+    const left = rtl ? rect.right - first.right : rect.left - first.left;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    track.scrollTo({ left, behavior: smooth && !reduceMotion ? "smooth" : "instant" });
     setIndex(target);
   }, []);
 
@@ -99,8 +120,15 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
     const onScroll = () => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => {
-        const width = track.clientWidth || 1;
-        const next = Math.round(Math.abs(track.scrollLeft) / width);
+        const rtl = getComputedStyle(track).direction === "rtl";
+        const rect = track.getBoundingClientRect();
+        const padding = parseFloat(getComputedStyle(track).paddingInlineStart) || 0;
+        const edge = rtl ? rect.right - padding : rect.left + padding;
+        const distances = Array.from(track.children, child => {
+          const box = child.getBoundingClientRect();
+          return Math.abs((rtl ? box.right : box.left) - edge);
+        });
+        const next = distances.indexOf(Math.min(...distances));
         setIndex((current) => (current === next ? current : next));
       });
     };
@@ -130,12 +158,14 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
     return () => window.clearInterval(timer);
   }, [goTo, index]);
 
+  if (failed && data === null) return <section className="ins" aria-label="مؤشرات المادة"><p role="status">تعذّر تحميل مؤشرات المادة</p><button type="button" onClick={() => setAttempt(value => value + 1)}>إعادة المحاولة</button></section>;
+
   const ins = data ?? EMPTY;
   const fresh = ins.readers < 20;
   const avg = fresh ? readingMinutes : ins.avgMinutes;
   const labels = ["< 2 د", "2–4 د", "4–6 د", "> 6 د"];
   const total = ins.likes + ins.answers;
-  const level = ins.engagement < 25 ? "منخفض" : ins.engagement < 60 ? "متوسط" : "مرتفع";
+  const level = fresh ? null : ins.engagement < 25 ? "منخفض" : ins.engagement < 60 ? "متوسط" : "مرتفع";
   const titles = ["معدل القراءة", "إكمال القراءة", "التفاعل الإجمالي", "نسبة التفاعل"];
 
   const select = (i: number) => {
@@ -144,7 +174,9 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
   };
 
   return (
-    <section className="ins" aria-label="مؤشرات المادة" data-loading={data === null ? "" : undefined}>
+    <section className="ins" aria-label="مؤشرات المادة" data-loading={data === null && !failed ? "" : undefined} onFocusCapture={() => { userTouched.current = true; }}>
+      {failed && <p className="ins-desc" role="status">تعذّر تحديث المؤشرات. <button type="button" onClick={() => setAttempt(value => value + 1)}>إعادة المحاولة</button></p>}
+      {!failed && <p className="ins-desc ins-sample">{data === null ? "جارٍ تحميل المؤشرات…" : `${n(ins.readers)} قارئ ضمن القياس${fresh ? " · تظهر النسب بعد 20 قارئًا" : ""}`}</p>}
       <div className="ins-track" ref={trackRef}>
         {/* 1) معدل القراءة */}
         <article className="ins-face" aria-hidden={index !== 0}>
@@ -192,7 +224,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             <Trend value={ins.trend} />
           </header>
           <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(total)}</b></p>
-          <p className="ins-desc">مجموع الإعجابات وإجابات الختام خلال آخر 30 يومًا</p>
+          <p className="ins-desc">مجموع الإعجابات وإجابات الختام المسجّلة</p>
           <div className="ins-split" aria-hidden="true">
             {total === 0 ? (
               <i className="empty" style={{ flex: 1 }} />
@@ -207,6 +239,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             <span><i />إعجابات <b className="latin-number" dir="ltr" lang="en">{n(ins.likes)}</b></span>
             <span><i className="alt" />إجابات <b className="latin-number" dir="ltr" lang="en">{n(ins.answers)}</b></span>
           </p>
+          <p className="ins-desc">منحنى التفاعلات خلال آخر 30 يومًا</p>
           <Sparkline values={ins.daily} />
         </article>
 
@@ -214,7 +247,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
         <article className="ins-face" aria-hidden={index !== 3}>
           <header>
             <h3>نسبة التفاعل</h3>
-            <Trend value={ins.trend} />
+            {!fresh && <span className="ins-chip">{n(ins.readers)} قارئ</span>}
           </header>
           {fresh ? <p className="ins-big ins-empty">العينة غير كافية بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.engagement)}</b><span>%</span></p>}
           <p className="ins-desc">{fresh ? "تظهر النسب بعد 20 قارئًا" : "نسبة القرّاء الذين تفاعلوا بشكل إيجابي مع المحتوى"}</p>
@@ -223,7 +256,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
           </div>
           <p className="ins-level-lbls"><span>منخفض</span><span>متوسط</span><span>مرتفع</span></p>
           <div className="ins-gauge" aria-hidden="true">
-            <i className="ins-gauge-pin" style={{ insetInlineStart: `${fresh ? 0 : ins.engagement}%` }} />
+            {!fresh && <i className="ins-gauge-pin" style={{ insetInlineStart: `${ins.engagement}%` }} />}
           </div>
           <p className="ins-scale latin-number" dir="ltr" lang="en">
             {[0, 25, 50, 75, 100].map((v) => (

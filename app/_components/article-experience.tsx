@@ -382,7 +382,7 @@ export function ArticleTracker({ storyId }: { storyId: string }) {
       lastTick.current = now;
       maxProgress.current = Math.max(maxProgress.current, progress());
       for (const mark of [25, 50, 75, 90]) {
-        if (maxProgress.current >= mark && !sentMarks.current.has(mark)) {
+        if (signedIn.current && maxProgress.current >= mark && !sentMarks.current.has(mark)) {
           sentMarks.current.add(mark);
           void postJson("/api/me/events", {
             events: [{ type: "reading_progress", storyId, durationMs: activeMs.current, value: maxProgress.current }],

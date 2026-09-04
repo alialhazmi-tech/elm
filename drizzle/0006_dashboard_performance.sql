@@ -1,0 +1,5 @@
+CREATE INDEX "media_created_at_idx" ON "media" USING btree ("created_at" DESC NULLS FIRST);--> statement-breakpoint
+CREATE INDEX "media_rights_created_at_idx" ON "media" USING btree ("rights_cleared","created_at" DESC NULLS FIRST);--> statement-breakpoint
+CREATE INDEX "stories_active_recency_idx" ON "stories" USING btree (coalesce("updated_at", "published_at") desc,"id" DESC NULLS FIRST) WHERE "stories"."status" <> 'archived';--> statement-breakpoint
+CREATE INDEX "stories_status_recency_idx" ON "stories" USING btree ("status",coalesce("updated_at", "published_at") desc,"id" DESC NULLS FIRST);--> statement-breakpoint
+CREATE INDEX "stories_format_recency_idx" ON "stories" USING btree ("format",coalesce("updated_at", "published_at") desc,"id" DESC NULLS FIRST) WHERE "stories"."status" <> 'archived';
