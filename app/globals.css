@@ -37,14 +37,14 @@
   --r-lg: 26px;
 
   /* طيف السلاسل الثماني — القيم مطابقة لـ SERIES في lib/content/series.ts */
-  --c-absat: #12b5a0;
-  --c-aghrab: #ef476f;
-  --c-efhamha: #eda313;
-  --c-arqam: #3d7ef7;
-  --c-shakhsiat: #8b5cf6;
-  --c-limatha: #14a8d6;
-  --c-mathalaw: #f26a1b;
-  --c-tarikh: #c08a2e;
+  --c-absat: #2d9a8c;
+  --c-aghrab: #c45468;
+  --c-efhamha: #c49a32;
+  --c-arqam: #3d6fad;
+  --c-shakhsiat: #6b5a96;
+  --c-limatha: #2e8aa6;
+  --c-mathalaw: #c05c32;
+  --c-tarikh: #94744a;
   --success: #2eb873;
   --spectrum: linear-gradient(270deg,
     var(--c-absat), var(--c-aghrab), var(--c-efhamha), var(--c-arqam),

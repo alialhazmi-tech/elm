@@ -1,19 +1,20 @@
 /**
  * السلاسل — طيف «المنشور» — لكل سلسلة لونها، والقيم مطابقة لرموز CSS.
- * وحدة مستقلة باستيراد أنواع فقط ليقرأها سكربت الزرع مباشرة عبر Node.
+ * الطيف معدني: نفس العائلات اللونية، تشبّع وقيمة متقاربان حتى تجلس
+ * جنب الكحلي والزعفران بلا صراخ. وحدة مستقلة باستيراد أنواع فقط.
  */
 
 import type { Series } from "./types";
 
 export const SERIES: Series[] = [
-  { slug: "absat", name: "أبسط", description: "شرح متدرج للمعقد", color: "#12b5a0" },
-  { slug: "aghrab", name: "أغرب", description: "ما لا تتوقعه", color: "#ef476f" },
-  { slug: "efhamha-sah", name: "افهمها صح", description: "الحقيقة ضد الشائعة", color: "#eda313" },
-  { slug: "bel-arqam", name: "بالأرقام", description: "البيانات تحكي", color: "#3d7ef7" },
-  { slug: "shakhsiat", name: "شخصيات", description: "سِيَر صنعت أثرًا", color: "#8b5cf6" },
-  { slug: "limatha", name: "لماذا", description: "الأسباب خلف الظواهر", color: "#14a8d6" },
-  { slug: "matha-law", name: "ماذا لو", description: "سيناريوهات واحتمالات", color: "#f26a1b" },
-  { slug: "bel-tarikh", name: "بالتاريخ", description: "الزمن يعطي السياق", color: "#c08a2e" },
+  { slug: "absat", name: "أبسط", description: "شرح متدرج للمعقد", color: "#2d9a8c" },
+  { slug: "aghrab", name: "أغرب", description: "ما لا تتوقعه", color: "#c45468" },
+  { slug: "efhamha-sah", name: "افهمها صح", description: "الحقيقة ضد الشائعة", color: "#c49a32" },
+  { slug: "bel-arqam", name: "بالأرقام", description: "البيانات تحكي", color: "#3d6fad" },
+  { slug: "shakhsiat", name: "شخصيات", description: "سِيَر صنعت أثرًا", color: "#6b5a96" },
+  { slug: "limatha", name: "لماذا", description: "الأسباب خلف الظواهر", color: "#2e8aa6" },
+  { slug: "matha-law", name: "ماذا لو", description: "سيناريوهات واحتمالات", color: "#c05c32" },
+  { slug: "bel-tarikh", name: "بالتاريخ", description: "الزمن يعطي السياق", color: "#94744a" },
 ];
 
 /**

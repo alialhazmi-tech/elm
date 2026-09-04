@@ -39,7 +39,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "تقنية",
     description: "التحول الرقمي، الذكاء الاصطناعي، الأمن السيبراني، وابتكارات المستقبل.",
     seoDescription: "تغطية التطورات التقنية والذكاء الاصطناعي والتحول الرقمي والأمن السيبراني.",
-    color: "#3d7ef7",
+    color: "#3d6fad",
     navPriority: 1,
   },
   {
@@ -48,7 +48,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "علوم",
     description: "اكتشافات الفضاء، البيئة، الطبيعة، والأبحاث العلمية المتقدمة.",
     seoDescription: "استكشاف أحدث الاكتشافات العلمية والفلكية والبيئية بلغة بسيطة وموثقة.",
-    color: "#14a8d6",
+    color: "#2e8aa6",
     navPriority: 1,
   },
   {
@@ -66,7 +66,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "رياضة",
     description: "الرياضة السعودية، المنافسات الكبرى، واستثمارات الرياضة العالمية.",
     seoDescription: "تغطية وتحليل الشأن الرياضي وصناعة الرياضة في المملكة والعالم.",
-    color: "#ef476f",
+    color: "#c45468",
     navPriority: 1,
   },
   {
@@ -93,7 +93,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "أعمال",
     description: "الشركات الناشئة، نماذج الأعمال، والقيادة المؤسسية.",
     seoDescription: "رؤى في ريادة الأعمال وإدارة الشركات والابتكار المؤسسي.",
-    color: "#8b5cf6",
+    color: "#6b5a96",
     navPriority: 2,
   },
   {
@@ -129,7 +129,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "فن",
     description: "الفنون البصرية، التصميم، المعارض، والتجارب الإبداعية.",
     seoDescription: "إضاءات على الفنون والتصميم والإبداع البصري.",
-    color: "#c08a2e",
+    color: "#94744a",
     navPriority: 3,
   },
   {
@@ -138,7 +138,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "إنفوجرافيك",
     description: "تبسيط البيانات والأرقام المعقدة في رسوم تفاعلية أنيقة.",
     seoDescription: "إنفوجرافيك ورسوم بيانية تفاعلية تلخص المعرفة في أرقام وصور.",
-    color: "#3d7ef7",
+    color: "#3d6fad",
     navPriority: 2,
   },
   {
@@ -147,7 +147,7 @@ export const SECTIONS: SectionDefinition[] = [
     shortName: "مرئي",
     description: "فيديوهات معرفية، شروحات قصيرة، وتغطيات بصرية.",
     seoDescription: "محتوى مرئي عالي الجودة يقدم المعرفة بسلاسة وإيجاز.",
-    color: "#ef476f",
+    color: "#c45468",
     navPriority: 2,
   },
 ];

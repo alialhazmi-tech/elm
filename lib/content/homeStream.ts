@@ -68,7 +68,7 @@ export async function homeStream(exclude: Set<string>): Promise<HomeStream> {
     return {
       slug,
       name: def?.shortName ?? def?.name ?? slug,
-      color: def?.color ?? "#1f4fa3",
+      color: def?.color ?? "#1a4282",
       lead,
       rows,
       todayCount: items.filter((s) => s.publishedAt && Date.parse(s.publishedAt) >= since).length,

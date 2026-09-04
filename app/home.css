@@ -1,7 +1,7 @@
 /* ============================================================
    الرئيسية الناعمة v3 (2026-09-04) — طبقة واحدة بدل ثلاث.
-   الفكرة الحاكمة: اللون هو السلسلة. الألوان الثمانية هي المصدر
-   الوحيد للون التعبيري، وكل ما عداها أزرق soft.css وأسطحه.
+   الفكرة الحاكمة: اللون هو السلسلة. الألوان الثمانية مصدر التعبير،
+   والكحلي للأفعال، والزعفران نادرًا للشرارات. السطوح باردة هادئة.
    الرفع (ظل) لبطاقة الموجز وحدها؛ بقية الكتل تتمايز بالسطح.
    العناوين هنا بـ Alexandria كصفحة الخبر، والمتون بـ IBM Plex Sans Arabic.
    تُقرأ بعد soft.css و header.css فتغلبهما.
@@ -32,7 +32,7 @@ body:has(.home-shell) {
 .home-shell .btn-pill {
   display: inline-flex; align-items: center; height: 44px; padding: 0 22px; border-radius: 999px;
   background: var(--navy); color: #fff; font-size: 15px; font-weight: 600; text-decoration: none;
-  box-shadow: 0 10px 24px -14px rgb(31 79 163 / 0.9);
+  box-shadow: 0 10px 24px -14px rgb(var(--navy-rgb) / 0.55);
   transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1), background 160ms ease;
 }
 .home-shell .btn-pill::after { content: none; }
@@ -75,7 +75,7 @@ a:hover > .soft-img img, .soft-img:hover img, .river-card:hover .river-img img, 
 .sh-brief-head { padding: 20px 20px 12px; display: flex; flex-direction: column; gap: 4px; }
 .sh-brief-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 10px; flex-wrap: wrap; }
 .sh-brief h2 { font-size: 18px; font-weight: 800; display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
-.sh-brief h2 .spark { color: var(--navy); font-size: 14px; }
+.sh-brief h2 .spark { color: var(--gold); font-size: 14px; }
 .brief-listen {
   flex: none; display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px;
   border: 0; border-radius: 999px; background: var(--surface-3); color: var(--navy);
@@ -132,7 +132,7 @@ a:hover > .soft-img img, .soft-img:hover img, .river-card:hover .river-img img, 
 .river-body h3 { font-family: var(--font-text); font-size: 14.5px; font-weight: 600; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--success); display: inline-block; margin-inline-start: 2px; animation: liveDotBreathe 2.4s ease-in-out infinite; }
 @keyframes liveDotBreathe { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.8); opacity: 0.4; } }
-.river-new { position: absolute; top: -14px; inset-inline-start: 50%; transform: translateX(50%); z-index: 2; height: 32px; padding: 0 14px; border: 0; border-radius: 16px; background: var(--navy); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgb(31 79 163 / 0.3); }
+.river-new { position: absolute; top: -14px; inset-inline-start: 50%; transform: translateX(50%); z-index: 2; height: 32px; padding: 0 14px; border: 0; border-radius: 16px; background: var(--navy); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 8px 20px rgb(var(--navy-rgb) / 0.28); }
 
 /* ---------- اسأل العلم: لحظة الأزرق الوحيدة ---------- */
 .ask-band {
@@ -143,7 +143,7 @@ a:hover > .soft-img img, .soft-img:hover img, .river-card:hover .river-img img, 
 .ask-band-info { display: flex; flex-direction: column; gap: 6px; }
 .ask-band-badge { display: none; }
 .ask-band h2 { color: var(--ink); font-size: 24px; display: inline-flex; align-items: center; gap: 8px; }
-.ask-band h2 .spark { color: var(--navy); font-size: 16px; }
+.ask-band h2 .spark { color: var(--gold); font-size: 16px; }
 .ask-band .ask-sub { margin: 0; font-size: 14px; line-height: 1.75; color: var(--ink-2); }
 .ask-band-interactive { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .ask-band-form {
@@ -151,7 +151,7 @@ a:hover > .soft-img img, .soft-img:hover img, .river-card:hover .river-img img, 
   padding: 0 6px 0 18px; display: flex; align-items: center; gap: 10px; box-shadow: none;
   transition: box-shadow 200ms ease, border-color 200ms ease;
 }
-.ask-band-form:focus-within { box-shadow: 0 0 0 3px rgb(31 79 163 / 0.18); border-color: color-mix(in srgb, var(--navy) 40%, var(--line)); }
+.ask-band-form:focus-within { box-shadow: 0 0 0 3px rgb(var(--navy-rgb) / 0.18); border-color: color-mix(in srgb, var(--navy) 40%, var(--line)); }
 .ask-search-icon { color: var(--ink-3); display: inline-flex; align-items: center; margin-inline-start: 6px; flex: none; }
 .ask-band-form input { flex: 1; min-width: 0; border: 0; background: transparent; font: inherit; font-size: 15.5px; color: var(--ink); outline: none; }
 .ask-band-form input::placeholder { color: var(--ink-3); }
@@ -256,15 +256,15 @@ a:hover > .soft-img img, .soft-img:hover img, .river-card:hover .river-img img, 
 .sh-series .series-lens {
   position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 150px; padding: 20px;
   border-radius: var(--r-card); text-decoration: none; overflow: visible;
-  background: color-mix(in srgb, var(--sc) 11%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--sc) 20%, var(--line));
+  background: color-mix(in srgb, var(--sc) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--sc) 22%, var(--line));
   transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms cubic-bezier(0.16, 1, 0.3, 1), background 240ms ease;
 }
 .sh-series .series-lens::after { content: none; }
 .sh-series .series-lens:hover {
   transform: translateY(-3px);
-  background: color-mix(in srgb, var(--sc) 17%, var(--surface));
-  box-shadow: 0 16px 30px -12px color-mix(in srgb, var(--sc) 30%, transparent);
+  background: color-mix(in srgb, var(--sc) 20%, var(--surface));
+  box-shadow: 0 16px 30px -12px color-mix(in srgb, var(--sc) 28%, transparent);
 }
 .sh-series .sname { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: color-mix(in srgb, var(--sc) 78%, var(--ink)); display: flex; align-items: center; gap: 10px; }
 .sh-series .sname::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--sc); flex: none; }

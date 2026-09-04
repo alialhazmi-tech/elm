@@ -98,7 +98,7 @@ export default async function PodcastsPage() {
                   key={story.id}
                   className="pc-show"
                   href={href}
-                  style={{ "--pc": show?.accent ?? "#1f4fa3" } as React.CSSProperties}
+                  style={{ "--pc": show?.accent ?? "#1a4282" } as React.CSSProperties}
                 >
                   <span className="pc-show-cover">
                     {story.image ? <Image src={story.image} alt="" fill sizes="(max-width: 640px) 100vw, 280px" /> : null}
