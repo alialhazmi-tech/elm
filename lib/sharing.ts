@@ -33,7 +33,7 @@ type ShareInput = {
 
 export function sharingMetadata(input: ShareInput, env: SharingEnvironment = process.env): Pick<Metadata, "openGraph" | "twitter"> {
   const origin = sharingOrigin(env);
-  const fallback = { url: new URL("/og.png", origin).href, width: 1200, height: 630, type: "image/png", alt: SITE_TITLE };
+  const fallback = { url: new URL("/brand/share.jpg?v=20260905-light", origin).href, width: 1200, height: 630, type: "image/jpeg", alt: SITE_TITLE };
   let image: { url: string; alt: string; width?: number; height?: number; type?: string } = fallback;
   if (input.image?.trim()) {
     try {

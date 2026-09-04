@@ -11,7 +11,7 @@ test("share assets use the serving deployment instead of the legacy canonical si
   assert.equal(sharingOrigin({ RAILWAY_PUBLIC_DOMAIN: "alelm.net", NEXT_PUBLIC_SITE_URL: "https://alelm.net" }), "https://elm-production-ea24.up.railway.app");
   assert.throws(() => sharingOrigin({ SHARING_ORIGIN: "javascript:alert(1)" }));
   const meta = sharingMetadata({ title: "العلم", description: "المعرفة وراء الخبر", path: "/" }, env);
-  assert.equal(meta.openGraph.images[0].url, "https://elm-preview.up.railway.app/og.png");
+  assert.equal(meta.openGraph.images[0].url, "https://elm-preview.up.railway.app/brand/share.jpg?v=20260905-light");
   assert.equal(meta.twitter.images[0].url, meta.openGraph.images[0].url);
   assert.equal(meta.openGraph.images[0].width, 1200);
   assert.equal(meta.openGraph.images[0].height, 630);
@@ -36,7 +36,7 @@ test("external article photos are preserved and missing or unsafe photos use the
   assert.equal(sharingMetadata({ ...input, image: "https://dash.alelm.net/photo.jpg" }, env).openGraph.images[0].url, "https://dash.alelm.net/photo.jpg");
   for (const image of [undefined, "", "data:image/png;base64,AAA", "javascript:alert(1)", "https://user:password@example.test/photo.jpg"]) {
     const meta = sharingMetadata({ ...input, image }, env);
-    assert.equal(meta.openGraph.images[0].url, "https://elm-preview.up.railway.app/og.png");
+    assert.equal(meta.openGraph.images[0].url, "https://elm-preview.up.railway.app/brand/share.jpg?v=20260905-light");
   }
 });
 
@@ -49,5 +49,5 @@ test("article images have a JPEG sharing endpoint, dimensions and a source-speci
   assert.equal(meta.openGraph.images[0].height, 630);
   assert.equal(meta.twitter.images[0].url, meta.openGraph.images[0].url);
   assert.notEqual(sharingMetadata({ ...input, image: "/uploads/updated.webp" }, env).openGraph.images[0].url, meta.openGraph.images[0].url);
-  assert.equal(sharingMetadata({ ...input, image: undefined }, env).openGraph.images[0].url, "https://elm-preview.up.railway.app/og.png");
+  assert.equal(sharingMetadata({ ...input, image: undefined }, env).openGraph.images[0].url, "https://elm-preview.up.railway.app/brand/share.jpg?v=20260905-light");
 });

@@ -17,12 +17,12 @@ export function sharingImageSource(value: string): { filename: string } | { url:
   return null;
 }
 
-export async function sharingJpeg(bytes: Uint8Array) {
+export async function sharingJpeg(bytes: Uint8Array, background = "#f8f7f4") {
   if (bytes.byteLength > MAX_SHARE_SOURCE_BYTES) throw new Error("Sharing image too large");
   // contain يحافظ على الإنفوجرافيك كاملًا؛ إزالة البيانات الوصفية والترميز إلى sRGB/JPEG.
   return sharp(bytes, { limitInputPixels: 40_000_000, animated: false })
-    .rotate().resize(1200, 630, { fit: "contain", background: "#f8f7f4" })
-    .flatten({ background: "#f8f7f4" }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
+    .rotate().resize(1200, 630, { fit: "contain", background })
+    .flatten({ background }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
 }
 
 export async function readSharingResponse(response: Response): Promise<Uint8Array> {

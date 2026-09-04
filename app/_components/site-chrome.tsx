@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandMark } from "./brand-mark";
 import { getNewsStrip } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
+import { SOCIAL_LINKS } from "@/lib/social-links";
 import { NewsletterForm } from "./newsletter-form";
 import { NewsStrip } from "./news-strip";
 import { SeriesRail } from "./series-navigator";
@@ -91,7 +92,7 @@ export async function SiteHeader({
       <header className={rail ? "topbar has-rail" : "topbar"}>
         <div className="topbar-inner">
           <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
-            <BrandMark />
+            <BrandMark variant="official" />
           </Link>
 
           <nav className="topnav" aria-label="التنقل الرئيسي">
@@ -243,6 +244,19 @@ export function SiteFooter() {
             <NewsletterForm source="footer" />
           </div>
         </div>
+
+        <nav className="ft-social" aria-label="حسابات العلم على منصات التواصل" dir="rtl">
+          <h3 className="ft-head">تابع العلم</h3>
+          <ul className="ft-social-links">
+            {SOCIAL_LINKS.map(({ id, label, href }) => (
+              <li key={id}>
+                <a href={href} target="_blank" rel="noopener noreferrer" aria-label={`العلم على ${label} — يفتح في تبويب جديد`} title={label}>
+                  <span className="ft-social-icon" aria-hidden="true" style={{ maskImage: `url(/social/${id}.svg)`, WebkitMaskImage: `url(/social/${id}.svg)` }} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
         <div className="footer-legal">
           <div className="ft-legal-right">
