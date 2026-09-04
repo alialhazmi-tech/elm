@@ -1,0 +1,57 @@
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  max-width: 1120px;
+  margin-inline: auto;
+  padding: 0 32px;
+  color: var(--ink);
+}
+.header { min-height: 104px; display: flex; justify-content: space-between; align-items: center; gap: 24px; border-bottom: 1px solid var(--line); }
+.header > span { font-size: 14px; color: var(--ink-2); }
+.brand { display: inline-flex; align-items: center; min-height: 48px; }
+.main {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+  padding-block: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.symbol { width: 88px; height: 96px; display: grid; place-items: center; color: var(--navy); background: var(--surface-2); border-radius: 24px 24px 8px 24px; margin-bottom: 24px; }
+.symbol svg { width: 46px; height: 46px; }
+.status { margin: 0 0 16px; color: var(--ink-2); font-size: 13px; }
+.status span { margin-inline: 8px; }
+.main h1 { margin: 0; font-family: var(--f-display); font-size: clamp(26px, 3.6vw, 42px); font-weight: 800; line-height: 1.6; text-wrap: balance; }
+.description { margin: 18px 0 0; color: var(--ink-2); font-size: 17px; line-height: 1.9; text-wrap: pretty; }
+.search { width: 100%; max-width: 480px; margin-top: 32px; text-align: start; }
+.search label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+.searchField { display: flex; align-items: center; gap: 12px; padding: 6px 12px 6px 6px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 14px; }
+.searchField > svg { flex: none; color: var(--ink-2); }
+.searchField input { min-width: 0; width: 100%; border: 0; padding: 8px 0; font: inherit; font-size: 15px; color: var(--ink); background: transparent; }
+.searchField input::placeholder { color: var(--ink-2); opacity: 1; }
+.searchField button { flex: none; min-height: 46px; padding: 0 24px; border: 0; border-radius: 9px; font: inherit; font-weight: 600; background: var(--ink); color: var(--bg); cursor: pointer; }
+.searchField button:hover { background: var(--navy); color: var(--bg); }
+.home { display: inline-flex; align-items: center; min-height: 48px; margin-top: 18px; color: var(--navy); font-weight: 600; text-decoration: underline; text-underline-offset: 6px; }
+.page a:focus-visible, .page button:focus-visible, .page input:focus-visible { outline: 2px solid var(--navy); outline-offset: 4px; border-radius: 4px; }
+.footer { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px 24px; border-top: 1px solid var(--line); padding-block: 26px; font-size: 14px; }
+.footer > span { color: var(--ink-2); }
+.footer nav { display: flex; gap: 24px; }
+.footer a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-underline-offset: 5px; }
+.footer a:hover { color: var(--navy); }
+@media (max-width: 540px) {
+  .page { padding-inline: 20px; }
+  .header { min-height: 84px; gap: 12px; }
+  .header > span { font-size: 12px; }
+  .main { padding-block: 40px; }
+  .description { font-size: 16px; }
+  .searchField { gap: 8px; }
+  .searchField > svg { display: none; }
+  .searchField input { font-size: 16px; }
+  .searchField button { padding-inline: 18px; }
+  .footer { gap: 4px 20px; padding-block: 18px; }
+}

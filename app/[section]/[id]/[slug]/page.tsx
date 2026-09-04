@@ -57,7 +57,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
   const story = await seedContentProvider.getStory(id);
-  if (!story) return { title: "المادة غير موجودة" };
+  if (!story) return { title: "الخبر غير متاح", robots: { index: false, follow: true } };
 
   const seoTitle = story.seoTitle || story.title;
   const seoDescription = story.seoDescription || story.excerpt;
