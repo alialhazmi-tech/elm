@@ -3,7 +3,8 @@
  * يُدفع إلى Neon عبر `npm run db:push`، ويُزرع من البذرة عبر `npm run db:seed`.
  */
 
-import { index, integer, jsonb, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { check, index, integer, jsonb, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
 
 export const series = pgTable("series", {
   slug: text("slug").primaryKey(),
@@ -58,6 +59,9 @@ export const stories = pgTable("stories", {
   index("stories_status_idx").on(table.status),
   index("stories_published_at_idx").on(table.publishedAt),
   index("stories_section_idx").on(table.section),
+  index("stories_active_recency_idx").on(sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
+  index("stories_status_recency_idx").on(table.status, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()),
+  index("stories_format_recency_idx").on(table.format, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
 ]);
 
 /**
@@ -111,7 +115,10 @@ export const media = pgTable("media", {
   createdAt: text("created_at").notNull(),
   /** مولّدة بالذكاء — توسم بشفافية، وحقوقها داخلية فتُوثق تلقائيًا. */
   aiGenerated: integer("ai_generated").notNull().default(0),
-});
+}, table => [
+  index("media_created_at_idx").on(table.createdAt.desc().nullsFirst()),
+  index("media_rights_created_at_idx").on(table.rightsCleared, table.createdAt.desc().nullsFirst()),
+]);
 
 /** إعدادات نظام الذكاء — صف واحد jsonb يديره رئيس التحرير من اللوحة. */
 export const aiSettings = pgTable("ai_settings", {
@@ -355,4 +362,22 @@ export const newsletterSubscribers = pgTable("newsletter_subscribers", {
   createdAt: text("created_at").notNull(),
 }, (table) => [
   index("newsletter_subscribers_created_idx").on(table.createdAt),
+]);
+
+/** قياس القراءة العام؛ معرّف متصفح عشوائي، وجلسات تراكمية تمنع تكرار النبضات. */
+export const storyReadingSessions = pgTable("story_reading_sessions", {
+  visitorId: text("visitor_id").notNull(),
+  storyId: text("story_id").notNull(),
+  sessionId: text("session_id").notNull(),
+  memberId: text("member_id"),
+  activeMs: integer("active_ms").notNull().default(0),
+  maxProgress: integer("max_progress").notNull().default(0),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, table => [
+  primaryKey({ columns: [table.visitorId, table.storyId, table.sessionId] }),
+  check("story_reading_active_bounds", sql`${table.activeMs} between 0 and 7200000`),
+  check("story_reading_progress_bounds", sql`${table.maxProgress} between 0 and 100`),
+  index("story_reading_sessions_story_idx").on(table.storyId),
+  index("story_reading_sessions_member_idx").on(table.memberId),
 ]);

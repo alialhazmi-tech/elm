@@ -1,14 +1,14 @@
 import { eq, sql } from "drizzle-orm";
 
-import { memberEvents, memberLikes, memberStoryStats } from "@/db/schema";
+import { memberEvents, memberLikes, memberStoryStats, storyReadingSessions } from "@/db/schema";
 import { getDb } from "@/lib/db";
 
 /**
- * مؤشرات المادة المجمّعة — من قراءات الأعضاء فقط، بلا بيانات فردية.
+ * مؤشرات المادة المجمّعة — من قراءات جميع الزوار، بلا بيانات فردية.
  * تغذّي بطاقات «مؤشرات المادة» في جانب المقال.
  */
 export interface StoryInsights {
-  /** عدد الأعضاء الذين فتحوا المادة. */
+  /** عدد المتصفحات المميزة التي فتحت المادة منذ تفعيل القياس العام. */
   readers: number;
   /** متوسط زمن القراءة الفعلي بالدقائق (عُشر دقيقة). */
   avgMinutes: number;
@@ -49,23 +49,30 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
   if (!db || !storyId) return EMPTY_INSIGHTS;
 
   const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
-  const [[agg], [likeRow], dayRows] = await Promise.all([
-    db
-      .select({
-        readers: sql<number>`count(*)::int`,
-        avgMs: sql<number>`coalesce(avg(${memberStoryStats.activeMs}), 0)::float`,
-        t1: sql<number>`count(*) filter (where ${memberStoryStats.activeMs} < 120000)::int`,
-        t2: sql<number>`count(*) filter (where ${memberStoryStats.activeMs} >= 120000 and ${memberStoryStats.activeMs} < 240000)::int`,
-        t3: sql<number>`count(*) filter (where ${memberStoryStats.activeMs} >= 240000 and ${memberStoryStats.activeMs} < 360000)::int`,
-        t4: sql<number>`count(*) filter (where ${memberStoryStats.activeMs} >= 360000)::int`,
-        intro: sql<number>`count(*) filter (where ${memberStoryStats.maxProgress} >= 25)::int`,
-        body: sql<number>`count(*) filter (where ${memberStoryStats.maxProgress} >= 50)::int`,
-        end: sql<number>`count(*) filter (where ${memberStoryStats.maxProgress} >= 90)::int`,
-        answers: sql<number>`count(*) filter (where ${memberStoryStats.closingAnswer} is not null)::int`,
-        engaged: sql<number>`count(*) filter (where ${memberStoryStats.liked} = 1 or ${memberStoryStats.usedAi} = 1 or ${memberStoryStats.closingAnswer} is not null)::int`,
-      })
-      .from(memberStoryStats)
-      .where(eq(memberStoryStats.storyId, storyId)),
+  const [readingRows, [likeRow], dayRows, [answerRow]] = await Promise.all([
+    db.execute<{
+      readers: number; avgMs: number; t1: number; t2: number; t3: number; t4: number;
+      intro: number; body: number; end: number; engaged: number;
+    }>(sql`
+      with readers as (
+        select r.visitor_id, sum(r.active_ms) as active_ms, max(r.max_progress) as progress,
+          bool_or(coalesce(m.liked = 1 or m.used_ai = 1 or m.closing_answer is not null, false)) as engaged
+        from ${storyReadingSessions} r
+        left join ${memberStoryStats} m on m.member_id = r.member_id and m.story_id = r.story_id
+        where r.story_id = ${storyId}
+        group by r.visitor_id
+      )
+      select count(*)::int as readers, coalesce(avg(active_ms), 0)::float as "avgMs",
+        count(*) filter (where active_ms < 120000)::int as t1,
+        count(*) filter (where active_ms >= 120000 and active_ms < 240000)::int as t2,
+        count(*) filter (where active_ms >= 240000 and active_ms < 360000)::int as t3,
+        count(*) filter (where active_ms >= 360000)::int as t4,
+        count(*) filter (where progress >= 25)::int as intro,
+        count(*) filter (where progress >= 50)::int as body,
+        count(*) filter (where progress >= 90)::int as end,
+        count(*) filter (where engaged)::int as engaged
+      from readers
+    `),
     db
       .select({ n: sql<number>`count(*)::int` })
       .from(memberLikes)
@@ -80,7 +87,10 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
         sql`${memberEvents.storyId} = ${storyId} and ${memberEvents.createdAt} >= ${since} and ${memberEvents.type} in ('like', 'closing_answer', 'ai_discuss', 'ai_summary', 'ai_simplify', 'listen')`,
       )
       .groupBy(sql`substr(${memberEvents.createdAt}, 1, 10)`),
+    db.select({ n: sql<number>`count(*)::int` }).from(memberStoryStats)
+      .where(sql`${memberStoryStats.storyId} = ${storyId} and ${memberStoryStats.closingAnswer} is not null`),
   ]);
+  const agg = readingRows.rows[0];
 
   const byDay = new Map(dayRows.map((row) => [row.day, Number(row.n)]));
   const daily = Array.from({ length: 30 }, (_, i) => {
@@ -92,7 +102,7 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
   const trend = prev7 > 0 ? Math.round(((last7 - prev7) / prev7) * 100) : last7 > 0 ? 100 : 0;
 
   const readers = Number(agg?.readers ?? 0);
-  if (readers === 0) return { ...EMPTY_INSIGHTS, likes: Number(likeRow?.n ?? 0), daily, trend };
+  if (readers === 0) return { ...EMPTY_INSIGHTS, likes: Number(likeRow?.n ?? 0), answers: Number(answerRow?.n ?? 0), daily, trend };
 
   return {
     readers,
@@ -101,7 +111,7 @@ export async function storyInsights(storyId: string): Promise<StoryInsights> {
     reach: { intro: pct(agg.intro, readers), body: pct(agg.body, readers), end: pct(agg.end, readers) },
     completion: pct(agg.end, readers),
     likes: Number(likeRow?.n ?? 0),
-    answers: Number(agg.answers),
+    answers: Number(answerRow?.n ?? 0),
     engagement: pct(agg.engaged, readers),
     daily,
     trend,

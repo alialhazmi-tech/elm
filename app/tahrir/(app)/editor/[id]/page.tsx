@@ -12,9 +12,15 @@ export const dynamic = "force-dynamic";
 
 export default async function EditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const settingsPromise = loadAiSettings();
+  // صور المحرر تبدأ بمجرد وصول إعداد الحقوق، بالتوازي مع تحميل المادة والصلاحيات.
+  const mediaPromise = settingsPromise.then(settings => listRecentMedia({
+    rightsCleared: settings.governance.requireImageRights ? true : undefined,
+    limit: 6,
+  })).catch(() => []);
   const [actor, settings, story] = await Promise.all([
     loadActor(),
-    loadAiSettings(),
+    settingsPromise,
     id === "new" ? Promise.resolve(null) : getStory(id).catch(() => null),
   ]);
   if (!actor || !canEditStory(actor, story)) redirect("/tahrir/stories");
@@ -22,10 +28,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const archiveEvent = story?.status === "archived"
     ? (await latestArchiveEvents([story.id])).get(story.id)
     : undefined;
-  const mediaRows = await listRecentMedia({
-    rightsCleared: settings.governance.requireImageRights ? true : undefined,
-    limit: 6,
-  }).catch(() => []);
+  const mediaRows = await mediaPromise;
   const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");

@@ -80,7 +80,7 @@
   .topbar-inner { padding: 10px 16px; gap: 8px; }
   .brand-word { font-size: 28px; }
   .member-entry { display: none; }
-  .theme-toggle { display: none; }
+  .topbar .theme-toggle { display: inline-flex; width: 44px; height: 44px; flex-shrink: 0; }
 }
 
 /* — شريط الأخبار: صف مستقل بين الهيدر والمسطرة — */

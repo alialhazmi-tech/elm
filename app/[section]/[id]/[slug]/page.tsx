@@ -1,3 +1,4 @@
+import { PublicReadingTracker } from "@/app/_components/public-reading-tracker";
 import type { Metadata } from "next";
 import { sharingMetadata } from "@/lib/sharing";
 import Image from "next/image";
@@ -308,7 +309,8 @@ export default async function ArticlePage({ params }: Params) {
             </header>
           )}
 
-          <ArticleTracker storyId={story.id} />
+          <ArticleTracker key={story.id} storyId={story.id} />
+          <PublicReadingTracker key={`public-${story.id}`} storyId={story.id} />
 
           {!podcastShow && story.image && isInfographicStory ? (
             <InfographicLightbox src={story.image} title={story.title} />
@@ -370,7 +372,7 @@ export default async function ArticlePage({ params }: Params) {
               <aside className="sa-aside" aria-label="أدوات المادة">
                 <ArticleToolbar storyId={story.id} joinHref={joinHref} excerpt={story.excerpt} />
 
-                <ArticleInsights storyId={story.id} readingMinutes={story.readingMinutes} />
+                <ArticleInsights key={story.id} storyId={story.id} readingMinutes={story.readingMinutes} />
 
                 {series ? (
                   <div className="sa-next" style={{ "--sc": series.color } as React.CSSProperties}>

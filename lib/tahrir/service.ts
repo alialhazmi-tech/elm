@@ -1,5 +1,6 @@
 /** طبقة بيانات «تحرير العلم»: استعلامات اللوحة، حفظ المسودات، سير الاعتماد، وسجل التدقيق. */
 
+import { cache } from "react";
 import { and, asc, desc, eq, ilike, inArray, ne, sql, type SQL } from "drizzle-orm";
 
 import { auditLog, stories, users } from "@/db/schema";
@@ -490,15 +491,15 @@ export type StoryLite = {
 
 const recencyOrder = desc(sql`coalesce(${stories.updatedAt}, ${stories.publishedAt})`);
 
-/** عدّادات الحالات بضربة SQL واحدة — بدل جلب كل الصفوف للعد. */
-export async function statusCounts(): Promise<Record<string, number>> {
+/** عدّادات حية؛ layout والصفحة يتشاركان الاستعلام داخل الطلب فقط دون تخزين بين المستخدمين. */
+export const statusCounts = cache(async (): Promise<Record<string, number>> => {
   const db = requireDb();
   const rows = await db
     .select({ status: stories.status, count: sql<number>`count(*)` })
     .from(stories)
     .groupBy(stories.status);
   return Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
-}
+});
 
 /** مرشّحات قائمة المواد فوق الحالة: بحث في العنوان وسلسلة بعينها. */
 export interface StoryFilters {
@@ -531,9 +532,22 @@ export async function listPage(
     .select(LITE_COLUMNS)
     .from(stories)
     .where(pageWhere(status, filters))
-    .orderBy(recencyOrder)
+    .orderBy(recencyOrder, desc(stories.id))
     .limit(perPage)
     .offset(Math.max(0, page - 1) * perPage);
+}
+
+/** متن المواد المعروضة فقط لفحص الحارس على الخادم، في رحلة جلب واحدة مع القائمة. */
+export async function listPageForReview(
+  status: StoryStatus | undefined,
+  page: number,
+  perPage: number,
+  filters: StoryFilters = {},
+): Promise<Array<StoryLite & { body: string }>> {
+  const db = requireDb();
+  return db.select({ ...LITE_COLUMNS, body: stories.body }).from(stories)
+    .where(pageWhere(status, filters)).orderBy(recencyOrder, desc(stories.id))
+    .limit(perPage).offset(Math.max(0, page - 1) * perPage);
 }
 
 /** عدد المواد المطابقة للمرشّحات نفسها — لترقيم صحيح عند البحث أو تصفية السلسلة. */
@@ -575,7 +589,7 @@ export async function listLatestByStatus(status: StoryStatus, limit: number): Pr
     .select(LITE_COLUMNS)
     .from(stories)
     .where(eq(stories.status, status))
-    .orderBy(recencyOrder)
+    .orderBy(recencyOrder, desc(stories.id))
     .limit(limit);
 }
 
@@ -586,7 +600,7 @@ export async function listLatestByFormat(format: string, limit: number): Promise
     .select(LITE_COLUMNS)
     .from(stories)
     .where(and(eq(stories.format, format), ne(stories.status, "archived")))
-    .orderBy(recencyOrder)
+    .orderBy(recencyOrder, desc(stories.id))
     .limit(limit);
 }
 

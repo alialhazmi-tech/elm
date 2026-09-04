@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { SearchIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ export function StoriesToolbar({ q, series }: { q: string; series: string }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const [value, setValue] = useState(q);
+  const [pending, startTransition] = useTransition();
 
   const navigate = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams(params.toString());
@@ -32,7 +33,7 @@ export function StoriesToolbar({ q, series }: { q: string; series: string }) {
     }
     next.delete("p");
     const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname);
+    startTransition(() => router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false }));
   };
 
   useEffect(() => {
@@ -44,9 +45,10 @@ export function StoriesToolbar({ q, series }: { q: string; series: string }) {
   }, [value, q]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2" dir="rtl">
+    <div className="flex flex-wrap items-center gap-2" dir="rtl" aria-busy={pending}>
+      <span role="status" className="sr-only">{pending ? "جارٍ تحديث قائمة المواد" : ""}</span>
       <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <SearchIcon className={`${pending ? "motion-safe:animate-pulse" : ""} pointer-events-none absolute top-1/2 start-2.5 size-3.5 -translate-y-1/2 text-muted-foreground`} />
         <Input
           type="search"
           value={value}

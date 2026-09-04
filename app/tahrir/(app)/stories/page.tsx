@@ -14,10 +14,9 @@ import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
   ACTIVE_STATUSES,
-  bodiesFor,
   countPage,
   latestArchiveEvents,
-  listPage,
+  listPageForReview,
   statusCounts,
   STATUS_LABELS,
   type StoryStatus,
@@ -58,18 +57,21 @@ export default async function StoriesPage({
   searchParams: Promise<{ status?: string; p?: string; q?: string; series?: string }>;
 }) {
   const params = await searchParams;
-  const [actor, settings] = await Promise.all([loadActor(), loadAiSettings()]);
+  const settingsPromise = loadAiSettings();
+  const actor = await loadActor();
   const canArchive = actor?.can("story.archive") ?? false;
   const status = VALID_STATUSES.has(params.status ?? "") ? (params.status as StoryStatus) : undefined;
-  const page = Math.max(1, Number(params.p) || 1);
+  const requestedPage = Number(params.p);
+  const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const q = (params.q ?? "").trim().slice(0, 80);
   const seriesSlug = params.series && seriesBySlug.has(params.series) ? params.series : "";
   const filters = { q: q || undefined, seriesSlug: seriesSlug || undefined };
   const hasFilters = Boolean(filters.q || filters.seriesSlug);
 
-  const [counts, rows, filteredCount] = await Promise.all([
+  const [settings, counts, rows, filteredCount] = await Promise.all([
+    settingsPromise,
     statusCounts(),
-    listPage(status, page, PER_PAGE, filters),
+    listPageForReview(status, page, PER_PAGE, filters),
     hasFilters ? countPage(status, filters) : Promise.resolve(null),
   ]);
   const archivedCount = counts.archived ?? 0;
@@ -79,10 +81,7 @@ export default async function StoriesPage({
   );
   const total = filteredCount ?? (status ? (counts[status] ?? 0) : activeTotal);
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const [archiveEvents, bodies] = await Promise.all([
-    status === "archived" ? latestArchiveEvents(rows.map((row) => row.id)) : new Map(),
-    bodiesFor(rows.map((row) => row.id)),
-  ]);
+  const archiveEvents = status === "archived" ? await latestArchiveEvents(rows.map((row) => row.id)) : new Map();
 
   const href = (targetStatus?: string, targetPage = 1) => {
     const query = new URLSearchParams();
@@ -96,7 +95,6 @@ export default async function StoriesPage({
 
   const tableRows: StoryTableRow[] = rows.map((story) => {
     const series = story.seriesSlug ? seriesBySlug.get(story.seriesSlug) : undefined;
-    const content = bodies.get(story.id);
     const archived = archiveEvents.get(story.id);
     const meta =
       story.status === "archived" && archived
@@ -107,9 +105,7 @@ export default async function StoriesPage({
       title: story.title,
       meta,
       series: series ? { name: series.name, color: series.color } : null,
-      guard: content
-        ? guardFor(content.title, content.body, story.format === "jakalelm" ? "design" : undefined, settings.governance)
-        : { tone: "ok", label: "—" },
+      guard: guardFor(story.title, story.body, story.format === "jakalelm" ? "design" : undefined, settings.governance),
       status: story.status,
       statusLabel: STATUS_LABELS[story.status as StoryStatus] ?? story.status,
       updated: updatedLabel(story.updatedAt ?? story.publishedAt),
