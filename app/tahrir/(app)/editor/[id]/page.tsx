@@ -4,19 +4,26 @@ import { SECTION_NAMES } from "@/lib/content/seed";
 import { loadActor } from "@/lib/tahrir/access";
 import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { EditorClient } from "@/components/tahrir/editor/editor-client";
+import { loadAiSettings } from "@/lib/ai/settings";
 
 export const metadata = { title: "المحرر" };
 export const dynamic = "force-dynamic";
 
 export default async function EditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await loadActor();
-  const story = id === "new" ? null : await getStory(id).catch(() => null);
+  const [actor, settings, story] = await Promise.all([
+    loadActor(),
+    loadAiSettings(),
+    id === "new" ? Promise.resolve(null) : getStory(id).catch(() => null),
+  ]);
   if (story?.format === "jakalelm") redirect(`/tahrir/jak/${story.id}`);
   const archiveEvent = story?.status === "archived"
     ? (await latestArchiveEvents([story.id])).get(story.id)
     : undefined;
-  const mediaRows = await listRecentMedia({ rightsCleared: true, limit: 6 }).catch(() => []);
+  const mediaRows = await listRecentMedia({
+    rightsCleared: settings.governance.requireImageRights ? true : undefined,
+    limit: 6,
+  }).catch(() => []);
   const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
   const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
@@ -25,6 +32,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
     <main>
       <EditorClient
         canApprove={actor?.can("story.publish") ?? false}
+        guardControls={settings.governance}
         recentMedia={recentMedia}
         series={SERIES.map(({ slug, name, color }) => ({ slug, name, color }))}
         sections={sections}

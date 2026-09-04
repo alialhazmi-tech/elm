@@ -1,4 +1,5 @@
 import { AiSettingsClient } from "@/components/tahrir/ai/ai-settings-client";
+import Link from "next/link";
 import { GuardChip } from "@/components/tahrir/badges";
 import { Panel } from "@/components/tahrir/overview/panel";
 import { Progress } from "@/components/ui/progress";
@@ -73,10 +74,10 @@ export default async function AiSettingsPage() {
           </Panel>
           <Panel title="كيف يعمل النظام">
             <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
-              المساعد يقترح ولا ينشر: كل مخرج يُفحص <b className="text-foreground">بحارس السياسة</b> على الخادم قبل عرضه، والدستور
-              التحريري و«نبرة العلم» يُحقنان في كل استدعاء، والإدراج بنقرة المحرر ويُدوَّن في{" "}
-              <b className="text-foreground">سجل التدقيق</b> مع كلفته. السقوف تُفرض من الخادم — عند بلوغها يتوقف الذكاء ولا يتوقف
-              التحرير.
+              المساعد يقترح ولا ينشر، والإدراج بنقرة المحرر ويُدوَّن في <b className="text-foreground">سجل التدقيق</b> مع كلفته.
+              الدستور التحريري و«نبرة العلم» يُحقنان في كل استدعاء، ويمكن إدارة فحص الحارس واشتراط حقوق الصور من{" "}
+              <Link href="/tahrir/settings" className="font-semibold text-primary underline-offset-4 hover:underline">إعدادات النظام</Link>.
+              السقوف تُفرض من الخادم — عند بلوغها يتوقف الذكاء ولا يتوقف التحرير.
             </p>
           </Panel>
         </div>

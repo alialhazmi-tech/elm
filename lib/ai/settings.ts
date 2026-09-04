@@ -21,6 +21,12 @@ export interface AiSettingsData {
   models: { editorial: string; light: string; image: string; fast: string };
   caps: { dailyUsd: number; monthlyUsd: number };
   tone: string;
+  governance: {
+    /** قواعد السياسة التحريرية النصية وبوابة الاعتماد. */
+    editorialGuard: boolean;
+    /** منع نشر صورة غير موثقة الحقوق — مستقل عن بقية قواعد الحارس. */
+    requireImageRights: boolean;
+  };
 }
 
 export const DEFAULT_AI_SETTINGS: AiSettingsData = {
@@ -42,6 +48,10 @@ export const DEFAULT_AI_SETTINGS: AiSettingsData = {
     image: DEFAULT_IMAGE_MODEL,
   },
   caps: { dailyUsd: 10, monthlyUsd: 150 },
+  governance: {
+    editorialGuard: true,
+    requireImageRights: true,
+  },
   tone:
     "اكتب بعربية صحفية مباشرة بلا تهويل. العنوان حتى 10 كلمات بلا «شاهد» أو «صادم». " +
     "الأرقام لاتينية. المصدر يُنسب دائمًا. اتبع دستور العلم التحريري نصًا.",
@@ -63,6 +73,7 @@ export async function loadAiSettings(): Promise<AiSettingsData> {
         image: normalizeImageModel(stored.models?.image),
       },
       caps: { ...DEFAULT_AI_SETTINGS.caps, ...stored.caps },
+      governance: { ...DEFAULT_AI_SETTINGS.governance, ...stored.governance },
       tone: stored.tone ?? DEFAULT_AI_SETTINGS.tone,
     };
   } catch {

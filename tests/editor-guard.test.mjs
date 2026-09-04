@@ -13,7 +13,9 @@ test("الحارس الحي والخادم يفحصان النص والصورة 
   ]);
 
   assert.match(editor, /JSON\.stringify\(\{ title: nextTitle, body: nextBodyText, image: nextImage \|\| null, format: nextFormat \}\)/);
-  assert.match(route, /media: await guardMediaFor\(image\)/);
+  assert.match(route, /const \[settings, media\] = await Promise\.all\(\[loadAiSettings\(\), guardMediaFor\(image\)\]\)/);
+  assert.match(route, /runConfiguredPolicyGuard/);
+  assert.match(route, /settings\.governance/);
   assert.match(route, /surface: format === "jakalelm" \? "design" : undefined/);
 });
 

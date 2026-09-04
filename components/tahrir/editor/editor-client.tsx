@@ -13,7 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { FullEditProgressStage } from "@/lib/ai/editorial";
 import { stripHtmlToText } from "@/lib/content/html";
+import { youtubeIdFrom } from "@/lib/content/video";
 import type { Finding, GuardReport } from "@/lib/policy/types";
+import type { GuardControls } from "@/lib/policy";
 import { cn } from "@/lib/utils";
 
 import { AiPanel } from "./ai-panel";
@@ -48,6 +50,7 @@ type InspectorTab = "details" | "seo" | "guard" | "ai";
 interface Props {
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
+  guardControls: GuardControls;
   series: Array<{ slug: string; name: string; color: string }>;
   sections: Array<[string, string]>;
   recentMedia: Array<{ url: string; filename: string }>;
@@ -110,7 +113,7 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * محرر المادة — المنطق (الحارس الحي، الحفظ، سير الاعتماد، التحرير الشامل المبثوث) كما هو منذ المرحلة
  * الأولى؛ الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ canApprove, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ canApprove, guardControls, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -260,7 +263,11 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
 
     setImage(data.url);
     scheduleGuard(title, bodyText(), data.url, format);
-    setImageUploadMessage("رُفعت واختيرت للمادة — يلزم توثيق الحقوق قبل الاعتماد.");
+    setImageUploadMessage(
+      guardControls.requireImageRights
+        ? "رُفعت واختيرت للمادة — يلزم توثيق الحقوق قبل الاعتماد."
+        : "رُفعت واختيرت للمادة — اشتراط توثيق الحقوق معطّل حاليًا.",
+    );
     if (imageFileRef.current) imageFileRef.current.value = "";
   }
 
@@ -394,6 +401,11 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
   }
 
   async function save(): Promise<string | null> {
+    if (format === "videos" && !youtubeIdFrom(videoUrl)) {
+      setInspectorTab("details");
+      setMessage({ kind: "err", text: "أدخل رابط يوتيوب صحيحًا لإكمال المادة المرئية." });
+      return null;
+    }
     setBusy(true);
     setMessage(null);
     const response = await fetch("/api/tahrir/story", {
@@ -494,6 +506,8 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
   const titleWords = wordCount(title);
   const blocking = report?.counts.blocking ?? 0;
   const gateOpen = !guardBusy && report?.canRequestApproval === true;
+  const allGatesDisabled = !guardControls.editorialGuard && !guardControls.requireImageRights;
+  const rightsOnly = !guardControls.editorialGuard && guardControls.requireImageRights;
   const publicHref = status === "published" && id && slug ? `/${section}/${id}/${slug}` : null;
 
   return (
@@ -502,9 +516,15 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
         <div className="flex flex-wrap items-center gap-2 px-3 py-2">
           <span className="text-[11px] text-muted-foreground">{initial ? "تحرير المادة" : "مادة جديدة"}</span>
           <StatusPill status={status} label={STATUS_LABELS[status] ?? status} />
-          <span className={cn("inline-flex items-center gap-1.5 text-xs", gateOpen ? "text-(--t-ok)" : guardBusy ? "text-muted-foreground" : "text-(--t-block)")}>
+          <span className={cn("inline-flex items-center gap-1.5 text-xs", allGatesDisabled ? "text-(--t-warn)" : gateOpen ? "text-(--t-ok)" : guardBusy ? "text-muted-foreground" : "text-(--t-block)")}>
             <ShieldCheckIcon className="size-3.5" />
-            {guardBusy ? "يفحص الحارس…" : gateOpen ? "جاهزة للاعتماد" : `${blocking} مخالفة قاطعة`}
+            {allGatesDisabled
+              ? "بوابات النشر معطّلة"
+              : guardBusy
+                ? rightsOnly ? "يفحص حقوق الصورة…" : "يفحص الحارس…"
+                : gateOpen
+                  ? rightsOnly ? "حقوق الصورة سليمة" : "جاهزة للاعتماد"
+                  : `${blocking} مخالفة قاطعة`}
           </span>
           <div className="ms-auto flex flex-wrap items-center gap-1.5">
             {publicHref ? (
@@ -601,8 +621,8 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
           <RichBody ref={richRef} initial={initial?.body ?? ""} onChange={(html, text) => onBody(html, text)} />
         </Card>
 
-        <Card className="gap-0 overflow-hidden py-0 xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
-          <Tabs value={inspectorTab} onValueChange={(value) => setInspectorTab(value as InspectorTab)}>
+        <Card dir="rtl" className="gap-0 overflow-hidden py-0 text-right xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
+          <Tabs dir="rtl" value={inspectorTab} onValueChange={(value) => setInspectorTab(value as InspectorTab)}>
             <div className="border-b p-2">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="details">التفاصيل</TabsTrigger>
@@ -655,6 +675,7 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
                   onPickImage={() => imageFileRef.current?.click()}
                   imageUploadBusy={imageUploadBusy}
                   imageUploadMessage={imageUploadMessage}
+                  requireImageRights={guardControls.requireImageRights}
                   recentMedia={recentMedia}
                   slug={slug}
                   onSlug={setSlug}
@@ -707,6 +728,7 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
                   report={report}
                   guardBusy={guardBusy}
                   gateOpen={gateOpen}
+                  controls={guardControls}
                   onFix={applyFix}
                   onLocate={(finding) => {
                     if (finding.excerpt && !richRef.current?.locate(finding.excerpt)) {
@@ -719,6 +741,7 @@ export function EditorClient({ canApprove, series, sections, recentMedia, initia
               </TabsContent>
               <TabsContent value="ai">
                 <AiPanel
+                  guardEnabled={guardControls.editorialGuard}
                   getDraft={() => ({
                     title,
                     body: bodyText(),

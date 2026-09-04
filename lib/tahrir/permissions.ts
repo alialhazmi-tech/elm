@@ -53,7 +53,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { key: "ai.assist", label: "المساعد التحريري", description: "الاقتراحات والتحرير الشامل في المحرر." },
       { key: "ai.image", label: "توليد الصور", description: "توليد صور بالذكاء الاصطناعي." },
       { key: "ai.infographic", label: "الإنفوجرافيك", description: "استوديو الإنفوجرافيك." },
-      { key: "ai.settings", label: "إعدادات الذكاء", description: "المزودون والسقوف ونبرة العلم." },
+      { key: "ai.settings", label: "إعدادات الذكاء والنظام", description: "المزودون والسقوف ونبرة العلم وبوابات النشر." },
     ],
   },
   {

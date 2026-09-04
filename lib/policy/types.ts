@@ -100,6 +100,8 @@ export interface Finding {
   autofix?: AutoFix;
   /** المخالفة تحتاج حكمًا بشريًا (أو نموذجًا لاحقًا) ولا يحسمها الفحص الحتمي. */
   needsHumanReview?: boolean;
+  /** نوع دقيق يسمح بإدارة بوابة مستقلة دون تعطيل بقية قاعدة الوسائط. */
+  kind?: "image-rights";
 }
 
 export interface Rule {

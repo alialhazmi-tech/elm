@@ -13,7 +13,7 @@ export async function GET() {
   return NextResponse.json({ settings, totals, keys: keyStatus() });
 }
 
-/** تعديل الإعدادات — لرئيس التحرير؛ بندا الحوكمة (الدستور والحارس) ليسا إعدادات أصلًا. */
+/** تعديل إعدادات أدوات الذكاء — إعدادات الحوكمة تُدار من شاشة النظام المنفصلة. */
 export async function PATCH(request: Request) {
   const gate = await requirePermission("ai.settings", "إعدادات الذكاء قرار رئيس التحرير.");
   if (!gate.ok) return gate.response;
@@ -30,6 +30,7 @@ export async function PATCH(request: Request) {
       dailyUsd: Math.max(1, Math.min(500, Number(incoming.caps?.dailyUsd ?? current.caps.dailyUsd))),
       monthlyUsd: Math.max(5, Math.min(5000, Number(incoming.caps?.monthlyUsd ?? current.caps.monthlyUsd))),
     },
+    governance: current.governance,
     tone: (incoming.tone ?? current.tone).slice(0, 2_000),
   };
 

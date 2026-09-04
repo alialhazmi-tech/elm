@@ -87,7 +87,8 @@ export interface JakPlan {
   dropped: Array<{ title: string; reason: string }>;
 }
 
-function guardSlide(text: string, as: "title" | "fragment"): SlideGuard {
+function guardSlide(text: string, as: "title" | "fragment", enabled = true): SlideGuard {
+  if (!enabled) return { ok: true, findings: [] };
   const report =
     as === "title" ? runPolicyGuard({ title: text }) : runPolicyGuard({ body: text, surface: "design" });
   const findings = report.findings
@@ -210,6 +211,7 @@ export function normalizeSlide(raw: RawSlide): JakSlide | null {
 export function validateJakPlan(
   parsed: { title?: string; excerpt?: string; palette?: string; slides?: RawSlide[] },
   source: string,
+  editorialGuard = true,
 ): JakPlan {
   const dropped: JakPlan["dropped"] = [];
   const slides: PlannedSlide[] = [];
@@ -230,8 +232,8 @@ export function validateJakPlan(
       continue;
     }
 
-    const titleGuard = slide.title ? guardSlide(slide.title, "title") : { ok: true, findings: [] };
-    const contentGuard = guardSlide(slideText(slide), "fragment");
+    const titleGuard = slide.title ? guardSlide(slide.title, "title", editorialGuard) : { ok: true, findings: [] };
+    const contentGuard = guardSlide(slideText(slide), "fragment", editorialGuard);
     slides.push({
       ...slide,
       guard: {
@@ -350,7 +352,7 @@ export async function runJakPlan(
     throw new Error("تعذر قراءة مخرج النموذج — أعد المحاولة.");
   }
 
-  const plan = validateJakPlan(parsed, input.source);
+  const plan = validateJakPlan(parsed, input.source, settings.governance.editorialGuard);
   if (input.canvas === "landscape") {
     plan.slides = plan.slides.map((slide, index) => ({
       ...slide,
@@ -446,7 +448,11 @@ export async function runSlideOp(
     throw new Error("تعذر قراءة مخرج النموذج — أعد المحاولة.");
   }
 
-  const plan = validateJakPlan({ title: "x", excerpt: "", slides: parsed.slides }, source);
+  const plan = validateJakPlan(
+    { title: "x", excerpt: "", slides: parsed.slides },
+    source,
+    settings.governance.editorialGuard,
+  );
   return {
     slides: plan.slides.slice(0, op === "split" ? 2 : 1),
     dropped: plan.dropped,

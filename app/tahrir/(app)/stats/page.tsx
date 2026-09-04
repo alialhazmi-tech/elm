@@ -4,7 +4,8 @@ import { StatTile } from "@/components/tahrir/overview/stat-tile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { stripHtmlToText } from "@/lib/content/html";
 import { SERIES } from "@/lib/content/series";
-import { runPolicyGuard } from "@/lib/policy";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard } from "@/lib/policy";
 import {
   bodiesFor,
   formatDistribution,
@@ -38,7 +39,8 @@ function daysAgoIso(days: number): string {
 }
 
 export default async function StatsPage() {
-  const [counts, audit, recentPublished, distribution, perDay, formats, authors, readingTime] = await Promise.all([
+  const [settings, counts, audit, recentPublished, distribution, perDay, formats, authors, readingTime] = await Promise.all([
+    loadAiSettings(),
     statusCounts().catch(() => ({}) as Record<string, number>),
     listAudit(500).catch(() => []),
     listLatestByStatus("published", 400).catch(() => []),
@@ -63,7 +65,7 @@ export default async function StatsPage() {
   const sampleBodies = await bodiesFor(samplePage.map((row) => row.id));
   const guardTotals = { blocking: 0, warning: 0, suggestion: 0, clean: 0 };
   for (const [, content] of sampleBodies) {
-    const report = runPolicyGuard({ title: content.title, body: stripHtmlToText(content.body) });
+    const report = runConfiguredPolicyGuard({ title: content.title, body: stripHtmlToText(content.body) }, settings.governance);
     guardTotals.blocking += report.counts.blocking;
     guardTotals.warning += report.counts.warning;
     guardTotals.suggestion += report.counts.suggestion;

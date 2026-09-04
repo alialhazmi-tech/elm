@@ -550,7 +550,9 @@ ${input.text.slice(0, 15000)}`;
       .filter(Boolean)
       .join("\n");
 
-    const guardResult = runPolicyGuard({ title: infographic.title, body: fullTextToCheck });
+    const guardResult = settings?.governance.editorialGuard
+      ? runPolicyGuard({ title: infographic.title, body: fullTextToCheck })
+      : null;
 
     return {
       infographic,
@@ -559,7 +561,7 @@ ${input.text.slice(0, 15000)}`;
         inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
       },
-      guardFindings: guardResult.findings,
+      guardFindings: guardResult?.findings ?? [],
     };
   } catch (parseErr) {
     console.error("JSON parse failed, falling back to dynamic structured infographic:", parseErr);

@@ -44,16 +44,16 @@ export function StoriesToolbar({ q, series }: { q: string; series: string }) {
   }, [value, q]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2" dir="rtl">
       <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
           value={value}
           onChange={(event) => setValue(event.target.value)}
           placeholder="ابحث بالعنوان…"
           aria-label="بحث في المواد"
-          className="w-56 bg-card ps-8 pe-7 sm:w-64"
+          className="h-8 w-52 bg-card ps-8 pe-7 text-xs sm:w-60"
         />
         {value ? (
           <Button
@@ -69,7 +69,7 @@ export function StoriesToolbar({ q, series }: { q: string; series: string }) {
         ) : null}
       </div>
       <Select value={series || "all"} onValueChange={(next) => navigate({ series: next === "all" ? null : next })}>
-        <SelectTrigger className="w-40 bg-card" aria-label="تصفية بالسلسلة">
+        <SelectTrigger size="sm" className="h-8 w-36 bg-card text-xs" aria-label="تصفية بالسلسلة">
           <SelectValue placeholder="كل السلاسل" />
         </SelectTrigger>
         <SelectContent align="end">
