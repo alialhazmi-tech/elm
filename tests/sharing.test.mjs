@@ -7,7 +7,8 @@ const env = { RAILWAY_PUBLIC_DOMAIN: "elm-preview.up.railway.app", NEXT_PUBLIC_S
 test("share assets use the serving deployment instead of the legacy canonical site", () => {
   assert.equal(sharingOrigin(env), "https://elm-preview.up.railway.app");
   assert.equal(sharingOrigin({ ...env, SHARING_ORIGIN: "https://alelm.net/" }), "https://alelm.net");
-  assert.equal(sharingOrigin({}), "https://alelm.net");
+  assert.equal(sharingOrigin({}), "https://elm-production-ea24.up.railway.app");
+  assert.equal(sharingOrigin({ RAILWAY_PUBLIC_DOMAIN: "alelm.net", NEXT_PUBLIC_SITE_URL: "https://alelm.net" }), "https://elm-production-ea24.up.railway.app");
   assert.throws(() => sharingOrigin({ SHARING_ORIGIN: "javascript:alert(1)" }));
   const meta = sharingMetadata({ title: "العلم", description: "المعرفة وراء الخبر", path: "/" }, env);
   assert.equal(meta.openGraph.images[0].url, "https://elm-preview.up.railway.app/og.png");
