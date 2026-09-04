@@ -3,12 +3,11 @@
    الفكرة الحاكمة: اللون هو السلسلة. الألوان الثمانية هي المصدر
    الوحيد للون التعبيري، وكل ما عداها أزرق soft.css وأسطحه.
    الرفع (ظل) لبطاقة الموجز وحدها؛ بقية الكتل تتمايز بالسطح.
-   العناوين هنا بالكوفي (خط الشعار) والمتون بـ IBM Plex Sans Arabic.
+   العناوين هنا بـ Alexandria كصفحة الخبر، والمتون بـ IBM Plex Sans Arabic.
    تُقرأ بعد soft.css و header.css فتغلبهما.
    ============================================================ */
 
 body:has(.home-shell) {
-  --font-display: var(--f-logo, "Noto Kufi Arabic"), var(--f-text, "IBM Plex Sans Arabic"), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
   --home-lift: 0 14px 36px -24px rgb(16 30 48 / 0.28);
   background: var(--bg);
 }

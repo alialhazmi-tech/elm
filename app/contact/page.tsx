@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 
-/** صفحة إرثية من الموقع القديم — روابطها الخارجية محفوظة (شرط M-2). */
-
 export const metadata: Metadata = {
   title: "تواصل معنا",
-  description: "قنوات التواصل مع فريق منصة العلم.",
+  description: "عنوان ورقم هاتف وبريد فريق منصة العلم.",
   alternates: { canonical: "/contact" },
 };
 
@@ -16,21 +13,37 @@ export default function ContactPage() {
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
       <SiteHeader />
-      <main id="main-content">
-        <section className="hub-hero">
-          <p className="eyebrow">تواصل</p>
-          <h1>يسعدنا أن نسمع منك</h1>
+      <main id="main-content" className="info-page">
+        <section className="hub-hero info-hero">
+          <div>
+            <p className="eyebrow">اتصل بنا</p>
+            <h1>تواصل معنا</h1>
+          </div>
+          <p className="hub-desc">لا تتردد في التواصل معنا، سنرد بأسرع وقت على كل استفساراتك.</p>
         </section>
-        <div className="wrap" style={{ maxWidth: 720, paddingBottom: 48 }}>
-          <p style={{ lineHeight: 1.9 }}>
-            تصلنا ملاحظاتكم ومقترحاتكم عبر حسابات «العلم» الرسمية في منصات التواصل،
-            وعبر الاشتراك في نشرتنا البريدية أسفل أي صفحة — نقرأ كل ما يصلنا.
-          </p>
-          <p style={{ lineHeight: 1.9 }}>
-            وللاطلاع على منهجيتنا التحريرية وسلاسلنا المعرفية:{" "}
-            <Link href="/about">عن العلم</Link> · <Link href="/series">سلاسل العلم</Link>
-          </p>
-        </div>
+
+        <article className="info-shell contact-shell">
+          <section className="info-lead contact-intro">
+            <p>يسعدنا استقبال ملاحظاتك واستفساراتك عبر إحدى القنوات التالية.</p>
+          </section>
+
+          <address className="contact-list">
+            <div className="contact-row">
+              <span className="contact-label">العنوان</span>
+              <p>شارع الأمير ناصر بن سعود، حي الصحافة، الرياض 13321، المملكة العربية السعودية</p>
+            </div>
+            <div className="contact-row">
+              <span className="contact-label">الهاتف</span>
+              <a href="tel:+966552653222" dir="ltr">+966 55 265 3222</a>
+            </div>
+            <div className="contact-row">
+              <span className="contact-label">البريد الإلكتروني</span>
+              <a href="mailto:alelm@trenddc.com" dir="ltr">alelm@trenddc.com</a>
+            </div>
+          </address>
+
+          <a className="contact-action" href="mailto:alelm@trenddc.com">إرسال رسالة</a>
+        </article>
       </main>
       <SiteFooter />
     </>

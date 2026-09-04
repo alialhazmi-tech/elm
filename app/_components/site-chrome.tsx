@@ -268,7 +268,11 @@ export function SiteFooter() {
             <span>المحتوى من مواد منشورة · المصدر النهائي «تحرير العلم»</span>
           </div>
           <div className="ft-legal-left">
-            <Link href="/robots.txt">سياسة النشر</Link>
+            <Link href="/about">من نحن</Link>
+            <span className="ft-sep" aria-hidden="true">·</span>
+            <Link href="/contact">تواصل معنا</Link>
+            <span className="ft-sep" aria-hidden="true">·</span>
+            <Link href="/privacy-policy">سياسة الخصوصية</Link>
             <span className="ft-sep" aria-hidden="true">·</span>
             <Link href="/sitemap.xml">خريطة المنصة</Link>
           </div>
