@@ -10,14 +10,14 @@
    ============================================================ */
 
 :root {
-  --bg: #f5f7fb;
+  --bg: #faf9f5;
   --surface: #ffffff;
-  --surface-2: #eef2f8;
-  --ink: #101e30;
-  --ink-2: #4e5f78;
-  --ink-3: #5a6677;
-  --line: #e7ecf4;
-  --line-2: #c7d2e2;
+  --surface-2: #f3efe8;
+  --ink: #141c24;
+  --ink-2: #465362;
+  --ink-3: #6e7c8b;
+  --line: #e8e2d8;
+  --line-2: #d4ccc0;
   --navy: #12284b;
   --navy-deep: #0b1a33;
   --ink-deep: #0A1A33;

@@ -196,3 +196,36 @@
   .breaking-inner { padding-inline: 16px; }
   .breaking-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
+
+/* لوقو العلم الرسمي — صورة مضبوطة الارتفاع حتى لا تُقص في سفاري */
+.brand,
+.ft-brand {
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+  text-decoration: none;
+  width: fit-content;
+  min-width: 0;
+}
+.brand-mark {
+  display: block;
+  flex: none;
+  line-height: 0;
+  overflow: visible;
+}
+.brand-mark img {
+  display: block;
+  width: auto;
+  height: 34px;
+  filter: brightness(0);
+}
+.brand-mark-lockup img { height: 48px; }
+@media (max-width: 640px) {
+  .brand-mark img { height: 28px; }
+  .brand-mark-lockup img { height: 38px; }
+}
+:root[data-theme="dark"] .brand-mark img { filter: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-mark img { filter: none; }
+}

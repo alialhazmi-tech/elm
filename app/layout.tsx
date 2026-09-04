@@ -7,8 +7,8 @@ import "./header.css";
 import "./home.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
-// تصميم «المنشور»: العناوين بـ Alexandria، وكل النصوص الفرعية بـ IBM Plex Sans Arabic،
-// واللوجوتايب الرسمي Noto Kufi 900 وحده.
+// العناوين بـ Alexandria، والنصوص بـ IBM Plex Sans Arabic،
+// والكوفي لمسميات السلاسل. اللوقو الرسمي أصل هندسي في BrandMark.
 const displayFont = Alexandria({
   subsets: ["arabic", "latin"],
   weight: ["700", "800"],
@@ -60,14 +60,21 @@ export const metadata: Metadata = {
     description: "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر.",
     images: ["/og.png"],
   },
-  icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+  icons: {
+    icon: [
+      { url: "/brand/alelm-icon.png", type: "image/png", sizes: "64x64" },
+      { url: "/favicon.svg" },
+    ],
+    shortcut: "/brand/alelm-icon.png",
+    apple: "/brand/alelm-icon.png",
+  },
   manifest: "/manifest.webmanifest",
 };
 
 export const viewport: Viewport = {
   colorScheme: "light dark",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f9fb" },
+    { media: "(prefers-color-scheme: light)", color: "#faf9f5" },
     { media: "(prefers-color-scheme: dark)", color: "#0b1322" },
   ],
 };

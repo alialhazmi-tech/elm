@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BrandMark } from "./brand-mark";
 import { getNewsStrip } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
 import { NewsletterForm } from "./newsletter-form";
@@ -59,8 +60,7 @@ async function BreakingBar() {
 }
 
 /**
- * الهيدر: لوح مداد، اللوجوتايب السالب (كلمة «العلم» وحدها —
- * Noto Kufi ‏900)، والنشط بتمييز كحلي فاتح دون أحمر.
+ * الهيدر: اللوقو الرسمي الهندسي، والنشط بتمييز كحلي دون أحمر.
  */
 function Caret() {
   return (
@@ -92,7 +92,7 @@ export async function SiteHeader({
       <header className={rail ? "topbar has-rail" : "topbar"}>
         <div className="topbar-inner">
           <Link className="brand" href="/" aria-label="العلم - الصفحة الرئيسية">
-            <span className="brand-word">العلم</span>
+            <BrandMark />
           </Link>
 
           <nav className="topnav" aria-label="التنقل الرئيسي">
@@ -187,8 +187,8 @@ export function SiteFooter() {
         <div className="footer-grid">
           {/* العمود الأول: الهوية والرسالة */}
           <div className="ft-col ft-col-brand">
-            <Link href="/" className="brand-word ft-brand-word" aria-label="العلم - الصفحة الرئيسية">
-              العلم
+            <Link href="/" className="ft-brand" aria-label="العلم - الصفحة الرئيسية">
+              <BrandMark variant="lockup" />
             </Link>
             <p className="ft-tagline">
               منصة إعلام ومعرفة سعودية تضع الخبر في سياقه، وتفكك الأحداث عبر السلاسل التفسيرية وصحافة البيانات والتحليل المعمّق.
