@@ -56,6 +56,19 @@ test("الخبر البارز والفاصلان يستخدمون ألوانًا
   assert.doesNotMatch(divider, /item\.color|<i key=/);
 });
 
+test("عناوين الرئيسية تستخدم خط تفاصيل الخبر لا خط الشعار", async () => {
+  const [homeCss, globalCss, articleCss] = await Promise.all([
+    readFile(new URL("../app/home.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/soft.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(globalCss, /--font-display:\s*var\(--f-display,\s*'Alexandria'\)/);
+  assert.match(articleCss, /\.sa-head h1\s*\{[^}]*font-family:\s*var\(--font-display\)/s);
+  assert.match(homeCss, /\.home-shell h1, \.home-shell h2, \.home-shell h3\s*\{[^}]*font-family:\s*var\(--font-display\)/s);
+  assert.doesNotMatch(homeCss, /--font-display:\s*var\(--f-logo/);
+});
+
 test("emits the required M0 security headers without temporary domains", async () => {
   const routes = JSON.parse(await readFile(routesPath, "utf8"));
   const headers = Object.fromEntries(routes.headers[0].headers.map(({ key, value }) => [key, value]));

@@ -96,17 +96,29 @@ test("قسما «غير مصنف» القديمان يتحولان دائمًا 
 });
 
 test("الصفحات الإرثية الأربع حية بروابطها القديمة", async () => {
-  const [about, contact, privacy, landing] = await Promise.all([
+  const [about, contact, privacy, landing, chrome] = await Promise.all([
     read("app/about/page.tsx"),
     read("app/contact/page.tsx"),
     read("app/privacy-policy/page.tsx"),
     read("app/landing-page/page.tsx"),
+    read("app/_components/site-chrome.tsx"),
   ]);
-  assert.match(about, /عن العلم/u);
-  assert.match(contact, /تواصل/u);
-  assert.match(privacy, /خصوصيتك ليست ثمن التخصيص/u);
-  // القانونية الكاملة تُعتمد من المالك قبل الإطلاق — الصفحة تصرّح بذلك كما في iOS.
-  assert.match(privacy, /السياسة القانونية الكاملة/u);
+  assert.match(about, /العلم منصة إعلامية معرفية/u);
+  assert.match(about, /المنصة المعرفية اليومية للمتلقي/u);
+  assert.match(about, /صناعة التأثير عبر الإعلام/u);
+  assert.match(contact, /شارع الأمير ناصر بن سعود/u);
+  assert.match(contact, /\+966552653222/u);
+  assert.match(contact, /alelm@trenddc\.com/u);
+  assert.match(privacy, /حماية حقوق الطبع والملكية الفكرية/u);
+  assert.match(privacy, /الكوكيز وإعدادات الشبكة/u);
+  assert.match(privacy, /info@alelm\.net/u);
+  assert.match(chrome, /href="\/about">من نحن/u);
+  assert.match(chrome, /href="\/contact">تواصل معنا/u);
+  assert.match(chrome, /href="\/privacy-policy">سياسة الخصوصية/u);
+  const sitemap = await read("app/sitemap.ts");
+  assert.match(sitemap, /\$\{BASE_URL\}\/about/u);
+  assert.match(sitemap, /\$\{BASE_URL\}\/contact/u);
+  assert.match(sitemap, /\$\{BASE_URL\}\/privacy-policy/u);
   // الإرثية التسويقية خارج الفهرسة حتى لا تزاحم الرئيسية.
   assert.match(landing, /index: false/u);
 });

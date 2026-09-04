@@ -25,7 +25,7 @@ const textFont = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
-// الكوفي: الشعار بوزن 900، وعناوين الرئيسية الناعمة v3 بوزني 700 و800 (home.css).
+// الكوفي: الشعار بوزن 900 ومسميات السلاسل في المسطرة بوزن 700؛ العناوين تبقى Alexandria.
 const logoFont = Noto_Kufi_Arabic({
   subsets: ["arabic", "latin"],
   weight: ["700", "800", "900"],

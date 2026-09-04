@@ -22,6 +22,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/series`, lastModified: now, changeFrequency: "daily", priority: 0.9 },
     { url: `${BASE_URL}/search`, lastModified: now, changeFrequency: "daily", priority: 0.7 },
     { url: `${BASE_URL}/podcasts`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${BASE_URL}/about`, lastModified: now, changeFrequency: "yearly", priority: 0.5 },
+    { url: `${BASE_URL}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.5 },
+    { url: `${BASE_URL}/privacy-policy`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
   ];
 
   const sectionPages: MetadataRoute.Sitemap = SECTIONS.map((sec) => ({
