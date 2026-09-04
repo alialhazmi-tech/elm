@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     // canonical واحد دائمًا من الرابط المحفوظ — لا يعكس معاملات طلب غير قانونية.
     alternates: { canonical: storyHref(story) },
     ...sharingMetadata({ type: "article", title: seoTitle, description: seoDescription,
-      path: storyHref(story), image: story.image, publishedTime: story.publishedAt }),
+      path: storyHref(story), image: story.image, storyId: story.id, publishedTime: story.publishedAt }),
   };
 }
 

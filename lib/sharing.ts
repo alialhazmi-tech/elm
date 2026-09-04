@@ -26,6 +26,7 @@ type ShareInput = {
   description: string;
   path: string;
   image?: string;
+  storyId?: string;
   type?: "website" | "article";
   publishedTime?: string;
 };
@@ -33,11 +34,18 @@ type ShareInput = {
 export function sharingMetadata(input: ShareInput, env: SharingEnvironment = process.env): Pick<Metadata, "openGraph" | "twitter"> {
   const origin = sharingOrigin(env);
   const fallback = { url: new URL("/og.png", origin).href, width: 1200, height: 630, type: "image/png", alt: SITE_TITLE };
-  let image: { url: string; alt: string } | typeof fallback = fallback;
+  let image: { url: string; alt: string; width?: number; height?: number; type?: string } = fallback;
   if (input.image?.trim()) {
     try {
       const url = new URL(input.image, origin);
-      if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) image = { url: url.href, alt: input.title };
+      if (["https:", "http:"].includes(url.protocol) && !url.username && !url.password) {
+        if (input.storyId) {
+          // تغيير الصورة يغيّر رابط المعاينة أيضًا؛ لا تعيد المنصات استخدام الصورة السابقة.
+          let version = 0;
+          for (const char of url.href) version = (Math.imul(version, 31) + char.charCodeAt(0)) >>> 0;
+          image = { url: new URL(`/share-images/${encodeURIComponent(input.storyId)}.jpg?v=${version.toString(36)}`, origin).href, width: 1200, height: 630, type: "image/jpeg", alt: input.title };
+        } else image = { url: url.href, alt: input.title };
+      }
     } catch { /* رابط صورة غير صالح: نعرض بطاقة العلم. */ }
   }
   return {
