@@ -701,7 +701,7 @@ function composeHome(articles: Story[], videos: Story[], stories: Story[]): Home
       return {
         title: story.title,
         href: storyHref(story),
-        color: storySeries?.color ?? "#3d7ef7",
+        color: storySeries?.color ?? "#3d6fad",
         label: storySeries?.name ?? sectionName(story.section),
         publishedAt: story.publishedAt,
       };

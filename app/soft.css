@@ -1,28 +1,29 @@
 /*
  * العلم — طبقة «الناعم» (2026-08-29)
- * الأسلوب: أسطح رمادية ناعمة بدل الخطوط، زوايا كبيرة، أزرق واحد، عناوين ضخمة، هواء.
+ * الأسلوب: ورق بارد، كحلي للأفعال، زعفران نادر للشرارات، وطيف معدني للسلاسل.
  * التوزيع خاص بالعلم. (أنماط الرئيسية والهيدر انتقلت إلى home.css وheader.css — تصميم 2026-09-01.)
  * تُحمَّل بعد globals/editorial-v2 فتغلبهما.
  */
 
 :root,
 :root[data-theme="light"] {
-  --bg: #ffffff;
+  --bg: #f3f5f8;
   --surface: #ffffff;
-  --surface-2: #f3f5f9;
-  --surface-3: #eaf3ff;
+  --surface-2: #eef1f6;
+  --surface-3: #e6edf5;
   --ink: #101e30;
   --ink-2: #4e5f78;
   --ink-3: #5a6677;
-  --line: #e7ecf4;
-  --line-2: #c7d2e2;
-  --navy: #1f4fa3;
-  --navy-deep: #173d80;
-  --accent: #1f4fa3;
-  --link: #1f4fa3;
-  --gold: #1f4fa3;
-  --gold-ink: #1f4fa3;
-  --success: #2eb873;
+  --line: #e3e8ef;
+  --line-2: #c5cedb;
+  --navy: #1a4282;
+  --navy-deep: #14356a;
+  --navy-rgb: 26 66 130;
+  --accent: #1a4282;
+  --link: #1a4282;
+  --gold: #b8923a;
+  --gold-ink: #8a6e28;
+  --success: #2a9a6e;
   --r-ui: 14px;
   --r-card: 20px;
   --r-panel: 24px;
@@ -31,7 +32,7 @@
   --r-lg: 24px;
   --shadow: none;
   --shadow-lift: 0 10px 30px rgb(16 30 48 / 0.08);
-  --spectrum: linear-gradient(90deg, var(--navy), #14a8d6);
+  --spectrum: linear-gradient(90deg, var(--navy), var(--gold));
 }
 
 :root[data-theme="dark"] {
@@ -44,12 +45,13 @@
   --ink-3: #8d9bb0;
   --line: #1f2c44;
   --line-2: #33456a;
-  --navy: #5b8ef0;
-  --navy-deep: #4677d8;
-  --accent: #5b8ef0;
-  --link: #7fb2ff;
-  --gold: #7fb2ff;
-  --gold-ink: #7fb2ff;
+  --navy: #6b93e0;
+  --navy-deep: #8aa8e8;
+  --navy-rgb: 107 147 224;
+  --accent: #6b93e0;
+  --link: #8eb4ff;
+  --gold: #d4b46a;
+  --gold-ink: #d4b46a;
   --shadow-lift: 0 10px 30px rgb(0 0 0 / 0.4);
 }
 @media (prefers-color-scheme: dark) {
@@ -63,12 +65,13 @@
     --ink-3: #8d9bb0;
     --line: #1f2c44;
     --line-2: #33456a;
-    --navy: #5b8ef0;
-    --navy-deep: #4677d8;
-    --accent: #5b8ef0;
-    --link: #7fb2ff;
-    --gold: #7fb2ff;
-    --gold-ink: #7fb2ff;
+    --navy: #6b93e0;
+    --navy-deep: #8aa8e8;
+    --navy-rgb: 107 147 224;
+    --accent: #6b93e0;
+    --link: #8eb4ff;
+    --gold: #d4b46a;
+    --gold-ink: #d4b46a;
     --shadow-lift: 0 10px 30px rgb(0 0 0 / 0.4);
   }
 }
@@ -455,7 +458,7 @@ body { background: var(--bg); color: var(--ink); }
 .ft-col-newsletter { padding: 0; border: 0; background: transparent; }
 .ft-newsletter-sub { margin: 0; font-size: 13.5px; line-height: 1.7; color: var(--ink-2); }
 .ft-compose { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; min-height: 50px; padding: 6px 6px 6px 16px; margin: 0; border-radius: 25px; background: var(--surface); border: 0; gap: 8px; }
-.ft-compose:focus-within { box-shadow: 0 0 0 3px rgb(31 79 163 / 0.18); }
+.ft-compose:focus-within { box-shadow: 0 0 0 3px rgb(var(--navy-rgb) / 0.18); }
 .ft-compose input { width: 100%; min-width: 0; height: auto; border: 0; background: transparent; padding: 0; font: inherit; font-size: 14px; color: var(--ink); outline: none; border-radius: 0; }
 .ft-compose input:focus { box-shadow: none; border: 0; }
 .ft-compose input::placeholder { color: var(--ink-3); }
@@ -531,7 +534,7 @@ body { background: var(--bg); color: var(--ink); }
   background: #fff; color: #0f1f3d; text-align: start; font: inherit;
 }
 .pc-play:hover { background: #eaf0f8; }
-.pc-play-ico { width: 44px; height: 44px; border-radius: 50%; background: var(--pc, #1f4fa3); color: #fff; display: grid; place-items: center; flex: none; }
+.pc-play-ico { width: 44px; height: 44px; border-radius: 50%; background: var(--pc, var(--navy)); color: #fff; display: grid; place-items: center; flex: none; }
 .pc-play-ico svg { width: 20px; height: 20px; }
 .pc-play-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .pc-play-txt b { font-size: 15px; font-weight: 700; }
@@ -828,7 +831,7 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 /* — رؤوس الأقسام: عناوين أهدأ من 30px — */
 .section-head h2 { font-size: 26px; }
 
-.spark { color: var(--navy); }
+.spark { color: var(--gold); }
 .brief-listen {
   flex: none; display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px;
   border: 0; border-radius: 999px; background: var(--surface-3); color: var(--navy);
@@ -847,7 +850,7 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 
 /* — شريط تقدم القراءة — */
 .read-progress { position: fixed; top: 0; inset-inline: 0; height: 3px; z-index: 60; background: transparent; }
-.read-progress i { display: block; height: 100%; width: 0; background: linear-gradient(270deg, var(--navy), #14a8d6); margin-inline-start: auto; }
+.read-progress i { display: block; height: 100%; width: 0; background: linear-gradient(270deg, var(--navy), var(--gold)); margin-inline-start: auto; }
 
 /* — رأس المادة: «احفظ المادة» في صف البايلاين — */
 .sa-layout { grid-template-columns: minmax(0, 740px) minmax(0, 1fr); }
@@ -868,8 +871,8 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 }
 .fact-block { border-radius: var(--r-md); border: 1px solid var(--line); background: transparent; }
 .fact-block > div { padding: 14px 18px; }
-.fact-rumor { background: rgb(239 71 111 / 0.07); }
-.fact-truth { background: rgb(46 184 115 / 0.08); }
+.fact-rumor { background: color-mix(in srgb, var(--c-aghrab) 8%, var(--surface)); }
+.fact-truth { background: color-mix(in srgb, var(--success) 9%, var(--surface)); }
 .fact-block b { font-size: 13px; }
 .fact-block p { font-size: 13.5px; line-height: 1.8; }
 
@@ -877,7 +880,7 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 .sa-poll .poll { margin: 0; padding: 20px 24px; border-radius: var(--r-md); background: var(--surface-2); border: 0; }
 .sa-poll .poll h4 { font-family: var(--font-text); font-size: 15.5px; font-weight: 700; margin-bottom: 12px; }
 .sa-poll .poll-opt { border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
-.sa-poll .poll-opt .fill { background: rgb(61 126 247 / 0.16); }
+.sa-poll .poll-opt .fill { background: color-mix(in srgb, var(--c-arqam) 16%, var(--surface)); }
 .sa-poll .poll-opt .row { padding: 10px 18px; }
 .sa-poll .poll-note { font-size: 11.5px; }
 @media (prefers-reduced-motion: no-preference) {
