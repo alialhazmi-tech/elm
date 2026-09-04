@@ -7,14 +7,14 @@
 
 :root,
 :root[data-theme="light"] {
-  --bg: #f3f5f8;
+  --bg: #f8f9fb;
   --surface: #ffffff;
-  --surface-2: #eef1f6;
-  --surface-3: #e6edf5;
+  --surface-2: #f4f6f9;
+  --surface-3: #eef3f8;
   --ink: #101e30;
   --ink-2: #4e5f78;
   --ink-3: #5a6677;
-  --line: #e3e8ef;
+  --line: #e8edf3;
   --line-2: #c5cedb;
   --navy: #1a4282;
   --navy-deep: #14356a;
