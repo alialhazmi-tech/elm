@@ -36,7 +36,7 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/server$/ }, () => ({ path: "next/server.js", external: true }));
@@ -53,6 +53,20 @@ try {
     } }],
   });
   const subject = await import(`../${directory}/subject.mjs`);
+  // Reproduce a deployed content database that predates editorial workflow columns.
+  // The temporary table is confined to this isolated connection and shadows public.stories.
+  await withDb(async () => {
+    const client = context.getStore().$client;
+    await client.query("create temporary table stories (like public.stories including defaults)");
+    await client.query("alter table pg_temp.stories drop column author_id, drop column version, drop column revision_of, drop column base_version");
+    await client.query("insert into pg_temp.stories (id,slug,section,title,body,status) values ('legacy-public','legacy-public','health','Existing article','Full published body','published'), ('legacy-archived','legacy-archived','health','Archived article','Hidden body','archived')");
+    const story = await subject.publicContentProvider.getStory('legacy-public');
+    assert.equal(story?.title, 'Existing article');
+    assert.equal(story?.body, 'Full published body');
+    assert.equal(await subject.publicContentProvider.getStory('legacy-archived'), null);
+    assert.equal(await subject.publicContentProvider.getStory('legacy-missing'), null);
+    checks++;
+  });
   const input = { id: "original", title: "عنوان عربي", excerpt: "موجز", body: "المتن", section: "health", slug: "عنوان-عربي", seriesSlug: null, image: null };
   const saved = await withDb(() => subject.saveDraft(input, editor));
   assert.equal(saved.version, 1); checks++;

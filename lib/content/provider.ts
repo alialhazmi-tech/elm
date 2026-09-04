@@ -815,11 +815,12 @@ export const seedContentProvider: ContentProvider = {
       DB_CACHE_MS,
       async (db) => {
         const rows = await db
-          .select()
+          // القراءة العامة لا تحتاج أعمدة الملكية وإصدارات مسودات التحرير.
+          .select({ ...CARD_COLUMNS, body: storiesTable.body })
           .from(storiesTable)
           .where(and(PUBLISHED, eq(storiesTable.id, clean)))
           .limit(1);
-        return rows.map((row) => mapRow(row as CardRow));
+        return rows.map(mapRow);
       },
       () => seedAll.filter((item) => item.id === clean),
     );
