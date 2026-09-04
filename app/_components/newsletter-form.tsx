@@ -38,7 +38,7 @@ export function NewsletterForm({ source = "footer" }: { source?: string }) {
         setMessage("هذا البريد مشترك مسبقًا.");
       } else {
         setStatus("success");
-        setMessage("تم — ستصلك نشرة العلم على بريدك.");
+        setMessage("تم حفظ اشتراكك في قائمة النشرة.");
         setEmail("");
       }
     } catch {

@@ -1,8 +1,7 @@
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
-import { memberEvents, memberLikes, memberProfiles, memberStoryStats } from "@/db/schema";
+import { memberEvents, memberProfiles, memberStoryStats, memberTopicScores } from "@/db/schema";
 import { getDb } from "@/lib/db";
-import { clearInferredScores } from "./interests";
 
 export async function setPersonalizationEnabled(memberId: string, enabled: boolean) {
   const db = getDb();
@@ -27,10 +26,9 @@ export async function setPersonalizationEnabled(memberId: string, enabled: boole
 export async function clearBehavioralData(memberId: string) {
   const db = getDb();
   if (!db) throw new Error("MEMBERSHIP_DATABASE_UNAVAILABLE");
-  await Promise.all([
+  await db.batch([
     db.delete(memberEvents).where(eq(memberEvents.memberId, memberId)),
     db.delete(memberStoryStats).where(eq(memberStoryStats.memberId, memberId)),
-    db.delete(memberLikes).where(eq(memberLikes.memberId, memberId)),
-    clearInferredScores(memberId),
+    db.delete(memberTopicScores).where(and(eq(memberTopicScores.memberId, memberId), ne(memberTopicScores.source, "explicit"))),
   ]);
 }

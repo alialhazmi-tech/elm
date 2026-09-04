@@ -1,3 +1,4 @@
+import "./home.css";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -5,7 +6,6 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
 import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
-import { BriefListen } from "@/app/_components/home-brief-listen";
 import { HomeAskBand } from "@/app/_components/home-ask-band";
 import { SeriesSpectrum } from "@/app/_components/series-navigator";
 import { homeStream } from "@/lib/content/homeStream";
@@ -53,10 +53,10 @@ export default async function Home() {
     seriesDirectory().catch(() => ({} as Awaited<ReturnType<typeof seriesDirectory>>)),
   ]);
   const hero = home.hero;
-  // التدفّق: يستبعد ما تعرضه الصدارة و«وراء الخبر» والأكثر قراءة حتى لا يتكرر خبر في الصفحة.
+  // التدفّق: يستبعد ما تعرضه الصدارة و«وراء الخبر» ومختارات من الأرشيف حتى لا يتكرر خبر في الصفحة.
   const shownIds = new Set<string>([hero?.id, ...home.mosaic.map((s) => s.id), ...home.mostRead.map((s) => s.id)].filter((id): id is string => Boolean(id)));
   const stream = await homeStream(shownIds).catch(() => null);
-  // الأكثر قراءة لا يكرر ما يعرضه معرض الإنفوجرافيك أو النهر أو اللوحات.
+  // مختارات من الأرشيف لا يكرر ما يعرضه معرض الإنفوجرافيك أو النهر أو اللوحات.
   const streamIds = new Set<string>([
     ...(stream?.river ?? []).map((s) => s.id),
     ...(stream?.infographics ?? []).map((s) => s.id),
@@ -74,12 +74,10 @@ export default async function Home() {
   });
   const today = brandDate(new Date().toISOString());
 
-  // الموجز الذكي: سطر الثقة يقرأ من أحدث مادة فيه، ومدة الاستماع تُقدَّر من طول العناوين.
+  // سطر تحديث الموجز يقرأ من أحدث مادة فيه.
   const briefUpdated = relativeTimeAr(
     home.brief.map((item) => item.publishedAt).filter(Boolean).sort().at(-1) ?? undefined,
   );
-  const briefWords = home.brief.reduce((total, item) => total + item.title.trim().split(/\s+/).length, 0);
-  const briefSeconds = Math.min(180, Math.max(30, Math.round((briefWords / 2.5) / 5) * 5));
 
   // «وراء الخبر»: مرتكز + 3 صفوف تحريرية.
   const contextFeatured = home.mosaic[0];
@@ -108,7 +106,7 @@ export default async function Home() {
           <span className="live">تغطية مستمرة</span>
         </div>
 
-        {/* الصدارة + موجز العلم الذكي: لوحة ناعمة يمينًا وبطاقة الموجز يسارًا */}
+        {/* الصدارة + موجز العلم: لوحة ناعمة يمينًا وبطاقة الموجز يسارًا */}
         <div className="sh-top">
         {hero ? (
           <section
@@ -146,19 +144,18 @@ export default async function Home() {
           </section>
         )}
 
-        {/* موجز العلم الذكي: خمسة عناوين مرقّمة مع سطري ثقة وشفافية */}
+        {/* موجز العلم: خمسة عناوين مرقّمة مع سطري ثقة وشفافية */}
         {home.brief.length > 0 ? (
           <aside className="sh-brief" aria-labelledby="brief-title">
             <div className="sh-brief-head">
               <div className="sh-brief-title-row">
                 <h2 id="brief-title">
-                  <span className="spark" aria-hidden="true">✦</span> موجز العلم الذكي
+                  <span className="spark" aria-hidden="true">✦</span> موجز العلم
                 </h2>
-                <BriefListen lines={home.brief.map((item) => item.title)} seconds={briefSeconds} />
               </div>
               {briefUpdated ? (
                 <span className="sh-brief-trust">
-                  تحديث {briefUpdated}، مُولّد من {toLatinDigits(String(home.briefFrom))} مادة منشورة في أرشيفنا
+                  تحديث {briefUpdated}، مختار من {toLatinDigits(String(home.briefFrom))} مادة منشورة في أرشيفنا
                 </span>
               ) : null}
             </div>
@@ -181,7 +178,7 @@ export default async function Home() {
               ))}
             </ol>
             <p className="sh-brief-why">
-              لماذا هذه المواد؟ الأكثر تطورًا خلال 24 ساعة عبر الأقسام. كل عنوان يحيل إلى مادته المنشورة.
+              لماذا هذه المواد؟ مختارات آلية من أحدث المواد عبر الأقسام. كل عنوان يحيل إلى مادته المنشورة.
             </p>
           </aside>
         ) : null}
@@ -380,7 +377,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* مرئي وصوتي + الأكثر قراءة */}
+        {/* مرئي وصوتي + مختارات من الأرشيف */}
         <div className="home-two">
           {home.videos.length > 0 ? (
             <div className="home-media">
@@ -396,9 +393,9 @@ export default async function Home() {
             </div>
           ) : null}
           {mostRead.length > 0 ? (
-            <section className="most-read" aria-label="الأكثر قراءة">
+            <section className="most-read" aria-label="مختارات من الأرشيف">
               <div className="section-head">
-                <h2>الأكثر قراءة</h2>
+                <h2>مختارات من الأرشيف</h2>
               </div>
               <ol className="most-read-list">
                 {mostRead.map((story, index) => (

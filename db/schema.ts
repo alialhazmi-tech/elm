@@ -32,6 +32,11 @@ export const stories = pgTable("stories", {
   status: text("status").notNull().default("published"),
   body: text("body").notNull().default(""),
   authorName: text("author_name").notNull().default(""),
+  authorId: text("author_id"),
+  version: integer("version").notNull().default(1),
+  /** مسودة تعديل مستقلة؛ لا تُعرض للجمهور ولا تغيّر هوية الأصل. */
+  revisionOf: text("revision_of"),
+  baseVersion: integer("base_version"),
   updatedAt: text("updated_at"),
   /** موعد النشر المجدول (ISO) — تُرقّى المادة آليًا بعد مرورها على الحارس لحظة الموعد. */
   scheduledAt: text("scheduled_at"),
@@ -179,6 +184,10 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("editor"),
   /** PBKDF2-SHA256: صيغة salt:iterations:hash بترميز hex. */
   passwordHash: text("password_hash").notNull(),
+  sessionVersion: integer("session_version").notNull().default(1),
+  mfaSecret: text("mfa_secret"),
+  mfaLastCounter: integer("mfa_last_counter").notNull().default(-1),
+  mfaRecoveryHashes: jsonb("mfa_recovery_hashes").notNull().default([]),
   status: text("status").notNull().default("active"),
   suspendedAt: text("suspended_at"),
   suspendedBy: text("suspended_by"),
@@ -188,6 +197,29 @@ export const users = pgTable("users", {
   mustChangePassword: integer("must_change_password").notNull().default(0),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),
+});
+
+/** لقطات منشورة قابلة للاستعادة كمسودة فقط. */
+export const storyVersions = pgTable("story_versions", {
+  id: text("id").primaryKey(),
+  storyId: text("story_id").notNull(),
+  version: integer("version").notNull(),
+  data: jsonb("data").notNull(),
+  actor: text("actor").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => [index("story_versions_story_idx").on(table.storyId, table.version)]);
+
+export const memberSavedStories = pgTable("member_saved_stories", {
+  memberId: text("member_id").notNull(),
+  storyId: text("story_id").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => [primaryKey({ columns: [table.memberId, table.storyId] })]);
+
+/** عدادات مشتركة بين نسخ الخادم، بلا عناوين IP أو أسماء حسابات خام. */
+export const requestLimits = pgTable("request_limits", {
+  key: text("key").primaryKey(),
+  count: integer("count").notNull(),
+  expiresAt: text("expires_at").notNull(),
 });
 
 /** سجل تدقيق غير قابل للتعديل: كل فعل تحريري يُدوَّن. */

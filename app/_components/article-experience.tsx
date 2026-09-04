@@ -43,47 +43,41 @@ function postJson(url: string, body: unknown, keepalive = false) {
   });
 }
 
-type ArticleState = { signedIn: boolean; liked: boolean };
-
-/** طلب واحد للمادة يتشاركه كل من يسأل عنها في الصفحة نفسها. */
-const stateRequests = new Map<string, Promise<ArticleState | null>>();
+type ArticleState = { memberId: string | null; signedIn: boolean; saved: boolean };
 
 function fetchArticleState(storyId: string): Promise<ArticleState | null> {
-  const pending = stateRequests.get(storyId);
-  if (pending) return pending;
-
-  const request = fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin" })
-    .then((response) => (response.ok ? response.json() : null))
-    .then((data) => (data ? { signedIn: Boolean(data.signedIn), liked: Boolean(data.liked) } : null))
+  return fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin", cache: "no-store" })
+    .then(response => response.ok ? response.json() : null)
+    .then(data => data ? { memberId: typeof data.memberId === "string" ? data.memberId : null, signedIn: Boolean(data.signedIn), saved: Boolean(data.saved) } : null)
     .catch(() => null);
-
-  stateRequests.set(storyId, request);
-  return request;
 }
 
-/** يقرأ حالة العضوية للمادة — تتشاركها أزرار الجانب والرأس بطلب واحد. */
+/** لا نخزّن جلسة عضو في كاش مواد عام؛ نحدّثها عند الرجوع للتبويب. */
 function useArticleState(storyId: string) {
-  const [state, setState] = useState<ArticleState>({ signedIn: false, liked: false });
-
+  const [state, setState] = useState<ArticleState>({ memberId: null, signedIn: false, saved: false });
   useEffect(() => {
     let live = true;
-    void fetchArticleState(storyId).then((data) => {
-      if (live && data) setState(data);
-    });
-    return () => {
-      live = false;
+    let sequence = 0;
+    const refresh = () => {
+      const request = ++sequence;
+      void fetchArticleState(storyId).then(data => { if (live && request === sequence && data) setState(data); });
     };
+    refresh();
+    window.addEventListener("focus", refresh);
+    window.addEventListener("alelm-saved-change", refresh);
+    return () => { live = false; window.removeEventListener("focus", refresh); window.removeEventListener("alelm-saved-change", refresh); };
   }, [storyId]);
-
   return [state, setState] as const;
 }
 
 /**
  * «احفظ المادة» في صف البايلاين — نفس مكتبة العضو خلف الواجهة
- * (`/api/me/like`)، فالمحفوظ هنا هو المحفوظ في صفحة «لك».
+ * (`/api/me/saved`)، فالمحفوظ هنا هو المحفوظ في صفحة «لك».
  */
 export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; joinHref: string }) {
   const [state, setState] = useArticleState(storyId);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   if (!state.signedIn) {
     return (
@@ -94,30 +88,36 @@ export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; join
   }
 
   const toggle = async () => {
-    const next = !state.liked;
-    setState((current) => ({ ...current, liked: next }));
+    if (saving) return;
+    setSaving(true); setSaveError("");
+    const next = !state.saved;
+    setState((current) => ({ ...current, saved: next }));
     try {
-      const response = await postJson("/api/me/like", { storyId, liked: next });
-      if (!response.ok) throw new Error("like");
-      const data = (await response.json()) as { liked?: boolean };
-      const liked = Boolean(data.liked);
-      setState((current) => ({ ...current, liked }));
-      // الكاش المشترك يلحق بالحفظ، فلا تعود البطاقة قديمة عند إعادة التركيب.
-      stateRequests.set(storyId, Promise.resolve({ signedIn: true, liked }));
+      const response = await postJson("/api/me/saved", { storyId, saved: next, expectedMemberId: state.memberId });
+      if (!response.ok) throw new Error("save");
+      const data = (await response.json()) as { saved?: boolean };
+      const saved = Boolean(data.saved);
+      setState((current) => ({ ...current, saved }));
+      window.dispatchEvent(new Event("alelm-saved-change"));
     } catch {
-      setState((current) => ({ ...current, liked: !next }));
-    }
+      setState((current) => ({ ...current, saved: !next }));
+      setSaveError("تعذر الحفظ. تحقق من الحساب والاتصال ثم أعد المحاولة.");
+      const latest = await fetchArticleState(storyId);
+      if (latest) setState(latest);
+    } finally { setSaving(false); }
   };
 
   return (
     <button
       type="button"
-      className={state.liked ? "sa-save is-on" : "sa-save"}
-      aria-pressed={state.liked}
+      disabled={saving}
+      title={saveError || undefined}
+      className={state.saved ? "sa-save is-on" : "sa-save"}
+      aria-pressed={state.saved}
       onClick={() => void toggle()}
     >
-      <span aria-hidden="true">{state.liked ? "★" : "☆"}</span>
-      {state.liked ? "محفوظة" : "احفظ المادة"}
+      <span aria-hidden="true">{state.saved ? "★" : "☆"}</span>
+      {saveError ? "أعد محاولة الحفظ" : state.saved ? "محفوظة" : "احفظ المادة"}
     </button>
   );
 }
@@ -444,7 +444,7 @@ export function PersonalizedRelated({
     <section aria-labelledby="related-title">
       <div className="section-head">
         <h2 id="related-title">نرشّح لك</h2>
-        <span className="sub">الترشيح يشرح نفسه دائمًا — تحت كل مادة سبب اختيارها لك</span>
+        <span className="sub">مواد أخرى قد تهمك</span>
       </div>
       <div className="grid-3">
         {items.map((item) => (

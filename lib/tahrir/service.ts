@@ -1,10 +1,12 @@
 /** طبقة بيانات «تحرير العلم»: استعلامات اللوحة، حفظ المسودات، سير الاعتماد، وسجل التدقيق. */
 
-import { and, desc, eq, ilike, inArray, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, ne, sql, type SQL } from "drizzle-orm";
 
 import { auditLog, stories, users } from "@/db/schema";
 import { stripHtmlToText } from "@/lib/content/html";
 import { getDb } from "@/lib/db";
+import { assertCanWrite, assertExpectedVersion, stableIdentity, StoryWriteError, type WriteActor } from "./write-policy";
+import { auditQuery, copySlides, copySource, lockStory, publishCheckedStory } from "./workflow";
 
 export type StoryRow = typeof stories.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -63,6 +65,7 @@ export async function getStory(id: string): Promise<StoryRow | null> {
 
 export interface DraftInput {
   id: string;
+  expectedVersion?: number;
   title: string;
   excerpt: string;
   body: string;
@@ -81,7 +84,7 @@ export interface DraftInput {
   breakingUntil?: string | null;
 }
 
-export async function saveDraft(input: DraftInput, actor: string): Promise<void> {
+export async function saveDraft(input: DraftInput, actor: WriteActor) {
   const db = requireDb();
   const now = new Date().toISOString();
 
@@ -100,61 +103,54 @@ export async function saveDraft(input: DraftInput, actor: string): Promise<void>
   const words = stripHtmlToText(input.body).split(/\s+/u).filter(Boolean).length;
   const readingMinutes = Math.min(15, Math.max(1, Math.round(words / 200) || 1));
 
-  await db
-    .insert(stories)
-    .values({
-      id: input.id,
-      slug: input.slug,
-      section: input.section,
-      title: input.title,
-      excerpt: input.excerpt,
-      body: input.body,
-      seriesSlug: input.seriesSlug,
-      image: input.image,
-      status: "draft",
-      authorName: actor,
-      updatedAt: now,
-      readingMinutes,
-      ...privileged,
-      ...seo,
-    })
-    .onConflictDoUpdate({
-      target: stories.id,
-      set: {
-        slug: input.slug,
-        section: input.section,
-        title: input.title,
-        excerpt: input.excerpt,
-        body: input.body,
-        seriesSlug: input.seriesSlug,
-        image: input.image,
-        updatedAt: now,
-        readingMinutes,
-        ...privileged,
-        ...seo,
-      },
+  const existing = await getStory(input.id);
+  assertCanWrite(actor, existing);
+  if (existing) assertExpectedVersion(existing.version, input.expectedVersion);
+  if (existing?.status === "archived") throw new StoryWriteError("استعد المادة المؤرشفة قبل تحريرها.");
+  const fork = existing && ["published", "scheduled"].includes(existing.status);
+  const id = fork ? crypto.randomUUID() : input.id;
+  const identity = stableIdentity(existing, input, id);
+  const content = {
+    ...identity, title: input.title, excerpt: input.excerpt, body: input.body,
+    seriesSlug: input.seriesSlug, image: input.image, updatedAt: now, readingMinutes,
+    ...privileged, ...seo,
+  };
+  if (!existing || fork) {
+    const insert = db.insert(stories).values({
+      ...(existing ?? {}), ...content, id, status: "draft", scheduledAt: null,
+      authorId: actor.userId, authorName: actor.displayName, version: 1,
+      revisionOf: existing?.revisionOf ?? existing?.id ?? null, baseVersion: existing?.baseVersion ?? existing?.version ?? null,
     });
+    if (existing) {
+      await db.batch([lockStory(existing), insert, copySlides(existing.id, id), copySource(existing.id, id), auditQuery(actor.username, "revision:create", id, existing.id)]);
+    } else {
+      await db.batch([insert, auditQuery(actor.username, "draft:create", id)]);
+    }
+    return { id, ...identity, version: 1, status: "draft", revisionOf: existing?.revisionOf ?? existing?.id ?? null };
+  }
+  await db.batch([
+    lockStory(existing),
+    db.update(stories).set({ ...content, status: "draft", scheduledAt: null, version: existing.version + 1 }).where(eq(stories.id, id)),
+    auditQuery(actor.username, "draft:save", id),
+  ]);
+  return { id, ...identity, version: existing.version + 1, status: "draft", revisionOf: existing.revisionOf };
 }
 
 export async function setStatus(
-  id: string,
-  status: StoryStatus,
+  checked: StoryRow,
+  status: "review" | "published",
   actor: string,
   detail = "",
-): Promise<void> {
+) {
+  if (status === "published") return publishCheckedStory(checked, actor, detail);
+  if (!["draft", "review"].includes(checked.status)) throw new StoryWriteError("يمكن رفع المسودة فقط للاعتماد.");
   const db = requireDb();
-  const now = new Date().toISOString();
-
-  await db
-    .update(stories)
-    .set(
-      status === "published"
-        ? { status, updatedAt: now, publishedAt: now }
-        : { status, updatedAt: now },
-    )
-    .where(eq(stories.id, id));
-
-  await audit(actor, `status:${status}`, id, detail);
+  await db.batch([
+    lockStory(checked),
+    db.update(stories).set({ status, updatedAt: new Date().toISOString(), version: checked.version + 1 }).where(eq(stories.id, checked.id)),
+    auditQuery(actor, `status:${status}`, checked.id, detail),
+  ]);
+  return { id: checked.id, slug: checked.slug, section: checked.section, version: checked.version + 1 };
 }
 
 export type DeleteDraftResult = "deleted" | "not-found" | "not-draft";
@@ -213,16 +209,17 @@ export async function archiveStory(
   if (story.status === "draft") return "is-draft";
 
   const now = new Date().toISOString();
-  await db
+  await db.batch([lockStory(story), db
     .update(stories)
     .set({
       status: "archived",
+      version: sql`${stories.version} + 1`,
+      scheduledAt: null,
       updatedAt: now,
       pinned: 0,
       breakingUntil: null,
     })
-    .where(eq(stories.id, id));
-  await audit(actor, ARCHIVE_ACTION, id, trimmed);
+    .where(eq(stories.id, id)), auditQuery(actor, ARCHIVE_ACTION, id, trimmed)]);
   return "archived";
 }
 
@@ -234,11 +231,10 @@ export async function restoreArchived(id: string, actor: string): Promise<Restor
   if (story.status !== "archived") return "not-archived";
 
   const now = new Date().toISOString();
-  await db
+  await db.batch([lockStory(story), db
     .update(stories)
-    .set({ status: "draft", updatedAt: now })
-    .where(eq(stories.id, id));
-  await audit(actor, RESTORE_ACTION, id, "استعادة من الأرشيف إلى مسودة");
+    .set({ status: "draft", scheduledAt: null, version: story.version + 1, updatedAt: now })
+    .where(eq(stories.id, id)), auditQuery(actor, RESTORE_ACTION, id, "استعادة من الأرشيف إلى مسودة")]);
   return "restored";
 }
 
@@ -376,64 +372,61 @@ export async function decideProposal(id: string, decision: "accepted" | "rejecte
   await audit(actor, `series:proposal-${decision}`, undefined, id);
 }
 
-export async function scheduleStory(id: string, scheduledAt: string, actor: string) {
+export async function scheduleStory(story: StoryRow, scheduledAt: string, actor: string) {
+  if (!["draft", "review"].includes(story.status)) throw new StoryWriteError("احفظ مسودة قبل الجدولة.");
   const db = requireDb();
-  await db
-    .update(stories)
-    .set({ status: "scheduled", scheduledAt, updatedAt: new Date().toISOString() })
-    .where(eq(stories.id, id));
-  await audit(actor, "status:scheduled", id, `الموعد ${scheduledAt}`);
+  await db.batch([
+    lockStory(story),
+    db.update(stories).set({ status: "scheduled", scheduledAt, updatedAt: new Date().toISOString(), version: story.version + 1 }).where(eq(stories.id, story.id)),
+    auditQuery(actor, "status:scheduled", story.id, `الموعد ${scheduledAt}`),
+  ]);
+  return { version: story.version + 1 };
 }
 
-/**
- * ترقية المواد المجدولة التي حان موعدها — تمر على الحارس لحظة الموعد:
- * السليمة تُنشر، والمخالفة تعود للاعتماد ويُدوَّن المنع. تُستدعى من
- * تحميل اللوحة ومن /api/tahrir/tick (لمراقب خارجي).
- */
-export interface PromotedStory {
-  id: string;
-  section: string;
-  slug: string;
-}
-
-/** يعيد المواد التي نُشرت فعلًا — ليبطل مستدعيها (Route Handler) كاش صفحاتها العامة. */
+export interface PromotedStory { id: string; section: string; slug: string }
 export async function promoteDueScheduled(): Promise<PromotedStory[]> {
   const db = requireDb();
   const now = new Date().toISOString();
   const settings = await loadAiSettings();
-  const due = await db
-    .select()
-    .from(stories)
-    .where(eq(stories.status, "scheduled"));
-
+  const due = await db.select().from(stories)
+    .where(and(eq(stories.status, "scheduled"), sql`${stories.scheduledAt} <= ${now}`)).orderBy(asc(stories.scheduledAt), asc(stories.id)).limit(100);
   const promoted: PromotedStory[] = [];
   for (const story of due) {
-    if (!story.scheduledAt || story.scheduledAt > now) continue;
-    const report = runConfiguredPolicyGuard({
-      id: story.id,
-      title: story.title,
-      body: stripHtmlToText(story.body),
-      surface: story.format === "jakalelm" ? ("design" as const) : undefined,
-      media: await guardMediaFor(story.image),
+    const report = runConfiguredPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body),
+      surface: story.format === "jakalelm" ? "design" as const : undefined, media: await guardMediaFor(story.image),
     }, settings.governance);
-    if (report.canRequestApproval) {
-      await db
-        .update(stories)
-        .set({ status: "published", publishedAt: now, updatedAt: now })
-        .where(eq(stories.id, story.id));
-      await audit("النظام", "publish:scheduled", story.id, "نشر مجدول — مرّ على الحارس لحظة الموعد");
-      promoted.push({ id: story.id, section: story.section, slug: story.slug });
-    } else {
-      await db
-        .update(stories)
-        .set({ status: "review", scheduledAt: null, updatedAt: now })
-        .where(eq(stories.id, story.id));
-      await audit(
-        "النظام",
-        "schedule:blocked",
-        story.id,
-        `أوقف الحارس النشر المجدول: ${report.audit.blockingRuleIds.join("، ")}`,
-      );
+    try {
+      if (report.canRequestApproval) {
+        promoted.push(await publishCheckedStory(story, "النظام", "نشر النسخة المعتمدة في موعدها"));
+      } else {
+        await db.batch([
+          lockStory(story),
+          db.update(stories).set({ status: "review", scheduledAt: null, updatedAt: now, version: story.version + 1 }).where(eq(stories.id, story.id)),
+          auditQuery("النظام", "schedule:blocked", story.id, report.audit.blockingRuleIds.join("، ")),
+        ]);
+      }
+    } catch (error) {
+      // عامل آخر سبقنا أو تغيّرت النسخة: لا ننشر ولا نكتب سجل نجاح مضللًا.
+      let cause: unknown = error;
+      let conflict = error instanceof StoryWriteError;
+      while (cause && typeof cause === "object") {
+        if ("code" in cause && cause.code === "40001") conflict = true;
+        cause = "cause" in cause ? cause.cause : null;
+      }
+      if (!conflict) throw error;
+      if (error instanceof StoryWriteError) {
+        // تعارض الأصل دائم لهذه النسخة؛ أخرجها من الطابور لئلا تحجب المواد التالية.
+        try {
+          await db.batch([lockStory(story), db.update(stories).set({ status: "review", scheduledAt: null, version: story.version + 1, updatedAt: now }).where(eq(stories.id, story.id)), auditQuery("النظام", "schedule:conflict", story.id, error.message)]);
+        } catch (transitionError) {
+          let cause: unknown = transitionError;
+          for (let depth = 0; depth < 5 && cause && typeof cause === "object"; depth++) {
+            if ("code" in cause && cause.code === "40001") { cause = null; break; }
+            cause = "cause" in cause ? cause.cause : undefined;
+          }
+          if (cause !== null) throw transitionError;
+        }
+      }
     }
   }
   return promoted;

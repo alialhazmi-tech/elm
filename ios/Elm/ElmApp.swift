@@ -36,6 +36,8 @@ struct ElmApp: App {
                 .environment(chrome)
                 .preferredColorScheme(appearance.colorScheme)
                 .task { await member.restore() }
+                .task(id: member.user?.id) { await library.switchAccount(member.user?.id) }
+                .task(id: member.user?.id) { await interests.switchAccount(member.user?.id, appearance: appearance) }
         }
     }
 }

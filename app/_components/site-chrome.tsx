@@ -7,11 +7,10 @@ import { NewsletterForm } from "./newsletter-form";
 import { NewsStrip } from "./news-strip";
 import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
-import { MemberEntry } from "./member-entry";
 
 /** الأقسام — تحت «الأخبار» في قائمة منسدلة. */
 const SECTIONS = [
-  { label: "محليات", href: "/politics" },
+  { label: "سياسة", href: "/politics" },
   { label: "اقتصاد", href: "/economy" },
   { label: "تقنية", href: "/technology" },
   { label: "علوم", href: "/sciences" },
@@ -32,7 +31,7 @@ const MOBILE_NAV = [
 ];
 
 const FOOTER_SECTIONS = [
-  { label: "محليات وسياق", href: "/politics" },
+  { label: "سياسة وسياق", href: "/politics" },
   { label: "اقتصاد واستثمار", href: "/economy" },
   { label: "تقنية وذكاء اصطناعي", href: "/technology" },
   { label: "علوم ومعرفة", href: "/sciences" },
@@ -72,7 +71,7 @@ function Caret() {
 
 /**
  * الهيدر: صف واحد رحب — شعار كبير يمينًا، قائمة بأسهم منسدلة هادئة،
- * ويسارًا زر دخول مملوء واحد وأيقونات بسيطة بلا خلفيات.
+ * ويسارًا أدوات البحث والمظهر والقائمة.
  */
 export async function SiteHeader({
   active,
@@ -129,11 +128,10 @@ export async function SiteHeader({
           </nav>
 
           <div className="top-tools">
-            <Link className="icon-btn" href="/search" aria-label="ابحث أو اسأل العلم">
+            <Link className="icon-btn" href="/search" aria-label="ابحث في العلم">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             </Link>
             <ThemeToggle />
-            <MemberEntry />
             <details className="mnav">
               <summary aria-label="القائمة">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
@@ -240,7 +238,7 @@ export function SiteFooter() {
           <div className="ft-col ft-col-newsletter">
             <h3 className="ft-head">نشرة «ما وراء العناوين»</h3>
             <p className="ft-newsletter-sub">
-              ابقَ قريبًا من المعرفة؛ أبرز مواد «العلم» تصلك أسبوعيًا عبر البريد.
+              سجّل بريدك في قائمة نشرة «العلم» لتصلك الإصدارات عند إطلاقها.
             </p>
             <NewsletterForm source="footer" />
           </div>

@@ -18,13 +18,14 @@ interface EditorialInput {
   selection?: string;
 }
 
-async function recordUsage(tool: AiTool, result: AiResult, actor: string) {
+async function recordUsage(tool: AiTool, result: AiResult, actor: string, reservationId?: string) {
   const parts = result.usages ?? [result.usage];
   const cents = parts.reduce(
     (sum, part) => sum + costCents(part.model, part.inputTokens, part.outputTokens),
     0,
   );
   await logUsage({
+    reservationId,
     tool,
     model: parts.map((part) => part.model).join("+"),
     inputTokens: result.usage.inputTokens,
@@ -44,6 +45,7 @@ function streamFullEdit(
   input: EditorialInput,
   settings: AiSettingsData,
   actor: string,
+  reservationId?: string,
 ) {
   const encoder = new TextEncoder();
   let firstEvent = true;
@@ -67,7 +69,7 @@ function streamFullEdit(
           signal: request.signal,
           onFullEditProgress: (stage: FullEditProgressStage) => send({ type: "progress", stage }),
         });
-        await recordUsage("full_edit", result, actor);
+        await recordUsage("full_edit", result, actor, reservationId);
         send({ type: "result", data: { ok: true, ...result } });
       } catch (error) {
         if (!request.signal.aborted) send({ type: "error", error: errorMessage(error) });
@@ -128,12 +130,12 @@ export async function POST(request: Request) {
   };
 
   if (tool === "full_edit" && request.headers.get("accept")?.includes("application/x-ndjson")) {
-    return streamFullEdit(request, normalizedInput, settings, session.username);
+    return streamFullEdit(request, normalizedInput, settings, session.username, gate.reservationId);
   }
 
   try {
     const result = await runEditorialTool(tool, normalizedInput, settings, { signal: request.signal });
-    await recordUsage(tool, result, session.username);
+    await recordUsage(tool, result, session.username, gate.reservationId);
 
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {

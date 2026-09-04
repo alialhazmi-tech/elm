@@ -19,8 +19,8 @@ export async function POST(request: Request) {
     preferredTheme?: InfographicThemeId;
   } | null;
 
-  const rawText = input?.text?.trim() ?? "";
-  const topic = input?.topic?.trim() ?? "";
+  const rawText = input?.text?.trim().slice(0, 40_000) ?? "";
+  const topic = input?.topic?.trim().slice(0, 500) ?? "";
 
   if (!rawText && !topic) {
     return NextResponse.json({ error: "يرجى كتابة نص التقرير أو اختيار موضوع لتوليده." }, { status: 400 });
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
 
     try {
       await logUsage({
+      reservationId: gate.reservationId,
         tool: "infographic-generator",
         model: result.usage.model,
         inputTokens: result.usage.inputTokens,

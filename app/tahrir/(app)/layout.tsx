@@ -5,7 +5,7 @@ import { AppSidebar } from "@/components/tahrir/app-sidebar";
 import { SiteHeader } from "@/components/tahrir/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { loadActor } from "@/lib/tahrir/access";
-import { promoteDueScheduled, statusCounts } from "@/lib/tahrir/service";
+import { statusCounts } from "@/lib/tahrir/service";
 
 export default async function TahrirAppLayout({
   children,
@@ -15,9 +15,6 @@ export default async function TahrirAppLayout({
   if (!actor) redirect("/tahrir/login");
   if (actor.mustChangePassword) redirect("/tahrir/password");
 
-  // النشر التلقائي هنا يبطل نفسه خلال 300 ثانية عبر ISR — الإبطال الفوري في /api/tahrir/tick فقط
-  // (revalidatePath يرفض العمل أثناء رندر مكوّن خادم مثل هذا الـlayout).
-  await promoteDueScheduled().catch(() => []);
   const counts = await statusCounts().catch(() => ({}) as Record<string, number>);
   const total = Object.entries(counts).reduce(
     (sum, [key, value]) => (key === "archived" ? sum : sum + value),

@@ -1,4 +1,5 @@
 import { InfographicStudio } from "@/components/tahrir/infographic/infographic-studio";
+import { aiProvider } from "@/lib/ai/provider-config";
 
 export const metadata = { title: "استوديو الإنفوجرافيك" };
 
@@ -9,7 +10,7 @@ export default function InfographicsPage() {
         <h1 className="font-display text-xl font-extrabold">استوديو الإنفوجرافيك</h1>
         <span className="text-xs text-muted-foreground">تجربة بصرية تفاعلية من أي تقرير — وصور حقيقية بنقرة</span>
       </div>
-      <InfographicStudio />
+      <InfographicStudio openRouter={aiProvider() === "openrouter"} />
     </main>
   );
 }

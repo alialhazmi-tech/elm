@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { SERIES } from "@/lib/content/series";
 import { redirect } from "next/navigation";
 import { SECTION_NAMES } from "@/lib/content/seed";
-import { loadActor } from "@/lib/tahrir/access";
+import { canEditStory, loadActor } from "@/lib/tahrir/access";
 import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { EditorClient } from "@/components/tahrir/editor/editor-client";
 import { loadAiSettings } from "@/lib/ai/settings";
@@ -16,6 +17,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
     loadAiSettings(),
     id === "new" ? Promise.resolve(null) : getStory(id).catch(() => null),
   ]);
+  if (!actor || !canEditStory(actor, story)) redirect("/tahrir/stories");
   if (story?.format === "jakalelm") redirect(`/tahrir/jak/${story.id}`);
   const archiveEvent = story?.status === "archived"
     ? (await latestArchiveEvents([story.id])).get(story.id)
@@ -30,7 +32,9 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
 
   return (
     <main>
+      {story && <Link className="mx-5 my-2 inline-block text-sm underline" href={`/tahrir/history/${story.revisionOf ?? story.id}`}>سجل النسخ واستعادتها</Link>}
       <EditorClient
+        actorId={actor.userId}
         canApprove={actor?.can("story.publish") ?? false}
         guardControls={settings.governance}
         recentMedia={recentMedia}
@@ -40,6 +44,8 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
           story
             ? {
                 id: story.id,
+                version: story.version,
+                revisionOf: story.revisionOf,
                 title: story.title,
                 excerpt: story.excerpt,
                 body: story.body,

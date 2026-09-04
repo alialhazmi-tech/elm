@@ -23,6 +23,7 @@
  *           docs/metrics/wp-migrate-report.json (التقرير النهائي).
  */
 
+import { migrationCoverage } from "./lib/migration-metrics.mjs";
 import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
@@ -225,16 +226,17 @@ async function databaseCounts() {
 
 async function verify(reportExtra = {}) {
   const [wpTotal, db] = await Promise.all([wordpressTotal(), databaseCounts()]);
-  const coverage = wpTotal > 0 ? Math.round((db.published / wpTotal) * 10000) / 100 : 0;
+  const metrics = migrationCoverage({ since: SINCE, sourceCount: wpTotal, targetPublished: db.published });
+  const coverage = metrics.coveragePercent;
   await log("——— التحقق ———");
   await log(`ووردبريس (منشور${SINCE ? "، معدَّل بعد " + SINCE : ""}): ${wpTotal}`);
   await log(`قاعدتنا (معرّفات رقمية): ${db.migrated} — منها منشور: ${db.published}`);
-  await log(`التغطية: ${coverage}%`);
+  await log(SINCE ? "دفعة تزايدية: لا يمكن استنتاج تغطية الأرشيف من عدد الدفعة." : `التغطية العددية: ${coverage}% (ليست إثبات مطابقة المحتوى)`);
   const report = {
     generatedAt: new Date().toISOString(),
     startedAt: startedAt.toISOString(),
     mode: SINCE ? `incremental-since-${SINCE}` : VERIFY_ONLY ? "verify-only" : "full",
-    wordpressPublished: wpTotal,
+    ...metrics,
     targetNumericIds: db.migrated,
     targetPublished: db.published,
     coveragePercent: coverage,

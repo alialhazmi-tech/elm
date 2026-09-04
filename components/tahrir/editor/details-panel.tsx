@@ -225,7 +225,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
       </Section>
 
       <Section title="القسم">
-        <Select dir="rtl" value={props.section} onValueChange={props.onSection}>
+        <Select dir="rtl" disabled={Boolean(props.id)} value={props.section} onValueChange={props.onSection}>
           <SelectTrigger className="w-full" aria-label="القسم">
             <SelectValue />
           </SelectTrigger>
@@ -286,7 +286,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
       </Section>
 
       <Section title="الرابط (لاتيني)">
-        <Input dir="ltr" placeholder="my-story-slug" value={props.slug} onChange={(event) => props.onSlug(event.target.value)} />
+        <Input dir="ltr" placeholder="my-story-slug" readOnly={Boolean(props.id)} value={props.slug} onChange={(event) => props.onSlug(event.target.value)} />
       </Section>
 
       <ArchiveDialog

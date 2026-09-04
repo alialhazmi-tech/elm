@@ -42,6 +42,10 @@ struct SavedScreen: View {
                 .padding(.top, 12)
 
                 autoDownloadRow.padding(.top, 14)
+                if let error = library.syncError {
+                    Text(error).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink2).padding(.top, 10)
+                    Button("إعادة المزامنة") { Task { await library.synchronize() } }
+                }
 
                 if items.isEmpty {
                     emptyState.padding(.top, 30)
@@ -57,6 +61,8 @@ struct SavedScreen: View {
             .padding(.horizontal, 18)
             .padding(.top, 16)
         }
+        .task { await library.synchronize() }
+        .refreshable { await library.synchronize() }
     }
 
     private var autoDownloadRow: some View {

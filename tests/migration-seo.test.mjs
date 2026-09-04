@@ -117,7 +117,7 @@ test("الصفحات الإرثية الأربع حية بروابطها الق�
   assert.match(chrome, /href="\/privacy-policy">سياسة الخصوصية/u);
   assert.match(chrome, /href="\/sitemap\.xml">خريطة المنصة/u);
   assert.doesNotMatch(chrome, /المحتوى من مواد منشورة/u);
-  assert.match(chrome, /ابقَ قريبًا من المعرفة؛ أبرز مواد «العلم» تصلك أسبوعيًا عبر البريد/u);
+  assert.match(chrome, /سجّل بريدك في قائمة نشرة «العلم» لتصلك الإصدارات عند إطلاقها/u);
   assert.doesNotMatch(chrome, /بلا إعلانات|موجز أسبوعي يختصر/u);
   const sitemap = await read("app/sitemap.ts");
   assert.match(sitemap, /\$\{BASE_URL\}\/about/u);

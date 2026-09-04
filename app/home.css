@@ -39,8 +39,8 @@ body:has(.home-shell) {
 .home-shell .btn-pill:hover { background: var(--navy-deep); color: #fff; transform: translateY(-1px); text-decoration: none; }
 .home-shell .btn-pill:active { transform: scale(0.97); }
 .home-shell .soft-img { background: var(--surface-2); overflow: hidden; }
-.soft-img img, .river-img img, .media-thumb img { transition: transform 650ms cubic-bezier(0.16, 1, 0.3, 1); }
-a:hover > .soft-img img, .soft-img:hover img, .river-card:hover .river-img img, .media-card:hover .media-thumb img, .sh-ctx-featured:hover .soft-img img, .sh-ctx-row:hover .soft-img img, .panel-lead:hover .soft-img img { transform: scale(1.03); }
+.home-shell .soft-img img, .home-shell .river-img img, .home-shell .media-thumb img { transition: transform 650ms cubic-bezier(0.16, 1, 0.3, 1); }
+.home-shell a:hover > .soft-img img, .home-shell .soft-img:hover img, .home-shell .river-card:hover .river-img img, .home-shell .media-card:hover .media-thumb img, .home-shell .sh-ctx-featured:hover .soft-img img, .home-shell .sh-ctx-row:hover .soft-img img, .home-shell .sh-ctx-row:hover .soft-img img, .home-shell .panel-lead:hover .soft-img img { transform: scale(1.03); }
 
 /* رأس المقطع: عنوان كوفي + وصف + رابط، بلا علامة جانبية ولا سهم */
 .home-shell .section-head { display: flex; align-items: baseline; gap: 14px; margin: 0 0 20px; padding: 0; border: 0; }

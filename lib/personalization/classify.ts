@@ -83,18 +83,18 @@ export async function ensureStoryTopics(storyId: string): Promise<void> {
  * لا يُستدعى عند فتح المقال، ولا يكتب نصًا تحريريًا للعرض.
  */
 async function classifyWithHaiku(storyId: string): Promise<void> {
-  if (!process.env.ANTHROPIC_API_KEY) return;
+  const { textClient } = await import("@/lib/ai/text-client");
+  const client = textClient();
+  if (!client) return;
   const { loadAiSettings } = await import("@/lib/ai/settings");
-  const { default: Anthropic } = await import("@anthropic-ai/sdk");
   const story = await seedContentProvider.getStory(storyId);
   if (!story) return;
 
   const settings = await loadAiSettings();
   const { budgetGate, logUsage, costCents } = await import("@/lib/ai/usage");
-  const gate = await budgetGate(settings.caps);
+  const gate = await budgetGate(settings.caps, 20);
   if (!gate.ok) return;
   const catalog = MEMBER_INTERESTS.map((item) => `${item.id}:${item.label}`).join("، ");
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const response = await client.messages.create({
     model: settings.models.light,
     max_tokens: 400,
@@ -118,6 +118,7 @@ async function classifyWithHaiku(storyId: string): Promise<void> {
   const allowed = new Set(MEMBER_INTERESTS.map((item) => item.id));
   const ids = (parsed.interests ?? []).filter((id) => allowed.has(id)).slice(0, 4);
   await logUsage({
+      reservationId: gate.reservationId,
     tool: "story_topics",
     model: settings.models.light,
     inputTokens: response.usage.input_tokens,

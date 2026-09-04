@@ -1,3 +1,4 @@
+import { assertCanWrite, assertExpectedVersion, StoryWriteError, type WriteActor } from "./write-policy.ts";
 /**
  * «جاك العلم» — طبقة بيانات الشرائح.
  *
@@ -221,16 +222,23 @@ export function projectSlides(slides: JakSlide[]): string {
 export async function replaceSlides(
   storyId: string,
   slides: JakSlide[],
-  actor: string,
+  actor: WriteActor,
   source?: string,
-): Promise<void> {
+  expectedVersion?: number,
+) {
+  const { auditQuery, lockStory } = await import("./workflow");
   const db = requireDb();
+  const [story] = await db.select().from(stories).where(eq(stories.id, storyId)).limit(1);
+  if (!story) throw new StoryWriteError("المادة غير موجودة.", 404);
+  assertCanWrite(actor, story);
+  assertExpectedVersion(story.version, expectedVersion);
+  if (!["draft", "review"].includes(story.status)) throw new StoryWriteError("احفظ مسودة مراجعة قبل تعديل الشرائح.");
   const now = new Date().toISOString();
   const sourceToSave = source?.trim();
   const deleteSlides = () => db.delete(storySlides).where(eq(storySlides.storyId, storyId));
   const updateStory = () => db
     .update(stories)
-    .set({ body: projectSlides(slides), updatedAt: now })
+    .set({ body: projectSlides(slides), updatedAt: now, status: "draft", version: story.version + 1 })
     .where(eq(stories.id, storyId));
   const insertSlides = () => db.insert(storySlides).values(
     slides.map((slide, position) => ({
@@ -261,17 +269,16 @@ export async function replaceSlides(
   // neon-http لا يدعم المعاملات التفاعلية، وbatch ينفذ الاستعلامات
   // كمعاملة HTTP واحدة غير تفاعلية مع الحفاظ على ذرية الاستبدال.
   if (slides.length > 0 && sourceToSave) {
-    await db.batch([deleteSlides(), insertSlides(), updateStory(), upsertSource()]);
+    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), insertSlides(), updateStory(), upsertSource()]);
   } else if (slides.length > 0) {
-    await db.batch([deleteSlides(), insertSlides(), updateStory()]);
+    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), insertSlides(), updateStory()]);
   } else if (sourceToSave) {
-    await db.batch([deleteSlides(), updateStory(), upsertSource()]);
+    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), updateStory(), upsertSource()]);
   } else {
-    await db.batch([deleteSlides(), updateStory()]);
+    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), updateStory()]);
   }
 
-  const { audit } = await import("./service");
-  await audit(actor, "jak:slides-save", storyId, `${slides.length} شريحة`);
+  return { version: story.version + 1 };
 }
 
 export async function getJakSource(storyId: string): Promise<string> {

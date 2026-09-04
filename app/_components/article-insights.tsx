@@ -131,7 +131,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
   }, [goTo, index]);
 
   const ins = data ?? EMPTY;
-  const fresh = ins.readers === 0;
+  const fresh = ins.readers < 20;
   const avg = fresh ? readingMinutes : ins.avgMinutes;
   const labels = ["< 2 د", "2–4 د", "4–6 د", "> 6 د"];
   const total = ins.likes + ins.answers;
@@ -171,8 +171,8 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             <h3>إكمال القراءة</h3>
             {fresh ? null : <span className="ins-chip">{n(ins.readers)} قارئ</span>}
           </header>
-          {fresh ? <p className="ins-big ins-empty">لا قراءات بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.completion)}</b><span>%</span></p>}
-          <p className="ins-desc">{fresh ? "تُحسب مع أول قراءات الأعضاء" : "نسبة القرّاء الذين أكملوا قراءة المادة حتى النهاية"}</p>
+          {fresh ? <p className="ins-big ins-empty">العينة غير كافية بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.completion)}</b><span>%</span></p>}
+          <p className="ins-desc">{fresh ? "تظهر النسب بعد 20 قارئًا" : "نسبة القرّاء الذين أكملوا قراءة المادة حتى النهاية"}</p>
           <div className="ins-progress"><i style={{ width: `${fresh ? 0 : ins.completion}%` }} /></div>
           <ul className="ins-steps">
             {([["مقدمة", ins.reach.intro], ["محتوى", ins.reach.body], ["خاتمة", ins.reach.end]] as const).map(([label, value], i) => (
@@ -216,8 +216,8 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             <h3>نسبة التفاعل</h3>
             <Trend value={ins.trend} />
           </header>
-          {fresh ? <p className="ins-big ins-empty">لا قراءات بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.engagement)}</b><span>%</span></p>}
-          <p className="ins-desc">{fresh ? "تُحسب مع أول قراءات الأعضاء" : "نسبة القرّاء الذين تفاعلوا بشكل إيجابي مع المحتوى"}</p>
+          {fresh ? <p className="ins-big ins-empty">العينة غير كافية بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.engagement)}</b><span>%</span></p>}
+          <p className="ins-desc">{fresh ? "تظهر النسب بعد 20 قارئًا" : "نسبة القرّاء الذين تفاعلوا بشكل إيجابي مع المحتوى"}</p>
           <div className="ins-levels" aria-hidden="true">
             <i className={level === "منخفض" ? "is-on low" : "low"} /><i className={level === "متوسط" ? "is-on mid" : "mid"} /><i className={level === "مرتفع" ? "is-on high" : "high"} />
           </div>

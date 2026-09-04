@@ -9,7 +9,8 @@
  */
 
 // استيرادات نسبية عمدًا — الملف يدخل حزمة اختبارات node:test التي لا تعرف alias ‏@/.
-import Anthropic from "@anthropic-ai/sdk";
+import { textClient as client } from "./text-client.ts";
+import { missingTextKeyMessage } from "./provider-config.ts";
 
 import { runPolicyGuard } from "../policy/index.ts";
 import {
@@ -26,10 +27,7 @@ import {
 } from "../tahrir/jak.ts";
 import type { AiSettingsData } from "./settings";
 
-function client(): Anthropic | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  return apiKey ? new Anthropic({ apiKey }) : null;
-}
+
 
 /* ============ مدقق الأرقام ============ */
 
@@ -321,7 +319,7 @@ export async function runJakPlan(
 ): Promise<{ plan: JakPlan; usage: { model: string; inputTokens: number; outputTokens: number } }> {
   const anthropic = client();
   if (!anthropic) {
-    throw new Error("مفتاح Anthropic غير مضبوط — أضف ANTHROPIC_API_KEY ثم أعد التشغيل.");
+    throw new Error(missingTextKeyMessage());
   }
 
   const { constitution } = await import("./editorial");
@@ -407,7 +405,7 @@ export async function runSlideOp(
 }> {
   const anthropic = client();
   if (!anthropic) {
-    throw new Error("مفتاح Anthropic غير مضبوط — أضف ANTHROPIC_API_KEY ثم أعد التشغيل.");
+    throw new Error(missingTextKeyMessage());
   }
 
   const { constitution } = await import("./editorial");

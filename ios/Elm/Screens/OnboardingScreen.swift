@@ -139,11 +139,11 @@ struct OnboardingScreen: View {
 
     private var footer: some View {
         HStack(spacing: 12) {
-            Text("\(ElmFormat.latinDigits(String(count))) مختارة")
+            Text(interests.syncError ?? "\(ElmFormat.latinDigits(String(count))) مختارة")
                 .font(ElmFonts.text(.caption))
                 .foregroundStyle(ready ? ElmTheme.ink2 : ElmTheme.ink3)
                 .fixedSize()
-            Button { onboarding.complete() } label: {
+            Button { Task { if await interests.save() { onboarding.complete() } } } label: {
                 Text(ready ? "تأكيد اهتماماتي" : "اختر \(ElmFormat.latinDigits(String(minimum - count))) على الأقل")
                     .font(ElmFonts.text(.subheadline, weight: .bold))
                     .foregroundStyle(ready ? .white : ElmTheme.ink3)
@@ -152,7 +152,7 @@ struct OnboardingScreen: View {
                     .background(ready ? ElmTheme.navyDeep : ElmTheme.line2, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
-            .disabled(!ready)
+            .disabled(!ready || interests.syncing)
         }
         .padding(.horizontal, 18)
         .padding(.top, 12)

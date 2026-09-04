@@ -15,6 +15,7 @@ export interface Session {
   displayName: string;
   role: Role;
   exp: number;
+  sessionVersion?: number;
 }
 
 const encoder = new TextEncoder();

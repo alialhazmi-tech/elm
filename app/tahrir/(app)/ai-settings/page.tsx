@@ -16,11 +16,13 @@ export default async function AiSettingsPage() {
   const actor = await loadActor();
   const [settings, totals] = await Promise.all([loadAiSettings(), usageTotals()]);
   const keys = keyStatus();
+  const via = keys.provider === "openrouter" ? "OpenRouter" : "Anthropic";
+  const textKey = keys.provider === "openrouter" ? "OPENROUTER_API_KEY" : "ANTHROPIC_API_KEY";
   const providers: Array<[string, string, string, boolean, string]> = [
-    ["النصوص — Claude (Anthropic)", "التحرير والعناوين والتدقيق", settings.models.editorial, keys.anthropic, "ANTHROPIC_API_KEY"],
-    ["المهام الخفيفة — Claude Haiku", "التصنيف السريع — أرخص 10×", settings.models.light, keys.anthropic, "ANTHROPIC_API_KEY"],
-    ["التحرير الشامل — Claude Sonnet", "أسرع من Opus لإعادة تحرير المتن، مع Haiku للحقول المساعدة", settings.models.fast, keys.anthropic, "ANTHROPIC_API_KEY"],
-    ["الصور — مزود التوليد", "الأنماط الثلاثة: حقيقي/توضيحي/رسومي", settings.models.image, keys.image, "GEMINI_API_KEY"],
+    [`النصوص — ${via}`, "التحرير والعناوين والتدقيق", settings.models.editorial, keys.editorial, textKey],
+    [`المهام الخفيفة — ${via}`, "التصنيف وSEO والحقول المساعدة", settings.models.light, keys.editorial, textKey],
+    [`التوليد الذكي الشامل — ${via}`, "تحرير المتن وتوليد الحقول المساعدة بالتوازي", settings.models.fast, keys.editorial, textKey],
+    [`الصور — ${keys.provider === "openrouter" ? "OpenRouter" : "مزود التوليد"}`, "حقيقي/توضيحي/رسومي", settings.models.image, keys.image, keys.provider === "openrouter" ? "OPENROUTER_API_KEY" : "GEMINI_API_KEY أو OPENAI_API_KEY"],
   ];
   const dayPct = Math.min(100, (totals.todayCents / (settings.caps.dailyUsd * 100)) * 100);
   const monthPct = Math.min(100, (totals.monthCents / (settings.caps.monthlyUsd * 100)) * 100);

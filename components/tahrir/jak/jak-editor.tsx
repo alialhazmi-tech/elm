@@ -7,7 +7,7 @@
  * المنطق كما كان منذ المرحلة الأولى؛ الواجهة على shadcn.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArchiveIcon,
@@ -49,6 +49,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useDraftRecovery } from "@/components/tahrir/use-draft-recovery";
 import { cn } from "@/lib/utils";
 
 interface SlideGuard {
@@ -58,11 +59,14 @@ interface SlideGuard {
 type EditorSlide = JakSlide & { guard?: SlideGuard };
 
 interface Props {
+  actorId: string;
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
   sections: Array<[string, string]>;
   recentMedia: Array<{ url: string; filename: string }>;
   initial: {
+    version: number;
+    revisionOf: string | null;
     id: string;
     title: string;
     excerpt: string;
@@ -133,8 +137,9 @@ const MessageAlert = ({ message }: { message: { kind: "ok" | "err"; text: string
     </Alert>
   ) : null;
 
-export function JakEditor({ canApprove, sections, recentMedia, initial }: Props) {
+export function JakEditor({ actorId, canApprove, sections, recentMedia, initial }: Props) {
   const router = useRouter();
+  const versionRef = useRef(initial?.version ?? 0);
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
@@ -343,11 +348,15 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
 
   /* ============ الحفظ والنشر ============ */
 
+  const recoverySnapshot = { title, excerpt, section, source, slides };
+  const recovery = useDraftRecovery(`alelm-jak:${actorId}:${id || "new"}`, recoverySnapshot);
+
   async function save(): Promise<string | null> {
     if (!title.trim()) {
       err("العنوان مطلوب.");
       return null;
     }
+    const savedSnapshot = recoverySnapshot;
     setBusy(true);
     setMessage(null);
 
@@ -356,6 +365,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: id || undefined,
+        expectedVersion: versionRef.current,
         title,
         excerpt,
         body: "",
@@ -376,13 +386,15 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
     // ثبّت هوية المادة فور نجاح الصف الأم. إذا تعثر حفظ الشرائح لاحقًا،
     // تعيد المحاولة على السجل نفسه بدل إنشاء مسودة مكررة بمعرّف جديد.
     const savedStoryId = storyData.id as string;
+    versionRef.current = storyData.version;
+    setStatus(storyData.status);
     setId(savedStoryId);
-    if (!id) router.replace(`/tahrir/jak/${savedStoryId}`);
+
 
     const slidesResponse = await fetch("/api/tahrir/jak/slides", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storyId: savedStoryId, source, slides }),
+      body: JSON.stringify({ storyId: savedStoryId, expectedVersion: storyData.version, source, slides }),
     }).catch(() => null);
     const slidesData = await slidesResponse?.json().catch(() => null);
     setBusy(false);
@@ -391,7 +403,10 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
       return null;
     }
 
-    if (!initial) setStatus("draft");
+    recovery.markSaved(savedSnapshot);
+    versionRef.current = slidesData.version;
+    window.history.replaceState(null, "", `/tahrir/jak/${savedStoryId}`);
+    setStatus("draft");
     ok("حُفظ جاك العلم بشرائحه.");
     return savedStoryId;
   }
@@ -403,7 +418,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
     const response = await fetch(`/api/tahrir/story/${route}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId }),
+      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current }),
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     setBusy(false);
@@ -413,9 +428,12 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
       err(data?.error ?? `تعذر ${label}.`);
       return;
     }
+    versionRef.current = data.version;
+    if (data.id) setId(data.id);
     setBlockers([]);
     setStatus(route === "publish" ? "published" : "review");
     ok(route === "publish" ? "نُشر جاك العلم على الموقع." : "أُرسل للاعتماد — القرار بشري.");
+    if (data.id) router.replace(`/tahrir/jak/${data.id}`);
     router.refresh();
   }
 
@@ -430,7 +448,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
     const response = await fetch("/api/tahrir/story/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId, scheduledAt: new Date(scheduleAt).toISOString() }),
+      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current, scheduledAt: new Date(scheduleAt).toISOString() }),
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     setBusy(false);
@@ -440,6 +458,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
       return;
     }
     setBlockers([]);
+    versionRef.current = data.version;
     setStatus("scheduled");
     ok("جُدول — الحارس يفحصه ثانية لحظة الموعد.");
   }
@@ -469,7 +488,9 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
   if (phase !== "slides") {
     return (
       <Card className="mx-auto w-full max-w-3xl gap-4 p-5">
+      {recovery.recovery ? <Alert><AlertDescription>توجد نسخة محلية غير محفوظة. <Button onClick={() => { const value = recovery.recovery; if (!value) return; setTitle(value.title); setExcerpt(value.excerpt); setSection(value.section); setSource(value.source); setSlides(value.slides); recovery.dismiss(); }}>استعادة الكتابة</Button> <Button variant="ghost" onClick={() => recovery.dismiss()}>تجاهل</Button></AlertDescription></Alert> : null}
         <div className="grid gap-1.5">
+
           <Label htmlFor="jak-title">العنوان (اختياري — يقترحه التحليل إن تُرك)</Label>
           <Input id="jak-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="عنوان جاك العلم…" />
         </div>
@@ -536,6 +557,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
 
   return (
     <div className="flex flex-col gap-3">
+      {recovery.recovery ? <Alert><AlertDescription>توجد نسخة محلية غير محفوظة. <Button onClick={() => { const value = recovery.recovery; if (!value) return; setTitle(value.title); setExcerpt(value.excerpt); setSection(value.section); setSource(value.source); setSlides(value.slides); if (value.slides.length) setPhase("slides"); recovery.dismiss(); }}>استعادة الكتابة</Button> <Button variant="ghost" onClick={() => recovery.dismiss()}>تجاهل</Button></AlertDescription></Alert> : null}
       <Card className="gap-3 p-4">
         <Textarea
           rows={1}
@@ -546,7 +568,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
           className="min-h-0 resize-none rounded-none border-0 bg-transparent px-0 py-1 font-display text-[20px] leading-snug font-extrabold shadow-none focus-visible:ring-0 md:text-[20px] dark:bg-transparent"
         />
         <div className="flex flex-wrap items-center gap-2">
-          <SelectField value={section} onValueChange={setSection} options={sectionOptions} ariaLabel="القسم" className="w-40" />
+          <SelectField disabled={Boolean(id)} value={section} onValueChange={setSection} options={sectionOptions} ariaLabel="القسم" className="w-40" />
           <StatusPill status={status} label={STATUS_LABELS[status] ?? status} />
           {landscape ? <span className="rounded-md bg-muted px-2 py-0.5 text-[11px]">▭ تقرير 16:9</span> : null}
           {landscape ? (
@@ -958,6 +980,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
         action={action}
         onClose={() => setAction(null)}
         onDone={() => {
+          window.location.reload();
           setAction(null);
           setStatus("archived");
           setArchiveEvent({ at: new Date().toISOString(), actor: "", reason: "أُرشفت من المحرر" });
@@ -967,6 +990,7 @@ export function JakEditor({ canApprove, sections, recentMedia, initial }: Props)
         action={action}
         onClose={() => setAction(null)}
         onDone={() => {
+          window.location.reload();
           setAction(null);
           setStatus("draft");
           setArchiveEvent(null);

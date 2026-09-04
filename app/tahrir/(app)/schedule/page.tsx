@@ -5,7 +5,7 @@ import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
 import { TodayTimeline, type TimelineItem } from "@/components/tahrir/overview/today-timeline";
 import { SERIES } from "@/lib/content/series";
 import { editorHref } from "@/lib/tahrir/routes";
-import { listLatestByStatus, promoteDueScheduled } from "@/lib/tahrir/service";
+import { listLatestByStatus } from "@/lib/tahrir/service";
 
 export const metadata = { title: "جدولة النشر" };
 export const dynamic = "force-dynamic";
@@ -32,8 +32,7 @@ const dayOf = (iso: string) =>
   }).format(new Date(iso));
 
 export default async function SchedulePage() {
-  // نبضة الترقية تعمل مع كل فتح للشاشة — والمراقب الخارجي يضرب /api/tahrir/tick.
-  await promoteDueScheduled().catch(() => []);
+  // المراقب الخارجي ينشر عبر POST موثق؛ هذه الشاشة للقراءة فقط.
   const [latestPublished, scheduled] = await Promise.all([
     listLatestByStatus("published", 60).catch(() => []),
     listLatestByStatus("scheduled", 100).catch(() => []),

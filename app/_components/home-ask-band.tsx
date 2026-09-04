@@ -26,9 +26,9 @@ export function HomeAskBand() {
     <section className="ask-band" aria-labelledby="ask-title">
       <div className="ask-band-info">
         <h2 id="ask-title">
-          <span className="spark" aria-hidden="true">✦</span> اسأل العلم
+          <span className="spark" aria-hidden="true">✦</span> ابحث في الأرشيف
         </h2>
-        <p className="ask-sub">بحث ذكي يجيب من أرشيف موادنا، وكل إجابة تحمل روابط مصادرها المنشورة.</p>
+        <p className="ask-sub">ابحث في أرشيف العلم، وافتح المواد الأصلية لتقرأ التفاصيل ومصادرها.</p>
       </div>
       <div className="ask-band-interactive">
         <form className="ask-band-form" action="/search" role="search">
@@ -48,14 +48,14 @@ export function HomeAskBand() {
             dir="rtl"
             autoComplete="off"
           />
-          <button type="submit">اسأل</button>
+          <button type="submit">ابحث</button>
         </form>
         <p className="ask-suggest">
           <span className="suggest-lbl">جرّب:</span>
           <Link href="/search?q=التنجستن">أسعار التنجستن</Link>
           <Link href="/search?q=تود بلانش">من هو تود بلانش؟</Link>
           <Link href="/search?q=الجاذبية">شائعة الجاذبية</Link>
-          <span className="ask-note">الإجابات مولّدة آليًا وتُراجع مصادرها قبل الاعتماد</span>
+          <span className="ask-note">نتائج بحث من المواد المنشورة في العلم</span>
         </p>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { generateImages, IMAGE_STYLES } from "@/lib/ai/images";
+import { imageExtension } from "@/lib/ai/openrouter-images";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, logUsage } from "@/lib/ai/usage";
 import { putStoredImage } from "@/lib/storage/images";
@@ -8,7 +9,7 @@ import { requirePermission } from "@/lib/tahrir/access";
 import { addMedia, audit } from "@/lib/tahrir/service";
 
 /** كلفة تقديرية لكل صورة بالسنت — تُحتسب ضمن السقوف نفسها. */
-const IMAGE_COST_CENTS = 4;
+const IMAGE_COST_CENTS = 100; // تقدير محافظ حتى تتوفر فاتورة المزود.
 
 export async function POST(request: Request) {
   const access = await requirePermission("ai.image");
@@ -42,12 +43,13 @@ export async function POST(request: Request) {
       model: settings.models.image,
       // مكتبة التوليد العامة تبقى بخيارين افتراضيًا؛ جاك يطلب صورة واحدة صراحةً.
       count: input.count === 1 ? 1 : 2,
+      signal: request.signal,
     });
 
     const saved = [];
     for (const image of images) {
       const id = crypto.randomUUID();
-      const ext = image.mime.includes("jpeg") ? "jpg" : "png";
+      const ext = imageExtension(image.mime);
       const bytes = Buffer.from(image.base64, "base64");
       await putStoredImage({ filename: `${id}.${ext}`, body: bytes, contentType: image.mime });
 
@@ -72,11 +74,12 @@ export async function POST(request: Request) {
     }
 
     await logUsage({
+      reservationId: gate.reservationId,
       tool: "image",
-      model: settings.models.image,
+      model: images.every(image => image.costCents !== undefined) ? settings.models.image : `${settings.models.image}:estimated`,
       inputTokens: 0,
       outputTokens: 0,
-      costCents: IMAGE_COST_CENTS * saved.length,
+      costCents: images.every(image => image.costCents !== undefined) ? images.reduce((sum, image) => sum + image.costCents!, 0) : IMAGE_COST_CENTS * (input.count === 1 ? 1 : 2),
       actor: session.username,
     });
     await audit(session.username, "ai:image", undefined, `${style} · ${saved.length} صورة`);

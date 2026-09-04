@@ -1,6 +1,8 @@
 import { runReaderTool, type ReaderTool } from "@/lib/ai/reader";
 import { getSessionMemberId, persistStatsAndSignal, privateJson } from "@/lib/personalization";
 
+import { consumeLimit } from "@/lib/tahrir/rate-limit";
+
 const TOOLS: Record<string, ReaderTool> = {
   summary: "summary",
   simplify: "simplify",
@@ -33,6 +35,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (!await consumeLimit("reader-ai", memberId, 30, 86400)) return privateJson({ error: "وصلت إلى حد أدوات القراءة اليوم. حاول لاحقًا." }, 429);
     const result = await runReaderTool(tool, storyId, question);
     if ("error" in result) return privateJson({ error: result.error }, result.status);
     await persistStatsAndSignal(memberId, storyId, EVENT[tool], new Date().toISOString());

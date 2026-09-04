@@ -3,7 +3,7 @@
  * تقترح فهمًا للمادة المنشورة ولا تنشر ولا تخزّن نص المحادثة في ملف التخصيص.
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import { textClient as client } from "./text-client.ts";
 
 import { runPolicyGuard } from "@/lib/policy";
 import { loadAiSettings } from "@/lib/ai/settings";
@@ -12,10 +12,7 @@ import { seedContentProvider } from "@/lib/content/provider";
 
 export type ReaderTool = "summary" | "simplify" | "discuss";
 
-function client(): Anthropic | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  return apiKey ? new Anthropic({ apiKey }) : null;
-}
+
 
 function plainBody(title: string, excerpt: string, body?: string): string {
   const raw = `${title}\n${excerpt}\n${body ?? ""}`;
@@ -46,7 +43,7 @@ export async function runReaderTool(
   if (!story) return { error: "المادة غير متاحة.", status: 404 };
 
   const settings = await loadAiSettings();
-  const gate = await budgetGate(settings.caps);
+  const gate = await budgetGate(settings.caps, 20);
   if (!gate.ok) return { error: gate.reason ?? "بلغ استهلاك الذكاء سقفه.", status: 429 };
 
   const article = plainBody(story.title, story.excerpt, story.body);
@@ -60,6 +57,7 @@ export async function runReaderTool(
 
   const text = (response.content.find((block) => block.type === "text")?.text ?? "").trim();
   await logUsage({
+      reservationId: gate.reservationId,
     tool: `reader_${tool}`,
     model: settings.models.light,
     inputTokens: response.usage.input_tokens,
