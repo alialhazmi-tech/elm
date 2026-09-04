@@ -4,12 +4,12 @@ import { memberProfiles, storyReadingSessions } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { seedContentProvider } from "@/lib/content/provider";
 import { getSessionMemberId, privateJson } from "@/lib/personalization/session";
-import { readingInput, READING_COOKIE, UUID } from "@/lib/personalization/reading-input";
+import { readingInput, readingOrigin, READING_COOKIE, UUID } from "@/lib/personalization/reading-input";
 import { consumeLimit } from "@/lib/tahrir/rate-limit";
 
 export async function POST(request: Request) {
-  const origin = request.headers.get("origin");
-  if (!origin || origin !== new URL(request.url).origin || request.headers.get("sec-fetch-site") === "cross-site") return privateJson({ error: "ORIGIN_REJECTED" }, 403);
+  const origin = readingOrigin(request);
+  if (!origin) return privateJson({ error: "ORIGIN_REJECTED" }, 403);
   if (!request.headers.get("content-type")?.startsWith("application/json")) return privateJson({ error: "JSON_REQUIRED" }, 415);
   const reader = request.body?.getReader();
   let text = "";
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         },
       });
     const response = privateJson({ accepted: true });
-    if (current !== visitorId) response.headers.append("Set-Cookie", `${READING_COOKIE}=${visitorId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=15552000${new URL(request.url).protocol === "https:" ? "; Secure" : ""}`);
+    if (current !== visitorId) response.headers.append("Set-Cookie", `${READING_COOKIE}=${visitorId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=15552000${new URL(origin).protocol === "https:" ? "; Secure" : ""}`);
     return response;
   } catch {
     return privateJson({ error: "READING_UNAVAILABLE" }, 503);
