@@ -39,3 +39,15 @@ test("external article photos are preserved and missing or unsafe photos use the
     assert.equal(meta.openGraph.images[0].url, "https://elm-preview.up.railway.app/og.png");
   }
 });
+
+test("article images have a JPEG sharing endpoint, dimensions and a source-specific cache key", () => {
+  const input = { storyId: "264648", title: "خبر", description: "وصف", path: "/health/264648/news", image: "/uploads/photo.webp" };
+  const meta = sharingMetadata(input, env);
+  assert.match(meta.openGraph.images[0].url, /^https:\/\/elm-preview.up.railway.app\/share-images\/264648.jpg\?v=/);
+  assert.equal(meta.openGraph.images[0].type, "image/jpeg");
+  assert.equal(meta.openGraph.images[0].width, 1200);
+  assert.equal(meta.openGraph.images[0].height, 630);
+  assert.equal(meta.twitter.images[0].url, meta.openGraph.images[0].url);
+  assert.notEqual(sharingMetadata({ ...input, image: "/uploads/updated.webp" }, env).openGraph.images[0].url, meta.openGraph.images[0].url);
+  assert.equal(sharingMetadata({ ...input, image: undefined }, env).openGraph.images[0].url, "https://elm-preview.up.railway.app/og.png");
+});

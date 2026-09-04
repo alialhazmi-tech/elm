@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { DATABASE_READINESS_SQL } from "../lib/db-readiness.ts";
 
 if (!process.argv.includes("--apply")) {
   console.log("Migrations in drizzle/: baseline adoption, stabilization, workflow lock, AI reservations, MFA. Run with --apply against a tested direct connection.");
@@ -25,5 +26,7 @@ try {
     }
   }
   await migrate(drizzle(client), { migrationsFolder: "drizzle" });
+  const readiness = await client.query(DATABASE_READINESS_SQL);
+  if (readiness.rows.length) throw new Error(`Database schema is incomplete: ${readiness.rows.map(row => row.missing).join(", ")}`);
   console.log("Database migrations completed.");
 } finally { await client.end(); }

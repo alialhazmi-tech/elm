@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import sharp from "sharp";
 
 const base = process.argv[2];
 if (!base || !/^https?:\/\//.test(base)) throw new Error("Usage: node scripts/verify-sharing.mjs https://your-public-site");
@@ -6,7 +7,7 @@ const origin = new URL(base).origin;
 const home = await fetch(origin, { signal: AbortSignal.timeout(20000) });
 assert.equal(home.status, 200);
 const homeHtml = await home.text();
-const article = [...homeHtml.matchAll(/href="([^"?#]+)"/g)].map(x => x[1]).find(x => /^\/[^/]+\/\d+\//.test(x));
+const article = process.argv[3] ?? [...homeHtml.matchAll(/href="([^"?#]+)"/g)].map(x => x[1]).find(x => /^\/[^/]+\/\d+\//.test(x));
 assert.ok(article, "Homepage must contain a real article to verify");
 const images = new Set();
 const results = [];
@@ -24,12 +25,19 @@ for (const agent of ["WhatsApp/2.24.1", "facebookexternalhit/1.1", "Twitterbot/1
     assert.equal(new URL(meta.get("og:url")).origin, origin, "Sharing URL points to another deployment");
     assert.equal(meta.get("og:locale"), "ar_SA");
     const image = meta.get("og:image");
-    if (!images.has(image)) {
+    const imageKey = `${agent}:${image}`;
+    if (!images.has(imageKey)) {
       const asset = await fetch(image, { headers: { "User-Agent": agent }, signal: AbortSignal.timeout(20000) });
       assert.equal(asset.status, 200, "Sharing image unavailable");
-      assert.match(asset.headers.get("content-type") ?? "", /^image\//, "Sharing image URL returned non-image content");
-      assert.ok((await asset.arrayBuffer()).byteLength > 100, "Sharing image is empty");
-      images.add(image);
+      assert.match(asset.headers.get("content-type") ?? "", /^image\/(jpeg|png)(?:;|$)/, "Sharing requires a JPEG or PNG asset");
+      const bytes = Buffer.from(await asset.arrayBuffer());
+      const decoded = await sharp(bytes).metadata();
+      assert.ok(bytes.byteLength > 100 && bytes.byteLength < 1024 * 1024, "Sharing image must be non-empty and below 1 MB");
+      assert.ok(["jpeg", "png"].includes(decoded.format), "Actual image encoding must match a supported sharing format");
+      assert.equal(decoded.width, Number(meta.get("og:image:width")), "Declared image width must match actual bytes");
+      assert.equal(decoded.height, Number(meta.get("og:image:height")), "Declared image height must match actual bytes");
+      assert.equal(asset.headers.get("content-type")?.split(";")[0], meta.get("og:image:type"));
+      images.add(imageKey);
     }
     results.push({ agent, path, title: meta.get("og:title"), image });
   }

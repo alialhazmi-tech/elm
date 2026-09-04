@@ -36,10 +36,11 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/server$/ }, () => ({ path: "next/server.js", external: true }));
+      builder.onResolve({ filter: /^@\/lib\/tahrir\/auth$/ }, () => ({ path: `${process.cwd()}/lib/tahrir/crypto.ts` }));
       builder.onResolve({ filter: /^(?:@\/lib\/db|\.\.\/db\.ts)$/ }, () => ({ path: "db", namespace: "test" }));
       builder.onResolve({ filter: /^@\/lib\/personalization\/session$/ }, () => ({ path: "session", namespace: "test" }));
       builder.onResolve({ filter: /^@\/lib\/content\/provider$/ }, () => ({ path: "provider", namespace: "test" }));
@@ -67,6 +68,43 @@ try {
     assert.equal(await subject.publicContentProvider.getStory('legacy-missing'), null);
     checks++;
   });
+  // Exercise the real login handler and signed session against the migrated database.
+  const { hashPassword, readSessionToken, SESSION_COOKIE } = await import('../lib/tahrir/crypto.ts');
+  process.env.AUTH_SECRET = 'isolated-integration-session-secret';
+  await admin.query("insert into users(id,username,display_name,password_hash,created_at) values($1,$2,$3,$4,$5)", ['login-fixture','login-fixture','Local fixture',await hashPassword('fixture-password-123'),new Date().toISOString()]);
+  const loginRequest = password => new Request('https://test.invalid/api/tahrir/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'login-fixture',password})});
+  assert.equal((await withDb(() => subject.loginApi(loginRequest('wrong-password')))).status,401);
+  const loggedIn = await withDb(() => subject.loginApi(loginRequest('fixture-password-123')));
+  assert.equal(loggedIn.status,200);
+  const cookie = loggedIn.headers.get('Set-Cookie');
+  assert.ok(cookie?.includes('HttpOnly'));
+  assert.ok(cookie?.includes('SameSite=Lax'));
+  const token = cookie.split(';')[0].slice(SESSION_COOKIE.length+1);
+  globalThis.__alelmSession = await readSessionToken(token);
+  assert.equal(globalThis.__alelmSession?.sessionVersion,1);
+  assert.equal((await withDb(() => subject.loadActor()))?.userId,'login-fixture');
+  await admin.query("update users set session_version=session_version+1 where id='login-fixture'");
+  assert.equal(await withDb(() => subject.loadActor()),null);
+  checks++;
+  await admin.query("update users set mfa_secret='requires-verification' where id='login-fixture'");
+  const mfaLogin = await withDb(() => subject.loginApi(loginRequest('fixture-password-123')));
+  assert.equal(mfaLogin.status,401);
+  assert.equal((await mfaLogin.json()).mfaRequired,true);
+  assert.equal(mfaLogin.headers.get('Set-Cookie'),null);
+  checks++;
+  assert.equal((await withDb(() => subject.healthApi())).status,200);
+  await withDb(async () => {
+    const client = context.getStore().$client;
+    await client.query('begin');
+    try {
+      await client.query('drop function public.alelm_reserve_ai(text,integer,integer,integer)');
+      const unhealthy = await subject.healthApi();
+      assert.equal(unhealthy.status,503);
+      assert.deepEqual(await unhealthy.json(),{ok:false});
+    } finally { await client.query('rollback'); }
+  });
+  assert.equal((await withDb(() => subject.healthApi())).status,200);
+  checks++;
   const input = { id: "original", title: "عنوان عربي", excerpt: "موجز", body: "المتن", section: "health", slug: "عنوان-عربي", seriesSlug: null, image: null };
   const saved = await withDb(() => subject.saveDraft(input, editor));
   assert.equal(saved.version, 1); checks++;
