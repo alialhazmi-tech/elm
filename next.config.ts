@@ -9,6 +9,8 @@ import { LEGACY_REDIRECTS } from "./lib/content/redirects";
  * الإنتاج يبقى صارمًا بلا unsafe-eval — ويحرسه اختبار في tests/platform-contract.
  */
 const isDevelopment = process.env.NODE_ENV !== "production";
+// نطاقات الحاوية وقياس Google Analytics؛ لا نفتح الاتصال لكل المصادر الخارجية.
+const googleConnectSources = "https://www.googletagmanager.com https://www.google.com https://*.google-analytics.com https://*.analytics.google.com";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -16,16 +18,16 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  // مواد الفيديو تضمّن مشغّل يوتيوب بالنسخة الخاصة بالخصوصية فقط — لا إطارات أخرى.
-  "frame-src https://www.youtube-nocookie.com",
-  "img-src 'self' data: blob: https://dash.alelm.net",
+  // مشغّل يوتيوب الخاص بالخصوصية وإطار GTM البديل عند تعطيل JavaScript.
+  "frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com",
+  "img-src 'self' data: blob: https://dash.alelm.net https://www.googletagmanager.com https://*.google-analytics.com",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
   "media-src 'self' https:",
   "object-src 'none'",
-  isDevelopment ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'" : "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  isDevelopment ? "connect-src 'self' ws: wss:" : "connect-src 'self'",
+  `connect-src 'self' ${googleConnectSources}${isDevelopment ? " ws: wss:" : ""}`,
   // ترقية HTTP منطقية في الإنتاج فقط؛ في التطوير تحوّل أصول localhost إلى HTTPS
   // وتمنع المعاينة على الأجهزة والشاشات الأخرى في الشبكة المحلية.
   ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),

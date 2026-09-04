@@ -68,6 +68,8 @@ export const viewport: Viewport = {
 /** يقرأ تفضيل الثيم المحفوظ قبل الرسم الأول لمنع وميض التبديل. */
 const themeInit = `(function(){try{var t=localStorage.getItem("alelm-theme");if(t==="dark"||t==="light"){document.documentElement.dataset.theme=t}}catch(e){}})()`;
 
+const tagManagerInit = `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-MLB68TX2');`;
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
@@ -77,7 +79,19 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       className={`${displayFont.variable} ${textFont.variable} ${logoFont.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script id="google-tag-manager" dangerouslySetInnerHTML={{ __html: tagManagerInit }} />
+      </head>
       <body>
+        <noscript>
+          <iframe
+            title="Google Tag Manager"
+            src="https://www.googletagmanager.com/ns.html?id=GTM-MLB68TX2"
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <PodcastDockProvider>{children}</PodcastDockProvider>
       </body>
