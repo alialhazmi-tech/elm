@@ -262,7 +262,8 @@ export async function latestArchiveEvents(ids: string[]): Promise<Map<string, Ar
 /* ============ المرحلة 2 ============ */
 
 import { media, seriesProposals } from "@/db/schema";
-import { runPolicyGuard } from "@/lib/policy";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard } from "@/lib/policy";
 
 export type MediaRow = typeof media.$inferSelect;
 export type ProposalRow = typeof seriesProposals.$inferSelect;
@@ -399,6 +400,7 @@ export interface PromotedStory {
 export async function promoteDueScheduled(): Promise<PromotedStory[]> {
   const db = requireDb();
   const now = new Date().toISOString();
+  const settings = await loadAiSettings();
   const due = await db
     .select()
     .from(stories)
@@ -407,12 +409,13 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
   const promoted: PromotedStory[] = [];
   for (const story of due) {
     if (!story.scheduledAt || story.scheduledAt > now) continue;
-    const report = runPolicyGuard({
+    const report = runConfiguredPolicyGuard({
       id: story.id,
       title: story.title,
       body: stripHtmlToText(story.body),
       surface: story.format === "jakalelm" ? ("design" as const) : undefined,
-    });
+      media: await guardMediaFor(story.image),
+    }, settings.governance);
     if (report.canRequestApproval) {
       await db
         .update(stories)
@@ -443,9 +446,11 @@ export async function listAudit(limit = 100) {
 
 /** يبني حقل media لمسودة الحارس من صورة المادة إن كانت من المكتبة. */
 export async function guardMediaFor(imageUrl: string | null | undefined) {
-  if (!imageUrl?.startsWith("/uploads/")) return undefined;
+  if (!imageUrl) return undefined;
+  const unknown = [{ url: imageUrl, rightsCleared: false, flags: [] as string[] }];
+  if (!imageUrl.startsWith("/uploads/")) return unknown;
   const asset = await findMediaByUrl(imageUrl);
-  if (!asset) return undefined;
+  if (!asset) return unknown;
   return [
     {
       id: asset.id,

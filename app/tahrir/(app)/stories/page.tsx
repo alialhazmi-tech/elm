@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { stripHtmlToText } from "@/lib/content/html";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { ALL_SERIES } from "@/lib/content/series";
-import { runPolicyGuard } from "@/lib/policy";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard, type GuardControls } from "@/lib/policy";
 import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
@@ -44,8 +45,8 @@ function updatedLabel(iso: string | null | undefined): string {
   return iso.startsWith(today) ? `اليوم ${when(iso, true).split(" ").pop()}` : when(iso);
 }
 
-function guardFor(title: string, body: string, surface: "design" | undefined) {
-  const report = runPolicyGuard({ title, body: stripHtmlToText(body), surface });
+function guardFor(title: string, body: string, surface: "design" | undefined, controls: GuardControls) {
+  const report = runConfiguredPolicyGuard({ title, body: stripHtmlToText(body), surface }, controls);
   if (report.counts.blocking > 0) return { tone: "block" as const, label: `${report.counts.blocking} قاطع` };
   if (report.counts.warning > 0) return { tone: "warn" as const, label: `${report.counts.warning} تحذير` };
   return { tone: "ok" as const, label: "سليم" };
@@ -57,7 +58,7 @@ export default async function StoriesPage({
   searchParams: Promise<{ status?: string; p?: string; q?: string; series?: string }>;
 }) {
   const params = await searchParams;
-  const actor = await loadActor();
+  const [actor, settings] = await Promise.all([loadActor(), loadAiSettings()]);
   const canArchive = actor?.can("story.archive") ?? false;
   const status = VALID_STATUSES.has(params.status ?? "") ? (params.status as StoryStatus) : undefined;
   const page = Math.max(1, Number(params.p) || 1);
@@ -107,7 +108,7 @@ export default async function StoriesPage({
       meta,
       series: series ? { name: series.name, color: series.color } : null,
       guard: content
-        ? guardFor(content.title, content.body, story.format === "jakalelm" ? "design" : undefined)
+        ? guardFor(content.title, content.body, story.format === "jakalelm" ? "design" : undefined, settings.governance)
         : { tone: "ok", label: "—" },
       status: story.status,
       statusLabel: STATUS_LABELS[story.status as StoryStatus] ?? story.status,
@@ -131,35 +132,35 @@ export default async function StoriesPage({
 
   return (
     <main className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-xl font-extrabold">المواد</h1>
         <span className="text-xs text-muted-foreground tabular-nums">
           {activeTotal} مادة نشطة · {archivedCount} مؤرشفة
         </span>
-        <div className="ms-auto">
-          <StoriesToolbar q={q} series={seriesSlug} />
-        </div>
       </div>
 
-      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0">
-        {chips.map((chip) => {
-          const active = chip.key === status;
-          return (
-            <Link
-              key={chip.label}
-              href={href(chip.key)}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 font-display text-xs font-semibold whitespace-nowrap transition-colors",
-                active
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
-              )}
-            >
-              {chip.label}
-              <b className={cn("tabular-nums", active ? "text-primary" : "text-muted-foreground/80")}>{chip.count}</b>
-            </Link>
-          );
-        })}
+      <div className="flex flex-wrap items-center gap-2">
+        <StoriesToolbar q={q} series={seriesSlug} />
+        <div className="-mx-1 flex max-w-full gap-0.5 overflow-x-auto rounded-lg border border-border/80 bg-muted/30 p-0.5 [scrollbar-width:none] sm:mx-0">
+          {chips.map((chip) => {
+            const active = chip.key === status;
+            return (
+              <Link
+                key={chip.label}
+                href={href(chip.key)}
+                className={cn(
+                  "inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 font-display text-xs font-semibold whitespace-nowrap transition-colors",
+                  active
+                    ? "bg-card text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {chip.label}
+                <span className="text-[10px] text-muted-foreground tabular-nums">{chip.count}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <StoriesTable rows={tableRows} canArchive={canArchive} />

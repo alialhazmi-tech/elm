@@ -246,7 +246,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             </header>
           ) : (
-            <header className={`sa-head${(isInfographicStory || !story.image) && !videoEmbed ? " no-media" : ""}`}>
+            <header className={`sa-head${videoEmbed ? " has-video" : (isInfographicStory || !story.image) ? " no-media" : ""}`}>
               <div className="sa-head-copy">
                 <div className="sa-head-top">
                   <nav className="breadcrumb" aria-label="مسار التصفح">
@@ -289,7 +289,6 @@ export default async function ArticlePage({ params }: Params) {
                     allow="accelerometer; encrypted-media; picture-in-picture; web-share"
                     allowFullScreen
                     referrerPolicy="strict-origin-when-cross-origin"
-                    style={{ aspectRatio: "16 / 9", width: "100%", border: 0, display: "block", background: "#000" }}
                   />
                 </figure>
               ) : story.image && !isInfographicStory ? (

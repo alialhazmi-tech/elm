@@ -69,8 +69,8 @@ export async function runReaderTool(
   });
 
   if (!text) return { error: "تعذر توليد النص. حاول مرة أخرى.", status: 502 };
-  const guard = runPolicyGuard({ body: text });
-  const blocked = guard.findings.some(
+  const guard = settings.governance.editorialGuard ? runPolicyGuard({ body: text }) : null;
+  const blocked = guard?.findings.some(
     (finding) => finding.severity === "blocking" && finding.ruleId !== "BODY-WORD-RANGE",
   );
   if (blocked) {

@@ -10,6 +10,7 @@
  */
 
 export { runPolicyGuard, applyAutofixes, guardWithAutofix } from "./engine.ts";
+export { runConfiguredPolicyGuard, type GuardControls } from "./configured.ts";
 export { allRules } from "./rules/index.ts";
 export * from "./types.ts";
 export { normalizeArabic, countWords, toLatinDigits } from "./normalize.ts";

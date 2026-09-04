@@ -23,20 +23,34 @@ test("روابط يوتيوب تُطبَّع إلى الفيديو وحده بل
   assert.doesNotMatch(videoEmbedUrl(withList), /list=/);
 });
 
-test("مادة الفيديو تُعرض مشغّلًا مضمَّنًا بالنسخة الخاصة بالخصوصية والسياسة تسمح بذلك الإطار وحده", async () => {
-  const [page, config, route, migrate, schema] = await Promise.all([
+test("مادة الفيديو تُعرض مشغّلًا واسعًا تحت الرأس بالنسخة الخاصة بالخصوصية والسياسة تسمح بذلك الإطار وحده", async () => {
+  const [page, styles, provider, config, route, migrate, schema, editor, details] = await Promise.all([
     read("app/[section]/[id]/[slug]/page.tsx"),
+    read("app/soft.css"),
+    read("lib/content/provider.ts"),
     read("next.config.ts"),
     read("app/api/tahrir/story/route.ts"),
     read("scripts/wp-migrate.mjs"),
     read("db/schema.ts"),
+    read("components/tahrir/editor/editor-client.tsx"),
+    read("components/tahrir/editor/details-panel.tsx"),
   ]);
   assert.match(page, /story\.format === "videos" \? videoEmbedUrl\(story\.videoUrl\) : null/);
+  assert.match(page, /videoEmbed \? " has-video"/);
   assert.match(page, /<iframe[\s\S]*src=\{videoEmbed\}/);
+  assert.match(styles, /\.sa-head\.has-video \{ grid-template-columns: minmax\(0, 1fr\); \}/);
+  assert.match(styles, /\.sa-video iframe \{[^}]*width: 100%;[^}]*aspect-ratio: 16 \/ 9;/);
+  assert.match(provider, /section === "videos"[\s\S]*or\(eq\(storiesTable\.section, section\), eq\(storiesTable\.format, "videos"\)\)/);
+  assert.match(provider, /section === "videos" \? isVideo\(story\) : story\.section === section/);
   assert.match(config, /"frame-src https:\/\/www\.youtube-nocookie\.com"/);
   assert.doesNotMatch(config, /frame-src[^"]*youtube\.com[^-]/);
   // الحفظ يقبل يوتيوب فقط، والهجرة تسحب الرابط من واجهة الموقع القديم الخاصة.
-  assert.match(route, /videoUrl: normalizeVideoUrl\(input\.videoUrl\)/);
+  assert.match(route, /const videoUrl = normalizeVideoUrl\(input\.videoUrl\)/);
+  assert.match(route, /input\.format\?\.trim\(\) === "videos" && !videoUrl/);
+  assert.match(editor, /format === "videos" && !youtubeIdFrom\(videoUrl\)/);
+  assert.match(details, /aria-label="تفعيل فيديو للمادة"/);
+  assert.match(details, /onCheckedChange=\{\(checked\) => props\.onFormat\(checked \? "videos" : "news"\)\}/);
+  assert.match(details, /ألصق رابط يوتيوب لإكمال المادة المرئية/);
   assert.match(migrate, /alelm-api\/v1"/);
   assert.match(migrate, /single-post\?id=\$\{postId\}/);
   assert.match(migrate, /video_url = coalesce\(excluded\.video_url, stories\.video_url\)/);

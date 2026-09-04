@@ -14,6 +14,7 @@ import {
   ChartNoAxesColumnIcon,
   SparklesIcon,
   Settings2Icon,
+  SlidersHorizontalIcon,
   type LucideIcon,
 } from "lucide-react";
 
@@ -81,6 +82,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "المنصة",
     items: [
+      { title: "إعدادات النظام", href: "/tahrir/settings", icon: SlidersHorizontalIcon, permission: "ai.settings" },
       { title: "الإحصاءات", href: "/tahrir/stats", icon: ChartNoAxesColumnIcon, permission: "stats.view" },
       { title: "سجل التدقيق", href: "/tahrir/audit", icon: FileClockIcon, permission: "audit.view" },
     ],

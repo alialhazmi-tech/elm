@@ -33,7 +33,7 @@ function Counter({ length, max }: { length: number; max: number }) {
 export function SeoPanel(props: Props) {
   const [keywordInput, setKeywordInput] = useState("");
   return (
-    <div className="grid gap-3 p-3">
+    <div className="grid gap-3 p-3 text-right" dir="rtl">
       <div className="flex items-center gap-2">
         <h2 className="font-display text-[13px] font-bold">SEO والكلمات المفتاحية</h2>
         <Button size="xs" variant="outline" className="ms-auto" onClick={props.onGenerate} disabled={props.busy}>

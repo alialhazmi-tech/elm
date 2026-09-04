@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LockIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Panel } from "@/components/tahrir/overview/panel";
@@ -27,12 +26,6 @@ const TOOL_META: Array<[string, string, string, "editorial" | "light" | "fast" |
   ["full_edit", "التحرير الذكي الشامل", "Sonnet يحرر المتن وHaiku يولّد العنوان وSEO والتصنيف بالتوازي", "fast"],
   ["jak", "جاك العلم", "تحليل التقرير إلى خطة شرائح + عمليات الشريحة الواحدة — بمدقق أرقام صارم", "editorial"],
   ["images", "توليد الصور", "الأنماط الثلاثة: حقيقي/توضيحي/رسومي", "image"],
-];
-
-const GOVERNANCE: Array<[string, string]> = [
-  ["حقن الدستور التحريري في كل استدعاء", "إلزامي — غير قابل للتعطيل"],
-  ["فحص الحارس لكل مخرج قبل عرضه", "إلزامي — غير قابل للتعطيل"],
-  ["تدوين كل استدعاء في سجل التدقيق", "مَن استدعى ماذا وبأي كلفة"],
 ];
 
 function Row({ name, desc, model, children }: { name: string; desc: string; model?: string; children: React.ReactNode }) {
@@ -89,20 +82,6 @@ export function AiSettingsClient({ initial, isChief }: { initial: SettingsShape;
               disabled={!isChief}
               onCheckedChange={(checked) => patch({ tools: { ...settings.tools, [key]: checked } })}
             />
-          </Row>
-        ))}
-      </Panel>
-      <Panel title="الحوكمة">
-        {GOVERNANCE.map(([name, desc]) => (
-          <Row
-            key={name}
-            name={name}
-            desc={desc}
-          >
-            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <LockIcon className="size-3.5" />
-              <Switch checked disabled aria-label="إلزامي" />
-            </span>
           </Row>
         ))}
       </Panel>

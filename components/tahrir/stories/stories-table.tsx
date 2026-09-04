@@ -6,7 +6,6 @@ import {
   ArchiveIcon,
   ArchiveRestoreIcon,
   ExternalLinkIcon,
-  MoreHorizontalIcon,
   PenLineIcon,
   Trash2Icon,
   XIcon,
@@ -16,13 +15,6 @@ import { GuardChip, SeriesTag, StatusPill } from "@/components/tahrir/badges";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 import { useStoryActions } from "./story-actions";
@@ -30,7 +22,7 @@ import { countLabel, type StoryTableRow } from "./types";
 
 const SELECTED_NOUN = { one: "مادة واحدة محددة", two: "مادتان محددتان", few: "مواد محددة", many: "مادة محددة" };
 
-/** جدول المواد: تحديد جماعي بإجراءات على الشريط العلوي، وقائمة إجراءات لكل صف؛ الترقيم والتصفية من الخادم. */
+/** جدول المواد: تحديد جماعي، وإجراءات صفية ظاهرة بالترتيب نفسه لجدول الأعضاء؛ الترقيم والتصفية من الخادم. */
 export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canArchive: boolean }) {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const { setAction, dialogs } = useStoryActions(() => setSelected(new Set()));
@@ -82,7 +74,7 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/40 hover:bg-muted/40">
+            <TableRow className="border-b border-border/80 bg-muted/20 hover:bg-muted/20">
               <TableHead className="w-10 ps-3">
                 <Checkbox
                   aria-label="تحديد كل مواد الصفحة"
@@ -92,12 +84,12 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                   }
                 />
               </TableHead>
-              <TableHead>المادة</TableHead>
-              <TableHead className="hidden md:table-cell">السلسلة</TableHead>
-              <TableHead className="hidden md:table-cell">الحارس</TableHead>
-              <TableHead className="hidden md:table-cell">الحالة</TableHead>
-              <TableHead className="hidden lg:table-cell">حُدّثت</TableHead>
-              <TableHead className="w-12" />
+              <TableHead className="font-display text-xs font-semibold">المادة</TableHead>
+              <TableHead className="hidden w-32 font-display text-xs font-semibold md:table-cell">السلسلة</TableHead>
+              <TableHead className="hidden w-28 font-display text-xs font-semibold md:table-cell">الحارس</TableHead>
+              <TableHead className="hidden w-28 font-display text-xs font-semibold md:table-cell">الحالة</TableHead>
+              <TableHead className="hidden w-28 font-display text-xs font-semibold lg:table-cell">حُدّثت</TableHead>
+              <TableHead className="w-32 pe-4 font-display text-xs font-semibold text-start">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -111,15 +103,15 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
             {rows.map((row) => {
               const isSelected = selected.has(row.id);
               return (
-                <TableRow key={row.id} data-state={isSelected ? "selected" : undefined}>
-                  <TableCell className="ps-3">
+                <TableRow key={row.id} data-state={isSelected ? "selected" : undefined} className="transition-colors hover:bg-muted/30">
+                  <TableCell className="ps-3 py-2.5">
                     <Checkbox
                       aria-label={`تحديد ${row.title}`}
                       checked={isSelected}
                       onCheckedChange={(checked) => toggle(row.id, checked === true)}
                     />
                   </TableCell>
-                  <TableCell className="relative max-w-[520px] ps-4 whitespace-normal md:whitespace-nowrap">
+                  <TableCell className="relative max-w-[520px] ps-4 py-2.5 whitespace-normal md:whitespace-nowrap">
                     <i
                       aria-hidden
                       className="absolute inset-y-2.5 start-1 w-[3px] rounded-full"
@@ -139,61 +131,81 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                       {row.series ? <SeriesTag name={row.series.name} color={row.series.color} /> : null}
                     </span>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden w-32 py-2.5 md:table-cell">
                     {row.series ? <SeriesTag name={row.series.name} color={row.series.color} /> : <span className="text-muted-foreground">—</span>}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden w-28 py-2.5 md:table-cell">
                     <GuardChip tone={row.guard.tone} label={row.guard.label} />
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden w-28 py-2.5 md:table-cell">
                     <StatusPill status={row.status} label={row.statusLabel} />
                   </TableCell>
-                  <TableCell className="hidden text-xs text-muted-foreground tabular-nums whitespace-nowrap lg:table-cell">
+                  <TableCell className="hidden w-28 py-2.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap lg:table-cell">
                     {row.updated}
                   </TableCell>
-                  <TableCell className="pe-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon-xs" variant="ghost" aria-label={`إجراءات ${row.title}`}>
-                          <MoreHorizontalIcon />
+                  <TableCell className="w-32 pe-4 py-2.5">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        asChild
+                        size="icon-xs"
+                        variant="ghost"
+                        className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        title="فتح في المحرر"
+                      >
+                        <Link href={row.href} aria-label={`فتح ${row.title} في المحرر`}>
+                          <PenLineIcon className="size-3.5" />
+                        </Link>
+                      </Button>
+                      {row.publicHref ? (
+                        <Button
+                          asChild
+                          size="icon-xs"
+                          variant="ghost"
+                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="عرض على الموقع"
+                        >
+                          <a href={row.publicHref} target="_blank" rel="noreferrer" aria-label={`عرض ${row.title} على الموقع`}>
+                            <ExternalLinkIcon className="size-3.5" />
+                          </a>
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem asChild>
-                          <Link href={row.href}>
-                            <PenLineIcon />
-                            فتح في المحرر
-                          </Link>
-                        </DropdownMenuItem>
-                        {row.publicHref ? (
-                          <DropdownMenuItem asChild>
-                            <a href={row.publicHref} target="_blank" rel="noreferrer">
-                              <ExternalLinkIcon />
-                              عرض على الموقع
-                            </a>
-                          </DropdownMenuItem>
-                        ) : null}
-                        {(canArchive && row.status !== "draft") || row.status === "draft" ? <DropdownMenuSeparator /> : null}
-                        {canArchive && row.status !== "draft" && row.status !== "archived" ? (
-                          <DropdownMenuItem onSelect={() => setAction({ kind: "archive", rows: [row] })}>
-                            <ArchiveIcon />
-                            أرشفة
-                          </DropdownMenuItem>
-                        ) : null}
-                        {canArchive && row.status === "archived" ? (
-                          <DropdownMenuItem onSelect={() => setAction({ kind: "restore", rows: [row] })}>
-                            <ArchiveRestoreIcon />
-                            استعادة كمسودة
-                          </DropdownMenuItem>
-                        ) : null}
-                        {row.status === "draft" ? (
-                          <DropdownMenuItem variant="destructive" onSelect={() => setAction({ kind: "delete", rows: [row] })}>
-                            <Trash2Icon />
-                            حذف المسودة
-                          </DropdownMenuItem>
-                        ) : null}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      ) : null}
+                      {canArchive && row.status !== "draft" && row.status !== "archived" ? (
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="أرشفة"
+                          aria-label={`أرشفة ${row.title}`}
+                          onClick={() => setAction({ kind: "archive", rows: [row] })}
+                        >
+                          <ArchiveIcon className="size-3.5" />
+                        </Button>
+                      ) : null}
+                      {canArchive && row.status === "archived" ? (
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          title="استعادة كمسودة"
+                          aria-label={`استعادة ${row.title} كمسودة`}
+                          onClick={() => setAction({ kind: "restore", rows: [row] })}
+                        >
+                          <ArchiveRestoreIcon className="size-3.5" />
+                        </Button>
+                      ) : null}
+                      {row.status === "draft" ? (
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          className="text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          title="حذف المسودة"
+                          aria-label={`حذف مسودة ${row.title}`}
+                          onClick={() => setAction({ kind: "delete", rows: [row] })}
+                        >
+                          <Trash2Icon className="size-3.5" />
+                        </Button>
+                      ) : null}
+                    </div>
                   </TableCell>
                 </TableRow>
               );

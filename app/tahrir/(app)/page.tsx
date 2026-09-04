@@ -23,7 +23,8 @@ import { TodayTimeline, type TimelineItem } from "@/components/tahrir/overview/t
 import { stripHtmlToText } from "@/lib/content/html";
 import { SERIES } from "@/lib/content/series";
 import { relativeTimeAr } from "@/lib/format";
-import { runPolicyGuard } from "@/lib/policy";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard, type GuardControls } from "@/lib/policy";
 import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
 import {
@@ -75,8 +76,8 @@ function storiesCount(n: number): string {
   return `${n} مادة`;
 }
 
-function guardChip(title: string, body: string): { tone: "ok" | "warn" | "block"; label: string; blocking: number } {
-  const report = runPolicyGuard({ title, body: stripHtmlToText(body) });
+function guardChip(title: string, body: string, controls: GuardControls): { tone: "ok" | "warn" | "block"; label: string; blocking: number } {
+  const report = runConfiguredPolicyGuard({ title, body: stripHtmlToText(body) }, controls);
   if (report.counts.blocking > 0)
     return { tone: "block", label: `${report.counts.blocking} قاطع`, blocking: report.counts.blocking };
   if (report.counts.warning > 0) return { tone: "warn", label: `${report.counts.warning} تحذير`, blocking: 0 };
@@ -87,8 +88,9 @@ export default async function OverviewPage() {
   const actor = await loadActor();
   const can = (key: string) => actor?.can(key) ?? false;
   const todayIso = new Date().toISOString().slice(0, 10);
-  const [counts, todayCount, perDay, review, latestPublished, latestDraft, scheduled, distribution, media] =
+  const [settings, counts, todayCount, perDay, review, latestPublished, latestDraft, scheduled, distribution, media] =
     await Promise.all([
+      loadAiSettings(),
       statusCounts().catch(() => ({}) as Record<string, number>),
       publishedTodayCount().catch(() => 0),
       publishedPerDay(14).catch(() => []),
@@ -103,7 +105,7 @@ export default async function OverviewPage() {
   const reviewChips = new Map(
     review.map((row) => {
       const content = reviewBodies.get(row.id);
-      return [row.id, content ? guardChip(content.title, content.body) : { tone: "ok" as const, label: "—", blocking: 0 }];
+      return [row.id, content ? guardChip(content.title, content.body, settings.governance) : { tone: "ok" as const, label: "—", blocking: 0 }];
     }),
   );
   const blockingInReview = [...reviewChips.values()].filter((chip) => chip.blocking > 0).length;

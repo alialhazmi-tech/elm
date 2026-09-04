@@ -16,8 +16,8 @@ test("واجهة المواد تعرض الحذف للمسودة فقط وتتط
     readFile(new URL("../components/tahrir/stories/stories-table.tsx", import.meta.url), "utf8"),
     readFile(new URL("../components/tahrir/stories/story-actions.tsx", import.meta.url), "utf8"),
   ]);
-  // الحذف لا يظهر إلا للمسودات — في قائمة الصف وفي الشريط الجماعي.
-  assert.match(table, /row\.status === "draft" \? \(\s*<DropdownMenuItem variant="destructive"/);
+  // الحذف لا يظهر إلا للمسودات — كزر صف ظاهر وفي الشريط الجماعي.
+  assert.match(table, /row\.status === "draft" \? \([\s\S]*onClick=\{\(\) => setAction\(\{ kind: "delete", rows: \[row\] \}\)\}/);
   assert.match(table, /const drafts = selectedRows\.filter\(\(row\) => row\.status === "draft"\)/);
   // التأكيد حوار AlertDialog صريح لا تنفيذ فوري، والطلب DELETE على مسار المادة.
   assert.match(actions, /AlertDialogAction/);

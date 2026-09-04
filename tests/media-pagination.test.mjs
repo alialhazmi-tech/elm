@@ -27,6 +27,6 @@ test("مكتبة الوسائط تُرقَّم على الخادم ولا تُج
   for (const [name, source] of [["editor", editor], ["jak", jakNew], ["jak/[id]", jakEdit], ["ai-images", aiImages], ["media", mediaPage]]) {
     assert.doesNotMatch(source, /\blistMedia\(\)/, `${name} ما زالت تجلب المكتبة كاملة`);
   }
-  assert.match(editor, /listRecentMedia\(\{ rightsCleared: true, limit: 6 \}\)/);
+  assert.match(editor, /listRecentMedia\(\{[\s\S]*rightsCleared: settings\.governance\.requireImageRights \? true : undefined,[\s\S]*limit: 6/);
   assert.match(aiImages, /listRecentMedia\(\{ aiGenerated: true, limit: 6 \}\)/);
 });

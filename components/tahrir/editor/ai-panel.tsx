@@ -21,6 +21,7 @@ interface AssistResult {
 }
 
 interface Props {
+  guardEnabled: boolean;
   getDraft: () => { title: string; body: string; selection?: string };
   onInsertTitle: (text: string) => void;
   onInsertExcerpt: (text: string) => void;
@@ -43,8 +44,8 @@ const TOOL_HINTS: Record<string, string> = {
   proofread: "النص المدقق كاملًا",
 };
 
-/** مساعد «محرر العلم»: كل مخرج يمر على الحارس قبل عرضه، والإدراج بنقرة بشرية — لا ينشر شيئًا. */
-export function AiPanel({ getDraft, onInsertTitle, onInsertExcerpt, onReplaceBody, onClassify }: Props) {
+/** مساعد «محرر العلم»: يقترح فقط، والإدراج بنقرة بشرية — لا ينشر شيئًا. */
+export function AiPanel({ guardEnabled, getDraft, onInsertTitle, onInsertExcerpt, onReplaceBody, onClassify }: Props) {
   const [active, setActive] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<AssistResult | null>(null);
@@ -88,7 +89,7 @@ export function AiPanel({ getDraft, onInsertTitle, onInsertExcerpt, onReplaceBod
   }
 
   return (
-    <div className="grid gap-3 p-3">
+    <div className="grid gap-3 p-3 text-right" dir="rtl">
       <div className="flex items-center gap-2">
         <SparklesIcon className="size-4 text-primary" />
         <h2 className="font-display text-[13px] font-bold">محرر العلم — المساعد الذكي</h2>
@@ -109,7 +110,7 @@ export function AiPanel({ getDraft, onInsertTitle, onInsertExcerpt, onReplaceBod
 
       {busy ? (
         <div className="th-ai-shimmer rounded-md border border-dashed px-3 py-2 text-xs text-muted-foreground">
-          ✦ المساعد يعمل ويُفحص مخرجه بالحارس…
+          ✦ {guardEnabled ? "المساعد يعمل ويُفحص مخرجه بالحارس…" : "المساعد يعمل — فحص الحارس معطّل من إعدادات النظام…"}
         </div>
       ) : null}
       {error ? <div className="rounded-md bg-(--t-block-bg) px-3 py-2 text-xs text-(--t-block)">{error}</div> : null}
@@ -126,7 +127,7 @@ export function AiPanel({ getDraft, onInsertTitle, onInsertExcerpt, onReplaceBod
                   {suggestion.guard.ok ? (
                     <GuardChip
                       tone="ok"
-                      label={suggestion.guard.findings.length === 0 ? "سليم" : `${suggestion.guard.findings.length} ملاحظة`}
+                      label={!guardEnabled ? "فحص الحارس معطّل" : suggestion.guard.findings.length === 0 ? "سليم" : `${suggestion.guard.findings.length} ملاحظة`}
                     />
                   ) : (
                     <GuardChip tone="block" label={`رفضه الحارس — ${blocking?.message.slice(0, 60) ?? ""}`} className="max-w-full whitespace-normal" />

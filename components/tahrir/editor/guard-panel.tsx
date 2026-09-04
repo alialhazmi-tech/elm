@@ -4,6 +4,7 @@ import { LocateIcon, WandSparklesIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { Finding, GuardReport } from "@/lib/policy/types";
+import type { GuardControls } from "@/lib/policy";
 import { cn } from "@/lib/utils";
 
 const SEVERITY_LABELS: Record<string, string> = {
@@ -29,6 +30,7 @@ export function GuardPanel({
   report,
   guardBusy,
   gateOpen,
+  controls,
   onFix,
   onLocate,
   status,
@@ -37,6 +39,7 @@ export function GuardPanel({
   report: GuardReport | null;
   guardBusy: boolean;
   gateOpen: boolean;
+  controls: GuardControls;
   onFix: (finding: Finding) => void;
   onLocate: (finding: Finding) => void;
   status: string;
@@ -44,7 +47,13 @@ export function GuardPanel({
 }) {
   const counts = report?.counts;
   return (
-    <div className="grid">
+    <div className="grid text-right" dir="rtl">
+      {!controls.editorialGuard ? (
+        <div className="m-3 mb-0 rounded-md border border-(--t-warn)/30 bg-(--t-warn-bg) px-3 py-2 text-xs leading-relaxed text-(--t-warn)">
+          <b>حارس السياسة التحريرية معطّل.</b>{" "}
+          {controls.requireImageRights ? "اشتراط توثيق حقوق الصورة ما زال فعّالًا." : "اشتراط حقوق الصورة معطّل أيضًا."}
+        </div>
+      ) : null}
       <div className="grid grid-cols-3 gap-1.5 p-3">
         {(
           [
@@ -67,7 +76,11 @@ export function GuardPanel({
             guardBusy ? "animate-pulse bg-muted-foreground" : report && report.counts.blocking === 0 ? "bg-(--t-ok)" : "bg-(--t-block)",
           )}
         />
-        {guardBusy ? "يفحص الحارس…" : report ? `${report.rulesEvaluated} قاعدة · ${report.findings.length} ملاحظات` : "اكتب ليفحص"}
+        {guardBusy
+          ? controls.editorialGuard ? "يفحص الحارس…" : controls.requireImageRights ? "يفحص حقوق الصورة…" : "يحدّث حالة البوابات…"
+          : report
+            ? `${report.rulesEvaluated} قاعدة · ${report.findings.length} ملاحظات`
+            : "اكتب ليفحص"}
       </div>
 
       {report?.findings.slice(0, 12).map((finding, index) => (
@@ -102,7 +115,11 @@ export function GuardPanel({
           guardBusy || !report ? "bg-muted text-muted-foreground" : gateOpen ? "bg-(--t-ok-bg) text-(--t-ok)" : "bg-(--t-block-bg) text-(--t-block)",
         )}
       >
-        {guardBusy || !report ? (
+        {!controls.editorialGuard && !controls.requireImageRights ? (
+          <>
+            <b>بوابات النشر معطّلة</b> — يبقى الاعتماد النهائي بشريًا.
+          </>
+        ) : guardBusy || !report ? (
           <>
             <b>جارٍ فحص المادة</b> — لا يمكن طلب الاعتماد قبل اكتمال الحارس.
           </>

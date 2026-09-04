@@ -195,6 +195,7 @@ const mediaCompliance: Rule = {
             field,
             message: "حقوق الملكية الفكرية للصورة غير موثقة في مكتبة الوسائط. لا نشر قبل توثيقها.",
             excerpt: asset.url,
+            kind: "image-rights",
           }),
         );
       }

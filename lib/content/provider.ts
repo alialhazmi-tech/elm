@@ -392,11 +392,16 @@ export async function pageBySection(
   section: string,
   rawPage: string | undefined | null,
 ): Promise<PageSlice<Story>> {
+  // «مرئي» أرشيف شكل لا قسم موضوعي: الفيديو يحتفظ بقسمه الأصلي وتجمعه الصفحة عبر format.
+  const dbFilter = section === "videos"
+    ? or(eq(storiesTable.section, section), eq(storiesTable.format, "videos"))
+    : eq(storiesTable.section, section);
+  const seedFilter = (story: Story) => section === "videos" ? isVideo(story) : story.section === section;
   return dbOrSeed(
     `page:section:${section}:${parsePage(rawPage)}`,
     DB_CACHE_MS,
-    (db) => pageFromDb(db, and(PUBLISHED, eq(storiesTable.section, section)), rawPage),
-    () => paginate(seedAll.filter((story) => story.section === section).sort(byDateDesc), rawPage),
+    (db) => pageFromDb(db, and(PUBLISHED, dbFilter), rawPage),
+    () => paginate(seedAll.filter(seedFilter).sort(byDateDesc), rawPage),
   );
 }
 
@@ -796,6 +801,10 @@ export const seedContentProvider: ContentProvider = {
   },
 
   async listBySection(section) {
+    const dbFilter = section === "videos"
+      ? or(eq(storiesTable.section, section), eq(storiesTable.format, "videos"))
+      : eq(storiesTable.section, section);
+    const seedFilter = (story: Story) => section === "videos" ? isVideo(story) : story.section === section;
     return dbOrSeed(
       `list:section:${section}`,
       DB_CACHE_MS,
@@ -803,12 +812,12 @@ export const seedContentProvider: ContentProvider = {
         const rows = await db
           .select(CARD_COLUMNS)
           .from(storiesTable)
-          .where(and(PUBLISHED, eq(storiesTable.section, section)))
+          .where(and(PUBLISHED, dbFilter))
           .orderBy(...RECENT_ORDER)
           .limit(RECENT_LIMIT);
         return rows.map(mapRow);
       },
-      () => seedAll.filter((story) => story.section === section).sort(byDateDesc),
+      () => seedAll.filter(seedFilter).sort(byDateDesc),
     );
   },
 

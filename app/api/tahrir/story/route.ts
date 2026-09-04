@@ -32,6 +32,10 @@ export async function POST(request: Request) {
   if (!input?.title?.trim()) {
     return NextResponse.json({ error: "العنوان مطلوب." }, { status: 400 });
   }
+  const videoUrl = normalizeVideoUrl(input.videoUrl);
+  if (input.format?.trim() === "videos" && !videoUrl) {
+    return NextResponse.json({ error: "رابط يوتيوب الصحيح مطلوب للمادة المرئية." }, { status: 400 });
+  }
 
   const id = input.id?.trim() || crypto.randomUUID();
   // مادة جديدة تحتاج story.create؛ القائمة يحررها صاحبها بـ edit.own أو أي عضو بـ edit.any.
@@ -69,7 +73,7 @@ export async function POST(request: Request) {
       seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",
       keywords,
       // رابط الفيديو يُقبل يوتيوب فقط ويُخزَّن بصيغته القياسية؛ أي قيمة أخرى تُمسح.
-      ...(input.videoUrl !== undefined ? { videoUrl: normalizeVideoUrl(input.videoUrl) } : {}),
+      ...(input.videoUrl !== undefined ? { videoUrl } : {}),
       ...(session.can("story.publish")
         ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
         : {}),

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
-import { runPolicyGuard } from "@/lib/policy";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard } from "@/lib/policy";
 import { requireActor } from "@/lib/tahrir/access";
 import { guardMediaFor } from "@/lib/tahrir/service";
 
@@ -17,11 +18,12 @@ export async function POST(request: Request) {
     format?: string;
   };
 
-  const report = runPolicyGuard({
+  const [settings, media] = await Promise.all([loadAiSettings(), guardMediaFor(image)]);
+  const report = runConfiguredPolicyGuard({
     title,
     body: stripHtmlToText(body),
     surface: format === "jakalelm" ? "design" : undefined,
-    media: await guardMediaFor(image),
-  });
+    media,
+  }, settings.governance);
   return NextResponse.json(report);
 }

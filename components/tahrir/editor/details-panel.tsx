@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArchiveIcon, ArchiveRestoreIcon, ImagePlusIcon, PinIcon, ZapIcon, ZapOffIcon } from "lucide-react";
+import { ArchiveIcon, ArchiveRestoreIcon, ImagePlusIcon, PinIcon, VideoIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 
 import { GuardChip } from "@/components/tahrir/badges";
 import { ArchiveDialog, ConfirmDialog, type StoryAction } from "@/components/tahrir/stories/story-actions";
@@ -33,6 +33,7 @@ export interface DetailsPanelProps {
   onPickImage: () => void;
   imageUploadBusy: boolean;
   imageUploadMessage: string;
+  requireImageRights: boolean;
   recentMedia: Array<{ url: string; filename: string }>;
   slug: string;
   onSlug: (value: string) => void;
@@ -68,7 +69,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
   const editable = props.status !== "published" && props.status !== "archived";
 
   return (
-    <div className="grid">
+    <div className="grid text-right" dir="rtl">
       {props.canApprove ? (
         <>
           {props.status !== "archived" ? (
@@ -141,40 +142,62 @@ export function DetailsPanel(props: DetailsPanelProps) {
         </>
       ) : null}
 
-      {props.format === "videos" ? (
-        <Section title="رابط الفيديو (يوتيوب)">
-          <Input
-            dir="ltr"
-            placeholder="https://www.youtube.com/watch?v=…"
-            value={props.videoUrl}
-            onChange={(event) => props.onVideoUrl(event.target.value)}
-            aria-invalid={props.videoUrl.trim() !== "" && !youtubeIdFrom(props.videoUrl)}
-          />
-          {props.videoUrl.trim() && !youtubeIdFrom(props.videoUrl) ? (
-            <div className="text-[11px] text-(--t-block)">يُقبل رابط يوتيوب فقط (مشاهدة أو youtu.be أو تضمين).</div>
-          ) : null}
-          {youtubeIdFrom(props.videoUrl) ? (
-            <iframe
-              src={videoEmbedUrl(props.videoUrl) ?? undefined}
-              title="معاينة الفيديو"
-              loading="lazy"
-              allow="encrypted-media; picture-in-picture"
-              allowFullScreen
-              className="aspect-video w-full rounded-md border bg-black"
-            />
-          ) : null}
-          <div className="text-[10px] text-muted-foreground">يُحفظ رابط الفيديو وحده بلا قائمة تشغيل — القارئ يبقى في المادة.</div>
-        </Section>
-      ) : null}
-
       <Section title="الشكل">
         <div className="flex flex-wrap gap-1.5">
-          {props.formats.map(([value, name]) => (
+          {props.formats.filter(([value]) => value !== "videos").map(([value, name]) => (
             <Button key={value} size="xs" variant={props.format === value ? "default" : "outline"} onClick={() => props.onFormat(value)}>
               {name}
             </Button>
           ))}
         </div>
+      </Section>
+
+      <Section title="الفيديو">
+        <label htmlFor="story-video-toggle" className="flex cursor-pointer items-start gap-2.5 rounded-md border bg-muted/20 p-2.5 text-xs">
+          <Switch
+            id="story-video-toggle"
+            checked={props.format === "videos"}
+            onCheckedChange={(checked) => props.onFormat(checked ? "videos" : "news")}
+            aria-label="تفعيل فيديو للمادة"
+            aria-controls="story-video-fields"
+            aria-expanded={props.format === "videos"}
+          />
+          <VideoIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="grid gap-0.5">
+            <b className="font-display text-[12.5px]">تفعيل فيديو للمادة</b>
+            <span className="text-[10.5px] leading-relaxed text-muted-foreground">
+              يعرض مشغّل يوتيوب بعرض الصفحة أسفل عنوان المادة.
+            </span>
+          </span>
+        </label>
+
+        {props.format === "videos" ? (
+          <div id="story-video-fields" className="grid gap-2">
+            <Input
+              dir="ltr"
+              placeholder="https://www.youtube.com/watch?v=…"
+              value={props.videoUrl}
+              onChange={(event) => props.onVideoUrl(event.target.value)}
+              aria-invalid={props.videoUrl.trim() !== "" && !youtubeIdFrom(props.videoUrl)}
+            />
+            {props.videoUrl.trim() && !youtubeIdFrom(props.videoUrl) ? (
+              <div className="text-[11px] text-(--t-block)">يُقبل رابط يوتيوب فقط (مشاهدة أو youtu.be أو تضمين).</div>
+            ) : !props.videoUrl.trim() ? (
+              <div className="text-[11px] text-muted-foreground">ألصق رابط يوتيوب لإكمال المادة المرئية.</div>
+            ) : null}
+            {youtubeIdFrom(props.videoUrl) ? (
+              <iframe
+                src={videoEmbedUrl(props.videoUrl) ?? undefined}
+                title="معاينة الفيديو"
+                loading="lazy"
+                allow="encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="aspect-video w-full rounded-md border bg-black"
+              />
+            ) : null}
+            <div className="text-[10px] text-muted-foreground">يُحفظ رابط الفيديو وحده بلا قائمة تشغيل — القارئ يبقى في المادة.</div>
+          </div>
+        ) : null}
       </Section>
 
       <Section title="السلسلة">
@@ -202,7 +225,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
       </Section>
 
       <Section title="القسم">
-        <Select value={props.section} onValueChange={props.onSection}>
+        <Select dir="rtl" value={props.section} onValueChange={props.onSection}>
           <SelectTrigger className="w-full" aria-label="القسم">
             <SelectValue />
           </SelectTrigger>
@@ -255,7 +278,11 @@ export function DetailsPanel(props: DetailsPanelProps) {
             ))}
           </div>
         ) : null}
-        <div className="text-[10px] text-muted-foreground">المصغرات من المكتبة موثقة الحقوق فقط — صورة غير موثقة تمنع النشر (§12).</div>
+        <div className="text-[10px] text-muted-foreground">
+          {props.requireImageRights
+            ? "المصغرات من المكتبة موثقة الحقوق فقط — صورة غير موثقة تمنع النشر (§12)."
+            : "اشتراط توثيق الحقوق معطّل من إعدادات النظام — تبقى مسؤولية المحرر عن الحقوق قائمة."}
+        </div>
       </Section>
 
       <Section title="الرابط (لاتيني)">

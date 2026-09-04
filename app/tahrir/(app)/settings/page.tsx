@@ -1,0 +1,20 @@
+import { SystemSettingsClient } from "@/components/tahrir/settings/system-settings-client";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { loadActor } from "@/lib/tahrir/access";
+
+export const metadata = { title: "إعدادات النظام" };
+export const dynamic = "force-dynamic";
+
+export default async function SystemSettingsPage() {
+  const [actor, settings] = await Promise.all([loadActor(), loadAiSettings()]);
+
+  return (
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-3" dir="rtl">
+      <div className="flex flex-wrap items-baseline gap-3">
+        <h1 className="font-display text-xl font-extrabold">إعدادات النظام</h1>
+        <span className="text-xs text-muted-foreground">ضوابط عامة تُفرض من الخادم على كامل سير النشر</span>
+      </div>
+      <SystemSettingsClient initial={settings.governance} canEdit={actor?.can("ai.settings") ?? false} />
+    </main>
+  );
+}

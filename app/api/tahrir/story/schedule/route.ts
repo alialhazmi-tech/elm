@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
-import { runPolicyGuard } from "@/lib/policy";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard } from "@/lib/policy";
 import { blockingFindings } from "@/lib/policy/report";
 import { requirePermission } from "@/lib/tahrir/access";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
-import { getStory, scheduleStory } from "@/lib/tahrir/service";
+import { getStory, guardMediaFor, scheduleStory } from "@/lib/tahrir/service";
 
 /** جدولة النشر — للمعتمدين؛ الحارس يفحص عند الجدولة وسيفحص ثانية لحظة الموعد. */
 export async function POST(request: Request) {
@@ -26,12 +27,14 @@ export async function POST(request: Request) {
   const story = id ? await getStory(id) : null;
   if (!story) return NextResponse.json({ error: "المادة غير موجودة." }, { status: 404 });
 
-  const report = runPolicyGuard({
+  const [settings, media] = await Promise.all([loadAiSettings(), guardMediaFor(story.image)]);
+  const report = runConfiguredPolicyGuard({
     id: story.id,
     title: story.title,
     body: stripHtmlToText(story.body),
     surface: story.format === "jakalelm" ? ("design" as const) : undefined,
-  });
+    media,
+  }, settings.governance);
   if (!report.canRequestApproval) {
     return NextResponse.json(
       {

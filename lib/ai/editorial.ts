@@ -3,7 +3,7 @@
  *
  * الحوكمة كودًا، لا وعودًا:
  * 1) الدستور التحريري + نبرة العلم يُحقنان في كل استدعاء.
- * 2) كل مخرج يُفحص بحارس السياسة على الخادم قبل أن يصل الواجهة.
+ * 2) مخرجاته تُفحص بحارس السياسة على الخادم حين يكون مفعّلًا من إعدادات النظام.
  * 3) المفتاح من ANTHROPIC_API_KEY حصرًا — لا سقوط صامت لأي اعتماد آخر.
  */
 
@@ -40,13 +40,15 @@ function client(): Anthropic | null {
 
 type Usage = { model: string; inputTokens: number; outputTokens: number };
 
-function systemBlocks(tone: string): Anthropic.TextBlockParam[] {
+function systemBlocks(tone: string, editorialGuard: boolean): Anthropic.TextBlockParam[] {
   return [
     {
       type: "text",
       text: [
         "أنت «محرر العلم» — مساعد تحرير داخلي لمنصة العلم الإخبارية المعرفية السعودية.",
-        "تقترح ولا تنشر: مخرجاتك تُعرض على محرر بشري يقرر، ويفحصها حارس السياسة قبل العرض.",
+        editorialGuard
+          ? "تقترح ولا تنشر: مخرجاتك تُعرض على محرر بشري يقرر، ويفحصها حارس السياسة قبل العرض."
+          : "تقترح ولا تنشر: مخرجاتك تُعرض على محرر بشري يقرر.",
         "",
         "نبرة العلم (قرار رئيس التحرير):",
         tone,
@@ -108,7 +110,8 @@ interface EditorialRunOptions {
  * فحص مقترح بالحارس — قواعد العنوان للعناوين، وقواعد النص للفقرات
  * (بلا قاعدة طول المتن)، والمتن الكامل بكل القواعد.
  */
-function guardCheck(text: string, as: "title" | "fragment" | "body"): AiSuggestion["guard"] {
+function guardCheck(text: string, as: "title" | "fragment" | "body", enabled: boolean): AiSuggestion["guard"] {
+  if (!enabled) return { ok: true, findings: [] };
   const report =
     as === "title"
       ? runPolicyGuard({ title: text })
@@ -166,12 +169,12 @@ function parseJsonObject(raw: string): Record<string, unknown> {
 
 async function complete(
   anthropic: Anthropic,
-  opts: { model: string; maxTokens: number; tone: string; user: string; signal?: AbortSignal },
+  opts: { model: string; maxTokens: number; tone: string; editorialGuard: boolean; user: string; signal?: AbortSignal },
 ): Promise<{ text: string; usage: Usage; stopReason: string | null }> {
   const response = await anthropic.messages.create({
     model: opts.model,
     max_tokens: opts.maxTokens,
-    system: systemBlocks(opts.tone),
+    system: systemBlocks(opts.tone, opts.editorialGuard),
     messages: [{ role: "user", content: opts.user }],
   }, { signal: opts.signal });
   const text = response.content.find((block) => block.type === "text")?.text ?? "";
@@ -214,6 +217,7 @@ async function runFullEdit(
       model: bodyModel,
       maxTokens: 8192,
       tone: settings.tone,
+      editorialGuard: settings.governance.editorialGuard,
       user: TOOL_PROMPTS.full_edit(clipped),
       signal: options.signal,
     }).then((result) => {
@@ -224,6 +228,7 @@ async function runFullEdit(
       model: packModel,
       maxTokens: 1024,
       tone: settings.tone,
+      editorialGuard: settings.governance.editorialGuard,
       user: FULL_EDIT_PACK_PROMPT(clipped),
       signal: options.signal,
     }).then((result) => {
@@ -268,14 +273,14 @@ async function runFullEdit(
   options.onFullEditProgress?.("guard_checking");
 
   const fullEdit: FullEditResult = {
-    title: { text: title, guard: guardCheck(title, "title") },
-    excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment") },
-    body: { text: bodyText, guard: guardCheck(bodyText, "body") },
+    title: { text: title, guard: guardCheck(title, "title", settings.governance.editorialGuard) },
+    excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment", settings.governance.editorialGuard) },
+    body: { text: bodyText, guard: guardCheck(bodyText, "body", settings.governance.editorialGuard) },
     seo: {
       seoTitle,
       seoDescription,
       keywords,
-      guard: guardCheck(`${seoTitle} ${seoDescription} ${keywords.join(" ")}`, "fragment"),
+      guard: guardCheck(`${seoTitle} ${seoDescription} ${keywords.join(" ")}`, "fragment", settings.governance.editorialGuard),
     },
     classify: {
       seriesSlug: pack.seriesSlug ?? null,
@@ -318,6 +323,7 @@ export async function runEditorialTool(
     model,
     maxTokens: tool === "proofread" ? 8192 : 2048,
     tone: settings.tone,
+    editorialGuard: settings.governance.editorialGuard,
     user: TOOL_PROMPTS[tool](input),
     signal: options.signal,
   });
@@ -371,7 +377,7 @@ export async function runEditorialTool(
         seoTitle,
         seoDescription,
         keywords: cleanKeywords,
-        guard: guardCheck(`${seoTitle} ${seoDescription} ${cleanKeywords.join(" ")}`, "fragment"),
+        guard: guardCheck(`${seoTitle} ${seoDescription} ${cleanKeywords.join(" ")}`, "fragment", settings.governance.editorialGuard),
       },
       usage,
     };
@@ -381,7 +387,7 @@ export async function runEditorialTool(
   return {
     suggestions: texts.map((text) => ({
       text,
-      guard: guardCheck(text, tool === "headlines" ? "title" : "fragment"),
+      guard: guardCheck(text, tool === "headlines" ? "title" : "fragment", settings.governance.editorialGuard),
     })),
     usage,
   };
