@@ -65,7 +65,7 @@ export function BriefListen({ lines, seconds }: { lines: string[]; seconds: numb
           <span className="bl-play">▶</span>
         )}
       </span>
-      <span className="bl-text">{speaking ? "إيقاف" : `استمع · ${seconds} ث`}</span>
+      <span className="bl-text">{speaking ? "إيقاف" : `استمع، ${seconds} ث`}</span>
     </button>
   );
 }

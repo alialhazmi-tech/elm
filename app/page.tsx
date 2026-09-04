@@ -7,6 +7,7 @@ import { VideoCard } from "@/app/_components/story-card";
 import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
 import { BriefListen } from "@/app/_components/home-brief-listen";
 import { HomeAskBand } from "@/app/_components/home-ask-band";
+import { SeriesSpectrum } from "@/app/_components/series-navigator";
 import { homeStream } from "@/lib/content/homeStream";
 import { relativeTimeAr } from "@/lib/format";
 import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
@@ -31,7 +32,7 @@ function Kick({ story }: { story: Story }) {
   return (
     <span className="kick" style={{ "--kc": series?.color } as React.CSSProperties}>
       {series?.name ?? sectionName(story.section)}
-      {series ? <span className="sect">· {sectionName(story.section)}</span> : null}
+      {series ? <span className="sect">{sectionName(story.section)}</span> : null}
     </span>
   );
 }
@@ -101,7 +102,7 @@ export default async function Home() {
         <div className="day-line" aria-label="تاريخ اليوم">
           <time dateTime={riyadhDateISO()}>
             {toLatinDigits(today.hijri)}
-            <span aria-hidden="true"> · </span>
+            <span aria-hidden="true">، </span>
             {toLatinDigits(today.gregorian)}
           </time>
           <span className="live">تغطية مستمرة</span>
@@ -110,7 +111,12 @@ export default async function Home() {
         {/* الصدارة + موجز العلم الذكي: لوحة ناعمة يمينًا وبطاقة الموجز يسارًا */}
         <div className="sh-top">
         {hero ? (
-          <section className="sh-lead" aria-label="قصة الصدارة" data-story-id={hero.id}>
+          <section
+            className="sh-lead"
+            aria-label="قصة الصدارة"
+            data-story-id={hero.id}
+            style={{ "--hc": seriesOf(hero)?.color } as React.CSSProperties}
+          >
             <div className="sh-lead-copy">
               <Kick story={hero} />
               <h1>
@@ -122,7 +128,7 @@ export default async function Home() {
                   {hero.series === "limatha" ? "اقرأ الإجابة" : "اقرأ المادة"}
                 </Link>
                 <span className="meta">
-                  قراءة {formatReadingMinutes(hero.readingMinutes)} · تحرير: فريق العلم
+                  قراءة {formatReadingMinutes(hero.readingMinutes)}، تحرير فريق العلم
                 </span>
               </div>
             </div>
@@ -144,7 +150,6 @@ export default async function Home() {
         {/* موجز العلم الذكي: خمسة عناوين مرقّمة مع سطري ثقة وشفافية */}
         {home.brief.length > 0 ? (
           <aside className="sh-brief" aria-labelledby="brief-title">
-            <i className="sh-brief-spectrum" aria-hidden="true" />
             <div className="sh-brief-head">
               <div className="sh-brief-title-row">
                 <h2 id="brief-title">
@@ -154,7 +159,7 @@ export default async function Home() {
               </div>
               {briefUpdated ? (
                 <span className="sh-brief-trust">
-                  تحديث {briefUpdated} · مُولّد من {toLatinDigits(String(home.briefFrom))} مادة منشورة في أرشيفنا
+                  تحديث {briefUpdated}، مُولّد من {toLatinDigits(String(home.briefFrom))} مادة منشورة في أرشيفنا
                 </span>
               ) : null}
             </div>
@@ -168,7 +173,7 @@ export default async function Home() {
                     <span className="kick" style={{ "--kc": item.color } as React.CSSProperties}>
                       {item.label}
                       {relativeTimeAr(item.publishedAt) ? (
-                        <span className="sect">· {relativeTimeAr(item.publishedAt)}</span>
+                        <span className="sect">{relativeTimeAr(item.publishedAt)}</span>
                       ) : null}
                     </span>
                     <h3><Link className="story-link" href={item.href}>{item.title}</Link></h3>
@@ -193,7 +198,7 @@ export default async function Home() {
                   {stream.pulse.todayCount > 0
                     ? `نُشرت ${toLatinDigits(String(stream.pulse.todayCount))} مادة خلال 24 ساعة`
                     : "آخر ما نُشر"}
-                  {stream.pulse.lastAt && relativeTimeAr(stream.pulse.lastAt) ? ` · آخرها ${relativeTimeAr(stream.pulse.lastAt)}` : ""}
+                  {stream.pulse.lastAt && relativeTimeAr(stream.pulse.lastAt) ? `، آخرها ${relativeTimeAr(stream.pulse.lastAt)}` : ""}
                 </span>
               </div>
               <div className="pulse-line" aria-hidden="true">
@@ -219,7 +224,7 @@ export default async function Home() {
             <div className="section-head">
               <h2>وراء الخبر</h2>
               <span className="sub">قراءة أهدأ للصورة الكاملة</span>
-              <Link className="more" href="/politics">الأرشيف ←</Link>
+              <Link className="more" href="/politics">الأرشيف</Link>
             </div>
             <div className="sh-context">
               {contextFeatured ? (
@@ -255,7 +260,7 @@ export default async function Home() {
                     <article className="sh-why">
                       <div className="body">
                         <span className="kick" style={{ "--kc": "#14a8d6" } as React.CSSProperties}>
-                          {home.question.kick || "لماذا"} <span className="sect">· سؤال الأسبوع</span>
+                          {home.question.kick || "لماذا"} <span className="sect">سؤال الأسبوع</span>
                         </span>
                         <h3><Link className="story-link" href={home.question.href}>{home.question.title}</Link></h3>
                       </div>
@@ -283,7 +288,7 @@ export default async function Home() {
                     <span className="meta">
                       {panel.todayCount > 0 ? `${toLatinDigits(String(panel.todayCount))} جديدة خلال 24 ساعة` : "أحدث ما في القسم"}
                     </span>
-                    <Link className="more" href={`/${panel.slug}`} aria-label={`كل مواد ${panel.name}`}>كل القسم ←</Link>
+                    <Link className="more" href={`/${panel.slug}`} aria-label={`كل مواد ${panel.name}`}>كل القسم</Link>
                   </div>
                   <div className="panel-body">
                     {panel.lead ? (
@@ -323,7 +328,7 @@ export default async function Home() {
             <div className="section-head">
               <h2>إنفوجرافيك</h2>
               <span className="sub">البيانات مرسومة</span>
-              <Link className="more" href="/infographics">كل الإنفوجرافيك ←</Link>
+              <Link className="more" href="/infographics">كل الإنفوجرافيك</Link>
             </div>
             <InfographicGallery
               items={stream.infographics.map((story) => ({
@@ -350,7 +355,7 @@ export default async function Home() {
                   </div>
                   <p>{stat.label}</p>
                   <Link className="src" href={stat.href ?? "/infographics"}>
-                    المصدر <span aria-hidden="true">←</span>
+                    المصدر
                   </Link>
                 </div>
               ))}
@@ -363,7 +368,7 @@ export default async function Home() {
           <div className="section-head">
             <h2>السلاسل</h2>
             <span className="sub">ثماني طرق لفهم الخبر</span>
-            <Link className="more" href="/series">كل السلاسل ←</Link>
+            <Link className="more" href="/series">كل السلاسل</Link>
           </div>
           <div className="sh-series">
             {home.series.map((series) => {
@@ -394,7 +399,7 @@ export default async function Home() {
             <div className="home-media">
               <div className="section-head">
                 <h2>مرئي وصوتي</h2>
-                <Link className="more" href="/videos">كل الوسائط ←</Link>
+                <Link className="more" href="/videos">كل الوسائط</Link>
               </div>
               <section className="media-grid" aria-label="مرئي وصوتي">
                 {home.videos.slice(0, 2).map((story) => (
@@ -425,6 +430,7 @@ export default async function Home() {
         </div>
       </main>
 
+      <SeriesSpectrum series={home.series} className="home-spectrum" />
       <SiteFooter />
 
       <script

@@ -25,9 +25,10 @@ const textFont = IBM_Plex_Sans_Arabic({
   display: "swap",
 });
 
+// الكوفي: الشعار بوزن 900، وعناوين الرئيسية الناعمة v3 بوزني 700 و800 (home.css).
 const logoFont = Noto_Kufi_Arabic({
   subsets: ["arabic", "latin"],
-  weight: ["900"],
+  weight: ["700", "800", "900"],
   variable: "--f-logo",
   display: "swap",
 });

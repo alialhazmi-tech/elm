@@ -171,7 +171,9 @@ export async function SiteHeader({
         </div>
       </header>
       <BreakingBar />
-      {/* خارج الهيدر حتى يلتصق وحده عند التمرير ولا يُسحب معه */}
+      {/* خارج الهيدر حتى يلتصق وحده عند التمرير ولا يُسحب معه.
+          على الرئيسية تُغني عنه مسطرة السلاسل التي تبقى ظاهرة على الجوال. */}
+      {rail ? null : (
       <nav className="sx-switch top-series-mobile" aria-label="السلاسل">
         <Link href="/series" className="sx-all">كل السلاسل</Link>
         {SERIES.map((item) => (
@@ -185,6 +187,7 @@ export async function SiteHeader({
           </Link>
         ))}
       </nav>
+      )}
       {rail ? <SeriesRail series={SERIES.filter((item) => !item.archived).slice(0, 8)} /> : null}
     </>
   );

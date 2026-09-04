@@ -140,10 +140,14 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--surface);
-  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 0;
   border-bottom: 1px solid var(--line);
 }
+/* خط الطيف: ثماني شرائح بلون كل سلسلة — علامة الهوية */
+.series-spectrum { display: grid; grid-template-columns: repeat(8, 1fr); height: 4px; }
+.series-spectrum i { display: block; background: var(--c); }
 .series-rail-inner {
   max-width: 1240px; margin: 0 auto; padding: 0 24px;
   display: flex; align-items: center; gap: 2px;
@@ -155,25 +159,33 @@
   padding-inline-end: 14px; border-inline-end: 1px solid var(--line);
 }
 .series-rail .series-lens {
-  flex: none; display: flex; align-items: center; gap: 7px;
-  padding: 11px 11px; font-size: 13.5px; font-weight: 500; color: var(--ink-2);
+  flex: none; display: flex; align-items: center; gap: 8px;
+  padding: 12px 12px; font-family: var(--f-logo, var(--font-display)); font-size: 14px; font-weight: 700; color: var(--ink-2);
   border-bottom: 2px solid transparent; margin-bottom: -1px;
   text-decoration: none;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
-.series-rail .series-lens i { width: 6px; height: 6px; border-radius: 50%; background: var(--sc); flex: none; }
+.series-rail .series-lens i { width: 8px; height: 8px; border-radius: 50%; background: var(--sc); flex: none; }
 .series-rail .series-lens:hover,
 .series-rail .series-lens:focus-visible { color: var(--ink); border-bottom-color: var(--sc); }
 .series-rail-all {
-  flex: none; margin-inline-start: auto; color: var(--navy); font-weight: 700; font-size: 12.5px;
-  border-inline-start: 1px solid var(--line); padding: 11px 0; padding-inline-start: 16px;
+  flex: none; margin-inline-start: auto; color: var(--navy); font-weight: 600; font-size: 13px;
+  border-inline-start: 1px solid var(--line); padding: 12px 0; padding-inline-start: 16px;
   text-decoration: none;
 }
 .series-rail-all:hover { color: var(--navy-deep); }
 
+/* الجوال: المسطرة لا تختفي — رقائق ملوّنة قابلة للتمرير تلتصق تحت الشعار */
 @media (max-width: 640px) {
-  .series-rail { display: none; }
-  .topbar.has-rail { border-bottom: 1px solid var(--line); }
+  .series-rail-label, .series-rail-all { display: none; }
+  .series-rail-inner { padding: 9px 14px 10px; gap: 7px; }
+  .series-rail .series-lens {
+    padding: 7px 13px 7px 11px; border-radius: 999px; border-bottom: 0; margin: 0; font-size: 13.5px;
+    background: color-mix(in srgb, var(--sc) 12%, var(--surface));
+    color: color-mix(in srgb, var(--sc) 68%, var(--ink));
+  }
+  .series-rail .series-lens i { width: 7px; height: 7px; }
+  .series-rail .series-lens:hover, .series-rail .series-lens:focus-visible { background: color-mix(in srgb, var(--sc) 22%, var(--surface)); color: var(--ink); }
   .breaking-inner { padding-inline: 16px; }
   .breaking-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 }
