@@ -44,12 +44,14 @@ struct AccountScreen: View {
                         color: SeriesPalette.color(for: "absat"),
                         isOn: appearance.personalizationEnabled
                     ) {
-                        appearance.personalizationEnabled.toggle()
+                        Task { await interests.setPersonalization(!appearance.personalizationEnabled, appearance: appearance) }
                     }
                 }
 
+                if let error = interests.syncError { Text(error).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2).padding(.top, 12) }
+
                 group("العضوية") {
-                    linkRow(label: "خطة الاشتراك", value: member.isSignedIn ? "سنوية" : "زائر", color: SeriesPalette.color(for: "bel-tarikh")) {
+                    linkRow(label: "العضوية", value: member.isSignedIn ? "حساب مسجل" : "زائر", color: SeriesPalette.color(for: "bel-tarikh")) {
                         MembershipScreen()
                     }
                     Divider().overlay(ElmTheme.line)
@@ -241,6 +243,10 @@ struct AccountScreen: View {
 
 /// سياسة مختصرة داخل التطبيق حتى لا يعتمد مسار أساسي على صفحة ويب غير منشورة.
 struct PrivacyScreen: View {
+    @Environment(MemberSessionStore.self) private var member
+    @State private var confirmClear = false
+    @State private var busy = false
+    @State private var message: String?
     var body: some View {
         ElmScreen(title: "الخصوصية", showBack: true) {
             VStack(alignment: .leading, spacing: 14) {
@@ -248,13 +254,32 @@ struct PrivacyScreen: View {
                     .font(ElmFonts.display(.title, weight: .heavy))
                     .foregroundStyle(ElmTheme.ink)
 
-                item(icon: "iphone", title: "اختياراتك على جهازك",
-                     text: "الاهتمامات والمحفوظات وإعدادات المظهر تُحفظ محليًا على هذا الجهاز.")
+                item(icon: "iphone", title: "اختياراتك وحسابك",
+                     text: "للزائر تُحفظ الاختيارات على الجهاز. عند الدخول تتزامن المحفوظات والاهتمامات وإعداد التخصيص مع حسابك، ويبقى المظهر محليًا.")
                 item(icon: "person.crop.circle.badge.checkmark", title: "الحساب مستقل",
                      text: "بيانات عضويتك تُستخدم للدخول ومزامنة تجربتك، ولا تمنحك صلاحيات تحريرية.")
                 item(icon: "slider.horizontal.3", title: "أنت المتحكم",
                      text: "يمكنك إيقاف التخصيص ومسح اهتماماتك ومغادرة حسابك في أي وقت.")
 
+                if member.isSignedIn {
+                    Button("مسح بيانات القراءة المستنتجة في حسابي", role: .destructive) { confirmClear = true }
+                        .disabled(busy)
+                        .confirmationDialog("مسح بيانات القراءة؟ تبقى الاهتمامات التي اخترتها والمحـفوظات والإعجابات.", isPresented: $confirmClear) {
+                            Button("مسح البيانات", role: .destructive) {
+                                guard let id = member.user?.id else { return }
+                                busy = true
+                                Task {
+                                    do {
+                                        try await APIClient.updateProfile(memberId: id, action: "clear-behavior")
+                                        if member.user?.id == id { message = "مُسحت بيانات القراءة المستنتجة في حسابك." }
+                                    } catch { if member.user?.id == id { message = "تعذر المسح. تحقق من الاتصال وحاول مجددًا." } }
+                                    busy = false
+                                }
+                            }
+                            Button("إلغاء", role: .cancel) {}
+                        }
+                }
+                if let message { Text(message).font(ElmFonts.text(.caption)) }
                 Text("هذه نسخة مختصرة داخل التطبيق. تُضاف السياسة القانونية الكاملة قبل النشر في المتجر.")
                     .font(ElmFonts.text(.caption))
                     .foregroundStyle(ElmTheme.ink3)

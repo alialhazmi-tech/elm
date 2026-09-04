@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { generateImages } from "@/lib/ai/images";
+import { imageExtension } from "@/lib/ai/openrouter-images";
+import { aiProvider } from "@/lib/ai/provider-config";
 import { type InfographicData } from "@/lib/ai/infographic-types";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, logUsage } from "@/lib/ai/usage";
@@ -26,19 +28,24 @@ export async function POST(request: Request) {
   }
 
   const settings = await loadAiSettings();
+  if (!settings.tools.images) return NextResponse.json({ error: "توليد الصور معطل من إعدادات الذكاء." }, { status: 403 });
   const gate = await budgetGate(settings.caps);
   if (!gate.ok) {
     return NextResponse.json({ error: gate.reason }, { status: 429 });
   }
 
   const infographic = { ...input.infographic };
-  const provider = input.provider || "auto";
+  const provider = aiProvider() === "openrouter" ? "openrouter" : input.provider || "auto";
   const model = settings.models.image;
 
+  let attemptedImages = 0;
+  let completedImages = 0;
+  const warnings: string[] = [];
   try {
     // 1. توليد صورة الخلفية للرأس (Hero Background)
     if (infographic.hero?.bgPrompt && !infographic.hero.bgImageUrl) {
       try {
+        attemptedImages++;
         const heroImages = await generateImages({
           prompt: infographic.hero.bgPrompt,
           style: "illustrative",
@@ -46,10 +53,11 @@ export async function POST(request: Request) {
           model,
           provider,
           count: 1,
+          signal: request.signal,
         });
         if (heroImages[0]) {
           const id = crypto.randomUUID();
-          const ext = heroImages[0].mime.includes("jpeg") ? "jpg" : "png";
+          const ext = imageExtension(heroImages[0].mime);
           const bytes = Buffer.from(heroImages[0].base64, "base64");
           await putStoredImage({ filename: `${id}.${ext}`, body: bytes, contentType: heroImages[0].mime });
           await addMedia(
@@ -69,9 +77,10 @@ export async function POST(request: Request) {
             session.username,
           );
           infographic.hero.bgImageUrl = `/uploads/${id}.${ext}`;
+          completedImages++;
         }
       } catch (err) {
-        console.error("Failed to generate hero image:", err);
+        warnings.push(err instanceof Error ? err.message : "تعذر توليد خلفية المادة.");
       }
     }
 
@@ -82,6 +91,7 @@ export async function POST(request: Request) {
         const item = updatedItems[i];
         if (item.imagePrompt && !item.imageUrl) {
           try {
+            attemptedImages++;
             const itemImages = await generateImages({
               prompt: item.imagePrompt,
               style: "isolated_3d",
@@ -89,10 +99,11 @@ export async function POST(request: Request) {
               model,
               provider,
               count: 1,
+              signal: request.signal,
             });
             if (itemImages[0]) {
               const id = crypto.randomUUID();
-              const ext = itemImages[0].mime.includes("jpeg") ? "jpg" : "png";
+              const ext = imageExtension(itemImages[0].mime);
               const bytes = Buffer.from(itemImages[0].base64, "base64");
               await putStoredImage({ filename: `${id}.${ext}`, body: bytes, contentType: itemImages[0].mime });
               await addMedia(
@@ -112,9 +123,10 @@ export async function POST(request: Request) {
                 session.username,
               );
               updatedItems[i] = { ...item, imageUrl: `/uploads/${id}.${ext}` };
+              completedImages++;
             }
           } catch (err) {
-            console.error(`Failed to generate image for ${item.name}:`, err);
+            warnings.push(err instanceof Error ? err.message : "تعذر توليد صورة من التصميم.");
           }
         }
       }
@@ -123,17 +135,19 @@ export async function POST(request: Request) {
 
     // تسجيل الاستخدام والتدقيق
     await logUsage({
+      reservationId: gate.reservationId,
       tool: "infographic-images",
-      model: provider,
+      model: `${provider}:estimated`,
       inputTokens: 0,
       outputTokens: 0,
-      costCents: 15,
+      costCents: attemptedImages * 100, // تقدير حجز محافظ، لا فاتورة مزود
       actor: session.username,
     });
 
     await audit(session.username, "ai:infographic-images", undefined, `${infographic.title} · ${provider}`);
 
-    return NextResponse.json({ ok: true, infographic });
+    if (attemptedImages > 0 && completedImages === 0) return NextResponse.json({ error: warnings[0] ?? "لم يكتمل توليد أي صورة." }, { status: 502 });
+    return NextResponse.json({ ok: true, infographic, warnings });
   } catch (error) {
     const message = error instanceof Error ? error.message : "تعذر توليد صور الإنفوجرافيك.";
     return NextResponse.json({ error: message }, { status: 500 });

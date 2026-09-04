@@ -1,7 +1,10 @@
 /**
- * توليد صور العلم — دعم مزودي التوليد (Google Gemini/Imagen و OpenAI DALL-E 3).
+ * توليد صور العلم — OpenRouter أو المزودون المباشرون.
  * كل صورة توسم «مولّدة بالذكاء» وتدخل المكتبة موثقة الحقوق.
  */
+
+import { aiProvider } from "./provider-config.ts";
+import { generateViaOpenRouter } from "./openrouter-images.ts";
 
 const STYLE_PROMPTS: Record<string, string> = {
   real:
@@ -24,6 +27,8 @@ const SIZE_RATIOS: Record<string, string> = { cover: "16:9", square: "1:1", port
 export interface GeneratedImage {
   base64: string;
   mime: string;
+  /** كلفة المزود بالسنت إن أعادها؛ موزعة مرة واحدة على صور الطلب. */
+  costCents?: number;
 }
 
 interface InteractionImage {
@@ -141,8 +146,9 @@ export async function generateImages(input: {
   style: string;
   size: string;
   model: string;
-  provider?: "gemini" | "openai" | "auto";
+  provider?: "gemini" | "openai" | "openrouter" | "auto";
   count?: number;
+  signal?: AbortSignal;
 }): Promise<GeneratedImage[]> {
   const geminiKey = process.env.GEMINI_API_KEY;
   const openAiKey = process.env.OPENAI_API_KEY;
@@ -150,6 +156,10 @@ export async function generateImages(input: {
   const stylePrompt = STYLE_PROMPTS[input.style] ?? STYLE_PROMPTS.illustrative;
   const fullPrompt = `${input.prompt}\n\nStyle: ${stylePrompt}`;
   const count = Math.min(2, Math.max(1, input.count ?? 1));
+
+  if (aiProvider() === "openrouter" || input.provider === "openrouter") {
+    return generateViaOpenRouter({ prompt: fullPrompt, size: input.size, model: input.model, count, signal: input.signal });
+  }
 
   // إذا طلب OpenAI أو كان مفتاح OpenAI متوفراً بمفرده
   if ((input.provider === "openai" || (!geminiKey && openAiKey)) && openAiKey) {

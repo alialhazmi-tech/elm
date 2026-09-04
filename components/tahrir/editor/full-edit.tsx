@@ -41,13 +41,13 @@ export function FullEditBar({ onStart }: { onStart: () => void }) {
     <div className="flex flex-wrap items-center gap-3 border-y bg-muted/30 px-5 py-2.5">
       <SparklesIcon className="size-4 shrink-0 text-primary" />
       <span className="grid min-w-0 flex-1 leading-tight">
-        <b className="text-[12.5px]">تحرير ذكي شامل</b>
+        <b className="text-[12.5px]">توليد ذكي شامل</b>
         <span className="text-[11px] text-muted-foreground">
           يحرر المتن ويقترح العنوان والموجز وSEO والتصنيف — ثم يعرضه عليك قبل التطبيق.
         </span>
       </span>
       <Button size="sm" variant="outline" onClick={onStart}>
-        ابدأ التحليل
+        توليد ذكي شامل
       </Button>
     </div>
   );
@@ -134,7 +134,7 @@ export function FullEditProposal({
       </div>
       {stale ? (
         <div role="alert" className="rounded-md bg-(--t-warn-bg) px-3 py-2 text-xs text-(--t-warn)">
-          تغيّرت المسودة أثناء التحليل. أعد التحليل على النسخة الحالية لتجنب استبدال تعديلاتك الجديدة.
+          تغيّرت المسودة أثناء التوليد. أعد التوليد على النسخة الحالية لتجنب استبدال تعديلاتك الجديدة.
         </div>
       ) : null}
       {row("العنوان", <b>{fullEdit.title.text}</b>)}
@@ -149,7 +149,7 @@ export function FullEditProposal({
         </Button>
         {stale ? (
           <Button size="sm" variant="outline" onClick={onRerun}>
-            أعد التحليل
+            أعد التوليد الذكي الشامل
           </Button>
         ) : null}
         <Button size="sm" variant="ghost" onClick={onDismiss}>

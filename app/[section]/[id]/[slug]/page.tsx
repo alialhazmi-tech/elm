@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { readingOutline } from "@/lib/content/reading-outline";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
@@ -25,6 +26,7 @@ import { fetchEpisodes, formatPodcastDuration, podcastShowFor, presentEpisode } 
 import { PodcastPlayer } from "@/app/_components/podcast-player";
 import { PodcastHeroPlay } from "@/app/_components/podcast-hero";
 import { ArticleInsights } from "@/app/_components/article-insights";
+import { ArticleKeywords } from "@/app/_components/article-keywords";
 import "@/app/_components/podcast-player.css";
 import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 
@@ -145,6 +147,7 @@ export default async function ArticlePage({ params }: Params) {
               slides={slides}
             />
           )}
+          <div className="wrap"><ArticleKeywords keywords={story.keywords} /></div>
         </main>
         <SiteFooter />
         <script
@@ -179,12 +182,13 @@ export default async function ArticlePage({ params }: Params) {
   const fullExcerpt = formatArticleDek(story.excerpt);
   // مواد الفيديو: المشغّل يحل محل الصورة البارزة في الرأس (الصورة تبقى للبطاقات والمشاركة).
   const videoEmbed = story.format === "videos" ? videoEmbedUrl(story.videoUrl) : null;
-  const showBrief = fullExcerpt.length > readingBrief.length + 80;
+  const showBrief = Boolean(story.body?.trim()) && fullExcerpt.length > readingBrief.length + 80;
   // الجانب: التالي في السلسلة نفسها (حتى 3)، والذيل: مواد من سلاسل أخرى.
   const sameSeries = series ? related.filter((item) => item.series === series.slug).slice(0, 3) : [];
   const otherSeries = related.filter((item) => !sameSeries.includes(item));
   const joinHref = `/join?next=${encodeURIComponent(storyHref(story))}`;
 
+  const reading = readingOutline(story.body && looksLikeHtml(story.body) ? sanitizeBodyHtml(story.body) : "");
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -277,7 +281,7 @@ export default async function ArticlePage({ params }: Params) {
                       </span>
                     </div>
                   </div>
-                  <ArticleSaveButton storyId={story.id} joinHref={joinHref} />
+                  <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
                 </div>
               </div>
               {videoEmbed ? (
@@ -317,23 +321,24 @@ export default async function ArticlePage({ params }: Params) {
             <div className="sa-layout">
               <div className="sa-body">
                 {showBrief ? (
-                  <aside className="article-brief" aria-labelledby="article-brief-label">
-                    <p id="article-brief-label" className="article-brief-label">قبل القراءة — الخلاصة في 30 ثانية</p>
+                  <details className="article-brief">
+                    <summary id="article-brief-label" className="article-brief-label">موجز المادة</summary>
                     <p className="article-brief-text">{fullExcerpt}</p>
                     <p className="article-brief-foot">من موجز المادة المنشورة</p>
-                  </aside>
+                  </details>
                 ) : null}
 
+                {reading.headings.length >= 2 && <nav className="article-outline" aria-label="في هذه المادة"><strong>في هذه المادة</strong><ul>{reading.headings.map(heading => <li key={heading.id}><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ul></nav>}
                 <div className="article-body" id="article-body">
                   {story.body && looksLikeHtml(story.body) ? (
                     // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
-                    <div dangerouslySetInnerHTML={{ __html: sanitizeBodyHtml(story.body) }} />
+                    <div dangerouslySetInnerHTML={{ __html: reading.body }} />
                   ) : story.body ? (
                     story.body
                       .split(/\n{2,}/)
                       .filter((paragraph) => paragraph.trim())
                       .map((paragraph, index) => <p key={index}>{paragraph.trim()}</p>)
-                  ) : story.excerpt ? null : (
+                  ) : story.excerpt ? <p>{fullExcerpt}</p> : (
                     <p className="article-placeholder">متن هذه المادة غير متاح الآن.</p>
                   )}
 
@@ -351,6 +356,8 @@ export default async function ArticlePage({ params }: Params) {
                   ) : null}
                 </div>
 
+                {reading.links.length > 0 && <aside className="article-sources" aria-label="روابط وردت في المادة"><h2>روابط وردت في المادة</h2><ul>{reading.links.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a></li>)}</ul></aside>}
+                <ArticleKeywords keywords={story.keywords} />
                 <div className="sa-poll">
                   <ArticleClosingPoll
                     storyId={story.id}
@@ -422,6 +429,7 @@ export default async function ArticlePage({ params }: Params) {
               </section>
             )
           ) : null}
+          {podcastShow ? <ArticleKeywords keywords={story.keywords} /> : null}
         </article>
 
         <div className="sa-related">

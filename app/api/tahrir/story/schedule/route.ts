@@ -1,3 +1,4 @@
+import { assertExpectedVersion, writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
@@ -10,13 +11,16 @@ import { getStory, guardMediaFor, scheduleStory } from "@/lib/tahrir/service";
 
 /** جدولة النشر — للمعتمدين؛ الحارس يفحص عند الجدولة وسيفحص ثانية لحظة الموعد. */
 export async function POST(request: Request) {
+  try { return await transition(request); } catch (error) { return writeError(error); }
+}
+async function transition(request: Request) {
   const gate = await requirePermission("story.schedule", "الجدولة من صلاحية المعتمدين.");
   if (!gate.ok) return gate.response;
   const session = gate.actor;
 
-  const { id, scheduledAt } = (await request.json().catch(() => ({}))) as {
+  const { id, scheduledAt, expectedVersion } = (await request.json().catch(() => ({}))) as {
     id?: string;
-    scheduledAt?: string;
+    scheduledAt?: string; expectedVersion?: number;
   };
 
   const when = scheduledAt ? new Date(scheduledAt) : null;
@@ -26,6 +30,7 @@ export async function POST(request: Request) {
 
   const story = id ? await getStory(id) : null;
   if (!story) return NextResponse.json({ error: "المادة غير موجودة." }, { status: 404 });
+  assertExpectedVersion(story.version, expectedVersion);
 
   const [settings, media] = await Promise.all([loadAiSettings(), guardMediaFor(story.image)]);
   const report = runConfiguredPolicyGuard({
@@ -46,8 +51,8 @@ export async function POST(request: Request) {
     );
   }
 
-  await scheduleStory(story.id, when.toISOString(), session.username);
+  const result = await scheduleStory(story, when.toISOString(), session.username);
   // إن كانت منشورة سابقًا يجب أن تختفي من الموقع فورًا، لا بعد 300 ثانية.
-  revalidatePublicStory({ section: story.section, id: story.id, slug: story.slug });
-  return NextResponse.json({ ok: true });
+  revalidatePublicStory(story);
+  return NextResponse.json({ ok: true, ...result });
 }

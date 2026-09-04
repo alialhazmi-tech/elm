@@ -94,20 +94,20 @@ test("رابط الوسائط يُشتق من أصل الطلب لا من نطا
   );
 });
 
-test("عقد الموبايل يعيد روابط عبر محسّن الصور لا الأصول الكاملة", async () => {
+test("عقد الموبايل يعيد أصولًا قابلة للخدمة عندما يكون التحسين معطلًا", async () => {
   const { optimizedMedia, MEDIA_WIDTH } = await import("../lib/mobile/origin.ts");
   const origin = "https://elm-production-5035.up.railway.app";
 
   // المحلية: نسبية داخل url= حتى تطابق localPatterns، بمقاس البطاقة الافتراضي
   assert.equal(
     optimizedMedia("/uploads/a.jpg", origin),
-    `${origin}/_next/image?url=%2Fuploads%2Fa.jpg&w=${MEDIA_WIDTH.card}&q=75`,
+    `${origin}/uploads/a.jpg`,
   );
 
   // ووردبريس المسموحة في remotePatterns: تُغلّف كاملة بالمقاس المطلوب
   assert.equal(
     optimizedMedia("https://dash.alelm.net/wp-content/x.webp", origin, MEDIA_WIDTH.full),
-    `${origin}/_next/image?url=${encodeURIComponent("https://dash.alelm.net/wp-content/x.webp")}&w=${MEDIA_WIDTH.full}&q=75`,
+    "https://dash.alelm.net/wp-content/x.webp",
   );
 
   // خارج القائمة المسموحة: يمرّ كما هو بدل رابط محسّن سيرد 400

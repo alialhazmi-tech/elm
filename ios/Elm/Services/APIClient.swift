@@ -9,6 +9,49 @@ enum APIClientError: Error {
 enum APIClient {
     private static let decoder = JSONDecoder()
 
+    struct MemberProfile: Decodable {
+        let memberId: String
+        let interestIds: [String]
+        let personalizationEnabled: Bool
+    }
+    static func fetchProfile() async throws -> MemberProfile {
+        try await get(URLConstants.productionAPI.appending(path: "api/me/profile"), timeout: 12)
+    }
+    static func updateProfile(memberId: String, action: String, interests: [String]? = nil, enabled: Bool? = nil) async throws {
+        var body: [String: Any] = ["expectedMemberId": memberId, "action": action]
+        if let interests { body["interestIds"] = interests }
+        if let enabled { body["enabled"] = enabled }
+        var request = URLRequest(url: URLConstants.productionAPI.appending(path: "api/me/profile"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (_, response) = try await session.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else { throw APIClientError.badStatus(status) }
+    }
+
+    struct SavedPage: Decodable {
+        let memberId: String
+        let items: [StoryCard]
+        let nextOffset: Int?
+    }
+
+    static func fetchSaved(offset: Int) async throws -> SavedPage {
+        var url = URLComponents(url: URLConstants.productionAPI.appending(path: "api/me/saved"), resolvingAgainstBaseURL: false)!
+        url.queryItems = [URLQueryItem(name: "offset", value: String(offset))]
+        return try await get(url.url!, timeout: 12)
+    }
+
+    static func setSaved(storyId: String, saved: Bool, memberId: String) async throws {
+        var request = URLRequest(url: URLConstants.productionAPI.appending(path: "api/me/saved"))
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["storyId": storyId, "saved": saved, "expectedMemberId": memberId])
+        let (_, response) = try await session.data(for: request)
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else { throw APIClientError.badStatus(status) }
+    }
+
     static func fetchHome() async throws -> (MobileHomePayload, Data) {
         var lastError: Error = APIClientError.empty
 

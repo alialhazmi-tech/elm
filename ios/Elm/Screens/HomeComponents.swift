@@ -557,7 +557,7 @@ struct MostReadList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHead(title: "الأكثر قراءة", subtitle: "مواد أخرى تستحق الانتباه")
+            SectionHead(title: "مختارات من الأرشيف", subtitle: "مواد أخرى تستحق الانتباه")
 
             VStack(spacing: 0) {
                 ForEach(Array(stories.prefix(5).enumerated()), id: \.element.id) { index, story in

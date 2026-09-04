@@ -1,16 +1,18 @@
 /**
- * «محرر العلم» — أدوات التحرير الذكية فوق Claude (SDK الرسمي).
+ * «محرر العلم» — أدوات التحرير عبر Anthropic أو OpenRouter بواجهة Messages.
  *
  * الحوكمة كودًا، لا وعودًا:
  * 1) الدستور التحريري + نبرة العلم يُحقنان في كل استدعاء.
  * 2) مخرجاته تُفحص بحارس السياسة على الخادم حين يكون مفعّلًا من إعدادات النظام.
- * 3) المفتاح من ANTHROPIC_API_KEY حصرًا — لا سقوط صامت لأي اعتماد آخر.
+ * 3) مفتاح المزود المختار من أسرار التشغيل — لا سقوط صامت إلى مزود آخر.
  */
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-import Anthropic from "@anthropic-ai/sdk";
+import type Anthropic from "@anthropic-ai/sdk";
+import { textClient as client } from "./text-client";
+import { missingTextKeyMessage } from "./provider-config";
 
 import { runPolicyGuard } from "@/lib/policy";
 import type { Finding } from "@/lib/policy/types";
@@ -30,12 +32,6 @@ export function constitution(): string {
     constitutionCache = "";
   }
   return constitutionCache;
-}
-
-function client(): Anthropic | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  // صراحةً بلا سقوط لملفات اعتماد الجهاز — مفتاح المنصة أو لا شيء.
-  return apiKey ? new Anthropic({ apiKey }) : null;
 }
 
 type Usage = { model: string; inputTokens: number; outputTokens: number };
@@ -311,7 +307,7 @@ export async function runEditorialTool(
 ): Promise<AiResult> {
   const anthropic = client();
   if (!anthropic) {
-    throw new Error("مفتاح Anthropic غير مضبوط — أضف ANTHROPIC_API_KEY ثم أعد التشغيل.");
+    throw new Error(missingTextKeyMessage());
   }
 
   if (tool === "full_edit") {

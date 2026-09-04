@@ -1,5 +1,5 @@
-import { desc, eq } from "drizzle-orm";
-import { memberLikes, memberStoryStats, newsletterSubscribers } from "@/db/schema";
+import { desc, eq, sql } from "drizzle-orm";
+import { memberSavedStories, memberStoryStats, newsletterSubscribers } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { seedContentProvider } from "@/lib/content/provider";
 import { type Story } from "@/lib/content/types";
@@ -66,28 +66,22 @@ export async function getMemberAccountData(userId: string, userEmail: string, us
     };
   }
 
-  // 1. جلب الإعجابات / المحفوظات
-  const likesRows = await db
+  // 1. جلب المحفوظات المستقلة عن الإعجابات
+  const savedRows = await db
     .select({
-      storyId: memberLikes.storyId,
-      createdAt: memberLikes.createdAt,
+      storyId: memberSavedStories.storyId,
+      createdAt: memberSavedStories.createdAt,
     })
-    .from(memberLikes)
-    .where(eq(memberLikes.memberId, userId))
-    .orderBy(desc(memberLikes.createdAt))
+    .from(memberSavedStories)
+    .where(eq(memberSavedStories.memberId, userId))
+    .orderBy(desc(memberSavedStories.createdAt))
     .limit(20);
 
   // حل تفاصيل المواد المحفوظة
-  const savedStories: MemberSavedStory[] = [];
-  for (const row of likesRows) {
+  const savedStories = (await Promise.all(savedRows.map(async row => {
     const story = await seedContentProvider.getStory(row.storyId);
-    if (story) {
-      savedStories.push({
-        story,
-        savedAt: row.createdAt,
-      });
-    }
-  }
+    return story ? { story, savedAt: row.createdAt } : null;
+  }))).filter((item): item is MemberSavedStory => item !== null);
 
   // 2. إحصاءات وسجل القراءة
   const statsRows = await db
@@ -97,13 +91,9 @@ export async function getMemberAccountData(userId: string, userEmail: string, us
     .orderBy(desc(memberStoryStats.lastVisitAt))
     .limit(20);
 
-  let totalActiveMs = 0;
-  let totalAi = 0;
   const recentHistory: MemberHistoryItem[] = [];
 
   for (const row of statsRows) {
-    totalActiveMs += row.activeMs ?? 0;
-    totalAi += row.usedAi ?? 0;
     if (recentHistory.length < 5) {
       const story = await seedContentProvider.getStory(row.storyId);
       if (story) {
@@ -132,12 +122,11 @@ export async function getMemberAccountData(userId: string, userEmail: string, us
   // 4. ترشيحات «لك» الحصرية
   const recommendedStories = await forYouForMember(userId, 3).catch(() => []);
 
-  const stats: MemberAccountStats = {
-    articlesRead: statsRows.length,
-    activeMinutes: Math.round(totalActiveMs / 60000),
-    savedCount: likesRows.length,
-    aiInteractions: totalAi,
-  };
+  const [[totals], [saves]] = await Promise.all([
+    db.select({ read: sql<number>`count(*) filter (where ${memberStoryStats.maxProgress} >= 90)::int`, minutes: sql<number>`coalesce(sum(${memberStoryStats.activeMs}),0) / 60000`, ai: sql<number>`coalesce(sum(${memberStoryStats.usedAi}),0)::int` }).from(memberStoryStats).where(eq(memberStoryStats.memberId, userId)),
+    db.select({ count: sql<number>`count(*)::int` }).from(memberSavedStories).where(eq(memberSavedStories.memberId, userId)),
+  ]);
+  const stats: MemberAccountStats = { articlesRead: Number(totals.read), activeMinutes: Math.round(Number(totals.minutes)), savedCount: Number(saves.count), aiInteractions: Number(totals.ai) };
 
   return {
     user: {

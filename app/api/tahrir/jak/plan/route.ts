@@ -50,6 +50,7 @@ export async function POST(request: Request) {
 
     const cents = costCents(usage.model, usage.inputTokens, usage.outputTokens);
     await logUsage({
+      reservationId: gate.reservationId,
       tool: "jak_plan",
       model: usage.model,
       inputTokens: usage.inputTokens,

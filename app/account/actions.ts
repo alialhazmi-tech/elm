@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { memberAuth } from "@/lib/membership/auth";
 import { clearBehavioralData, setPersonalizationEnabled } from "@/lib/personalization/privacy";
-import { setLiked } from "@/lib/personalization/likes";
+import { setSaved } from "@/lib/personalization/saved";
 import { newsletterSubscribers } from "@/db/schema";
 import { getDb } from "@/lib/db";
 
@@ -57,7 +57,7 @@ export async function removeSavedStory(formData: FormData) {
   if (!data?.user) redirect("/join");
   const storyId = String(formData.get("storyId") ?? "");
   if (storyId) {
-    await setLiked(data.user.id, storyId, false);
+    await setSaved(data.user.id, storyId, false);
   }
   redirect("/account");
 }

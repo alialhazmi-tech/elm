@@ -4,7 +4,6 @@ import "./globals.css";
 import "./editorial-v2.css";
 import "./soft.css";
 import "./header.css";
-import "./home.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 
 // العناوين بـ Alexandria، والنصوص بـ IBM Plex Sans Arabic،

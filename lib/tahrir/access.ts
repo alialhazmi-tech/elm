@@ -91,7 +91,7 @@ export const loadActor = cache(async (): Promise<Actor | null> => {
     loadRoleMap(),
   ]);
   const user = userRows[0];
-  if (!user || user.status !== "active") return null;
+  if (!user || (session.sessionVersion ?? 0) !== user.sessionVersion || user.status !== "active") return null;
 
   const roleId = LEGACY_ROLE_MAP[user.role] ?? user.role;
   const role = roleMap.get(roleId);
@@ -143,20 +143,24 @@ export async function requirePermission(key: string, forbiddenMessage?: string):
 }
 
 /** بوابة الجلسة فقط (بلا صلاحية بعينها) — للمسارات المفتوحة لكل عضو فعّال. */
-export async function requireActor(): Promise<Gate> {
+export async function requireActor(options: { allowTemporaryPassword?: boolean } = {}): Promise<Gate> {
   const actor = await loadActor();
   if (!actor) {
     return { ok: false, response: NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 }) };
+  }
+  if (actor.mustChangePassword && !options.allowTemporaryPassword) {
+    return { ok: false, response: NextResponse.json({ error: "غيّر كلمة المرور المؤقتة أولًا." }, { status: 403 }) };
   }
   return { ok: true, actor };
 }
 
 /**
  * تحرير مادة: صاحبها بـ story.edit.own، وغيره بـ story.edit.any.
- * الملكية بالاسم المعروض لأن المواد تحمل authorName فقط.
+ * الملكية بمعرف المستخدم الثابت؛ الاسم المعروض ليس إثبات ملكية.
  */
-export function canEditStory(actor: Actor, story: { authorName: string } | null): boolean {
-  if (actor.can("story.edit.any")) return true;
+export function canEditStory(actor: Actor, story: { authorId: string | null } | null): boolean {
+  if (actor.mustChangePassword) return false;
+  if (story && actor.can("story.edit.any")) return true;
   if (!story) return actor.can("story.create");
-  return actor.can("story.edit.own") && story.authorName === actor.displayName;
+  return actor.can("story.edit.own") && story.authorId === actor.userId;
 }

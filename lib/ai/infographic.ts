@@ -3,7 +3,8 @@
  * يدعم المحركات الثلاثة الرائدة: Anthropic Claude و Google Gemini و OpenAI GPT.
  */
 
-import Anthropic from "@anthropic-ai/sdk";
+import { textClient as getAnthropicClient } from "./text-client.ts";
+import { aiProvider, missingTextKeyMessage, openRouterModel } from "./provider-config.ts";
 
 import { runPolicyGuard } from "../policy/index.ts";
 import {
@@ -13,11 +14,6 @@ import {
   type InfographicThemeId,
 } from "./infographic-types.ts";
 import type { AiSettingsData } from "./settings.ts";
-
-function getAnthropicClient(): Anthropic | null {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  return apiKey ? new Anthropic({ apiKey }) : null;
-}
 
 const ARABIC_DIGITS = /[٠-٩]/g;
 const toLatinDigits = (text: string) =>
@@ -443,6 +439,8 @@ ${input.text.slice(0, 15000)}`;
 
   // 1. المحاولة عبر Anthropic Claude
   const anthropic = getAnthropicClient();
+  const routed = aiProvider() === "openrouter";
+  if (routed && !anthropic) throw new Error(missingTextKeyMessage());
   if (anthropic) {
     const candidateModels = [
       settings?.models?.editorial,
@@ -451,7 +449,7 @@ ${input.text.slice(0, 15000)}`;
       "claude-3-5-haiku-latest",
     ].filter(Boolean) as string[];
 
-    const resolvedModels = Array.from(
+    const resolvedModels = routed ? [openRouterModel(settings?.models.editorial ?? "claude-opus-5")] : Array.from(
       new Set(
         candidateModels.map((m) => {
           if (m === "claude-3-5-sonnet-latest" || m === "claude-sonnet-5" || m === "claude-opus-5") {
@@ -482,10 +480,13 @@ ${input.text.slice(0, 15000)}`;
         usage.outputTokens = response.usage.output_tokens;
         if (responseText) break;
       } catch (err: unknown) {
+        if (routed) throw err;
         console.error(`Anthropic attempt on ${modelToTry}:`, err);
       }
     }
   }
+
+  if (routed && !responseText) throw new Error("لم يُرجع OpenRouter محتوى مكتملًا للإنفوجرافيك.");
 
   // 2. إذا لم يتوفر Claude، نجرب Google Gemini
   if (!responseText && process.env.GEMINI_API_KEY) {

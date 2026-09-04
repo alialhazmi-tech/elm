@@ -32,14 +32,14 @@ test("نموذج التسجيل يتحقق خادميًا ولا يكشف وجو
   assert.doesNotMatch(actions, /console\.(log|error).*password/);
 });
 
-test("الواجهة العامة تقود إلى التسجيل الحقيقي والحساب محمي بالجلسة", async () => {
+test("زر العضوية مخفي من الهيدر ومسار التسجيل والحساب المحمي متاحان", async () => {
   const [header, account, signup, form] = await Promise.all([
     read("app/_components/site-chrome.tsx"),
     read("app/account/page.tsx"),
     read("app/join/page.tsx"),
     read("app/join/join-form.tsx"),
   ]);
-  assert.match(header, /MemberEntry/);
+  assert.doesNotMatch(header, /MemberEntry/);
   assert.match(account, /memberAuth\.getSession/);
   assert.match(account, /redirect\("\/join"\)/);
   assert.match(signup, /JoinForm/);

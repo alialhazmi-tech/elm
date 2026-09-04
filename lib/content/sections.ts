@@ -17,10 +17,10 @@ export type SectionDefinition = {
 export const SECTIONS: SectionDefinition[] = [
   {
     slug: "politics",
-    name: "محليات وسياق",
-    shortName: "محليات",
-    description: "تغطية عميقة للشأن الوطني والتحولات والقرارات الكبرى في المملكة.",
-    seoDescription: "أحدث التحليلات والتغطيات المعرفية للشأن السعودي والمحلي عبر منصة العلم.",
+    name: "سياسة وسياق",
+    shortName: "سياسة",
+    description: "تغطية الشأن السياسي والتحولات والقرارات المحلية والدولية.",
+    seoDescription: "أحدث التحليلات والتغطيات المعرفية للشأن السياسي المحلي والدولي عبر منصة العلم.",
     color: "#2f7d66",
     navPriority: 1,
   },

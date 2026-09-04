@@ -28,6 +28,7 @@ import type {
 } from "./types";
 import { storyHref } from "./types";
 import { normalizeArabic } from "@/lib/policy/normalize";
+import { storyKeywords } from "./keywords";
 
 export { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
 import { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
@@ -446,6 +447,29 @@ export async function pageBySeries(
 }
 
 export type SeriesDirectoryEntry = { count: number; latest: Story | null };
+
+/** أرشيف الكلمة الصريحة، بترقيم SQL ودون إدخال نتائج بحث العنوان في الأرشيف. */
+export async function pageByKeyword(
+  value: string,
+  rawPage: string | undefined | null,
+): Promise<PageSlice<Story>> {
+  const keyword = value.trim();
+  if (!keyword) return paginate([], rawPage);
+  const match = sql`exists (
+    select 1 from jsonb_array_elements(
+      case when jsonb_typeof(${storiesTable.keywords}) = 'array'
+        then ${storiesTable.keywords} else '[]'::jsonb end
+    ) as keyword_entry(value)
+    where jsonb_typeof(keyword_entry.value) = 'string'
+      and btrim(keyword_entry.value #>> '{}') = ${keyword}
+  )`;
+  return dbOrSeed(
+    `page:keyword:${JSON.stringify([keyword, parsePage(rawPage)])}`,
+    DB_CACHE_MS,
+    (db) => pageFromDb(db, and(PUBLISHED, match), rawPage),
+    () => paginate(seedAll.filter((story) => storyKeywords(story.keywords).includes(keyword)).sort(byDateDesc), rawPage),
+  );
+}
 
 /** أعداد مواد السلاسل كلها وأحدث مادة للنشطة — لفهرس السلاسل بلا تحميل الأرشيف. */
 export async function seriesDirectory(): Promise<Record<string, SeriesDirectoryEntry>> {

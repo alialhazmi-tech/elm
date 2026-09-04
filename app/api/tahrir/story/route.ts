@@ -1,18 +1,22 @@
+import { writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { normalizeVideoUrl } from "@/lib/content/video";
 import { canEditStory, requireActor } from "@/lib/tahrir/access";
-import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
-import { audit, deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
+import { deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
 
 export async function POST(request: Request) {
+  try { return await saveStory(request); } catch (error) { return writeError(error); }
+}
+async function saveStory(request: Request) {
   const gate = await requireActor();
   if (!gate.ok) return gate.response;
   const session = gate.actor;
 
   const input = (await request.json().catch(() => null)) as {
     id?: string;
+    expectedVersion?: number;
     title?: string;
     excerpt?: string;
     body?: string;
@@ -29,9 +33,13 @@ export async function POST(request: Request) {
     videoUrl?: string | null;
   } | null;
 
-  if (!input?.title?.trim()) {
+  if (!input || typeof input.title !== "string" || !input.title.trim()) {
     return NextResponse.json({ error: "العنوان مطلوب." }, { status: 400 });
   }
+  for (const field of ["id", "excerpt", "body", "section", "slug", "seriesSlug", "image", "format", "seoTitle", "seoDescription", "videoUrl"] as const) {
+    if (input[field] != null && typeof input[field] !== "string") return NextResponse.json({ error: "مدخل غير صالح." }, { status: 400 });
+  }
+  if (input.title.length > 500 || (input.body?.length ?? 0) > 200_000) return NextResponse.json({ error: "تجاوز النص الحد المسموح." }, { status: 413 });
   const videoUrl = normalizeVideoUrl(input.videoUrl);
   if (input.format?.trim() === "videos" && !videoUrl) {
     return NextResponse.json({ error: "رابط يوتيوب الصحيح مطلوب للمادة المرئية." }, { status: 400 });
@@ -39,7 +47,7 @@ export async function POST(request: Request) {
 
   const id = input.id?.trim() || crypto.randomUUID();
   // مادة جديدة تحتاج story.create؛ القائمة يحررها صاحبها بـ edit.own أو أي عضو بـ edit.any.
-  const existing = input.id?.trim() ? await getStory(id).catch(() => null) : null;
+  const existing = input.id?.trim() ? await getStory(id) : null;
   if (!canEditStory(session, existing)) {
     return NextResponse.json({ error: existing ? "لا تملك صلاحية تحرير هذه المادة." : "ليست لديك صلاحية إنشاء مادة." }, { status: 403 });
   }
@@ -54,13 +62,12 @@ export async function POST(request: Request) {
         .slice(0, 12)
         .map((keyword) => keyword.slice(0, 40))
     : undefined;
-  const slug =
-    input.slug?.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "") ||
-    `story-${id.slice(0, 8)}`;
+  const slug = input.slug?.trim() ?? "";
 
-  await saveDraft(
+  const saved = await saveDraft(
     {
       id,
+      expectedVersion: input.expectedVersion,
       title: input.title.trim(),
       excerpt: input.excerpt?.trim() ?? "",
       body,
@@ -78,13 +85,9 @@ export async function POST(request: Request) {
         ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
         : {}),
     },
-    session.displayName,
+    session,
   );
-  await audit(session.username, "draft:save", id);
-  // إبطال فوري — بلا هذا، تعديل مادة منشورة يبقى غائبًا عن الموقع حتى 300 ثانية (كاش ISR).
-  revalidatePublicStory({ section: input.section?.trim() || "news", id, slug });
-
-  return NextResponse.json({ ok: true, id, slug });
+  return NextResponse.json({ ok: true, ...saved });
 }
 
 export async function DELETE(request: Request) {

@@ -1,3 +1,4 @@
+import { assertExpectedVersion, writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
@@ -13,13 +14,17 @@ import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
  * الحارس يُفحص هنا أيضًا: صلاحية النشر لا تعلو على المخالفات القاطعة.
  */
 export async function POST(request: Request) {
+  try { return await transition(request); } catch (error) { return writeError(error); }
+}
+async function transition(request: Request) {
   const gate = await requirePermission("story.publish", "الاعتماد من صلاحية المعتمدين فقط.");
   if (!gate.ok) return gate.response;
   const session = gate.actor;
 
-  const { id } = (await request.json().catch(() => ({}))) as { id?: string };
+  const { id, expectedVersion } = (await request.json().catch(() => ({}))) as { id?: string; expectedVersion?: number };
   const story = id ? await getStory(id) : null;
   if (!story) return NextResponse.json({ error: "المادة غير موجودة." }, { status: 404 });
+  assertExpectedVersion(story.version, expectedVersion);
 
   const [settings, media] = await Promise.all([loadAiSettings(), guardMediaFor(story.image)]);
   const report = runConfiguredPolicyGuard({
@@ -40,7 +45,7 @@ export async function POST(request: Request) {
     );
   }
 
-  await setStatus(story.id, "published", session.username, `نشر بقرار ${session.displayName}`);
-  revalidatePublicStory({ section: story.section, id: story.id, slug: story.slug });
-  return NextResponse.json({ ok: true });
+  const result = await setStatus(story, "published", session.username, `نشر بقرار ${session.displayName}`);
+  revalidatePublicStory(result);
+  return NextResponse.json({ ok: true, ...result });
 }

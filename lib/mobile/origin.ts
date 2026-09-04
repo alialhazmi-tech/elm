@@ -28,8 +28,7 @@ export function absoluteMedia(url: string | undefined, origin: string = FALLBACK
 }
 
 /**
- * مقاسات العقد الجوّال — من deviceSizes/imageSizes في next.config.ts حصرًا،
- * فالمحسّن يرفض أي عرض خارجها بـ 400.
+ * مقاسات مستهدفة محفوظة لتوافق المستهلكين؛ تُخدم الصورة الأصلية حاليًا.
  */
 export const MEDIA_WIDTH = {
   /** بطاقات القوائم والمصغّرات. */
@@ -38,22 +37,12 @@ export const MEDIA_WIDTH = {
   full: 1080,
 } as const;
 
-/**
- * رابط عبر محسّن صور Next بدل الأصل الكامل: أصل `/uploads` كان يمرّ من S3
- * بـ 0.7–1MB للصورة، والمحسّن يصغّرها إلى webp بعشرات الكيلوبايتات ويكيّشها.
- * الروابط المحلية تُمرَّر نسبية (localPatterns)، والخارجية كاملة (remotePatterns).
- */
+/** يطابق الويب: التحسين معطل، فلا نعلن نقطة /_next/image غير المتاحة. */
 export function optimizedMedia(
   url: string | undefined,
   origin: string = FALLBACK_SITE,
   width: number = MEDIA_WIDTH.card,
 ): string | null {
-  if (!url) return null;
-  const external = /^https?:\/\//i.test(url);
-  if (external && !url.startsWith("https://dash.alelm.net/wp-content/")) {
-    // خارج قائمة remotePatterns المسموحة — يمرّ كما هو بدل رابط محسّن سيرد 400.
-    return url;
-  }
-  const target = external ? url : url.startsWith("/") ? url : `/${url}`;
-  return `${origin}/_next/image?url=${encodeURIComponent(target)}&w=${width}&q=75`;
+  void width; // إبقاء توقيع العقد متوافقًا مع المستهلكين.
+  return absoluteMedia(url, origin);
 }

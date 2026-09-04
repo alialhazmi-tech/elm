@@ -1,3 +1,4 @@
+import { writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
 import { requirePermission } from "@/lib/tahrir/access";
@@ -5,6 +6,9 @@ import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { archiveStory, getStory } from "@/lib/tahrir/service";
 
 export async function POST(request: Request) {
+  try { return await transition(request); } catch (error) { return writeError(error); }
+}
+async function transition(request: Request) {
   const gate = await requirePermission("story.archive", "الأرشفة من صلاحية المعتمدين ورئيس التحرير.");
   if (!gate.ok) return gate.response;
   const session = gate.actor;

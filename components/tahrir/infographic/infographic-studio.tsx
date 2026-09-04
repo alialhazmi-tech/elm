@@ -67,7 +67,7 @@ function PromptBlock({ title, prompt, done }: { title: string; prompt: string; d
   );
 }
 
-export function InfographicStudio() {
+export function InfographicStudio({ openRouter = false }: { openRouter?: boolean }) {
   const [topic, setTopic] = useState("اقتصاد المدّ الأزرق");
   const [text, setText] = useState("");
   const [theme, setTheme] = useState<InfographicThemeId>("ocean-cyber");
@@ -134,7 +134,7 @@ export function InfographicStudio() {
     if (imageBusy) return;
     setImageBusy(true);
     setError("");
-    setStatusMsg("جارٍ توليد الصور الحقيقية بالذكاء الاصطناعي (قد يستغرق 10-20 ثانية)...");
+    setStatusMsg("جارٍ توليد الصور وربطها بالتصميم… قد يستغرق ذلك بضع دقائق.");
 
     try {
       const res = await fetch("/api/tahrir/infographic/generate-images", {
@@ -152,7 +152,8 @@ export function InfographicStudio() {
       }
 
       setInfographic(data.infographic);
-      setStatusMsg("تم توليد وربط الصور الحقيقية بنجاح! تفقد المعاينة الحية.");
+      setStatusMsg(data.warnings?.length ? "اكتمل جزء من الصور؛ راجع التنبيه وأعد محاولة الصور المتبقية." : "تم توليد وربط الصور بنجاح. تفقد المعاينة.");
+      if (data.warnings?.length) setError(data.warnings.join(" · "));
       setActiveTab("preview");
     } catch (err) {
       setError(err instanceof Error ? err.message : "تعذر توليد الصور");
@@ -227,7 +228,8 @@ export function InfographicStudio() {
             ariaLabel="محرك توليد الصور"
             value={imageProvider}
             onValueChange={(value) => setImageProvider(value as "auto" | "gemini" | "openai")}
-            options={PROVIDERS}
+            options={openRouter ? [{ value: "auto", label: "OpenRouter — مزود المنصة" }] : PROVIDERS}
+            disabled={openRouter}
             className="w-64"
           />
           <Button size="sm" variant="secondary" className="ms-auto" disabled={imageBusy} onClick={handleGenerateRealImages}>
@@ -321,7 +323,7 @@ export function InfographicStudio() {
             <div className="flex flex-wrap items-start gap-3">
               <div className="grid gap-0.5">
                 <h3 className="font-display text-[14px] font-bold">مطالبات وتوليد الصور بالذكاء الاصطناعي</h3>
-                <p className="text-xs text-muted-foreground">مطالبات مصممة لتوليد صور سينمائية فائقة الوضوح عبر Gemini وOpenAI.</p>
+                <p className="text-xs text-muted-foreground">توليد الصور عبر مزود المنصة وربطها بالمعاينة.</p>
               </div>
               <Button size="sm" variant="secondary" className="ms-auto" disabled={imageBusy} onClick={handleGenerateRealImages}>
                 <ImageIcon data-icon="inline-start" />

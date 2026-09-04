@@ -49,6 +49,7 @@ export default async function JakNewPage() {
         )}
       </Panel>
       <JakEditor
+        actorId={actor!.userId}
         canApprove={actor?.can("story.publish") ?? false}
         sections={sections}
         recentMedia={recentMedia}

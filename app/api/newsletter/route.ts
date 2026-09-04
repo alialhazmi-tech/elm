@@ -1,5 +1,3 @@
-import { eq } from "drizzle-orm";
-
 import { newsletterSubscribers } from "@/db/schema";
 import { getDb } from "@/lib/db";
 
@@ -27,33 +25,15 @@ export async function POST(request: Request) {
   }
 
   const db = getDb();
-  if (!db) {
-    // بدون قاعدة: نقبل التسجيل شكليًا حتى لا تنكسر التجربة المحلية.
-    return Response.json({ ok: true, status: "queued" });
-  }
+  if (!db) return Response.json({ ok: false, error: "الاشتراك غير متاح الآن. حاول لاحقًا." }, { status: 503 });
 
   try {
-    const existing = await db
-      .select({ id: newsletterSubscribers.id })
-      .from(newsletterSubscribers)
-      .where(eq(newsletterSubscribers.email, email))
-      .limit(1);
-
-    if (existing[0]) {
-      return Response.json({ ok: true, status: "exists" });
-    }
-
     await db.insert(newsletterSubscribers).values({
-      id: crypto.randomUUID(),
-      email,
-      source,
-      createdAt: new Date().toISOString(),
-    });
-
+      id: crypto.randomUUID(), email, source, createdAt: new Date().toISOString(),
+    }).onConflictDoNothing({ target: newsletterSubscribers.email });
     return Response.json({ ok: true, status: "created" });
-  } catch (error) {
-    // الجدول قد لا يكون مدفوعًا بعد — لا نكسر الواجهة.
-    console.warn("[newsletter] persist failed", error instanceof Error ? error.message : error);
-    return Response.json({ ok: true, status: "queued" });
+  } catch {
+    console.error("[newsletter] persist failed");
+    return Response.json({ ok: false, error: "تعذر حفظ الاشتراك. حاول مرة أخرى." }, { status: 503 });
   }
 }

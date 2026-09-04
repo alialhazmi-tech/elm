@@ -213,6 +213,7 @@ function NavUser({ user }: { user: SidebarUser }) {
               <Switch checked={resolvedTheme === "dark"} className="ms-auto" aria-hidden tabIndex={-1} />
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild><Link href="/tahrir/security">أمان الحساب</Link></DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onSelect={() => void logout()}>
               <LogOutIcon />
               خروج

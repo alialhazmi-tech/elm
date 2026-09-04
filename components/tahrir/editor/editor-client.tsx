@@ -18,6 +18,8 @@ import type { Finding, GuardReport } from "@/lib/policy/types";
 import type { GuardControls } from "@/lib/policy";
 import { cn } from "@/lib/utils";
 
+import { useDraftRecovery } from "@/components/tahrir/use-draft-recovery";
+
 import { AiPanel } from "./ai-panel";
 import { DetailsPanel } from "./details-panel";
 import { FullEditBar, FullEditProgressView, FullEditProposal, type FullEditData, type FullEditProgress } from "./full-edit";
@@ -26,6 +28,8 @@ import { RichBody, type RichBodyHandle } from "./rich-body";
 import { SeoPanel } from "./seo-panel";
 
 interface EditorInitial {
+  version: number;
+  revisionOf: string | null;
   id: string;
   title: string;
   excerpt: string;
@@ -48,6 +52,7 @@ interface EditorInitial {
 type InspectorTab = "details" | "seo" | "guard" | "ai";
 
 interface Props {
+  actorId: string;
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
   guardControls: GuardControls;
@@ -113,8 +118,10 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * محرر المادة — المنطق (الحارس الحي، الحفظ، سير الاعتماد، التحرير الشامل المبثوث) كما هو منذ المرحلة
  * الأولى؛ الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ canApprove, guardControls, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ actorId, canApprove, guardControls, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
+  const versionRef = useRef(initial?.version ?? 0);
+  const [revisionOf, setRevisionOf] = useState(initial?.revisionOf ?? null);
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
@@ -153,6 +160,21 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
   const fullAbort = useRef<AbortController | null>(null);
   const draftRevision = useRef(0);
   const fullStartRevision = useRef(0);
+
+  const recoverySnapshot = { title, excerpt, body, section, slug, seriesSlug, image, format, seoTitle, seoDescription, keywords, videoUrl };
+  const recovery = useDraftRecovery(`alelm-editor:${actorId}:${id || "new"}`, recoverySnapshot);
+  function restoreLocalDraft() {
+    const value = recovery.recovery;
+    if (!value) return;
+    markDraftChanged();
+    setTitle(value.title); setExcerpt(value.excerpt); setBody(value.body);
+    richRef.current?.setHtml(value.body);
+    setSection(value.section); setSlug(value.slug); setSeriesSlug(value.seriesSlug);
+    setImage(value.image); setFormat(value.format); setSeoTitle(value.seoTitle);
+    setSeoDescription(value.seoDescription); setKeywords(value.keywords); setVideoUrl(value.videoUrl);
+    recovery.dismiss();
+    scheduleGuard(value.title, stripHtmlToText(value.body), value.image, value.format);
+  }
 
   const bodyText = () => richRef.current?.getText() ?? stripHtmlToText(body);
 
@@ -406,12 +428,13 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
       setMessage({ kind: "err", text: "أدخل رابط يوتيوب صحيحًا لإكمال المادة المرئية." });
       return null;
     }
+    const savedSnapshot = recoverySnapshot;
     setBusy(true);
     setMessage(null);
     const response = await fetch("/api/tahrir/story", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: id || undefined, title, excerpt, body: richRef.current?.getHtml() ?? body, section, slug, seriesSlug, image: image || null, format, seoTitle, seoDescription, keywords, pinned, breakingUntil, videoUrl: videoUrl.trim() || null }),
+      body: JSON.stringify({ id: id || undefined, expectedVersion: versionRef.current, title, excerpt, body: richRef.current?.getHtml() ?? body, section, slug, seriesSlug, image: image || null, format, seoTitle, seoDescription, keywords, pinned, breakingUntil, videoUrl: videoUrl.trim() || null }),
     }).catch(() => null);
     setBusy(false);
 
@@ -421,10 +444,15 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
       return null;
     }
 
+    recovery.markSaved(savedSnapshot);
+    versionRef.current = data.version;
+    setRevisionOf(data.revisionOf);
+    setStatus(data.status);
     setId(data.id);
     setSlug(data.slug);
-    if (!initial) setStatus("draft");
-    setMessage({ kind: "ok", text: "حُفظت المسودة." });
+    setSection(data.section);
+    window.history.replaceState(null, "", `/tahrir/editor/${data.id}`);
+    setMessage({ kind: "ok", text: data.revisionOf ? "حُفظت مسودة التعديل؛ النسخة المعتمدة باقية حتى النشر." : "حُفظت المسودة." });
     return data.id as string;
   }
 
@@ -436,7 +464,7 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
     const response = await fetch("/api/tahrir/story/submit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId }),
+      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current }),
     }).catch(() => null);
     setBusy(false);
 
@@ -452,6 +480,7 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
       setMessage({ kind: "err", text: `${data?.error ?? "رفض الحارس الإرسال."}${blockingRules}` });
       return;
     }
+    versionRef.current = data.version;
     setStatus("review");
     setMessage({ kind: "ok", text: "أُرسلت للاعتماد — بانتظار المعتمد البشري." });
   }
@@ -468,7 +497,7 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
     const response = await fetch("/api/tahrir/story/schedule", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId, scheduledAt: new Date(scheduleAt).toISOString() }),
+      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current, scheduledAt: new Date(scheduleAt).toISOString() }),
     }).catch(() => null);
     setBusy(false);
 
@@ -477,6 +506,7 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
       setMessage({ kind: "err", text: data?.error ?? "تعذرت الجدولة." });
       return;
     }
+    versionRef.current = data.version;
     setStatus("scheduled");
     setMessage({ kind: "ok", text: "جُدولت — الحارس سيفحصها ثانية لحظة الموعد." });
   }
@@ -489,7 +519,7 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
     const response = await fetch("/api/tahrir/story/publish", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId }),
+      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current }),
     }).catch(() => null);
     setBusy(false);
 
@@ -498,8 +528,12 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
       setMessage({ kind: "err", text: data?.error ?? "تعذر النشر." });
       return;
     }
+    versionRef.current = data.version;
+    setId(data.id);
+    setRevisionOf(null);
     setStatus("published");
     setMessage({ kind: "ok", text: "نُشرت المادة على الموقع." });
+    router.replace(`/tahrir/editor/${data.id}`);
     router.refresh();
   }
 
@@ -512,6 +546,9 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
 
   return (
     <div className="flex flex-col gap-3">
+      {recovery.recovery ? <Alert><AlertDescription>وجدنا نسخة محلية لم تُحفظ على الخادم. <Button variant="outline" onClick={restoreLocalDraft}>استعادة كتابتي</Button> <Button variant="ghost" onClick={() => recovery.dismiss()}>تجاهل النسخة</Button></AlertDescription></Alert> : null}
+      {recovery.unavailable ? <Alert><AlertDescription>الحفظ الاحتياطي المحلي غير متاح في هذا المتصفح؛ احفظ المسودة على الخادم بانتظام.</AlertDescription></Alert> : null}
+      {revisionOf ? <Alert><AlertDescription>مسودة تعديل على مادة معتمدة. لن تتغير النسخة العامة حتى اعتماد هذه المسودة ونشرها.</AlertDescription></Alert> : null}
       <Card className="sticky top-[calc(var(--header-height)+0.5rem)] z-30 gap-0 py-0 shadow-md">
         <div className="flex flex-wrap items-center gap-2 px-3 py-2">
           <span className="text-[11px] text-muted-foreground">{initial ? "تحرير المادة" : "مادة جديدة"}</span>
@@ -692,10 +729,12 @@ export function EditorClient({ canApprove, guardControls, series, sections, rece
                   onScheduleAt={setScheduleAt}
                   onSchedule={schedule}
                   onArchived={() => {
+                    window.location.reload();
                     setStatus("archived");
                     setArchiveEvent({ at: new Date().toISOString(), actor: "", reason: "أُرشفت من المحرر" });
                   }}
                   onRestored={() => {
+                    window.location.reload();
                     setStatus("draft");
                     setArchiveEvent(null);
                   }}

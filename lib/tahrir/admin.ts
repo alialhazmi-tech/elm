@@ -118,6 +118,7 @@ async function otherActiveAdmins(exceptUserId: string): Promise<number> {
 }
 
 export function validatePassword(password: string) {
+  if (typeof password !== "string" || password.length > 512) throw new AdminError("كلمة المرور لا تتجاوز 512 محرفًا.");
   if (password.length < 10) throw new AdminError("كلمة المرور 10 محارف على الأقل.");
 }
 
@@ -218,6 +219,7 @@ export async function setMemberStatus(
       .update(users)
       .set({
         status: "suspended",
+        sessionVersion: sql`${users.sessionVersion} + 1`,
         suspendedAt: now(),
         suspendedBy: actor.username,
         suspendReason: reason.trim().slice(0, 300),
@@ -243,20 +245,22 @@ export async function resetMemberPassword(id: string, password: string, actor: s
   if (!user) throw new AdminError("العضو غير موجود.", 404);
   await db
     .update(users)
-    .set({ passwordHash: await hashPassword(password), mustChangePassword: 1, updatedAt: now() })
+    .set({ passwordHash: await hashPassword(password), sessionVersion: sql`${users.sessionVersion} + 1`, mustChangePassword: 1, updatedAt: now() })
     .where(eq(users.id, id));
   await audit(actor, "users:reset-password", undefined, user.displayName);
 }
 
 /** العضو يغيّر كلمة مروره بنفسه — يرفع علم الإجبار. */
-export async function changeOwnPassword(id: string, password: string, actor: string) {
+export async function changeOwnPassword(id: string, password: string, actor: string, expectedSessionVersion: number) {
   const db = requireDb();
   validatePassword(password);
-  await db
+  const [updated] = await db
     .update(users)
-    .set({ passwordHash: await hashPassword(password), mustChangePassword: 0, updatedAt: now() })
-    .where(eq(users.id, id));
+    .set({ passwordHash: await hashPassword(password), sessionVersion: sql`${users.sessionVersion} + 1`, mustChangePassword: 0, updatedAt: now() })
+    .where(and(eq(users.id, id), eq(users.sessionVersion, expectedSessionVersion), eq(users.status, "active"))).returning();
+  if (!updated) throw new AdminError("تغيّرت حماية الحساب؛ أعد تسجيل الدخول.", 409);
   await audit(actor, "users:change-password");
+  return updated;
 }
 
 export async function setMemberOverrides(

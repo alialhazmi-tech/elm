@@ -1,3 +1,4 @@
+import { assertCanWrite, assertExpectedVersion, writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
 import { stripHtmlToText } from "@/lib/content/html";
@@ -12,14 +13,19 @@ import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
  * أي مخالفة قاطعة تعيد 422 وتمنع الإرسال مهما تحايلت الواجهة.
  */
 export async function POST(request: Request) {
+  try { return await transition(request); } catch (error) { return writeError(error); }
+}
+async function transition(request: Request) {
   const gate = await requirePermission("story.submit");
   if (!gate.ok) return gate.response;
   const session = gate.actor;
 
-  const { id } = (await request.json().catch(() => ({}))) as { id?: string };
+  const { id, expectedVersion } = (await request.json().catch(() => ({}))) as { id?: string; expectedVersion?: number };
   const story = id ? await getStory(id) : null;
   if (!story) return NextResponse.json({ error: "المادة غير موجودة." }, { status: 404 });
+  assertExpectedVersion(story.version, expectedVersion);
 
+  assertCanWrite(session, story);
   const [settings, media] = await Promise.all([loadAiSettings(), guardMediaFor(story.image)]);
   const report = runConfiguredPolicyGuard({
     id: story.id,
@@ -39,6 +45,6 @@ export async function POST(request: Request) {
     );
   }
 
-  await setStatus(story.id, "review", session.username, `طلب اعتماد من ${session.displayName}`);
-  return NextResponse.json({ ok: true });
+  const result = await setStatus(story, "review", session.username, `طلب اعتماد من ${session.displayName}`);
+  return NextResponse.json({ ok: true, ...result });
 }

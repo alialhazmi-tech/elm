@@ -29,7 +29,12 @@ enum InterestCatalog {
 @MainActor
 @Observable
 final class InterestStore {
-    private let key = "elm.interests.v1"
+    private var memberId: String?
+    private var epoch = UUID()
+    private var revision = 0
+    private var key: String { memberId.map { "elm.interests.member.\($0)" } ?? "elm.interests.v1" }
+    var syncError: String?
+    var syncing = false
     var selected: Set<String> = []
 
     var items: [InterestItem] {
@@ -42,7 +47,49 @@ final class InterestStore {
         }
     }
 
+    func switchAccount(_ id: String?, appearance: AppearanceStore) async {
+        memberId = id; epoch = UUID(); revision = 0; syncing = false; syncError = nil
+        selected = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+        appearance.switchAccount(id)
+        guard let id else { return }
+        let token = epoch, version = revision
+        do {
+            let profile = try await APIClient.fetchProfile()
+            guard token == epoch, profile.memberId == id else { return }
+            if version == revision {
+                selected = Set(profile.interestIds)
+                UserDefaults.standard.set(Array(selected), forKey: key)
+                appearance.personalizationEnabled = profile.personalizationEnabled
+            }
+        } catch { if token == epoch { syncError = "تعذرت مزامنة تفضيلات الحساب. حاول مجددًا." } }
+    }
+
+    func save() async -> Bool {
+        guard let memberId else { return true }
+        let token = epoch
+        syncing = true; syncError = nil
+        defer { if token == epoch { syncing = false } }
+        do {
+            try await APIClient.updateProfile(memberId: memberId, action: "interests", interests: Array(selected))
+            return token == epoch
+        } catch { if token == epoch { syncError = "لم تُحفظ الاهتمامات في حسابك. تحقق من الاتصال وحاول مجددًا." }; return false }
+    }
+
+    func setPersonalization(_ enabled: Bool, appearance: AppearanceStore) async {
+        guard !syncing else { return }
+        revision += 1
+        guard let memberId else { appearance.personalizationEnabled = enabled; return }
+        let token = epoch
+        syncing = true; syncError = nil
+        defer { if token == epoch { syncing = false } }
+        do {
+            try await APIClient.updateProfile(memberId: memberId, action: "personalization", enabled: enabled)
+            if token == epoch { appearance.personalizationEnabled = enabled }
+        } catch { if token == epoch { syncError = "تعذر حفظ إعداد الخصوصية؛ لم يتغير. حاول مجددًا." } }
+    }
+
     func toggle(_ id: String) {
+        revision += 1
         var next = selected
         if next.contains(id) {
             next.remove(id)
@@ -54,6 +101,7 @@ final class InterestStore {
     }
 
     func clear() {
+        revision += 1
         selected = []
         UserDefaults.standard.set([], forKey: key)
     }

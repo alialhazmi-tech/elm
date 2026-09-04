@@ -11,6 +11,7 @@ export function SelectField({
   ariaLabel,
   className,
   placeholder,
+  disabled = false,
 }: {
   value: string;
   onValueChange: (value: string) => void;
@@ -18,9 +19,10 @@ export function SelectField({
   ariaLabel: string;
   className?: string;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   return (
-    <Select value={value} onValueChange={onValueChange}>
+    <Select dir="rtl" disabled={disabled} value={value} onValueChange={onValueChange}>
       <SelectTrigger aria-label={ariaLabel} className={cn("w-full bg-card", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>

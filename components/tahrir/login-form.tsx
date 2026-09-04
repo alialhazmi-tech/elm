@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -21,7 +22,7 @@ export function LoginForm() {
     const response = await fetch("/api/tahrir/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: form.get("username"), password: form.get("password") }),
+      body: JSON.stringify({ username: form.get("username"), password: form.get("password"), code: form.get("code") }),
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     if (response?.ok) {
@@ -29,6 +30,7 @@ export function LoginForm() {
       router.refresh();
       return;
     }
+    if (data?.mfaRequired) setMfaRequired(true);
     setError(data?.error ?? "تعذر الاتصال بالخادم.");
     setBusy(false);
   }
@@ -43,6 +45,7 @@ export function LoginForm() {
         <Label htmlFor="th-pass">كلمة المرور</Label>
         <Input id="th-pass" name="password" type="password" autoComplete="current-password" required className="h-10" />
       </div>
+      {mfaRequired && <div className="grid gap-1.5"><Label htmlFor="th-code">رمز التحقق أو الاسترداد</Label><Input id="th-code" name="code" autoComplete="one-time-code" dir="ltr" required maxLength={64} /></div>}
       <Button type="submit" size="lg" disabled={busy} className="font-display font-bold">
         <LogInIcon data-icon="inline-start" className="rtl:-scale-x-100" />
         {busy ? "جارٍ الدخول…" : "دخول"}
