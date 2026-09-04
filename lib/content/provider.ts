@@ -305,6 +305,33 @@ export async function getBreaking(): Promise<BreakingItem | null> {
   return story ? toStripItem(story, now, false) : null;
 }
 
+/**
+ * مواد شريط الأخبار المتناوب: العاجل الساري أولًا ثم أحدث المواد المنشورة من دون تكرار.
+ * تبقى getBreaking مفردة حفاظًا على عقد تطبيقات الجوال الحالي.
+ */
+export async function getNewsStrip(limit = 5): Promise<BreakingItem[]> {
+  const safeLimit = Math.max(1, Math.min(limit, 8));
+  const now = new Date().toISOString();
+  const [lead, recent] = await Promise.all([getBreaking(), listRecent(safeLimit + 1)]);
+  const items: BreakingItem[] = [];
+  const seen = new Set<string>();
+
+  if (lead) {
+    items.push(lead);
+    seen.add(lead.href);
+  }
+
+  for (const story of recent) {
+    const item = toStripItem(story, now, false);
+    if (seen.has(item.href)) continue;
+    items.push(item);
+    seen.add(item.href);
+    if (items.length >= safeLimit) break;
+  }
+
+  return items.slice(0, safeLimit);
+}
+
 /* ============ شرائح جاك والسلاسل المتقاعدة ============ */
 
 /** شرائح «جاك العلم» لمادة منشورة — الظاهرة فقط وبترتيبها. */

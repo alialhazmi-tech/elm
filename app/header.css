@@ -1,6 +1,6 @@
 /* ============================================================
    الهيدر السابق (قبل 2026-09-01) — أُعيد في 2026-09-03 بطلب المالك.
-   أربع طبقات: صف الشعار والقائمة، شريط «مستجد»، مسطرة السلاسل، ورقائق الجوال.
+   أربع طبقات: صف الشعار والقائمة، شريط «الأحدث»، مسطرة السلاسل، ورقائق الجوال.
    الهيدر يمرّ مع الصفحة؛ المسطرة تلتصق وحدها. تُقرأ بعد soft.css فتغلبه.
    ============================================================ */
 
@@ -115,6 +115,11 @@
   text-decoration: none;
 }
 .breaking-title:hover { color: #ffffff; }
+.news-strip-enter { animation: news-strip-enter 0.35s ease-out both; }
+@keyframes news-strip-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .breaking,
 .breaking.is-fresh {
@@ -128,6 +133,9 @@
 .breaking.is-fresh .breaking-title:hover { color: var(--navy); }
 @media (prefers-reduced-motion: no-preference) {
   .breaking.is-fresh .breaking-dot { animation: fresh-pulse 2.2s ease-out infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .news-strip-enter { animation: none; }
 }
 @keyframes fresh-pulse {
   0% { box-shadow: 0 0 0 0 rgb(46 184 115 / 0.6); }
