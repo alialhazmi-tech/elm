@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharingMetadata } from "@/lib/sharing";
 import { cache } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -29,7 +30,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     title, description,
     alternates: { canonical: pageHref(keywordHref(keyword), page) },
     robots: { index: total > 0, follow: true },
-    openGraph: { title, description, type: "website", url: pageHref(keywordHref(keyword), page) },
+    ...sharingMetadata({ title, description, path: pageHref(keywordHref(keyword), page) }),
   };
 }
 

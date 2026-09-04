@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { sharingMetadata } from "@/lib/sharing";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
@@ -11,6 +12,7 @@ export const metadata: Metadata = {
   title: "سلاسل العلم",
   description: "ثماني سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.",
   alternates: { canonical: "/series" },
+  ...sharingMetadata({ title: "سلاسل العلم", description: "ثماني سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.", path: "/series" }),
 };
 
 export default async function SeriesIndexPage() {
