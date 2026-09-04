@@ -32,7 +32,7 @@ try {
   assert.equal((await send({}, {Origin:'https://evil.invalid'})).status,403);
   assert.equal((await send({sessionId:'invalid'})).status,400);
   assert.equal((await send({storyId:'missing'})).status,404);
-  let response=await send(); assert.equal(response.status,200);
+  let response=await subject.POST(new Request('http://localhost:3000/api/content/reading',{method:'POST',headers:{Origin:'https://alelm.net','Content-Type':'application/json'},body:JSON.stringify({storyId:'article',sessionId,activeMs:0,progress:0})})); assert.equal(response.status,200);
   assert.match(response.headers.get('set-cookie'), /HttpOnly; SameSite=Lax;.*Secure/);
   globalThis.__readingCookie=response.headers.get('set-cookie').split(';')[0].split('=')[1];
   await client.query("update story_reading_sessions set created_at=$1",[new Date(Date.now()-300000).toISOString()]);

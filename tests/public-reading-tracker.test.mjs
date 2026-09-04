@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { build } from 'esbuild';
-import { readingInput } from '../lib/personalization/reading-input.ts';
+import { readingInput, readingOrigin } from '../lib/personalization/reading-input.ts';
 
 test('public reading input rejects malformed progress and bounds cumulative time', () => {
   const valid={storyId:'263004',sessionId:crypto.randomUUID(),activeMs:1200,progress:50};
@@ -42,4 +42,16 @@ test('reader measures only visible article time, pauses in background and resets
     for(const [key,descriptor] of Object.entries(originals)) {if(descriptor) Object.defineProperty(globalThis,key,descriptor);else delete globalThis[key];}
     delete globalThis.__readingEffect;
   }
+});
+
+
+test('reading origins accept the public Railway site behind internal HTTP and reject foreign origins', () => {
+  const request=(origin,extra={})=>new Request('http://localhost:3000/api/content/reading',{headers:{Origin:origin,...extra}});
+  assert.equal(readingOrigin(request('https://alelm.net')),'https://alelm.net');
+  assert.equal(readingOrigin(request('https://elm-production-ea24.up.railway.app')),'https://elm-production-ea24.up.railway.app');
+  for(const origin of ['https://evil.invalid','https://alelm.net.evil.invalid','http://alelm.net','null','https://alelm.net/path']) {
+    assert.equal(readingOrigin(request(origin,{'x-forwarded-host':'evil.invalid','x-forwarded-proto':'https'})),null);
+  }
+  assert.equal(readingOrigin(request('https://alelm.net',{'sec-fetch-site':'cross-site'})),null);
+  assert.equal(readingOrigin(request('http://localhost:3000')),'http://localhost:3000');
 });

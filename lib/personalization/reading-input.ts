@@ -10,3 +10,19 @@ export function readingInput(value: unknown) {
   if (typeof v.progress !== "number" || !Number.isFinite(v.progress) || v.progress < 0 || v.progress > 100) return null;
   return { storyId: v.storyId, sessionId: v.sessionId, activeMs: Math.min(7_200_000, Math.floor(v.activeMs)), progress: Math.floor(v.progress) };
 }
+
+/** Railway ينهي TLS أمام خادم Next الداخلي؛ لا نستمد الثقة من ترويسات يرسلها الزائر. */
+export function readingOrigin(request: Request): string | null {
+  if (request.headers.get("sec-fetch-site") === "cross-site") return null;
+  const origin = request.headers.get("origin");
+  if (!origin) return null;
+  const allowed = new Set([
+    new URL(request.url).origin,
+    "https://alelm.net",
+    "https://www.alelm.net",
+    "https://elm-production-ea24.up.railway.app",
+  ]);
+  const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
+  if (railwayDomain && /^[a-z0-9-]+\.up\.railway\.app$/i.test(railwayDomain)) allowed.add(`https://${railwayDomain}`);
+  return allowed.has(origin) ? origin : null;
+}
