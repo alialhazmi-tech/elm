@@ -90,3 +90,22 @@ and unavailable storage.
 - Final local gate passed: lint (one existing image warning), typecheck,
   production build, 206 unit tests, performance budget, and the full PostgreSQL
   integration suite (including 16 member-account checks).
+
+## Profile images, editor identity, and audience administration
+
+The public header reads `/api/viewer` with `private, no-store`. It exposes only the current viewer's name and locally stored avatar, independently for the member and editorial sessions. A single account control is shown in the header. Its menu includes the member profile and, when an editorial session exists, the editor profile and dashboard. The public member identity takes precedence on the button when both sessions exist. Window focus, navigation, and successful avatar updates refresh this data; no private identity enters the public content cache.
+
+`ProfileAvatar` renders the stored image consistently in the public account menu, member profile (including mobile), audience list/details, editorial header/sidebar, administrative account list/dialogs, and audit actor cells/details. Missing, invalid, or failed images fall back to the name's initial. Audit avatars and display names describe the current account; the original recorded actor remains unchanged.
+
+- `/account?tab=settings`: upload/change/remove the member's image.
+- `/tahrir/profile`: editor's own image, display name, account facts, and security link. Every active editorial role can update its own profile; client-supplied user IDs or roles are ignored.
+- `/tahrir/members`: audience accounts from `neon_auth.user`, with name, email, live verification state, account status, join date, details, filters, and 25-row pagination. `users.view` gates access; `users.suspend` gates suspension/reactivation. Suspension requires a reason and both status changes and editor profile changes are audited.
+- `/tahrir/admin-accounts`: the existing administrative accounts screen, renamed and moved. Existing administrative APIs remain unchanged.
+
+Migration `0007_profile_avatars_member_status` adds `users.avatar_url` and the member profile's avatar/status/reason fields. Apply it before deploying this release. The managed Neon Auth schema is read-only; UUID identifiers are cast to text for the join with application profiles. Missing member profiles represent active members with no avatar.
+
+All membership pages, actions and personalization endpoints use a live application status check. A suspended member cannot use these services even with an existing Auth cookie. The Auth proxy hides suspended sessions and blocks their authenticated operations, while allowing sign-out. Suspension does not delete their data or claim to disable the underlying Neon identity; reactivation restores access.
+
+Avatar requests require the relevant live session, a trusted origin and a database-backed rate limit. Multipart input is bounded, including requests without Content-Length. JPEG/PNG/WebP are decoded with a pixel cap, EXIF/GPS metadata removed, and the result center-cropped to 384×384 WebP. Generated UUID objects are stored and verified using the existing S3-compatible image store, outside the editorial media library. The UI accepts files up to 4 MiB. Profile removal clears the profile reference; previously generated immutable image objects are not automatically purged.
+
+Validation covers account ownership, permission denial, suspension/reactivation and audit, filtered pagination, real UUID schema joins, invalid/oversized image rejection, metadata removal, and image propagation to the viewer response. Run `tests/profiles-audience.integration.mjs` and `tests/member-account.integration.mjs` only against an isolated `alelm_test*` database. Preview migration and real image storage were also exercised on the isolated Neon development branch, without modifying production member records.

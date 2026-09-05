@@ -67,6 +67,7 @@ export interface Actor {
   userId: string;
   username: string;
   displayName: string;
+  avatarUrl: string | null;
   role: string;
   roleLabel: string;
   mustChangePassword: boolean;
@@ -104,6 +105,7 @@ export const loadActor = cache(async (): Promise<Actor | null> => {
     userId: user.id,
     username: user.username,
     displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
     role: roleId,
     roleLabel: role?.label ?? roleId,
     mustChangePassword: user.mustChangePassword === 1,

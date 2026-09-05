@@ -39,6 +39,7 @@ export interface MemberSummary {
   id: string;
   username: string;
   displayName: string;
+  avatarUrl: string | null;
   email: string;
   role: string;
   roleLabel: string;
@@ -71,6 +72,7 @@ export async function listMembers(): Promise<MemberSummary[]> {
       id: row.id,
       username: row.username,
       displayName: row.displayName,
+      avatarUrl: row.avatarUrl,
       email: row.email,
       role: roleId,
       roleLabel: roleMap.get(roleId)?.label ?? roleId,

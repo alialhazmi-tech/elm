@@ -389,6 +389,15 @@ try {
     );
     checks++;
   });
+  await context.run(db, async () => {
+    await client.query("update member_profiles set status='suspended' where auth_user_id='account-a'");
+    const callsBefore = globalThis.__memberAccountCalls.length;
+    assert.ok((await subject.updateMemberDetails({}, form({ name: "blocked change" }))).error);
+    assert.ok((await subject.toggleNewsletter({}, form({ enabled: "1" }))).error);
+    assert.equal(globalThis.__memberAccountCalls.length, callsBefore);
+    await client.query("update member_profiles set status='active' where auth_user_id='account-a'");
+    checks++;
+  });
   await context.run(null, async () => {
     assert.equal(
       (

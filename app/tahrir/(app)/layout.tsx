@@ -48,13 +48,14 @@ export default async function TahrirAppLayout({
       <AppSidebar
         user={{
           displayName: actor.displayName,
+          avatarUrl: actor.avatarUrl,
           roleLabel: actor.roleLabel,
           permissions: [...actor.permissions],
         }}
         counts={{ total, review: counts.review ?? 0, scheduled: counts.scheduled ?? 0 }}
       />
       <SidebarInset>
-        <SiteHeader today={today} />
+        <SiteHeader today={today} user={{ name: actor.displayName, image: actor.avatarUrl }} />
         <div className="@container/main flex flex-1 flex-col p-4 md:p-(--content-padding) xl:group-data-[theme-content-layout=centered]/layout:mx-auto xl:group-data-[theme-content-layout=centered]/layout:w-full xl:group-data-[theme-content-layout=centered]/layout:max-w-7xl">
           {children}
         </div>

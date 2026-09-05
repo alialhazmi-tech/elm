@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { Check, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { MEMBER_INTERESTS } from "@/lib/membership/interests";
 import {
@@ -67,6 +67,9 @@ export function DetailsForm({
   verified: boolean;
 }) {
   const [state, action, pending] = useActionState(updateMemberDetails, {});
+  useEffect(() => {
+    if (state.success) window.dispatchEvent(new Event("alelm:profile-updated"));
+  }, [state]);
   return (
     <>
       <form action={action} className="ac-edit-form">

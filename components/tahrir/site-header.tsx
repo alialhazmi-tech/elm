@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { usePathname, useSearchParams } from "next/navigation";
 import { PanelRightCloseIcon, PanelRightOpenIcon, PlusIcon } from "lucide-react";
 
@@ -21,7 +22,7 @@ import { ThemeCustomizerPanel } from "./theme-customizer";
 import { ThemeSwitch } from "./theme-switch";
 
 /** الهيدر اللاصق: طيّ الشريط، الفتات، تاريخ اليوم، ثم «مادة جديدة» وتبديل الوضع ومخصّص المظهر. */
-export function SiteHeader({ today }: { today: string }) {
+export function SiteHeader({ today, user }: { today: string; user: { name: string; image: string | null } }) {
   const { toggleSidebar, open } = useSidebar();
   const pathname = usePathname();
   const status = useSearchParams().get("status");
@@ -63,6 +64,7 @@ export function SiteHeader({ today }: { today: string }) {
               <span className="sr-only sm:hidden">مادة جديدة</span>
             </Link>
           </Button>
+          <Link href="/tahrir/profile" aria-label={`ملفي الشخصي: ${user.name}`} className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted"><ProfileAvatar name={user.name} image={user.image} size={30} /><span className="hidden max-w-28 truncate text-sm font-semibold lg:inline">{user.name}</span></Link>
           <ThemeSwitch />
           <ThemeCustomizerPanel />
         </div>

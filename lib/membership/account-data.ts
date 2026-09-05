@@ -45,6 +45,7 @@ export type MemberAccountData = {
     email: string;
     joinedAt?: string;
     emailVerified?: boolean;
+    image?: string | null;
   };
   profile: MemberProfile;
   stats: MemberAccountStats;

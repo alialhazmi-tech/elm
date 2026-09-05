@@ -1,6 +1,7 @@
+import { getMemberSession } from "@/lib/membership/session";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
 import "../welcome.css";
 
@@ -8,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ReadyPage() {
   if (!memberAuthConfigured) redirect("/join");
-  const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
+  const { data } = await getMemberSession();
   if (!data?.user) redirect("/join");
   const profile = await getMemberProfile(data.user.id);
   if (!profile.onboardingCompleted) redirect("/welcome");

@@ -1,9 +1,10 @@
+import { getMemberSession } from "@/lib/membership/session";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
 import { forYouForMember } from "@/lib/personalization/recommend";
 import "./for-you.css";
@@ -13,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ForYouPage() {
   if (!memberAuthConfigured) redirect("/join");
-  const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
+  const { data } = await getMemberSession();
   if (!data?.user) redirect("/join");
   const profile = await getMemberProfile(data.user.id);
   if (!profile.onboardingCompleted) redirect("/welcome");

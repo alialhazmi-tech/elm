@@ -1,7 +1,8 @@
+import { getMemberSession } from "@/lib/membership/session";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { memberAuthConfigured } from "@/lib/membership/auth";
 import {
   accountTab,
   emptyAccountData,
@@ -21,7 +22,7 @@ export default async function AccountPage({
   searchParams: Promise<{ welcome?: string; tab?: string; page?: string }>;
 }) {
   if (!memberAuthConfigured) redirect("/join");
-  const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
+  const { data } = await getMemberSession();
   if (!data?.user) redirect("/join?mode=signin&next=%2Faccount");
   const params = await searchParams;
   const tab = accountTab(params.tab);
@@ -34,6 +35,7 @@ export default async function AccountPage({
     tab,
     Number(params.page ?? 1),
   ).catch(() => emptyAccountData(data.user.id, email, name));
+  account.user.image = data.user.image;
   account.user.emailVerified = data.user.emailVerified;
   account.user.joinedAt = data.user.createdAt
     ? new Date(data.user.createdAt).toISOString()
