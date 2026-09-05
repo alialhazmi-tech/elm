@@ -1,10 +1,11 @@
-import { getSessionMemberId, privateJson } from "@/lib/personalization/session";
+import { privateJson } from "@/lib/personalization/session";
+import { getSavedViewer } from "@/lib/personalization/saved-viewer";
 import { savedPage, setSaved } from "@/lib/personalization/saved";
 import { seedContentProvider } from "@/lib/content/provider";
 import { requestOrigin, toMobileCard } from "@/lib/mobile/home";
 
 export async function GET(request: Request) {
-  const memberId = await getSessionMemberId();
+  const { ownerId: memberId } = await getSavedViewer();
   if (!memberId) return privateJson({ error: "يلزم تسجيل الدخول" }, 401);
   const offset = Math.max(0, Math.min(100_000, Math.floor(Number(new URL(request.url).searchParams.get("offset")) || 0)));
   const rows = await savedPage(memberId, offset);
@@ -12,7 +13,8 @@ export async function GET(request: Request) {
   return privateJson({ memberId, items: stories.filter(story => story !== null).map(story => toMobileCard(story, requestOrigin(request))), nextOffset: rows.length > 100 ? offset + 100 : null });
 }
 export async function POST(request: Request) {
-  const memberId = await getSessionMemberId();
+  const { ownerId: memberId, signInHref } = await getSavedViewer();
+  if (signInHref) return privateJson({ error: "غيّر كلمة المرور المؤقتة أولًا.", signInHref }, 403);
   if (!memberId) return privateJson({ error: "يلزم تسجيل الدخول" }, 401);
   const body = await request.json().catch(() => null);
   if (body?.expectedMemberId !== memberId) return privateJson({ error: "تغيّر الحساب" }, 409);

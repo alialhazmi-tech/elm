@@ -120,6 +120,9 @@ export function MemberEntry() {
                 <small>{viewer.editor.name}</small>
               </span>
             </Link>
+            <Link href="/tahrir/profile/saved" onClick={close}>
+              <strong>محفوظات الحساب الإداري</strong>
+            </Link>
             <Link href="/tahrir" onClick={close}>
               <strong>لوحة التحكم</strong>
             </Link>

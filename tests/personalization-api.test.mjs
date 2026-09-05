@@ -102,7 +102,7 @@ test("حفظ المادة للزائر يقود إلى مسار الدخول ا�
   assert.match(client, /"\/api\/me\/saved"/);
   assert.match(
     client,
-    /!state\.signedIn[\s\S]*?<Link className="sa-save" href=\{joinHref\}[\s\S]*?احفظ المادة/,
+    /!state\.saveOwnerId[\s\S]*?<Link className="sa-save"[\s\S]*?joinHref[\s\S]*?احفظ المادة/,
     "زر الحفظ للزائر لا يقود إلى الانضمام",
   );
   assert.match(article, /\/join\?next=/);

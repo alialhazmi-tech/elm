@@ -43,24 +43,28 @@ function postJson(url: string, body: unknown, keepalive = false) {
   });
 }
 
-type ArticleState = { memberId: string | null; signedIn: boolean; saved: boolean };
+type ArticleState = {
+  memberId: string | null; signedIn: boolean; saved: boolean;
+  saveOwnerId: string | null; saveLoginHref: string | null;
+  status: "loading" | "ready" | "error";
+};
 
 function fetchArticleState(storyId: string): Promise<ArticleState | null> {
   return fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin", cache: "no-store" })
     .then(response => response.ok ? response.json() : null)
-    .then(data => data ? { memberId: typeof data.memberId === "string" ? data.memberId : null, signedIn: Boolean(data.signedIn), saved: Boolean(data.saved) } : null)
+    .then(data => data ? { memberId: typeof data.memberId === "string" ? data.memberId : null, signedIn: Boolean(data.signedIn), saved: Boolean(data.saved), saveOwnerId: typeof data.saveOwnerId === "string" ? data.saveOwnerId : null, saveLoginHref: typeof data.saveLoginHref === "string" ? data.saveLoginHref : null, status: "ready" as const } : null)
     .catch(() => null);
 }
 
 /** لا نخزّن جلسة عضو في كاش مواد عام؛ نحدّثها عند الرجوع للتبويب. */
 function useArticleState(storyId: string) {
-  const [state, setState] = useState<ArticleState>({ memberId: null, signedIn: false, saved: false });
+  const [state, setState] = useState<ArticleState>({ memberId: null, signedIn: false, saved: false, saveOwnerId: null, saveLoginHref: null, status: "loading" });
   useEffect(() => {
     let live = true;
     let sequence = 0;
     const refresh = () => {
       const request = ++sequence;
-      void fetchArticleState(storyId).then(data => { if (live && request === sequence && data) setState(data); });
+      void fetchArticleState(storyId).then(data => { if (live && request === sequence) setState(current => data ?? { ...current, status: "error" }); });
     };
     refresh();
     window.addEventListener("focus", refresh);
@@ -79,9 +83,20 @@ export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; join
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  if (!state.signedIn) {
+  if (state.status !== "ready") {
+    const retry = async () => {
+      setState(current => ({ ...current, status: "loading" }));
+      const latest = await fetchArticleState(storyId);
+      setState(current => latest ?? { ...current, status: "error" });
+    };
+    return <button type="button" className="sa-save" disabled={state.status === "loading"} onClick={() => void retry()}>
+      {state.status === "loading" ? "جارٍ التحقق من الحساب…" : "إعادة التحقق للحفظ"}
+    </button>;
+  }
+  if (state.saveLoginHref) return <Link className="sa-save" href={state.saveLoginHref}>أكمل تفعيل الحساب للحفظ</Link>;
+  if (!state.saveOwnerId) {
     return (
-      <Link className="sa-save" href={joinHref}>
+      <Link className="sa-save" href={`${joinHref}&mode=signin`}>
         <span aria-hidden="true">☆</span> احفظ المادة
       </Link>
     );
@@ -93,7 +108,7 @@ export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; join
     const next = !state.saved;
     setState((current) => ({ ...current, saved: next }));
     try {
-      const response = await postJson("/api/me/saved", { storyId, saved: next, expectedMemberId: state.memberId });
+      const response = await postJson("/api/me/saved", { storyId, saved: next, expectedMemberId: state.saveOwnerId });
       if (!response.ok) throw new Error("save");
       const data = (await response.json()) as { saved?: boolean };
       const saved = Boolean(data.saved);
