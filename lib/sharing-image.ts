@@ -1,20 +1,12 @@
 import sharp from "sharp";
 import { sharingOrigin } from "./sharing.ts";
+import { publicImageSource } from "./image-source.ts";
 
 export const MAX_SHARE_SOURCE_BYTES = 8 * 1024 * 1024;
 
 /** لا نقبل عنوانًا حرًا من الطلب: الصور من مخزننا أو أرشيف الوسائط المعروف فقط. */
 export function sharingImageSource(value: string): { filename: string } | { url: string } | null {
-  try {
-    const url = new URL(value, sharingOrigin());
-    if (url.username || url.password || url.search || url.hash) return null;
-    if (url.origin === sharingOrigin()) {
-      const match = /^\/uploads\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png|webp))$/i.exec(url.pathname);
-      return match ? { filename: match[1] } : null;
-    }
-    if (url.protocol === "https:" && !url.port && url.hostname === "dash.alelm.net" && url.pathname.startsWith("/wp-content/uploads/")) return { url: url.href };
-  } catch { /* رابط غير صالح؛ تستعمل البطاقة الافتراضية. */ }
-  return null;
+  return publicImageSource(value, sharingOrigin());
 }
 
 export async function sharingJpeg(bytes: Uint8Array, background = "#f8f7f4") {

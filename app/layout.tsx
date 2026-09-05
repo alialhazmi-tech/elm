@@ -44,6 +44,7 @@ export const metadata: Metadata = {
   authors: [{ name: "فريق تحرير العلم" }],
   creator: "العلم",
   publisher: "العلم",
+  robots: { "max-image-preview": "large" },
   formatDetection: { email: false, address: false, telephone: false },
   ...sharingMetadata({ title: SITE_TITLE, description: SITE_DESCRIPTION, path: "/" }),
   icons: {

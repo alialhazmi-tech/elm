@@ -136,7 +136,7 @@ export default async function Home() {
             </div>
             {hero.image ? (
               <Link className="sh-lead-media" href={storyHref(hero)} aria-hidden="true" tabIndex={-1}>
-                <Image src={hero.image} alt="" fill sizes="(max-width: 1040px) 100vw, 560px" priority />
+                <Image src={hero.image} alt="" fill sizes="(max-width: 900px) 100vw, 560px" priority />
               </Link>
             ) : null}
           </section>
@@ -251,7 +251,7 @@ export default async function Home() {
                     <article className="sh-ctx-row" key={story.id} data-story-id={story.id}>
                       {story.image ? (
                         <Link className="soft-img" href={storyHref(story)} aria-hidden="true" tabIndex={-1}>
-                          <Image src={story.image} alt="" fill sizes="150px" />
+                          <Image src={story.image} alt="" width={132} height={92} />
                         </Link>
                       ) : null}
                       <div className="body">

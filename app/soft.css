@@ -163,7 +163,7 @@ body { background: var(--bg); color: var(--ink); }
 .sa-byline b { display: block; font-size: 15px; font-weight: 600; }
 .sa-byline .meta { display: block; margin-top: 2px; }
 .sa-media { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.sa-media .soft-img { aspect-ratio: 600 / 420; border-radius: 20px; }
+.sa-media .soft-img { aspect-ratio: 16 / 9; border-radius: 20px; }
 .sa-video { width: 100%; overflow: hidden; border-radius: 20px; background: #000; }
 .sa-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
 .article-body blockquote[data-x-post] { margin: 24px 0; padding: 0; border: 0; background: none; font-style: normal; }
@@ -1106,3 +1106,6 @@ body .pp-list { display: flex; flex-direction: column; }
 .summary-listen-note { display: block; grid-column: 1 / -1; order: 2; font-size: 12px; color: var(--ink-2); line-height: 1.7; }
 [data-theme="dark"] .summary-listen-credit { color: #8ad5b0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .summary-listen-credit { color: #8ad5b0; } }
+
+/* المصغرات ذات المقاسات الثابتة تستخدم مرشحي كثافة بدل قائمة عروض طويلة. */
+.ctx-thumb img { width: 100%; height: 100%; object-fit: cover; }

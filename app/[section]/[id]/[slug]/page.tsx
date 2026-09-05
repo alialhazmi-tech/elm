@@ -295,7 +295,7 @@ export default async function ArticlePage({ params }: Params) {
                   <div className="soft-img">
                     <Image
                       src={story.image}
-                      alt=""
+                      alt={story.title}
                       fill
                       sizes="(max-width: 1040px) 100vw, 600px"
                       priority
