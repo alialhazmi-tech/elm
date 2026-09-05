@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { build } from 'esbuild';
 
 // Exercise the real component handlers without calling a paid provider.
 test('field generation requires content, proposes before applying, protects edits and handles failures', async () => {
+  await mkdir(`${process.cwd()}/tmp`, { recursive: true });
   const dir = await mkdtemp(`${process.cwd()}/tmp/field-generator-`);
   const originalFetch = globalThis.fetch;
   const slots = []; let cursor = 0;

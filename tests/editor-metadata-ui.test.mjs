@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { build } from 'esbuild';
 
 test('metadata requires approval, rejects stale results and copies saved links accurately',async()=>{
+  await mkdir(`${process.cwd()}/tmp`, { recursive: true });
   const dir=await mkdtemp(`${process.cwd()}/tmp/metadata-ui-`);
   const originalFetch=globalThis.fetch, originalWindow=globalThis.window, originalNavigator=Object.getOwnPropertyDescriptor(globalThis,'navigator');
   let slots=[], cursor=0;

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { build } from 'esbuild';
 
 function harness() {
@@ -20,6 +20,7 @@ function harness() {
 }
 
 test('autosave debounces, saves newer typing next, pauses failures and preserves recovery',async()=>{
+  await mkdir(`${process.cwd()}/tmp`, { recursive: true });
   const dir=await mkdtemp(`${process.cwd()}/tmp/autosave-`);
   const originals={window:globalThis.window,localStorage:globalThis.localStorage,requestAnimationFrame:globalThis.requestAnimationFrame,cancelAnimationFrame:globalThis.cancelAnimationFrame};
   const h=harness(); globalThis.__draftHooks=h.hooks;globalThis.window=h.browser;
