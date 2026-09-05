@@ -71,6 +71,13 @@
       "when": 1788592761861,
       "tag": "0009_username_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788631451933,
+      "tag": "0010_neon_performance",
+      "breakpoints": true
     }
   ]
 }

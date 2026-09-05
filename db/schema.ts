@@ -59,6 +59,7 @@ export const stories = pgTable("stories", {
   index("stories_status_idx").on(table.status),
   index("stories_published_at_idx").on(table.publishedAt),
   index("stories_section_idx").on(table.section),
+  index("stories_title_trgm_idx").using("gin", table.title.op("gin_trgm_ops")),
   index("stories_active_recency_idx").on(sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
   index("stories_status_recency_idx").on(table.status, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()),
   index("stories_format_recency_idx").on(table.format, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
