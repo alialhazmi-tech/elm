@@ -24,6 +24,8 @@ export interface NavItem {
   title: string;
   href: string;
   icon: LucideIcon;
+  /** بند ظاهر للتعريف فقط، بلا تنقّل حتى إطلاقه. */
+  comingSoon?: boolean;
   /** المفتاح الذي يُقرأ منه العدد الحي في الشارة. */
   badge?: NavBadgeKey;
   /** الشارة بلون الهوية (الاعتماد) بدل الرمادي. */
@@ -66,7 +68,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "المحتوى",
     items: [
-      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage" },
+      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage", comingSoon: true },
       { title: "السلاسل", href: "/tahrir/series", icon: LayersIcon },
       { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon, permission: "media.upload" },
     ],

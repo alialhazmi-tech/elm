@@ -2,27 +2,15 @@
 
 /**
  * مؤشرات المادة — بطاقة واحدة بأربعة وجوه تتقلّب: معدل القراءة، إكمال القراءة،
- * التفاعل الإجمالي، ونسبة التفاعل. النقاط مؤشر تنقّل، والسحب واللمس يعملان،
+ * التفاعلات المباشرة، ونسبة التفاعل. النقاط مؤشر تنقّل، والسحب واللمس يعملان،
  * وتدور تلقائيًا حتى يتدخل القارئ. الأرقام من قراءات الزوار المجمّعة.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { INTERACTION_EVENT } from "@/app/_components/interaction-client";
 import type { StoryInsights } from "@/lib/personalization/insights";
 import { toLatinDigits } from "@/lib/format";
-
-const EMPTY: StoryInsights = {
-  readers: 0,
-  avgMinutes: 0,
-  timeBuckets: [0, 0, 0, 0],
-  reach: { intro: 0, body: 0, end: 0 },
-  completion: 0,
-  likes: 0,
-  answers: 0,
-  engagement: 0,
-  daily: Array.from({ length: 30 }, () => 0),
-  trend: 0,
-};
 
 const n = (value: number) => toLatinDigits(String(value));
 const ROTATE_MS = 7000;
@@ -69,6 +57,7 @@ function Sparkline({ values }: { values: number[] }) {
 
 export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; readingMinutes: number }) {
   const [data, setData] = useState<StoryInsights | null>(null);
+  const loaded = data !== null;
   const [index, setIndex] = useState(0);
   const trackRef = useRef<HTMLDivElement>(null);
   const userTouched = useRef(false);
@@ -77,23 +66,28 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     const controller = new AbortController();
+    let sequence = 0;
     const load = async () => {
+      const id = ++sequence;
       try {
         const response = await fetch(`/api/content/insights?storyId=${encodeURIComponent(storyId)}`, { signal: controller.signal, cache: "no-store" });
         if (!response.ok) throw new Error("INSIGHTS_UNAVAILABLE");
         const json = await response.json();
         if (typeof json.readers !== "number") throw new Error("INVALID_INSIGHTS");
+        if (id !== sequence || controller.signal.aborted) return;
         setData(json as StoryInsights);
         setFailed(false);
       } catch {
-        if (!controller.signal.aborted) setFailed(true);
+        if (!controller.signal.aborted && id === sequence) setFailed(true);
       }
     };
     void load();
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void load();
     }, 60_000);
-    return () => { controller.abort(); window.clearInterval(timer); };
+    const changed = (event: Event) => { if ((event as CustomEvent).detail?.storyId === storyId) void load(); };
+    window.addEventListener(INTERACTION_EVENT, changed);
+    return () => { controller.abort(); window.clearInterval(timer); window.removeEventListener(INTERACTION_EVENT, changed); };
   }, [storyId, attempt]);
 
   const goTo = useCallback((next: number, smooth = true) => {
@@ -144,7 +138,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
       track.removeEventListener("touchstart", onPointer);
       cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [loaded]);
 
   // دوران تلقائي هادئ يتوقف بأول تدخل، ويحترم تقليل الحركة.
   useEffect(() => {
@@ -160,13 +154,13 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
 
   if (failed && data === null) return <section className="ins" aria-label="مؤشرات المادة"><p role="status">تعذّر تحميل مؤشرات المادة</p><button type="button" onClick={() => setAttempt(value => value + 1)}>إعادة المحاولة</button></section>;
 
-  const ins = data ?? EMPTY;
+  if (!data) return <section className="ins" aria-label="مؤشرات المادة"><p role="status">جارٍ تحميل مؤشرات القراءة والتفاعل…</p></section>;
+  const ins = data;
   const fresh = ins.readers < 20;
   const avg = fresh ? readingMinutes : ins.avgMinutes;
   const labels = ["< 2 د", "2–4 د", "4–6 د", "> 6 د"];
   const total = ins.likes + ins.answers;
-  const level = fresh ? null : ins.engagement < 25 ? "منخفض" : ins.engagement < 60 ? "متوسط" : "مرتفع";
-  const titles = ["معدل القراءة", "إكمال القراءة", "التفاعل الإجمالي", "نسبة التفاعل"];
+  const titles = ["معدل القراءة", "إكمال القراءة", "التفاعلات المباشرة", "نسبة التفاعل"];
 
   const select = (i: number) => {
     userTouched.current = true;
@@ -176,7 +170,7 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
   return (
     <section className="ins" aria-label="مؤشرات المادة" data-loading={data === null && !failed ? "" : undefined} onFocusCapture={() => { userTouched.current = true; }}>
       {failed && <p className="ins-desc" role="status">تعذّر تحديث المؤشرات. <button type="button" onClick={() => setAttempt(value => value + 1)}>إعادة المحاولة</button></p>}
-      {!failed && <p className="ins-desc ins-sample">{data === null ? "جارٍ تحميل المؤشرات…" : `${n(ins.readers)} قارئ ضمن القياس${fresh ? " · تظهر النسب بعد 20 قارئًا" : ""}`}</p>}
+      {!failed && <p className="ins-desc ins-sample">{data === null ? "جارٍ تحميل المؤشرات…" : `${n(ins.readers)} متصفح ضمن قياس القراءة${fresh ? " · تظهر النسب بعد 20 قارئًا" : ""}`}</p>}
       <div className="ins-track" ref={trackRef}>
         {/* 1) معدل القراءة */}
         <article className="ins-face" aria-hidden={index !== 0}>
@@ -217,14 +211,14 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
           </ul>
         </article>
 
-        {/* 3) التفاعل الإجمالي */}
+        {/* 3) التفاعلات المباشرة */}
         <article className="ins-face" aria-hidden={index !== 2}>
           <header>
-            <h3>التفاعل الإجمالي</h3>
+            <h3>التفاعلات المباشرة</h3>
             <Trend value={ins.trend} />
           </header>
           <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(total)}</b></p>
-          <p className="ins-desc">مجموع الإعجابات وإجابات الختام المسجّلة</p>
+          <p className="ins-desc">مجموع الإعجابات الحالية وإجابات سؤال الختام، منذ بدء التسجيل</p>
           <div className="ins-split" aria-hidden="true">
             {total === 0 ? (
               <i className="empty" style={{ flex: 1 }} />
@@ -237,9 +231,9 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
           </div>
           <p className="ins-legend">
             <span><i />إعجابات <b className="latin-number" dir="ltr" lang="en">{n(ins.likes)}</b></span>
-            <span><i className="alt" />إجابات <b className="latin-number" dir="ltr" lang="en">{n(ins.answers)}</b></span>
+            <span><i className="alt" />إجابات سؤال الختام <b className="latin-number" dir="ltr" lang="en">{n(ins.answers)}</b></span>
           </p>
-          <p className="ins-desc">منحنى التفاعلات خلال آخر 30 يومًا</p>
+          <p className="ins-desc">الإعجابات والإجابات القائمة المسجّلة خلال آخر 30 يومًا</p>
           <Sparkline values={ins.daily} />
         </article>
 
@@ -250,19 +244,9 @@ export function ArticleInsights({ storyId, readingMinutes }: { storyId: string; 
             {!fresh && <span className="ins-chip">{n(ins.readers)} قارئ</span>}
           </header>
           {fresh ? <p className="ins-big ins-empty">العينة غير كافية بعد</p> : <p className="ins-big"><b className="latin-number" dir="ltr" lang="en">{n(ins.engagement)}</b><span>%</span></p>}
-          <p className="ins-desc">{fresh ? "تظهر النسب بعد 20 قارئًا" : "نسبة القرّاء الذين تفاعلوا بشكل إيجابي مع المحتوى"}</p>
-          <div className="ins-levels" aria-hidden="true">
-            <i className={level === "منخفض" ? "is-on low" : "low"} /><i className={level === "متوسط" ? "is-on mid" : "mid"} /><i className={level === "مرتفع" ? "is-on high" : "high"} />
-          </div>
-          <p className="ins-level-lbls"><span>منخفض</span><span>متوسط</span><span>مرتفع</span></p>
-          <div className="ins-gauge" aria-hidden="true">
-            {!fresh && <i className="ins-gauge-pin" style={{ insetInlineStart: `${ins.engagement}%` }} />}
-          </div>
-          <p className="ins-scale latin-number" dir="ltr" lang="en">
-            {[0, 25, 50, 75, 100].map((v) => (
-              <span key={v} className={!fresh && Math.abs(ins.engagement - v) <= 12 ? "is-on" : undefined}>{n(v)}%</span>
-            ))}
-          </p>
+          <p className="ins-desc">{fresh ? "تظهر النسب بعد 20 قارئًا" : "نسبة المتصفحات ضمن قياس القراءة التي سجّلت إعجابًا أو إجابة لسؤال الختام"}</p>
+          <div className="ins-progress"><i style={{ width: `${fresh ? 0 : ins.engagement}%` }} /></div>
+          <p className="ins-desc">المشاهدات تقيس الوصول. الإعجاب والإجابة تفاعلان مباشران؛ من يقوم بهما معًا يُحتسب مرة واحدة في النسبة.</p>
         </article>
       </div>
 

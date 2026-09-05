@@ -121,17 +121,31 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
                     const count = item.badge ? counts[item.badge] : 0;
                     return (
                       <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={active}
-                          tooltip={item.title}
-                          className="data-active:shadow-[inset_-2px_0_0_0_var(--sidebar-primary)]"
-                        >
-                          <Link href={item.href} onClick={closeMobile}>
+                        {item.comingSoon ? (
+                          <SidebarMenuButton
+                            disabled
+                            tooltip={`${item.title} — قريبًا`}
+                            className="text-sidebar-foreground/70 disabled:opacity-100"
+                          >
                             <item.icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
+                            <span>
+                              {item.title}
+                              <small className="ms-2 text-[10px] font-normal">قريبًا</small>
+                            </span>
+                          </SidebarMenuButton>
+                        ) : (
+                          <SidebarMenuButton
+                            asChild
+                            isActive={active}
+                            tooltip={item.title}
+                            className="data-active:shadow-[inset_-2px_0_0_0_var(--sidebar-primary)]"
+                          >
+                            <Link href={item.href} onClick={closeMobile}>
+                              <item.icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        )}
                         {item.badge && count > 0 ? (
                           <SidebarMenuBadge
                             className={cn(

@@ -334,13 +334,14 @@ export function applyEvent(stats: StoryStats, event: IncomingEvent, nowIso: stri
       };
     }
     case "closing_answer": {
-      if (next.closingAnswer !== null) return none;
       const answer = event.value === 1 ? 1 : 0;
+      if (next.closingAnswer === answer) return none;
+      const previousWeight = next.closingAnswer === null ? 0 : next.closingAnswer === 0 ? WEIGHTS.closingNew : WEIGHTS.closingKnew;
       next.closingAnswer = answer;
       return {
         stats: { ...next, interestScore: storyInterestScore(next) },
         persistEvent: true,
-        topicDelta: answer === 0 ? WEIGHTS.closingNew : WEIGHTS.closingKnew,
+        topicDelta: (answer === 0 ? WEIGHTS.closingNew : WEIGHTS.closingKnew) - previousWeight,
         topicSource: "inferred",
         milestones: [],
         engagedNow: false,

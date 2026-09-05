@@ -44,6 +44,7 @@ try {
   assert.equal(stats.readers,1); assert.equal(stats.avgMinutes,2); assert.equal(stats.completion,100);
   assert.deepEqual(stats.timeBuckets,[0,100,0,0]);
   await client.query("insert into member_story_stats(member_id,story_id,liked,ai_tools,last_visit_at,updated_at) values('member','article',1,'[]',$1,$1)",[new Date().toISOString()]);
+  await client.query("insert into member_likes(member_id,story_id,created_at) values('member','article',$1)",[new Date().toISOString()]);
   globalThis.__readingMember='member'; await send({activeMs:120000,progress:90});
   stats=await subject.storyInsights('article'); assert.equal(stats.engagement,100);
   globalThis.__readingMember=null;

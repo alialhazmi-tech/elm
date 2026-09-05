@@ -385,3 +385,18 @@ export const storyReadingSessions = pgTable("story_reading_sessions", {
   index("story_reading_sessions_story_idx").on(table.storyId),
   index("story_reading_sessions_member_idx").on(table.memberId),
 ]);
+
+/** تفاعلات الزوار: حالة واحدة لكل متصفح ومادة، منفصلة عن نبضات القراءة. */
+export const visitorStoryInteractions = pgTable("visitor_story_interactions", {
+  visitorId: text("visitor_id").notNull(),
+  storyId: text("story_id").notNull(),
+  liked: integer("liked").notNull().default(0),
+  closingAnswer: integer("closing_answer"),
+  likedAt: text("liked_at"),
+  answeredAt: text("answered_at"),
+}, (table) => [
+  primaryKey({ columns: [table.visitorId, table.storyId] }),
+  index("visitor_interactions_story_idx").on(table.storyId),
+  check("visitor_interactions_like", sql`${table.liked} in (0, 1)`),
+  check("visitor_interactions_answer", sql`${table.closingAnswer} in (0, 1)`),
+]);

@@ -11,6 +11,6 @@ export async function GET(request: Request) {
   const total = counts[0] + counts[1];
   return Response.json(
     { counts, total },
-    { headers: { "Cache-Control": "public, max-age=30, stale-while-revalidate=60" } },
+    { headers: { "Cache-Control": "no-store" } },
   );
 }
