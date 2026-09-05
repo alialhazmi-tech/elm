@@ -26,13 +26,26 @@ try {
   assert.ok(before.includes("users.session_version"));
   assert.ok(before.includes("users.mfa_secret"));
   assert.ok(before.includes("request_limits.key"));
+  assert.ok(before.includes("public.users_username_normalized_uidx"));
+  // Conflicting legacy names must stop migration without modifying either account.
+  await client.query("insert into users(id,username,display_name,password_hash,created_at) values('case-conflict',' Existing-User ','Duplicate fixture',$1,now())", [passwordHash]);
+  await assert.rejects(promisify(execFile)(process.execPath, ['scripts/migrate-db.mjs', '--apply'], {
+    env: { ...process.env, TEST_DATABASE_URL: url.href, DATABASE_URL_UNPOOLED: url.href },
+  }), error => error.stderr.includes('users_username_normalized_uidx'));
+  assert.equal((await client.query('select count(*)::int n from users')).rows[0].n, 2);
+  await client.query("delete from users where id='case-conflict'");
   for (let run = 0; run < 2; run++) {
     await promisify(execFile)(process.execPath, ["scripts/migrate-db.mjs", "--apply"], {
       env: { ...process.env, TEST_DATABASE_URL: url.href, DATABASE_URL_UNPOOLED: url.href },
     });
   }
   assert.deepEqual((await client.query(DATABASE_READINESS_SQL)).rows, []);
+  await client.query('begin');
+  await client.query('drop index users_username_normalized_uidx');
+  assert.deepEqual((await client.query(DATABASE_READINESS_SQL)).rows.map(row => row.missing), ['public.users_username_normalized_uidx']);
+  await client.query('rollback');
   const user = (await client.query("select * from users where id='existing-user'")).rows[0];
+  assert.equal(user.username, 'existing-user');
   assert.equal(user.session_version, 1);
   assert.equal(user.mfa_secret, null);
   assert.equal(user.password_hash, passwordHash);

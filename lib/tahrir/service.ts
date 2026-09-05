@@ -8,6 +8,7 @@ import { stripHtmlToText } from "@/lib/content/html";
 import { getDb } from "@/lib/db";
 import { assertCanWrite, assertExpectedVersion, stableIdentity, StoryWriteError, type WriteActor } from "./write-policy";
 import { auditQuery, copySlides, copySource, lockStory, publishCheckedStory } from "./workflow";
+import { usernameEquals } from "./username";
 
 export type StoryRow = typeof stories.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -33,7 +34,9 @@ function requireDb() {
 
 export async function findUser(username: string): Promise<UserRow | null> {
   const db = requireDb();
-  const rows = await db.select().from(users).where(eq(users.username, username)).limit(1);
+  const rows = await db.select().from(users).where(usernameEquals(username)).limit(2);
+  // لا نختار حسابًا عشوائيًا إذا لم يُطبّق الفهرس بعد وكانت هناك أسماء متعارضة.
+  if (rows.length > 1) throw new Error("AMBIGUOUS_USERNAME");
   return rows[0] ?? null;
 }
 

@@ -36,7 +36,7 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/cache$/ }, () => ({ path: "cache", namespace: "test" }));
@@ -88,8 +88,9 @@ try {
   // Exercise the real login handler and signed session against the migrated database.
   const { hashPassword, readSessionToken, SESSION_COOKIE } = await import('../lib/tahrir/crypto.ts');
   process.env.AUTH_SECRET = 'isolated-integration-session-secret';
-  await admin.query("insert into users(id,username,display_name,password_hash,created_at) values($1,$2,$3,$4,$5)", ['login-fixture','login-fixture','Local fixture',await hashPassword('fixture-password-123'),new Date().toISOString()]);
-  const loginRequest = password => new Request('https://test.invalid/api/tahrir/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'login-fixture',password})});
+  await admin.query("insert into roles(id,label,created_at,updated_at) values('login-test-role','Login fixture role',now(),now()) on conflict do nothing");
+  await admin.query("insert into users(id,username,display_name,password_hash,created_at) values($1,$2,$3,$4,$5)", ['login-fixture','Login-Fixture','Local fixture',await hashPassword('fixture-password-123'),new Date().toISOString()]);
+  const loginRequest = (password, username = 'login-fixture') => new Request('https://test.invalid/api/tahrir/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
   // Existing account/network lockouts must no longer prevent password or MFA checks.
   await withDb(async () => {
     for (let attempt = 0; attempt < 41; attempt++) {
@@ -98,6 +99,20 @@ try {
     }
   });
   assert.equal((await withDb(() => subject.loginApi(loginRequest('wrong-password')))).status,401);
+  for (const password of ['FIXTURE-PASSWORD-123', ' fixture-password-123 ']) {
+    assert.equal((await withDb(() => subject.loginApi(loginRequest(password)))).status, 401, 'passwords must remain case- and whitespace-sensitive');
+  }
+  for (const username of ['Login-Fixture', 'LOGIN-FIXTURE', ' \tLoGiN-FiXtUrE\n ']) {
+    const response = await withDb(() => subject.loginApi(loginRequest('fixture-password-123', username)));
+    assert.equal(response.status, 200);
+    const value = response.headers.get('Set-Cookie').split(';')[0].slice(SESSION_COOKIE.length + 1);
+    const session = await readSessionToken(value);
+    assert.equal(session.userId, 'login-fixture');
+    assert.equal(session.username, 'Login-Fixture', 'stored identity and session claims stay intact');
+  }
+  assert.equal(await withDb(() => subject.findUser('login-fixtur_')), null);
+  assert.equal(await withDb(() => subject.findUser('login-%')), null);
+  checks++;
   const loggedIn = await withDb(() => subject.loginApi(loginRequest('fixture-password-123')));
   assert.equal(loggedIn.status,200);
   const cookie = loggedIn.headers.get('Set-Cookie');
@@ -115,6 +130,29 @@ try {
   assert.equal(mfaLogin.status,401);
   assert.equal((await mfaLogin.json()).mfaRequired,true);
   assert.equal(mfaLogin.headers.get('Set-Cookie'),null);
+  checks++;
+  // Enforce one normalized identity in both the service and the database, including races.
+  const newMember = username => ({ username, displayName: 'Test member', email: '', role: 'login-test-role', password: 'fixture-password-123' });
+  const duplicate = error => error.status === 409 && error.message === 'اسم المستخدم مستعمل.';
+  await assert.rejects(withDb(() => subject.createMember(newMember(' LOGIN-fixture '), 'test')), duplicate);
+  const attempts = await Promise.allSettled([' Concurrent.Identity ', 'concurrent.identity'].map(username => withDb(() => subject.createMember(newMember(username), 'test'))));
+  assert.equal(attempts.filter(result => result.status === 'fulfilled').length, 1);
+  assert.ok(duplicate(attempts.find(result => result.status === 'rejected').reason));
+  assert.equal((await admin.query("select count(*)::int n from users where lower(btrim(username))='concurrent.identity'")).rows[0].n, 1);
+  assert.equal((await admin.query("select count(*)::int n from audit_log where action='users:create'")).rows[0].n, 1);
+  await assert.rejects(admin.query("insert into users(id,username,display_name,password_hash,created_at) values('duplicate',' LOGIN-FIXTURE ','Fixture','unused',now())"), error => error.code === '23505');
+  await admin.query("insert into users(id,username,display_name,password_hash,created_at) values('padded',' Legacy.Name ','Fixture','unused',now())");
+  assert.equal((await withDb(() => subject.findUser('legacy.name'))).id, 'padded');
+  await assert.rejects(admin.query("update users set username='login-FIXTURE' where id='padded'"), error => error.code === '23505');
+  await withDb(async () => {
+    const client = context.getStore().$client;
+    await client.query('begin');
+    try {
+      await client.query('drop index users_username_normalized_uidx');
+      await client.query("insert into users(id,username,display_name,password_hash,created_at) values('ambiguous','LOGIN-FIXTURE','Fixture','unused',now())");
+      await assert.rejects(subject.findUser('login-fixture'), /AMBIGUOUS_USERNAME/);
+    } finally { await client.query('rollback'); }
+  });
   checks++;
   assert.equal((await withDb(() => subject.healthApi())).status,200);
   await withDb(async () => {

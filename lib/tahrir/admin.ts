@@ -16,6 +16,7 @@ import {
   type OverrideEffect,
 } from "./permissions";
 import { audit } from "./service";
+import { usernameEquals } from "./username";
 
 export class AdminError extends Error {
   status: number;
@@ -144,12 +145,12 @@ export async function createMember(
   validatePassword(input.password);
   await requireRole(input.role);
 
-  const existing = await db.select({ id: users.id }).from(users).where(eq(users.username, username)).limit(1);
+  const existing = await db.select({ id: users.id }).from(users).where(usernameEquals(username)).limit(1);
   if (existing.length > 0) throw new AdminError("اسم المستخدم مستعمل.", 409);
 
   const id = crypto.randomUUID();
   const at = now();
-  await db.insert(users).values({
+  const inserted = await db.insert(users).values({
     id,
     username,
     displayName,
@@ -160,7 +161,8 @@ export async function createMember(
     mustChangePassword: input.mustChangePassword === false ? 0 : 1,
     createdAt: at,
     updatedAt: at,
-  });
+  }).onConflictDoNothing().returning({ id: users.id });
+  if (inserted.length === 0) throw new AdminError("اسم المستخدم مستعمل.", 409);
   await audit(actor, "users:create", undefined, `${displayName} (${username}) — ${input.role}`);
   return id;
 }

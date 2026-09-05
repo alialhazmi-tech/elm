@@ -22,4 +22,11 @@ select signature from (values
   ('public.alelm_assert_story_version(text,integer,text)'),
   ('public.alelm_reserve_ai(text,integer,integer,integer)')
 ) as required(signature) where to_regprocedure(signature) is null
+union all
+select 'public.users_username_normalized_uidx' where not exists (
+  select 1 from pg_index
+  where indexrelid=to_regclass('public.users_username_normalized_uidx')
+    and indrelid=to_regclass('public.users')
+    and indisunique and indisvalid and indpred is null
+)
 order by missing`;
