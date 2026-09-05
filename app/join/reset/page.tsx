@@ -12,9 +12,9 @@ export const dynamic = "force-dynamic";
 export default async function ResetPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; receipt?: string }>;
 }) {
-  const { token } = await searchParams;
+  const { token, receipt } = await searchParams;
   return (
     <>
       <SiteHeader />
@@ -22,6 +22,11 @@ export default async function ResetPage({
         <section className="member-auth-panel">
           <ResetForm
             token={typeof token === "string" ? token : ""}
+            receipt={
+              typeof receipt === "string" && receipt.length <= 4096
+                ? receipt
+                : ""
+            }
             available={memberAuthConfigured}
           />
         </section>

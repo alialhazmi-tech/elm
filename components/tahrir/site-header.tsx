@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { usePathname, useSearchParams } from "next/navigation";
-import { PanelRightCloseIcon, PanelRightOpenIcon, PlusIcon } from "lucide-react";
+import { ExternalLinkIcon, PanelRightCloseIcon, PanelRightOpenIcon, PlusIcon } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -40,23 +40,29 @@ export function SiteHeader({ today, user }: { today: string; user: { name: strin
           {open ? <PanelRightCloseIcon /> : <PanelRightOpenIcon />}
         </Button>
         <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-4" />
-        <Breadcrumb>
-          <BreadcrumbList>
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap">
             <BreadcrumbItem className="hidden sm:block">
               <BreadcrumbLink asChild>
                 <Link href="/tahrir">تحرير العلم</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator className="hidden sm:block rtl:rotate-180" />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="font-display font-bold">{title}</BreadcrumbPage>
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="truncate font-display font-bold">{title}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
         <Separator orientation="vertical" className="mx-1 hidden data-[orientation=vertical]:h-4 md:block" />
         <span className="hidden text-xs text-muted-foreground md:inline">{today}</span>
 
-        <div className="ms-auto flex items-center gap-1">
+        <div className="ms-auto flex shrink-0 items-center gap-1">
+          <Button asChild size="sm" variant="outline">
+            <Link href="/" target="_blank" rel="noopener noreferrer" prefetch={false} aria-label="عرض الصفحة الرئيسية للموقع — يفتح في تبويب جديد" title="عرض الموقع في تبويب جديد">
+              <ExternalLinkIcon data-icon="inline-start" />
+              <span className="hidden sm:inline">عرض الموقع</span>
+            </Link>
+          </Button>
           <Button asChild size="sm" className="me-1 font-display font-bold shadow-md shadow-primary/30">
             <Link href="/tahrir/editor/new">
               <PlusIcon data-icon="inline-start" />

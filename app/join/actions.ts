@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
 import { safeInternalPath } from "@/lib/membership/paths";
+import { readResetReceipt } from "@/lib/membership/email/reset-receipt";
+import { notifyAccountChange } from "@/lib/membership/email/notifications";
 
 export type AuthFormState = { error?: string; success?: string };
 
@@ -117,6 +119,11 @@ export async function resetMemberPassword(
     return { error: "كلمة المرور يجب أن تكون بين 8 و128 حرفًا." };
   if (newPassword !== formData.get("confirmPassword"))
     return { error: "كلمتا المرور غير متطابقتين." };
+  const receipt = readResetReceipt(
+    String(formData.get("receipt") ?? ""),
+    token,
+    process.env.ACCOUNT_EMAIL_RECEIPT_SECRET ?? "",
+  );
   try {
     const result = await memberAuth.resetPassword({ token, newPassword });
     if (result.error)
@@ -127,5 +134,12 @@ export async function resetMemberPassword(
   } catch {
     return { error: "تعذر الاتصال بخدمة العضوية. حاول مرة أخرى." };
   }
+  if (receipt)
+    notifyAccountChange({
+      kind: "password-changed",
+      email: receipt.email,
+      name: receipt.name,
+      eventId: `reset/${receipt.eventId}`,
+    });
   return { success: "تم تغيير كلمة المرور. يمكنك تسجيل الدخول الآن." };
 }
