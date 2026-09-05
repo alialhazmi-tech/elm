@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ScheduleRefresh } from "@/components/tahrir/schedule-refresh";
 
 import { SeriesTag, StatusPill } from "@/components/tahrir/badges";
 import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
@@ -32,7 +33,8 @@ const dayOf = (iso: string) =>
   }).format(new Date(iso));
 
 export default async function SchedulePage() {
-  // المراقب الخارجي ينشر عبر POST موثق؛ هذه الشاشة للقراءة فقط.
+  const automatic = process.env.ALELM_SCHEDULER_INTERVAL_MS === "5000";
+  // المراقب الداخلي أو الخارجي ينشر عبر POST موثق؛ هذه الشاشة للقراءة فقط.
   const [latestPublished, scheduled] = await Promise.all([
     listLatestByStatus("published", 60).catch(() => []),
     listLatestByStatus("scheduled", 100).catch(() => []),
@@ -57,7 +59,7 @@ export default async function SchedulePage() {
         href: editorHref(entry.row),
         state:
           entry.state === "later" && all.findIndex((other) => other.state === "later") === index ? "next" : entry.state,
-        meta: `${entry.state === "done" ? "نُشرت" : "مجدولة · تُنشر تلقائيًا"}${series ? ` · ${series.name}` : ""}`,
+        meta: `${entry.state === "done" ? "نُشرت" : (automatic ? "مجدولة · تُنشر تلقائيًا" : "مجدولة · تحقق من تشغيل المجدول")}${series ? ` · ${series.name}` : ""}`,
       };
     });
 
@@ -67,6 +69,7 @@ export default async function SchedulePage() {
 
   return (
     <main className="flex flex-col gap-3">
+      <ScheduleRefresh active={scheduled.length > 0} />
       <div className="flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-xl font-extrabold">جدولة النشر</h1>
         <span className="text-xs text-muted-foreground tabular-nums">
@@ -105,9 +108,8 @@ export default async function SchedulePage() {
             <p className="px-4 py-3 text-xs leading-relaxed text-muted-foreground">
               الجدولة من المحرر ومن صلاحية <b className="text-foreground">المعتمدين</b> — الحارس يفحص المادة عند الجدولة، ثم
               يفحصها <b className="text-foreground">ثانية لحظة الموعد</b>: السليمة تُنشر آليًا، وأي مخالفة قاطعة توقف النشر
-              وتعيدها للاعتماد مع تدوين السبب في السجل. النبضة تعمل مع نشاط اللوحة، وللدقة الكاملة اربط مراقبًا خارجيًا بـ
-              <code className="mx-1 rounded bg-muted px-1 font-mono text-[11px]" dir="ltr">/api/tahrir/tick</code>
-              كل دقائق.
+              وتعيدها للاعتماد مع تدوين السبب في السجل.
+              {automatic ? " يعمل المجدول مع الخادم ويفحص المواعيد كل 5 ثوانٍ، حتى عند إغلاق اللوحة. تتحدث هذه الصفحة تلقائيًا لمتابعة النشر. قد يتأخر التنفيذ قليلًا بحسب استجابة الخادم." : " مشغّل الجدولة الداخلي غير مفعّل في هذه البيئة؛ يجب التحقق من إعداد تشغيل الجدولة قبل الاعتماد على النشر التلقائي."}
             </p>
           </Panel>
         </div>

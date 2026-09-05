@@ -280,6 +280,14 @@ try {
   assert.equal(returned.status,'review'); assert.equal(returned.scheduledAt,null);
   await withDb(() => subject.promoteDueScheduled());
   assert.equal((await admin.query("select count(*)::int as n from audit_log where action='schedule:conflict'")).rows[0].n,1); checks++;
+  // Multiple scheduler processes may overlap during deployment; publish each due story once.
+  await admin.query("insert into stories(id,slug,title,section,status,scheduled_at) values ('scheduler-due','scheduler-due','مادة مستحقة','news','scheduled','2000-01-01T00:00:00.000Z'), ('scheduler-future','scheduler-future','مادة مستقبلية','news','scheduled','2099-01-01T00:00:00.000Z')");
+  const ticks = await Promise.all([withDb(() => subject.promoteDueScheduled()), withDb(() => subject.promoteDueScheduled())]);
+  assert.equal(ticks.flat().filter(row => row.id === 'scheduler-due').length, 1);
+  assert.equal((await withDb(() => subject.getStory('scheduler-due'))).status, 'published');
+  assert.equal((await withDb(() => subject.getStory('scheduler-future'))).status, 'scheduled');
+  assert.deepEqual(await withDb(() => subject.promoteDueScheduled()), []);
+  assert.equal((await admin.query("select count(*)::int as n from audit_log where action='status:published' and story_id='scheduler-due'")).rows[0].n, 1); checks++;
   await withDb(() => subject.seedInterestCatalog());
   await Promise.all([withDb(() => subject.saveMemberInterests('alice',['health','science'])),withDb(() => subject.saveMemberInterests('alice',['economy','technology']))]);
   const profile = await withDb(() => subject.getMemberProfile('alice'));

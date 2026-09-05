@@ -393,9 +393,10 @@ export interface PromotedStory { id: string; section: string; slug: string }
 export async function promoteDueScheduled(): Promise<PromotedStory[]> {
   const db = requireDb();
   const now = new Date().toISOString();
-  const settings = await loadAiSettings();
   const due = await db.select().from(stories)
     .where(and(eq(stories.status, "scheduled"), sql`${stories.scheduledAt} <= ${now}`)).orderBy(asc(stories.scheduledAt), asc(stories.id)).limit(100);
+  if (!due.length) return [];
+  const settings = await loadAiSettings();
   const promoted: PromotedStory[] = [];
   for (const story of due) {
     const report = runConfiguredPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body),
