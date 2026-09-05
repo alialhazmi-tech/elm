@@ -130,5 +130,6 @@ export function pageTitleFor(pathname: string, status: string | null): string {
     }
   }
   if (pathname === "/tahrir/profile") return "ملفي الشخصي";
+  if (pathname === "/tahrir/profile/saved") return "المواد المحفوظة";
   return "تحرير العلم";
 }
