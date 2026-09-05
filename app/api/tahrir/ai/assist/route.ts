@@ -11,6 +11,7 @@ import {
 } from "@/lib/ai/editorial";
 import { textClient } from "@/lib/ai/text-client";
 import { missingTextKeyMessage } from "@/lib/ai/provider-config";
+import { EditorialOutputError } from "@/lib/ai/output-error";
 import { loadAiSettings, type AiSettingsData } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
 import { requirePermission } from "@/lib/tahrir/access";
@@ -192,7 +193,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     const message = errorMessage(error);
-    const status = message.includes("غير مضبوط") ? 503 : 502;
+    const status = error instanceof EditorialOutputError ? 422 : message.includes("غير مضبوط") ? 503 : 502;
     return NextResponse.json({ error: message }, { status });
   }
 }
