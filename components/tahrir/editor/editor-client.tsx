@@ -717,7 +717,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
             />
           ) : null}
 
-          <ArticleLinks identity={savedIdentity} published={status === "published" || Boolean(initial?.publishedAt)} dirty={autosave.dirty || busy} />
+          <ArticleLinks identity={savedIdentity} editorId={id} published={status === "published" || Boolean(initial?.publishedAt)} dirty={autosave.dirty || busy} />
           <RichBody ref={richRef} initial={initial?.body ?? ""} onChange={(html, text) => onBody(html, text)} />
         </Card>
 
