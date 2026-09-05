@@ -42,15 +42,16 @@ test("شريط الأخبار يتناوب بين أحدث المواد ويقد
   assert.doesNotMatch(`${chrome}\n${strip}`, /مستجد/u);
 });
 
-test("الهاتف يملك تنقلًا صريحًا بدل إخفاء الأقسام", async () => {
-  const [chrome, css] = await Promise.all([
-    read("app/_components/site-chrome.tsx"),
-    read("app/globals.css"),
-  ]);
-  assert.match(chrome, /className="mobile-nav"/);
-  assert.match(chrome, /التنقل الرئيسي للجوال/);
-  assert.match(css, /\.mobile-nav\s*\{\s*display:\s*none/);
-  assert.match(css, /@media \(max-width: 640px\)[\s\S]*\.mobile-nav\s*\{[\s\S]*display:\s*flex/);
+test("قائمة الهاتف تفصل الأقسام والسلاسل والصيغ وتضع العضوية بعد أدوات البحث والمظهر", async () => {
+  const chrome = await read("app/_components/site-chrome.tsx");
+  for (const label of ["الأقسام", "السلاسل", "مرئي وصوتي"]) {
+    assert.ok(chrome.includes(`className="site-drawer-section" aria-label="${label}"`));
+  }
+  assert.match(chrome, /label: "منوعات", href: "\/varieties"/);
+  const tools = chrome.slice(chrome.indexOf('className="top-tools"'));
+  assert.ok(tools.indexOf('<MobileNavigation>') < tools.indexOf('href="/search"'));
+  assert.ok(tools.indexOf('href="/search"') < tools.indexOf('<ThemeToggle />'));
+  assert.ok(tools.indexOf('<ThemeToggle />') < tools.indexOf('<MemberEntry />'));
 });
 
 test("قوائم المواد على الهاتف بطاقات أفقية كثيفة", async () => {
