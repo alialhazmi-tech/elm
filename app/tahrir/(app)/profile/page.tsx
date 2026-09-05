@@ -59,10 +59,10 @@ export default async function ProfilePage() {
             ["تاريخ الانضمام", date(user.createdAt)],
             ["آخر دخول", date(user.lastLoginAt)],
           ].map(([label, value]) => (
-            <div key={label}>
+            <div key={label} className="min-w-0">
               <dt className="text-muted-foreground">{label}</dt>
-              <dd className="mt-1 break-words font-medium" dir="auto">
-                {value}
+              <dd className="mt-1 break-words font-medium">
+                <bdi dir="auto">{value}</bdi>
               </dd>
             </div>
           ))}

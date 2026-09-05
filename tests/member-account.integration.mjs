@@ -5,6 +5,7 @@ import { build } from "esbuild";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { createResetReceipt } from "../lib/membership/email/reset-receipt.ts";
 
 const connectionString = process.env.TEST_DATABASE_URL;
 if (
@@ -36,6 +37,7 @@ globalThis.__memberAccountUser = {
   emailVerified: true,
 };
 globalThis.__memberAccountCalls = [];
+globalThis.__memberEmailNotifications = [];
 const directory = `tmp/member-account-test-${process.pid}`;
 const form = (values) => {
   const result = new FormData();
@@ -69,7 +71,7 @@ try {
           builder.onResolve(
             {
               filter:
-                /^(?:@\/lib\/db|next\/cache|next\/navigation|@\/lib\/membership\/auth)$/,
+                /^(?:@\/lib\/db|next\/cache|next\/navigation|@\/lib\/membership\/auth|@\/lib\/membership\/email\/notifications)$/,
             },
             (args) => ({ path: args.path, namespace: "fixture" }),
           );
@@ -82,6 +84,8 @@ try {
                 "export const unstable_cache=load=>load; export function revalidateTag(){} export function revalidatePath(){}",
               "next/navigation":
                 'export function redirect(url){throw new Error("REDIRECT:"+url)}',
+              "@/lib/membership/email/notifications":
+                "export function notifyAccountChange(input){globalThis.__memberEmailNotifications.push(input)}",
               "@/lib/membership/auth": `export const memberAuthConfigured=true; const call=method=>async body=>{globalThis.__memberAccountCalls.push({method,body}); return globalThis.__memberAccountFailure?{error:{message:'fixture'}}:{data:{}}}; export const memberAuth={getSession:async()=>({data:globalThis.__memberAccountUser?{user:globalThis.__memberAccountUser}:null}),updateUser:call('updateUser'),changePassword:call('changePassword'),emailOtp:{sendVerificationOtp:call('sendVerificationOtp'),verifyEmail:call('verifyEmail')},signOut:call('signOut'),requestPasswordReset:call('requestPasswordReset'),resetPassword:call('resetPassword')};`,
             }[args.path],
           }));
@@ -335,6 +339,7 @@ try {
     );
     checks++;
     globalThis.__memberAccountUser.emailVerified = false;
+    globalThis.__memberEmailNotifications.length = 0;
     assert.ok((await subject.sendMemberVerification()).success);
     assert.equal(
       globalThis.__memberAccountCalls.at(-1).body.type,
@@ -353,10 +358,17 @@ try {
       globalThis.__memberAccountCalls.at(-1).body.email,
       "account-a@example.invalid",
     );
+    assert.equal(globalThis.__memberEmailNotifications.length, 1);
+    assert.equal(globalThis.__memberEmailNotifications[0].kind, "welcome");
+    assert.equal(
+      globalThis.__memberEmailNotifications[0].email,
+      "account-a@example.invalid",
+    );
     globalThis.__memberAccountFailure = true;
     assert.ok(
       (await subject.verifyMemberEmail({}, form({ otp: "123456" }))).error,
     );
+    assert.equal(globalThis.__memberEmailNotifications.length, 1);
     globalThis.__memberAccountUser.emailVerified = true;
     checks++;
     assert.ok((await subject.signOutMember()).error);
@@ -390,12 +402,89 @@ try {
     checks++;
   });
   await context.run(db, async () => {
-    await client.query("update member_profiles set status='suspended' where auth_user_id='account-a'");
+    const previousSecret = process.env.ACCOUNT_EMAIL_RECEIPT_SECRET;
+    process.env.ACCOUNT_EMAIL_RECEIPT_SECRET =
+      "isolated-test-receipt-secret-at-least-32-chars";
+    try {
+      globalThis.__memberEmailNotifications.length = 0;
+      const receipt = createResetReceipt(
+        {
+          email: "reset-owner@example.invalid",
+          token: "valid-reset-token",
+          eventId: "test-reset-event",
+          expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        },
+        process.env.ACCOUNT_EMAIL_RECEIPT_SECRET,
+      );
+      const request = {
+        token: "valid-reset-token",
+        receipt,
+        password: "test-new-password",
+        confirmPassword: "test-new-password",
+        email: "attacker@example.invalid",
+      };
+      globalThis.__memberAccountFailure = true;
+      assert.ok((await subject.resetMemberPassword({}, form(request))).error);
+      assert.equal(globalThis.__memberEmailNotifications.length, 0);
+      globalThis.__memberAccountFailure = false;
+      assert.ok((await subject.resetMemberPassword({}, form(request))).success);
+      assert.equal(globalThis.__memberEmailNotifications.length, 1);
+      assert.equal(
+        globalThis.__memberEmailNotifications[0].email,
+        "reset-owner@example.invalid",
+      );
+      assert.equal(
+        globalThis.__memberEmailNotifications[0].kind,
+        "password-changed",
+      );
+      assert.ok(
+        (
+          await subject.resetMemberPassword(
+            {},
+            form({ ...request, receipt: "forged" }),
+          )
+        ).success,
+      );
+      assert.equal(globalThis.__memberEmailNotifications.length, 1);
+      globalThis.__memberAccountFailure = true;
+      const change = {
+        currentPassword: "old-password",
+        newPassword: "different-new-password",
+        confirmPassword: "different-new-password",
+        email: "attacker@example.invalid",
+      };
+      assert.ok((await subject.changeMemberPassword({}, form(change))).error);
+      assert.equal(globalThis.__memberEmailNotifications.length, 1);
+      globalThis.__memberAccountFailure = false;
+      assert.ok((await subject.changeMemberPassword({}, form(change))).success);
+      assert.equal(globalThis.__memberEmailNotifications.length, 2);
+      assert.equal(
+        globalThis.__memberEmailNotifications[1].email,
+        "account-a@example.invalid",
+      );
+      checks += 3;
+    } finally {
+      if (previousSecret === undefined)
+        delete process.env.ACCOUNT_EMAIL_RECEIPT_SECRET;
+      else process.env.ACCOUNT_EMAIL_RECEIPT_SECRET = previousSecret;
+    }
+  });
+  await context.run(db, async () => {
+    await client.query(
+      "update member_profiles set status='suspended' where auth_user_id='account-a'",
+    );
     const callsBefore = globalThis.__memberAccountCalls.length;
-    assert.ok((await subject.updateMemberDetails({}, form({ name: "blocked change" }))).error);
-    assert.ok((await subject.toggleNewsletter({}, form({ enabled: "1" }))).error);
+    assert.ok(
+      (await subject.updateMemberDetails({}, form({ name: "blocked change" })))
+        .error,
+    );
+    assert.ok(
+      (await subject.toggleNewsletter({}, form({ enabled: "1" }))).error,
+    );
     assert.equal(globalThis.__memberAccountCalls.length, callsBefore);
-    await client.query("update member_profiles set status='active' where auth_user_id='account-a'");
+    await client.query(
+      "update member_profiles set status='active' where auth_user_id='account-a'",
+    );
     checks++;
   });
   await context.run(null, async () => {
@@ -423,4 +512,5 @@ try {
   delete globalThis.__memberAccountUser;
   delete globalThis.__memberAccountCalls;
   delete globalThis.__memberAccountFailure;
+  delete globalThis.__memberEmailNotifications;
 }

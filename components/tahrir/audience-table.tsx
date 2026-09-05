@@ -246,8 +246,8 @@ export function AudienceTable({
                 ].map(([label, value]) => (
                   <div key={label}>
                     <dt className="text-muted-foreground">{label}</dt>
-                    <dd className="mt-1 break-words font-medium" dir="auto">
-                      {value}
+                    <dd className="mt-1 break-words font-medium">
+                      <bdi dir="auto">{value}</bdi>
                     </dd>
                   </div>
                 ))}

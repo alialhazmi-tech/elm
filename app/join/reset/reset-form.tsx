@@ -5,9 +5,11 @@ import { resetMemberPassword, type AuthFormState } from "../actions";
 import { PasswordInput } from "../join-form";
 export function ResetForm({
   token,
+  receipt = "",
   available,
 }: {
   token: string;
+  receipt?: string;
   available: boolean;
 }) {
   const [state, action, pending] = useActionState(
@@ -33,6 +35,7 @@ export function ResetForm({
       ) : (
         <form action={action} className="member-auth-form">
           <input type="hidden" name="token" value={token} />
+          <input type="hidden" name="receipt" value={receipt} />
           <PasswordInput
             autoComplete="new-password"
             label="كلمة المرور الجديدة"

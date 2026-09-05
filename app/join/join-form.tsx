@@ -196,7 +196,7 @@ export function JoinForm({
 }: {
   next?: string | null;
   available?: boolean;
-  initialMode?: "signup" | "signin";
+  initialMode?: "signup" | "signin" | "forgot";
 }) {
   const [mode, setMode] = useState<"signup" | "signin" | "forgot">(initialMode);
   return (

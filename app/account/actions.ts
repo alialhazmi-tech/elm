@@ -14,6 +14,7 @@ import { setSaved } from "@/lib/personalization/saved";
 import { setLiked } from "@/lib/personalization/likes";
 import { newsletterSubscribers } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { notifyAccountChange } from "@/lib/membership/email/notifications";
 
 export type AccountFormState = { error?: string; success?: string };
 async function currentMember() {
@@ -49,7 +50,8 @@ export async function changeMemberPassword(
   _state: AccountFormState,
   formData: FormData,
 ): Promise<AccountFormState> {
-  if (!(await currentMember())) return expired;
+  const user = await currentMember();
+  if (!user) return expired;
   const currentPassword = String(formData.get("currentPassword") ?? "");
   const newPassword = String(formData.get("newPassword") ?? "");
   if (!currentPassword || currentPassword.length > 128)
@@ -68,6 +70,11 @@ export async function changeMemberPassword(
     });
     if (result.error)
       return { error: "تعذر تغيير كلمة المرور. تحقق من كلمة المرور الحالية." };
+    notifyAccountChange({
+      kind: "password-changed",
+      email: user.email,
+      name: user.name,
+    });
     return saved("تم تغيير كلمة المرور وتسجيل الخروج من الجلسات الأخرى.");
   } catch {
     return failed;
@@ -221,6 +228,12 @@ export async function verifyMemberEmail(
     });
     if (result.error)
       return { error: "الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا." };
+    notifyAccountChange({
+      kind: "welcome",
+      email: user.email,
+      name: user.name,
+      eventId: `verified/${user.id}/${user.email}`,
+    });
     return saved("تم توثيق بريدك الإلكتروني.");
   } catch {
     return failed;

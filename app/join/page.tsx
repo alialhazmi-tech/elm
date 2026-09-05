@@ -120,7 +120,13 @@ export default async function JoinPage({
             <JoinForm
               next={next}
               available={memberAuthConfigured}
-              initialMode={mode === "signin" ? "signin" : "signup"}
+              initialMode={
+                mode === "forgot"
+                  ? "forgot"
+                  : mode === "signin"
+                    ? "signin"
+                    : "signup"
+              }
             />
           </section>
         </div>
