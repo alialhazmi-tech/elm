@@ -1,3 +1,4 @@
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import { seedContentProvider } from "@/lib/content/provider";
 import { storyInsights } from "@/lib/personalization/insights";
 
@@ -11,7 +12,7 @@ export async function GET(request: Request) {
     const story = await seedContentProvider.getStory(storyId);
     if (!story) return Response.json({ error: "STORY_NOT_FOUND" }, { status: 404, headers: { "Cache-Control": "no-store" } });
     const insights = await storyInsights(storyId);
-    return Response.json(insights, { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=60" } });
+    return Response.json(insights, { headers: { "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL } });
   } catch {
     return Response.json({ error: "INSIGHTS_UNAVAILABLE" }, { status: 503, headers: { "Cache-Control": "no-store" } });
   }

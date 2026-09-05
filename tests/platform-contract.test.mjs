@@ -9,6 +9,11 @@ const htmlPath = new URL(`../${DIST}/server/app/index.html`, import.meta.url);
 const routesPath = new URL(`../${DIST}/routes-manifest.json`, import.meta.url);
 const ogPath = new URL(`../${DIST}/server/app/brand/share.jpg.body`, import.meta.url);
 
+test("صفحات التنقل تعيد التحقق بدل الاحتفاظ بنسخة prefetch بعد النشر", async () => {
+  const meta = JSON.parse(await readFile(new URL(`../${DIST}/server/app/index.meta`, import.meta.url), "utf8"));
+  assert.equal(meta.headers["x-nextjs-stale-time"], "0");
+});
+
 test("places the approved GTM loader in head and its no-script fallback before authored body content", async () => {
   const html = await readFile(htmlPath, "utf8");
   const head = html.match(/<head>([\s\S]*?)<\/head>/)?.[1] ?? "";

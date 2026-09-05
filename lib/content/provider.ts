@@ -29,6 +29,7 @@ import type {
 import { storyHref } from "./types";
 import { normalizeArabic } from "@/lib/policy/normalize";
 import { storyKeywords } from "./keywords";
+import { cachedPublicQuery, invalidatePublicContent } from "./cache";
 
 export { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
 import { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
@@ -60,47 +61,10 @@ const seedAll: Story[] = [...seedArticles, ...seedVideosList];
 
 /* ============ كاش الاستعلامات الموجهة ============ */
 
-const DB_CACHE_MS = 60_000;
+const DB_CACHE_MS = 300_000;
 const SITEMAP_TTL_MS = 30 * 60_000;
-const CACHE_MAX_ENTRIES = 900;
-
-type CacheEntry = { at: number; value: unknown };
-const queryCache = new Map<string, CacheEntry>();
-const inflight = new Map<string, Promise<unknown>>();
 let dbHealthy = true;
 let dbWarned = false;
-
-function pruneCache() {
-  if (queryCache.size <= CACHE_MAX_ENTRIES) return;
-  const now = Date.now();
-  for (const [key, entry] of queryCache) {
-    if (now - entry.at > DB_CACHE_MS) queryCache.delete(key);
-  }
-  // إن بقيت ممتلئة بعد إسقاط المنتهي، احذف الأقدم (أول المفاتيح إدراجًا).
-  if (queryCache.size > CACHE_MAX_ENTRIES) {
-    for (const key of queryCache.keys()) {
-      queryCache.delete(key);
-      if (queryCache.size <= CACHE_MAX_ENTRIES / 2) break;
-    }
-  }
-}
-
-async function cached<T>(key: string, ttl: number, load: () => Promise<T>): Promise<T> {
-  const hit = queryCache.get(key);
-  if (hit && Date.now() - hit.at < ttl) return hit.value as T;
-  const running = inflight.get(key);
-  if (running) return running as Promise<T>;
-  const promise = load()
-    .then((value) => {
-      queryCache.set(key, { at: Date.now(), value });
-      pruneCache();
-      dbHealthy = true;
-      return value;
-    })
-    .finally(() => inflight.delete(key));
-  inflight.set(key, promise);
-  return promise;
-}
 
 type Db = NonNullable<ReturnType<typeof getDb>>;
 
@@ -114,7 +78,9 @@ async function dbOrSeed<T>(
   const db = getDb();
   if (!db) return viaSeed();
   try {
-    return await cached(key, ttl, () => viaDb(db));
+    const value = await cachedPublicQuery(key, ttl, () => viaDb(db));
+    dbHealthy = true;
+    return value;
   } catch (error) {
     dbHealthy = false;
     if (!dbWarned) {
@@ -125,9 +91,9 @@ async function dbOrSeed<T>(
   }
 }
 
-/** يُستدعى بعد أرشفة/نشر حتى لا تبقى المادة في كاش الدقيقة على الموقع العام. */
+/** يُستدعى من مسارات الكتابة بعد نجاح المعاملة، ويشمل كل قراءات الموقع العام. */
 export function invalidateCorpus() {
-  queryCache.clear();
+  invalidatePublicContent();
 }
 
 /* ============ التحويل من صف القاعدة ============ */
@@ -597,32 +563,41 @@ export type SitemapStoryEntry = {
  * الأرشيف ~29 ألف رابط: خريطة واحدة صالحة (السقف 50 ألفًا)؛ عند الاقتراب منه تُقسَّم.
  */
 export async function listSitemapEntries(): Promise<SitemapStoryEntry[]> {
-  return dbOrSeed(
-    "sitemap:stories",
-    SITEMAP_TTL_MS,
-    async (db) => {
-      const rows = await db
-        .select({
-          id: storiesTable.id,
-          slug: storiesTable.slug,
-          section: storiesTable.section,
-          publishedAt: storiesTable.publishedAt,
-          updatedAt: storiesTable.updatedAt,
-        })
-        .from(storiesTable)
-        .where(PUBLISHED)
-        .orderBy(...RECENT_ORDER);
-      return rows;
-    },
-    () =>
-      seedAll.map((story) => ({
-        id: story.id,
-        slug: story.slug,
-        section: story.section,
-        publishedAt: story.publishedAt ?? null,
-        updatedAt: null,
-      })),
-  );
+  // كل شريحة دون حد Next Data Cache البالغ 2 MB؛ لا نكاش الأرشيف كله كقيمة واحدة.
+  const pageSize = 1000;
+  const entries: SitemapStoryEntry[] = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await dbOrSeed(
+      `sitemap:stories:${offset}`,
+      SITEMAP_TTL_MS,
+      async (db) => {
+        const rows = await db
+          .select({
+            id: storiesTable.id,
+            slug: storiesTable.slug,
+            section: storiesTable.section,
+            publishedAt: storiesTable.publishedAt,
+            updatedAt: storiesTable.updatedAt,
+          })
+          .from(storiesTable)
+          .where(PUBLISHED)
+          .orderBy(...RECENT_ORDER)
+          .limit(pageSize)
+          .offset(offset);
+        return rows;
+      },
+      () =>
+        seedAll.slice(offset, offset + pageSize).map((story) => ({
+          id: story.id,
+          slug: story.slug,
+          section: story.section,
+          publishedAt: story.publishedAt ?? null,
+          updatedAt: null,
+        })),
+    );
+    entries.push(...page);
+    if (page.length < pageSize) return entries;
+  }
 }
 
 /* ============ استخراج الأرقام للرئيسية ============ */
@@ -787,10 +762,11 @@ export const seedContentProvider: ContentProvider = {
     }
     try {
       const [recent, videos, pinned] = await Promise.all([
-        cached("recent", DB_CACHE_MS, () => recentCardsFromDb(db)),
-        cached("home:videos", DB_CACHE_MS, () => homeVideoCards(db)),
-        cached("home:pinned", DB_CACHE_MS, () => pinnedCard(db)),
+        cachedPublicQuery("recent", DB_CACHE_MS, () => recentCardsFromDb(db)),
+        cachedPublicQuery("home:videos", DB_CACHE_MS, () => homeVideoCards(db)),
+        cachedPublicQuery("home:pinned", DB_CACHE_MS, () => pinnedCard(db)),
       ]);
+      dbHealthy = true;
       // المثبت قد يكون أقدم من النافذة الحديثة — يُقدَّم عليها دون تكرار.
       const articlesBase = recent.filter((story) => !isVideo(story));
       const articles =

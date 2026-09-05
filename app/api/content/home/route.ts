@@ -1,3 +1,4 @@
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import { contentSource, seedContentProvider } from "@/lib/content/provider";
 
 export async function GET() {
@@ -5,7 +6,7 @@ export async function GET() {
 
   return Response.json(home, {
     headers: {
-      "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
       "X-Content-Contract": "home-bundle.v2",
       "X-Content-Source": await contentSource(),
     },

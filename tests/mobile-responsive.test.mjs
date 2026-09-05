@@ -38,7 +38,7 @@ test("شريط الأخبار يتناوب بين أحدث المواد ويقد
   assert.match(strip, /fetch\("\/api\/content\/news-strip"/);
   assert.match(strip, /prefers-reduced-motion: reduce/);
   assert.match(route, /getNewsStrip\(5\)/);
-  assert.match(route, /s-maxage=30/);
+  assert.match(route, /PUBLIC_CONTENT_CACHE_CONTROL/);
   assert.doesNotMatch(`${chrome}\n${strip}`, /مستجد/u);
 });
 

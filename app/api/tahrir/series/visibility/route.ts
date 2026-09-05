@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { ARCHIVED_SERIES } from "@/lib/content/series";
 import { requirePermission } from "@/lib/tahrir/access";
 import { setSeriesHidden } from "@/lib/tahrir/service";
+import { revalidatePublicContent } from "@/lib/tahrir/revalidatePublic";
 
 const ARCHIVED_SLUGS = new Set(ARCHIVED_SERIES.map((series) => series.slug));
 
@@ -24,5 +25,6 @@ export async function PATCH(request: Request) {
   }
 
   await setSeriesHidden(slug, hidden, session.username);
+  revalidatePublicContent();
   return NextResponse.json({ ok: true });
 }

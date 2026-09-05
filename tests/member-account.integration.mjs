@@ -1,0 +1,417 @@
+import assert from "node:assert/strict";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { mkdir, rm } from "node:fs/promises";
+import { build } from "esbuild";
+import pg from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { migrate } from "drizzle-orm/node-postgres/migrator";
+
+const connectionString = process.env.TEST_DATABASE_URL;
+if (
+  !connectionString ||
+  !/^alelm_test/.test(new URL(connectionString).pathname.slice(1))
+)
+  throw new Error("Isolated TEST_DATABASE_URL named alelm_test* required.");
+const client = new pg.Client({ connectionString });
+await client.connect();
+const db = drizzle(client);
+db.batch = async (queries) => {
+  await client.query("begin");
+  try {
+    const result = [];
+    for (const query of queries) result.push(await query);
+    await client.query("commit");
+    return result;
+  } catch (error) {
+    await client.query("rollback");
+    throw error;
+  }
+};
+const context = new AsyncLocalStorage();
+globalThis.__memberAccountDb = context;
+globalThis.__memberAccountUser = {
+  id: "account-a",
+  name: "عضو أول",
+  email: "account-a@example.invalid",
+  emailVerified: true,
+};
+globalThis.__memberAccountCalls = [];
+const directory = `tmp/member-account-test-${process.pid}`;
+const form = (values) => {
+  const result = new FormData();
+  for (const [key, value] of Object.entries(values))
+    for (const entry of Array.isArray(value) ? value : [value])
+      result.append(key, entry);
+  return result;
+};
+let checks = 0;
+try {
+  await migrate(db, { migrationsFolder: "drizzle" });
+  await client.query(
+    "truncate stories, member_profiles, member_interests, interests, member_saved_stories, member_likes, member_story_stats, member_topic_scores, member_events, story_reading_sessions, newsletter_subscribers cascade",
+  );
+  await mkdir(directory, { recursive: true });
+  await build({
+    stdin: {
+      contents: `export * from './app/account/actions'; export * from './lib/membership/account-data'; export {saveMemberInterests,seedInterestCatalog} from './lib/membership/profile'; export {requestMemberPasswordReset,resetMemberPassword} from './app/join/actions';`,
+      resolveDir: process.cwd(),
+      loader: "ts",
+    },
+    outfile: `${directory}/subject.mjs`,
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    packages: "external",
+    plugins: [
+      {
+        name: "isolated-account",
+        setup(builder) {
+          builder.onResolve(
+            {
+              filter:
+                /^(?:@\/lib\/db|next\/cache|next\/navigation|@\/lib\/membership\/auth)$/,
+            },
+            (args) => ({ path: args.path, namespace: "fixture" }),
+          );
+          builder.onLoad({ filter: /.*/, namespace: "fixture" }, (args) => ({
+            loader: "js",
+            contents: {
+              "@/lib/db":
+                "export function getDb(){return globalThis.__memberAccountDb.getStore()}",
+              "next/cache":
+                "export const unstable_cache=load=>load; export function revalidateTag(){} export function revalidatePath(){}",
+              "next/navigation":
+                'export function redirect(url){throw new Error("REDIRECT:"+url)}',
+              "@/lib/membership/auth": `export const memberAuthConfigured=true; const call=method=>async body=>{globalThis.__memberAccountCalls.push({method,body}); return globalThis.__memberAccountFailure?{error:{message:'fixture'}}:{data:{}}}; export const memberAuth={getSession:async()=>({data:globalThis.__memberAccountUser?{user:globalThis.__memberAccountUser}:null}),updateUser:call('updateUser'),changePassword:call('changePassword'),emailOtp:{sendVerificationOtp:call('sendVerificationOtp'),verifyEmail:call('verifyEmail')},signOut:call('signOut'),requestPasswordReset:call('requestPasswordReset'),resetPassword:call('resetPassword')};`,
+            }[args.path],
+          }));
+        },
+      },
+    ],
+  });
+  const subject = await import(`../${directory}/subject.mjs`);
+  await context.run(db, async () => {
+    await subject.seedInterestCatalog();
+    await client.query(`insert into stories(id,slug,section,title,body,status,published_at)
+      select 'account-story-'||lpad(i::text,2,'0'),'story-'||i,'health','خبر '||i,'متن عربي',case when i=15 then 'draft' else 'published' end,'2026-09-01T00:00:00Z' from generate_series(1,15)i`);
+    await client.query(
+      `insert into member_saved_stories(member_id,story_id,created_at) select 'account-a','account-story-'||lpad(i::text,2,'0'),'2026-09-04T00:00:00Z' from generate_series(1,13)i`,
+    );
+    await client.query(
+      `insert into member_saved_stories(member_id,story_id,created_at) values('account-a','account-story-15','2026-09-04T00:00:00Z'),('account-b','account-story-01','2026-09-04T00:00:00Z')`,
+    );
+    await client.query(
+      `insert into member_likes(member_id,story_id,created_at) values('account-a','account-story-02','2026-09-04T00:00:00Z'),('account-b','account-story-03','2026-09-04T00:00:00Z')`,
+    );
+    await client.query(
+      `insert into member_story_stats(member_id,story_id,active_ms,max_progress,visits,last_visit_at,used_ai,ai_tools,updated_at) values('account-a','account-story-01',120000,100,1,'2026-09-04T00:00:00Z',1,'[]','2026-09-04T00:00:00Z'),('account-a','account-story-02',60000,40,1,'2026-09-04T00:00:00Z',0,'[]','2026-09-04T00:00:00Z'),('account-b','account-story-03',990000,100,1,'2026-09-04T00:00:00Z',1,'[]','2026-09-04T00:00:00Z')`,
+    );
+    await subject.saveMemberInterests("account-a", ["health", "science"]);
+    const account = await subject.getMemberAccountData(
+      "account-a",
+      "account-a@example.invalid",
+      "عضو أول",
+      "saved",
+      1,
+    );
+    assert.equal(account.available, true);
+    assert.equal(account.savedStories.length, 12);
+    assert.equal(account.pageCount, 2);
+    assert.deepEqual(account.stats, {
+      articlesRead: 1,
+      activeMinutes: 3,
+      savedCount: 13,
+      likedCount: 1,
+      aiInteractions: 1,
+    });
+    checks++;
+    const page2 = await subject.getMemberAccountData(
+      "account-a",
+      "account-a@example.invalid",
+      "عضو أول",
+      "saved",
+      2,
+    );
+    assert.equal(page2.savedStories.length, 1);
+    assert.equal(
+      new Set(
+        [...account.savedStories, ...page2.savedStories].map((x) => x.story.id),
+      ).size,
+      13,
+    );
+    checks++;
+    const history = await subject.getMemberAccountData(
+      "account-a",
+      "account-a@example.invalid",
+      "عضو أول",
+      "history",
+    );
+    assert.equal(history.recentHistory.length, 2);
+    assert.deepEqual(
+      history.recentHistory.map((x) => x.progress),
+      [100, 40],
+    );
+    checks++;
+    const liked = await subject.getMemberAccountData(
+      "account-a",
+      "account-a@example.invalid",
+      "عضو أول",
+      "liked",
+    );
+    assert.equal(liked.likedStories.length, 1);
+    assert.equal(liked.likedStories[0].story.id, "account-story-02");
+    checks++;
+    assert.ok(
+      (
+        await subject.removeSavedStory(
+          {},
+          form({ memberId: "account-b", storyId: "account-story-01" }),
+        )
+      ).success,
+    );
+    const saves = await client.query(
+      "select member_id from member_saved_stories where story_id='account-story-01'",
+    );
+    assert.deepEqual(saves.rows, [{ member_id: "account-b" }]);
+    checks++;
+    globalThis.__memberAccountUser = null;
+    for (const action of [
+      "updateMemberDetails",
+      "changeMemberPassword",
+      "saveAccountInterests",
+      "togglePersonalization",
+      "toggleNewsletter",
+      "removeSavedStory",
+      "removeLikedStory",
+      "clearInferredSignals",
+    ])
+      assert.ok(
+        (
+          await subject[action](
+            {},
+            form({
+              name: "تعديل",
+              enabled: "1",
+              storyId: "account-story-02",
+              confirm: "yes",
+            }),
+          )
+        ).error,
+        action,
+      );
+    assert.equal(globalThis.__memberAccountCalls.length, 0);
+    checks++;
+    globalThis.__memberAccountUser = {
+      id: "account-a",
+      name: "عضو أول",
+      email: "account-a@example.invalid",
+      emailVerified: true,
+    };
+    assert.ok(
+      (await subject.updateMemberDetails({}, form({ name: "أ" }))).error,
+    );
+    assert.ok(
+      (
+        await subject.updateMemberDetails(
+          {},
+          form({ name: "اسم جديد", id: "account-b" }),
+        )
+      ).success,
+    );
+    assert.deepEqual(globalThis.__memberAccountCalls.at(-1), {
+      method: "updateUser",
+      body: { name: "اسم جديد" },
+    });
+    checks++;
+    assert.ok(
+      (
+        await subject.changeMemberPassword(
+          {},
+          form({
+            currentPassword: "test-old-password",
+            newPassword: "test-new-password",
+            confirmPassword: "mismatch",
+          }),
+        )
+      ).error,
+    );
+    assert.ok(
+      (
+        await subject.changeMemberPassword(
+          {},
+          form({
+            currentPassword: "test-old-password",
+            newPassword: "test-new-password",
+            confirmPassword: "test-new-password",
+          }),
+        )
+      ).success,
+    );
+    assert.equal(
+      globalThis.__memberAccountCalls.at(-1).body.revokeOtherSessions,
+      true,
+    );
+    checks++;
+    assert.ok(
+      (await subject.saveAccountInterests({}, form({ interests: ["unknown"] })))
+        .error,
+    );
+    assert.ok(
+      (
+        await subject.saveAccountInterests(
+          {},
+          form({ interests: ["health", "technology"] }),
+        )
+      ).success,
+    );
+    checks++;
+    assert.ok(
+      (await subject.togglePersonalization({}, form({ enabled: "0" }))).success,
+    );
+    const preferences = await client.query(
+      "select personalization_enabled from member_profiles where auth_user_id='account-a'",
+    );
+    assert.equal(preferences.rows[0].personalization_enabled, 0);
+    checks++;
+    await subject.toggleNewsletter({}, form({ enabled: "1" }));
+    await subject.toggleNewsletter({}, form({ enabled: "1" }));
+    assert.equal(
+      Number(
+        (
+          await client.query(
+            "select count(*) from newsletter_subscribers where email='account-a@example.invalid'",
+          )
+        ).rows[0].count,
+      ),
+      1,
+    );
+    await subject.toggleNewsletter({}, form({ enabled: "0" }));
+    assert.equal(
+      Number(
+        (await client.query("select count(*) from newsletter_subscribers"))
+          .rows[0].count,
+      ),
+      0,
+    );
+    checks++;
+    assert.ok((await subject.clearInferredSignals({}, form({}))).error);
+    assert.equal(
+      Number(
+        (
+          await client.query(
+            "select count(*) from member_story_stats where member_id='account-a'",
+          )
+        ).rows[0].count,
+      ),
+      2,
+    );
+    assert.ok(
+      (await subject.clearInferredSignals({}, form({ confirm: "yes" })))
+        .success,
+    );
+    assert.deepEqual(
+      (await client.query("select member_id from member_story_stats")).rows,
+      [{ member_id: "account-b" }],
+    );
+    assert.equal(
+      Number(
+        (
+          await client.query(
+            "select count(*) from member_interests where member_id='account-a'",
+          )
+        ).rows[0].count,
+      ),
+      2,
+    );
+    assert.equal(
+      Number(
+        (
+          await client.query(
+            "select count(*) from member_saved_stories where member_id='account-a'",
+          )
+        ).rows[0].count,
+      ),
+      13,
+    );
+    checks++;
+    globalThis.__memberAccountUser.emailVerified = false;
+    assert.ok((await subject.sendMemberVerification()).success);
+    assert.equal(
+      globalThis.__memberAccountCalls.at(-1).body.type,
+      "email-verification",
+    );
+    assert.ok((await subject.verifyMemberEmail({}, form({ otp: "12" }))).error);
+    assert.ok(
+      (
+        await subject.verifyMemberEmail(
+          {},
+          form({ otp: "123456", email: "other@example.invalid" }),
+        )
+      ).success,
+    );
+    assert.equal(
+      globalThis.__memberAccountCalls.at(-1).body.email,
+      "account-a@example.invalid",
+    );
+    globalThis.__memberAccountFailure = true;
+    assert.ok(
+      (await subject.verifyMemberEmail({}, form({ otp: "123456" }))).error,
+    );
+    globalThis.__memberAccountUser.emailVerified = true;
+    checks++;
+    assert.ok((await subject.signOutMember()).error);
+    globalThis.__memberAccountFailure = false;
+    await assert.rejects(subject.signOutMember(), /REDIRECT:\//);
+    checks++;
+    assert.ok(
+      (await subject.requestMemberPasswordReset({}, form({ email: "invalid" })))
+        .error,
+    );
+    assert.ok(
+      (
+        await subject.requestMemberPasswordReset(
+          {},
+          form({ email: "account-a@example.invalid" }),
+        )
+      ).success,
+    );
+    assert.equal(
+      globalThis.__memberAccountCalls.at(-1).body.redirectTo,
+      "https://alelm.net/join/reset",
+    );
+    assert.ok(
+      (
+        await subject.resetMemberPassword(
+          {},
+          form({ token: "", password: "test-new-password" }),
+        )
+      ).error,
+    );
+    checks++;
+  });
+  await context.run(null, async () => {
+    assert.equal(
+      (
+        await subject.getMemberAccountData(
+          "account-a",
+          "account-a@example.invalid",
+        )
+      ).available,
+      false,
+    );
+    assert.ok(
+      (await subject.toggleNewsletter({}, form({ enabled: "1" }))).error,
+    );
+    checks++;
+  });
+  console.log(
+    `Member account integration: ${checks} checks passed; private pagination, history, likes, session-bound writes, credentials, preferences, failures, and confirmed clearing.`,
+  );
+} finally {
+  await client.end();
+  await rm(directory, { recursive: true, force: true });
+  delete globalThis.__memberAccountDb;
+  delete globalThis.__memberAccountUser;
+  delete globalThis.__memberAccountCalls;
+  delete globalThis.__memberAccountFailure;
+}

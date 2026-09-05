@@ -235,3 +235,9 @@
 @media (max-width: 640px) {
   .brand-mark-official img { height: 44px; }
 }
+
+/* رابط العضوية متاح على الجوال أيضًا. */
+@media (max-width: 760px) {
+  .topbar .member-entry { display: inline-flex; padding: 0 9px; min-height: 36px; height: 36px; font-size: 11px; gap: 5px; margin-inline-start: 0; }
+  .topbar .member-entry svg { width: 14px; height: 14px; }
+}

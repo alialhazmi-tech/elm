@@ -1,3 +1,4 @@
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import {
   contentSource,
   listPublicSlides,
@@ -251,9 +252,8 @@ export async function toMobileForYou(memberId: string, limit = 9, origin?: strin
 
 export async function mobileHeaders(contract: string) {
   return {
-    // max-age يخاطب كاش URLSession في التطبيق مباشرة — لا CDN أمام Railway
-    // فقيمة s-maxage وحدها كانت حبرًا على ورق وكل دخول شاشة رحلة كاملة للأصل.
-    "Cache-Control": "public, max-age=60, s-maxage=120, stale-while-revalidate=600",
+    // الكاش الخادمي يُبطل عند النشر؛ التطبيق يعيد التحقق قبل استخدام نسخة محفوظة.
+    "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
     "X-Content-Contract": contract,
     "X-Content-Source": await contentSource(),
   };

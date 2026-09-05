@@ -16,7 +16,7 @@
 
 **ترويسات**
 
-- `Cache-Control: public, s-maxage=120, stale-while-revalidate=600`
+- `Cache-Control: public, no-cache, must-revalidate`
 - `X-Content-Contract: mobile-home.v1`
 
 **جسم الاستجابة**
@@ -88,7 +88,7 @@
 
 عام، قابل للكاش. يطبّع الهمزات والتشكيل وينزع «الـ» من كل كلمة قبل المطابقة على العنوان والموجز والكلمات المفتاحية.
 
-**ترويسات:** `Cache-Control: public, s-maxage=120, stale-while-revalidate=600` · `X-Content-Contract: mobile-search.v1`
+**ترويسات:** `Cache-Control: public, no-cache, must-revalidate` · `X-Content-Contract: mobile-search.v1`
 
 ```json
 {
