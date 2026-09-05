@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 const FIELDS: Array<[string, string, string, "input" | "textarea"]> = [
   ["name", "اسم السلسلة", "مثال: خلف الكواليس", "input"],
   ["valueCase", "اتصالها بأهداف المنصة وقيمتها المعرفية", "ماذا تضيف للقارئ؟", "textarea"],
-  ["gapCase", "لماذا لا تغطيها السلاسل القائمة؟", "حدود السلاسل الثماني أمام هذا المحتوى", "textarea"],
+  ["gapCase", "لماذا لا تغطيها السلاسل القائمة؟", "حدود السلاسل الحالية أمام هذا المحتوى", "textarea"],
   ["impactCase", "الأثر المتوقع (تحريري أو زيارات)", "توقع قابل للقياس", "textarea"],
 ];
 

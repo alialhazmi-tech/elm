@@ -1,6 +1,6 @@
 /* ============================================================
    الرئيسية الناعمة v3 (2026-09-04) — طبقة واحدة بدل ثلاث.
-   الفكرة الحاكمة: اللون هو السلسلة. الألوان الثمانية مصدر التعبير،
+   الفكرة الحاكمة: اللون هو السلسلة. ألوان السلاسل مصدر التعبير،
    والكحلي للأفعال، والزعفران نادرًا للشرارات. السطوح باردة هادئة.
    الرفع (ظل) لبطاقة الموجز وحدها؛ بقية الكتل تتمايز بالسطح.
    العناوين هنا بـ Alexandria كصفحة الخبر، والمتون بـ IBM Plex Sans Arabic.
@@ -105,6 +105,9 @@ body:has(.home-shell) {
 .sh-brief-list .kick::before { display: none; }
 .sh-brief-list h3 { font-family: var(--font-text); font-size: 14px; font-weight: 500; line-height: 1.7; }
 .sh-brief-why { margin: 0; padding: 12px 20px 16px; border-top: 1px dashed var(--line-2); font-size: 11px; color: var(--ink-3); line-height: 1.7; }
+.sh-brief-transcript { margin: 0 20px 16px; font-size: 12px; line-height: 1.9; }
+.sh-brief-transcript summary { cursor: pointer; color: var(--navy); font-weight: 700; }
+.sh-brief-transcript p { white-space: pre-line; margin: 10px 0 0; color: var(--ink-2); }
 
 /* ---------- الجديد الآن ---------- */
 .sh-stream { margin-top: 28px; padding: 22px 24px 24px; border-radius: var(--r-panel); background: var(--surface-2); box-shadow: none; clip-path: none; }
@@ -251,7 +254,7 @@ body:has(.home-shell) {
 .figures-note { display: none; }
 .sh-figures + .sh-section { margin-top: 64px; }
 
-/* ---------- السلاسل: البلاطات الثماني، ذروة اللون في الصفحة ---------- */
+/* ---------- السلاسل: بلاطات السلاسل، ذروة اللون في الصفحة ---------- */
 .sh-series { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
 .sh-series .series-lens {
   position: relative; display: flex; flex-direction: column; gap: 10px; min-height: 150px; padding: 20px;

@@ -38,7 +38,7 @@ export default async function SeriesPage() {
     <main className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-xl font-extrabold">السلاسل</h1>
-        <span className="text-xs text-muted-foreground">ثماني سلاسل حية وأرشيف بمفتاح ظهور</span>
+        <span className="text-xs text-muted-foreground">{SERIES.length} سلاسل حية وأرشيف بمفتاح ظهور</span>
       </div>
       <div className="grid items-start gap-3 lg:grid-cols-[1.5fr_1fr]">
         <div className="grid gap-3">

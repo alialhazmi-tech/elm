@@ -10,9 +10,9 @@ export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "سلاسل العلم",
-  description: "ثماني سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.",
+  description: "سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.",
   alternates: { canonical: "/series" },
-  ...sharingMetadata({ title: "سلاسل العلم", description: "ثماني سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.", path: "/series" }),
+  ...sharingMetadata({ title: "سلاسل العلم", description: "سلاسل معرفية تشرح الخبر من زوايا مختلفة: التبسيط، البيانات، الحقيقة، السياق، والاحتمالات.", path: "/series" }),
 };
 
 export default async function SeriesIndexPage() {
@@ -40,11 +40,11 @@ export default async function SeriesIndexPage() {
 
       <main id="main-content" className="wrap sx-page">
         <section className="sx-index-hero">
-          {/* شريط الطيف: ألوان السلاسل الثماني بترتيبها — توقيع الصفحة. */}
+          {/* شريط الطيف: ألوان السلاسل بترتيبها — توقيع الصفحة. */}
           <i className="sx-spectrum" aria-hidden="true" style={spectrum} />
           <div className="sx-index-copy">
             <span className="kick">سلاسل العلم</span>
-            <h1>ثماني طرق لرؤية الخبر كاملًا</h1>
+            <h1>زوايا متعددة لرؤية الخبر كاملًا</h1>
             <p>
               لا نكتفي بتصنيف ما يحدث. نختار لكل قصة الطريقة الأنسب لفهمها:
               نشرح المعقد، نختبر الشائعة، نقرأ الأرقام، ونبني احتمالات المستقبل.
@@ -52,7 +52,7 @@ export default async function SeriesIndexPage() {
           </div>
           <p className="sx-index-stat">
             <b className="latin-number" dir="ltr" lang="en">{toLatinDigits(activeTotal)}</b>
-            <span>مادة عبر ثماني سلاسل</span>
+            <span>مادة عبر {SERIES.length} سلاسل</span>
             <small>منذ إطلاق تجربة السلاسل</small>
           </p>
         </section>

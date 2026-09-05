@@ -41,6 +41,7 @@ import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText, textToHtml } from "@/
 import { cn } from "@/lib/utils";
 import { xPostIdFrom } from "@/lib/content/video";
 import { XPostNode } from "./x-post-node";
+import { LinkHover } from "./link-hover";
 
 export interface RichBodyHandle {
   getHtml(): string;
@@ -153,6 +154,7 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
       <Toolbar editor={editor} words={words} />
       <div className="px-5 py-4">
         <EditorContent editor={editor} />
+        {editor ? <LinkHover editor={editor} /> : null}
       </div>
     </div>
   );

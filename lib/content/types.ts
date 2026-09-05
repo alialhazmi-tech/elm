@@ -68,6 +68,8 @@ export type NumberStat = {
 
 export type BriefItem = {
   title: string;
+  /** الموجز المنشور، لتجهيز النشرة الصوتية من المحتوى نفسه. */
+  excerpt?: string;
   href: string;
   color: string;
   label: string;
