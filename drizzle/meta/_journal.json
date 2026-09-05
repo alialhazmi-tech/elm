@@ -64,6 +64,13 @@
       "when": 1788592761860,
       "tag": "0008_public_interactions",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788592761861,
+      "tag": "0009_username_identity",
+      "breakpoints": true
     }
   ]
 }

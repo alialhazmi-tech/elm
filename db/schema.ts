@@ -4,7 +4,7 @@
  */
 
 import { sql } from "drizzle-orm";
-import { check, index, integer, jsonb, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
+import { check, index, integer, jsonb, pgTable, primaryKey, text, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const series = pgTable("series", {
   slug: text("slug").primaryKey(),
@@ -205,7 +205,7 @@ export const users = pgTable("users", {
   mustChangePassword: integer("must_change_password").notNull().default(0),
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),
-});
+}, (table) => [uniqueIndex("users_username_normalized_uidx").on(sql`lower(btrim(${table.username}))`)]);
 
 /** لقطات منشورة قابلة للاستعادة كمسودة فقط. */
 export const storyVersions = pgTable("story_versions", {
