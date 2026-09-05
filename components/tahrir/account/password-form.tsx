@@ -47,12 +47,14 @@ export function PasswordForm({ forced }: { forced: boolean }) {
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="pw-next">كلمة المرور الجديدة</Label>
-        <Input id="pw-next" name="next" type="password" autoComplete="new-password" minLength={10} required className="h-10" />
-        <span className="text-[11px] text-muted-foreground">10 محارف على الأقل.</span>
+        <p id="pw-requirements" className="text-sm font-medium leading-6 text-foreground">
+          يجب ألا تقل كلمة المرور الجديدة عن <strong>١٠ خانات</strong>.
+        </p>
+        <Input id="pw-next" name="next" type="password" autoComplete="new-password" aria-describedby="pw-requirements" minLength={10} required className="h-10" />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="pw-confirm">تأكيد كلمة المرور</Label>
-        <Input id="pw-confirm" name="confirm" type="password" autoComplete="new-password" minLength={10} required className="h-10" />
+        <Input id="pw-confirm" name="confirm" type="password" autoComplete="new-password" aria-describedby="pw-requirements" minLength={10} required className="h-10" />
       </div>
       <Button type="submit" size="lg" disabled={busy} className="font-display font-bold">
         <KeyRoundIcon data-icon="inline-start" />
