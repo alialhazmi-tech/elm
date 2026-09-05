@@ -55,11 +55,11 @@ const nextConfig: NextConfig = {
     // webp فقط: ترميز AVIF أبطأ بمرات على حاوية Railway المشتركة مع الـ API،
     // وwebp مقروء في التطبيق والمتصفحات كلها.
     formats: ["image/webp"],
-    // بيئة التشغيل تحل نطاق الأرشيف عبر NAT64 فيرفضه محسّن Next كعنوان خاص.
-    // نخدم الصور من المصدر الموثوق مباشرة بدل تعطيل حماية SSRF.
-    unoptimized: true,
-    deviceSizes: [360, 640, 768, 1080, 1280, 1920],
-    imageSizes: [320, 480, 640],
+    // أحجام محددة من مخزننا وأرشيف الوسائط فقط؛ لا نفتح محسّن Next لعناوين خاصة.
+    loader: "custom",
+    loaderFile: "./lib/image-variant-loader.ts",
+    deviceSizes: [360, 640, 1080, 1600],
+    imageSizes: [168],
     // إلزامي في Next 16 — بدونه يرفض المحسّن كل طلب (كما حدث في الإنتاج).
     qualities: [60, 75],
     // صور ووردبريس القديمة بلا Cache-Control؛ بدون حد أدنى يعاد جلبها كل دقيقة.

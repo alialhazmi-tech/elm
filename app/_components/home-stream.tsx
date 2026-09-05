@@ -71,7 +71,7 @@ export function NewsRiver({ initial, exclude }: { initial: RiverItem[]; exclude:
             <article key={item.id} className="river-card" role="listitem" data-story-id={item.id}>
               {item.image ? (
                 <Link className="river-img" href={item.href} tabIndex={-1} aria-hidden="true">
-                  <Image src={item.image} alt="" fill sizes="96px" />
+                  <Image src={item.image} alt="" width={84} height={84} />
                 </Link>
               ) : null}
               <div className="river-body">

@@ -109,6 +109,7 @@ export function InfographicLightbox({
               width={1600}
               height={1600}
               sizes="100vw"
+              unoptimized
               className="infographic-lightbox-img"
             />
           </div>

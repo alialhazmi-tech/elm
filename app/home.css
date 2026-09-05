@@ -52,7 +52,7 @@ body:has(.home-shell) {
 .sh-section { margin-top: 64px; }
 
 /* ---------- الصدارة + الموجز ---------- */
-.sh-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 350px); gap: 22px; align-items: stretch; }
+.sh-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(310px, 350px); gap: 22px; align-items: start; }
 .sh-lead {
   display: grid; grid-template-columns: minmax(300px, 1fr) minmax(320px, 1fr); gap: 24px; align-items: stretch;
   padding: 22px; border-radius: 28px;
@@ -60,10 +60,10 @@ body:has(.home-shell) {
   border: 1px solid var(--line);
 }
 .sh-lead-copy { display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 14px 8px; min-width: 0; }
-.sh-lead h1 { font-size: clamp(28px, 2.7vw, 38px); font-weight: 800; line-height: 1.5; letter-spacing: -0.015em; max-width: 22ch; text-wrap: pretty; }
+.sh-lead h1 { font-size: clamp(28px, 2.7vw, 38px); font-weight: 800; line-height: 1.5; letter-spacing: -0.015em; text-wrap: pretty; }
 .sh-lead .dek { margin: 0; font-family: var(--font-text); font-size: 16.5px; font-weight: 400; line-height: 1.9; color: var(--ink-2); max-width: 46ch; }
 .sh-lead-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 4px; }
-.sh-lead-media { position: relative; border-radius: 20px; overflow: hidden; background: var(--surface-2); width: 100%; height: 100%; min-height: 430px; }
+.sh-lead-media { position: relative; align-self: center; border-radius: 20px; overflow: hidden; background: var(--surface-2); width: 100%; aspect-ratio: 16 / 9; }
 .sh-lead-media img { object-fit: cover; }
 .sh-lead:hover .sh-lead-media img { transform: scale(1.02); }
 .sh-lead.empty-state { grid-template-columns: 1fr; }
@@ -128,7 +128,7 @@ body:has(.home-shell) {
 }
 .river-card:hover { transform: translateY(-2px); box-shadow: var(--home-lift); }
 .river-img { position: relative; width: 84px; height: 84px; flex: none; border-radius: 12px; overflow: hidden; background: var(--surface-2); }
-.river-img img { object-fit: cover; }
+.river-img img { width: 100%; height: 100%; object-fit: cover; }
 .river-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .river-body .kick { font-size: 12px; gap: 6px; }
 .river-body .kick::before { display: none; }
@@ -185,6 +185,7 @@ body:has(.home-shell) {
 }
 .sh-ctx-row:hover { box-shadow: var(--home-lift); transform: none; }
 .sh-ctx-row .soft-img { width: 132px; height: 92px; flex: none; border-radius: 13px; }
+.sh-ctx-row .soft-img img { width: 100%; height: 100%; }
 .sh-ctx-row .body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .sh-ctx-row .kick::before { display: none; }
 .sh-ctx-row h3 { font-family: var(--font-text); font-size: 15.5px; font-weight: 600; line-height: 1.55; }
@@ -325,7 +326,6 @@ body:has(.home-shell) .footer-shell { background: var(--surface-2); border: 0; }
 }
 @media (max-width: 900px) {
   .sh-lead { grid-template-columns: 1fr; }
-  .sh-lead-media { min-height: 340px; }
   .panels-grid { grid-template-columns: 1fr; }
   .panel-lead-media .soft-img { aspect-ratio: 16 / 7.5; }
   .sh-series { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -347,7 +347,7 @@ body:has(.home-shell) .footer-shell { background: var(--surface-2); border: 0; }
   .sh-lead .dek { font-size: 14.5px; line-height: 1.85; }
   .sh-lead-actions { gap: 10px; }
   .sh-lead-actions .meta { flex-basis: 100%; }
-  .sh-lead-media { order: -1; min-height: 0; height: auto; aspect-ratio: 16 / 10; border-radius: 0; }
+  .sh-lead-media { order: -1; border-radius: 0; }
 
   .sh-brief { border-radius: 22px; }
   .sh-brief h2 { font-size: 17px; }

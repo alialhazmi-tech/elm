@@ -33,7 +33,7 @@ export function ContextRowCard({ story }: { story: Story }) {
       </div>
       {story.image ? (
         <Link className="ctx-thumb" href={storyHref(story)} tabIndex={-1} aria-hidden="true">
-          <Image src={story.image} alt="" fill sizes="112px" />
+          <Image src={story.image} alt="" width={112} height={112} />
         </Link>
       ) : null}
     </article>
