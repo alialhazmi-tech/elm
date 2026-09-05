@@ -22,10 +22,15 @@ test('reader measures only visible article time, pauses in background and resets
   Object.defineProperty(globalThis,'document',{configurable:true,value:{...target,visibilityState:'visible',hasFocus:()=>true,querySelector:()=>({getBoundingClientRect:()=>box})}});
   Object.defineProperty(globalThis,'navigator',{configurable:true,value:{doNotTrack:'0'}});
   globalThis.clearInterval=()=>{};
-  globalThis.fetch=async (_url,options)=>{posts.push({...JSON.parse(options.body),keepalive:options.keepalive});return {ok:true,json:async()=>({accepted:true})}};
+  globalThis.fetch=async (_url,options)=>{
+    if (!options.body) return {ok:true,json:async()=>({liked:false,closingAnswer:null,counts:[0,0]})};
+    posts.push({...JSON.parse(options.body),keepalive:options.keepalive});return {ok:true,json:async()=>({accepted:true})};
+  };
   const advance=async n=>{for(let i=0;i<n;i++){time+=2000;tick();await new Promise(resolve=>setImmediate(resolve));}};
   try {
     PublicReadingTracker({storyId:'first'}); let cleanup=globalThis.__readingEffect();
+    assert.equal(posts.length,0,'wait for browser identity before the first reading write');
+    await new Promise(resolve=>setImmediate(resolve));
     await advance(8); assert.equal(posts.at(-1).activeMs,0,'above-body time is excluded');
     box={top:-1100,bottom:1900,height:3000}; await advance(8);
     assert.equal(posts.at(-1).activeMs,16000); assert.equal(posts.at(-1).progress,50);
@@ -34,6 +39,7 @@ test('reader measures only visible article time, pauses in background and resets
     cleanup(); assert.equal(posts.at(-1).keepalive,true);
     const firstSession=posts[0].sessionId;
     document.visibilityState='visible'; PublicReadingTracker({storyId:'second'}); cleanup=globalThis.__readingEffect();
+    await new Promise(resolve=>setImmediate(resolve));
     assert.equal(posts.at(-1).storyId,'second'); assert.equal(posts.at(-1).activeMs,0); assert.equal(posts.at(-1).progress,0); assert.notEqual(posts.at(-1).sessionId,firstSession);
     cleanup(); const count=posts.length;
     navigator.doNotTrack='1'; PublicReadingTracker({storyId:'private'}); assert.equal(globalThis.__readingEffect(),undefined); assert.equal(posts.length,count);

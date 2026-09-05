@@ -94,14 +94,17 @@ test("مراحل التقدم تُسجَّل عند العبور فقط", () => 
   assert.deepEqual(crossedMilestones(80, 95), [90]);
 });
 
-test("سؤال الختام تراكمي ولا يُستبدل", () => {
+test("سؤال الختام قابل للتغيير دون مضاعفة الإشارة", () => {
   let stats = emptyStats(nowIso);
   const first = applyEvent(stats, { type: "closing_answer", storyId: "s1", value: 0 }, nowIso);
   assert.equal(first.stats.closingAnswer, 0);
   assert.equal(first.topicDelta, WEIGHTS.closingNew);
   const second = applyEvent(first.stats, { type: "closing_answer", storyId: "s1", value: 1 }, nowIso);
-  assert.equal(second.persistEvent, false);
-  assert.equal(second.stats.closingAnswer, 0);
+  assert.equal(second.persistEvent, true);
+  assert.equal(second.stats.closingAnswer, 1);
+  assert.equal(second.topicDelta, WEIGHTS.closingKnew - WEIGHTS.closingNew);
+  const retry = applyEvent(second.stats, { type: "closing_answer", storyId: "s1", value: 1 }, nowIso);
+  assert.equal(retry.persistEvent, false);
 });
 
 test("أدوات الذكاء تُحتسب بعد الحدث لا قبله، والأولى أقوى", () => {

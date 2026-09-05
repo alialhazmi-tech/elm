@@ -81,10 +81,12 @@ export function CommandPalette({
                 <CommandItem
                   key={item.href}
                   value={`${group.title} ${item.title}`}
-                  onSelect={() => go(item.href)}
+                  disabled={item.comingSoon}
+                  onSelect={() => { if (!item.comingSoon) go(item.href); }}
                 >
                   <item.icon />
                   <span>{item.title}</span>
+                  {item.comingSoon ? <small className="text-[10px] text-muted-foreground">قريبًا</small> : null}
                 </CommandItem>
               ))}
             </CommandGroup>

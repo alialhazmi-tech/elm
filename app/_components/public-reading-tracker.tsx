@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { loadArticleInteraction } from "./interaction-client";
 
 /** قياس واحد لجميع الزوار؛ الزمن تراكمي داخل جلسة المادة، ولا يُحسب في الخلفية. */
 export function PublicReadingTracker({ storyId }: { storyId: string }) {
@@ -14,6 +15,7 @@ export function PublicReadingTracker({ storyId }: { storyId: string }) {
     let busy = false;
     let stopped = false;
     let enabled = true;
+    let ready = false;
     let visible = document.visibilityState === "visible" && document.hasFocus();
     const sample = () => {
       const now = Date.now();
@@ -32,7 +34,7 @@ export function PublicReadingTracker({ storyId }: { storyId: string }) {
       previous = now;
     };
     const send = (final = false) => {
-      if (!enabled || (busy && !final)) return;
+      if (!ready || !enabled || (busy && !final)) return;
       busy = true;
       lastSent = Date.now();
       void fetch("/api/content/reading", {
@@ -43,7 +45,9 @@ export function PublicReadingTracker({ storyId }: { storyId: string }) {
         if (response.ok && (await response.json()).accepted === false) enabled = false;
       }).catch(() => undefined).finally(() => { busy = false; });
     };
-    send();
+    void loadArticleInteraction(storyId).catch(() => undefined).then(() => {
+      if (!stopped) { ready = true; send(); }
+    });
     const timer = window.setInterval(() => {
       sample();
       if (visible && Date.now() - lastSent >= 15_000) send();

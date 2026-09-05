@@ -96,13 +96,21 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
 
   const visible = useMemo(() => {
     const needle = q.trim().toLowerCase();
+    // listRoles supplies the configured hierarchy, including custom roles.
+    const roleOrder = new Map(roles.map((role, index) => [role.id, index]));
     return members.filter(
       (member) =>
         (filter === "all" || member.status === filter) &&
         (roleFilter === "all" || member.role === roleFilter) &&
         (!needle || `${member.displayName} ${member.username} ${member.email}`.toLowerCase().includes(needle)),
+    ).sort((a, b) =>
+      (roleOrder.get(a.role) ?? roles.length) - (roleOrder.get(b.role) ?? roles.length) ||
+      a.roleLabel.localeCompare(b.roleLabel, "ar") ||
+      Number(b.status === "active") - Number(a.status === "active") ||
+      a.displayName.localeCompare(b.displayName, "ar") ||
+      a.id.localeCompare(b.id),
     );
-  }, [members, filter, roleFilter, q]);
+  }, [members, roles, filter, roleFilter, q]);
 
   const done = (message: string) => {
     toast.success(message);

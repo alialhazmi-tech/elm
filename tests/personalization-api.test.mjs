@@ -108,15 +108,15 @@ test("حفظ المادة للزائر يقود إلى مسار الدخول ا�
   assert.match(article, /\/join\?next=/);
 });
 
-test("سؤال الختام مربوط بملف العضو بلا أصوات وهمية", async () => {
+test("سؤال الختام للجميع بلا أصوات محلية وهمية", async () => {
   const [poll, article, route, publicRoute] = await Promise.all([
     read("app/_components/poll.tsx"),
     read("app/[section]/[id]/[slug]/page.tsx"),
     read("app/api/me/closing/route.ts"),
     read("app/api/polls/closing/route.ts"),
   ]);
-  assert.match(poll, /\/api\/me\/closing/);
-  assert.match(poll, /\/api\/polls\/closing/);
+  assert.match(poll, /useArticleInteraction/);
+  assert.doesNotMatch(poll, /localStorage|setBonus|displayCounts/);
   assert.doesNotMatch(poll, /النتائج لحظية/);
   assert.doesNotMatch(article, /votes:\s*34|votes:\s*12/);
   assert.match(route, /closing_answer/);

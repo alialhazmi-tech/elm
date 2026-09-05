@@ -1,3 +1,4 @@
+import { ArticleLikeButton } from "@/app/_components/article-interactions";
 import { PublicReadingTracker } from "@/app/_components/public-reading-tracker";
 import type { Metadata } from "next";
 import { sharingMetadata } from "@/lib/sharing";
@@ -279,7 +280,7 @@ export default async function ArticlePage({ params }: Params) {
                       </span>
                     </div>
                   </div>
-                  <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
+                  <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleLikeButton storyId={story.id} /><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
                 </div>
               </div>
               {videoEmbed ? (
