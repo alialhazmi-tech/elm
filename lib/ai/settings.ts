@@ -16,6 +16,7 @@ export interface AiSettingsData {
     classify: boolean;
     seo: boolean;
     full_edit: boolean;
+    metadata: boolean;
     jak: boolean;
     images: boolean;
   };
@@ -39,6 +40,7 @@ export const DEFAULT_AI_SETTINGS: AiSettingsData = {
     classify: true,
     seo: true,
     full_edit: true,
+    metadata: true,
     jak: true,
     images: true,
   },

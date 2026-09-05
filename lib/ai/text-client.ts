@@ -23,5 +23,5 @@ export function textClient(): Anthropic | null {
     });
   }
   const apiKey = process.env.ANTHROPIC_API_KEY;
-  return apiKey ? new Anthropic({ apiKey, baseURL: "https://api.anthropic.com" }) : null;
+  return apiKey ? new Anthropic({ apiKey, baseURL: "https://api.anthropic.com", maxRetries: 0, timeout: 120_000 }) : null;
 }

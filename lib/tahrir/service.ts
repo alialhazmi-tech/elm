@@ -110,7 +110,9 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
   if (existing?.status === "archived") throw new StoryWriteError("استعد المادة المؤرشفة قبل تحريرها.");
   const fork = existing && ["published", "scheduled"].includes(existing.status);
   const id = fork ? crypto.randomUUID() : input.id;
-  const identity = stableIdentity(existing, input, id);
+  // الحفظ التلقائي يبدأ مبكرًا؛ تبقى هوية المسودة الجديدة قابلة للاستكمال.
+  // المنشور ومسودات تعديله يحافظان على الرابط والقسم المعتمدين.
+  const identity = stableIdentity(existing?.status === "draft" && !existing.revisionOf && !existing.publishedAt ? null : existing, input, id);
   const content = {
     ...identity, title: input.title, excerpt: input.excerpt, body: input.body,
     seriesSlug: input.seriesSlug, image: input.image, updatedAt: now, readingMinutes,

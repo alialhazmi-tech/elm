@@ -60,6 +60,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 pinned: story.pinned === 1,
                 breakingUntil: story.breakingUntil,
                 status: story.status,
+                publishedAt: story.publishedAt,
                 seoTitle: story.seoTitle ?? "",
                 seoDescription: story.seoDescription ?? "",
                 keywords: Array.isArray(story.keywords) ? (story.keywords as string[]) : [],
