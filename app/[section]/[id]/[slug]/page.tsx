@@ -5,6 +5,7 @@ import { sharingMetadata } from "@/lib/sharing";
 import Image from "next/image";
 import { readingOutline } from "@/lib/content/reading-outline";
 import Link from "next/link";
+import { Link2, List } from "lucide-react";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { JakStory } from "@/app/_components/jak-slides";
@@ -323,7 +324,12 @@ export default async function ArticlePage({ params }: Params) {
                   </details>
                 ) : null}
 
-                {reading.headings.length >= 2 && <nav className="article-outline" aria-label="في هذه المادة"><strong>في هذه المادة</strong><ul>{reading.headings.map(heading => <li key={heading.id}><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ul></nav>}
+                {reading.headings.length >= 2 && (
+                  <nav className="article-outline" aria-label="في هذه المادة">
+                    <h2 className="article-section-heading"><List aria-hidden="true" />في هذه المادة</h2>
+                    <ul>{reading.headings.map(heading => <li key={heading.id}><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ul>
+                  </nav>
+                )}
                 <div className="article-body" id="article-body">
                   {story.body && looksLikeHtml(story.body) ? (
                     // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
@@ -351,7 +357,12 @@ export default async function ArticlePage({ params }: Params) {
                   ) : null}
                 </div>
 
-                {reading.links.length > 0 && <aside className="article-sources" aria-label="روابط وردت في المادة"><h2>روابط وردت في المادة</h2><ul>{reading.links.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a></li>)}</ul></aside>}
+                {reading.links.length > 0 && (
+                  <aside className="article-sources" aria-label="روابط وردت في المادة">
+                    <h2 className="article-section-heading"><Link2 aria-hidden="true" />روابط وردت في المادة</h2>
+                    <ul>{reading.links.map(link => <li key={link.href}><a href={link.href} target="_blank" rel="noopener noreferrer">{link.label}</a></li>)}</ul>
+                  </aside>
+                )}
                 <ArticleKeywords keywords={story.keywords} />
                 <div className="sa-poll">
                   <ArticleClosingPoll

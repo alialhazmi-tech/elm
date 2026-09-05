@@ -15,6 +15,7 @@ import { textClient as client } from "./text-client";
 import { reserveTextCents } from "./pricing";
 import { missingTextKeyMessage } from "./provider-config";
 import { EditorialOutputError } from "./output-error";
+import { excerptInstructions, validateExcerpt } from "./summary-editorial";
 
 import { runPolicyGuard } from "@/lib/policy";
 import type { Finding } from "@/lib/policy/types";
@@ -131,7 +132,7 @@ const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; select
   headlines: ({ title, body }) =>
     `اقترح ثلاثة عناوين لهذه المادة، كل عنوان حتى 10 كلمات، من حقائق المتن دون إضافة أو تهويل. أعد JSON فقط بالشكل {"suggestions": ["...", "...", "..."]}.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
   excerpt: ({ title, body }) =>
-    `اكتب الموجز الذكي «قبل القراءة»: خلاصة من جملة واحدة حتى 180 حرفًا و25 كلمة، تلخص جوهر المادة لا مقدمة لها، من حقائق المتن دون إضافة. أعد JSON فقط: {"suggestions": ["..."]}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
+    `اكتب الموجز الذكي «قبل القراءة». ${excerptInstructions} أعد JSON فقط: {"suggestions": ["..."]}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
   improve: ({ selection, body }) =>
     `حسّن هذا المقطع صحفيًا: أزل الركاكة والحشو، واحفظ المعنى والحقائق كما هي تمامًا، ولا تضف معلومة. أعد JSON فقط: {"suggestions": ["النص المحسّن"]}.\n\nالمقطع:\n${selection || body}`,
   proofread: ({ body }) =>
@@ -141,7 +142,7 @@ const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; select
   seo: ({ title, body }) =>
     `ولّد حزمة SEO لهذه المادة: عنوان بحث حتى 60 حرفًا يحمل الكلمة المفتاحية الأهم، ووصف بحث حتى 155 حرفًا يلخص القيمة بلا حشو، و5-8 كلمات مفتاحية عربية يبحث بها الناس فعلًا (بلا وسوم #). أعد JSON فقط: {"seoTitle": "...", "seoDescription": "...", "keywords": ["...", "..."]}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
   metadata: ({ title, body }) =>
-    `ولّد ملحقات المادة فقط من حقائق المتن: موجز «قبل القراءة» جملة واحدة حتى 180 حرفًا، عنوان SEO حتى 60 حرفًا ووصف SEO حتى 155 حرفًا، و5-8 كلمات مفتاحية بلا #. اختر القسم والشكل والسلسلة الأنسب أو null إذا لم تناسبها سلسلة. لا تعد كتابة العنوان أو المتن ولا تضف معلومة. الأقسام: politics,economy,world,ksa,current-events,health,technology,sciences,sport,business,art,culture,varieties,news. الأشكال: news,infographics,videos,reports,podcasts. السلاسل: absat,aghrab,efhamha-sah,bel-arqam,shakhsiat,limatha,matha-law,bel-tarikh. أعد JSON فقط بالشكل {"excerpt":"...","seoTitle":"...","seoDescription":"...","keywords":["..."],"section":"...","format":"...","seriesSlug":null}.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
+    `ولّد ملحقات المادة فقط من حقائق المتن: موجز «قبل القراءة» وفق المعايير التالية: ${excerptInstructions} ثم عنوان SEO حتى 60 حرفًا ووصف SEO حتى 155 حرفًا، و5-8 كلمات مفتاحية بلا #. اختر القسم والشكل والسلسلة الأنسب أو null إذا لم تناسبها سلسلة. لا تعد كتابة العنوان أو المتن ولا تضف معلومة. الأقسام: politics,economy,world,ksa,current-events,health,technology,sciences,sport,business,art,culture,varieties,news. الأشكال: news,infographics,videos,reports,podcasts. السلاسل: absat,aghrab,efhamha-sah,bel-arqam,shakhsiat,limatha,matha-law,bel-tarikh. أعد JSON فقط بالشكل {"excerpt":"...","seoTitle":"...","seoDescription":"...","keywords":["..."],"section":"...","format":"...","seriesSlug":null}.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
   full_edit: ({ title, body }) =>
     `حرّر المتن بأسلوب العلم. أعد المتن المحرَّر فقط — بلا عنوان وبلا JSON وبلا تعليق وبلا Markdown. فقرات مفصولة بسطر فارغ. أزل الركاكة والحشو واحفظ كل الحقائق والأرقام والمصادر كما هي. ممنوع إضافة أي معلومة.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
 };
@@ -149,7 +150,8 @@ const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; select
 const FULL_EDIT_PACK_PROMPT = ({ title, body }: { title: string; body: string }) =>
   [
     "من المادة التالية ولّد الحقول المساعدة فقط. أعد JSON واحدًا:",
-    '{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة جملة واحدة حتى 25 كلمة","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"absat|aghrab|efhamha-sah|bel-arqam|shakhsiat|limatha|matha-law|bel-tarikh أو null","section":"politics|economy|world|ksa|current-events|health|technology|sciences|sport|business|art|culture|varieties|news","format":"news|infographics|videos|reports|podcasts"}',
+    excerptInstructions,
+    '{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة خبرية مكتملة حتى 180 حرفًا","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"absat|aghrab|efhamha-sah|bel-arqam|shakhsiat|limatha|matha-law|bel-tarikh أو null","section":"politics|economy|world|ksa|current-events|health|technology|sciences|sport|business|art|culture|varieties|news","format":"news|infographics|videos|reports|podcasts"}',
     "",
     `العنوان الحالي: ${title}`,
     "",
@@ -161,7 +163,7 @@ export type AiTool = keyof typeof TOOL_PROMPTS;
 
 export const AI_TOOLS = Object.keys(TOOL_PROMPTS) as AiTool[];
 
-const FULL_EDIT_BODY_LIMIT = 12_000;
+const FULL_EDIT_BODY_LIMIT = 40_000;
 
 function stripFences(text: string): string {
   return text.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").trim();
@@ -188,7 +190,7 @@ export function editorialReservationCents(tool: AiTool, input: { title: string; 
   if (tool === "full_edit") {
     const clipped = { ...input, body: input.body.slice(0, FULL_EDIT_BODY_LIMIT) };
     return requestEstimate({ ...common, model: settings.models.fast, user: TOOL_PROMPTS.full_edit(clipped), maxTokens: 8192 })
-      + requestEstimate({ ...common, model: settings.models.light, user: FULL_EDIT_PACK_PROMPT(clipped), maxTokens: 2048 });
+      + requestEstimate({ ...common, model: settings.models.light, user: FULL_EDIT_PACK_PROMPT(input), maxTokens: 2048 });
   }
   return requestEstimate({ ...common, model: modelFor(tool, settings), user: TOOL_PROMPTS[tool](input), maxTokens: tool === "proofread" ? 8192 : 2048 });
 }
@@ -244,6 +246,9 @@ async function runFullEdit(
   settings: AiSettingsData,
   options: EditorialRunOptions,
 ): Promise<AiResult> {
+  if (input.body.length > FULL_EDIT_BODY_LIMIT) {
+    throw new EditorialOutputError("المادة أطول من الحد المتاح للتحليل الكامل حاليًا؛ قسّمها قبل إعادة المحاولة.");
+  }
   const clipped = {
     title: input.title,
     body: input.body.slice(0, FULL_EDIT_BODY_LIMIT),
@@ -275,7 +280,7 @@ async function runFullEdit(
       maxTokens: 2048,
       tone: settings.tone,
       editorialGuard: settings.governance.editorialGuard,
-      user: FULL_EDIT_PACK_PROMPT(clipped),
+      user: FULL_EDIT_PACK_PROMPT(input),
       signal: options.signal,
       stream: true,
       onUsage: options.onUsage,
@@ -322,7 +327,7 @@ async function runFullEdit(
     throw new Error("ملحقات التحرير الشامل ناقصة؛ أعد المحاولة.");
   }
   const title = (pack.title ?? clipped.title).trim() || clipped.title;
-  const excerpt = (pack.excerpt ?? "").trim();
+  const excerpt = validateExcerpt(pack.excerpt, title);
   const seoTitle = (pack.seoTitle ?? "").trim();
   const seoDescription = (pack.seoDescription ?? "").trim();
   const keywords = (pack.keywords ?? [])
@@ -432,7 +437,7 @@ export async function runEditorialTool(
     .slice(0, 8);
 
   if (tool === "metadata") {
-    const excerpt = typeof parsed.excerpt === "string" ? parsed.excerpt.trim() : "";
+    const excerpt = validateExcerpt(parsed.excerpt, input.title);
     const seoTitle = typeof parsed.seoTitle === "string" ? parsed.seoTitle.trim() : "";
     const seoDescription = typeof parsed.seoDescription === "string" ? parsed.seoDescription.trim() : "";
     const sections = ["politics", "economy", "world", "ksa", "current-events", "health", "technology", "sciences", "sport", "business", "art", "culture", "varieties", "news"];
@@ -465,7 +470,11 @@ export async function runEditorialTool(
     };
   }
 
-  const texts = (parsed.suggestions ?? []).filter(Boolean).slice(0, 3);
+  const texts = (Array.isArray(parsed.suggestions) ? parsed.suggestions : []).filter((text): text is string => typeof text === "string" && !!text.trim()).slice(0, tool === "excerpt" ? 1 : 3);
+  if (tool === "excerpt") {
+    if (!texts.length) throw new EditorialOutputError("لم يرجع النموذج موجزًا صالحًا. أعد التوليد.");
+    texts[0] = validateExcerpt(texts[0], input.title);
+  }
   return {
     suggestions: texts.map((text) => ({
       text,

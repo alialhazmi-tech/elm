@@ -258,7 +258,7 @@ export function ArticleToolbar({
             <p className="sa-tools-wait">يلخّص المادة…</p>
           ) : summary?.length ? (
             <ul>
-              {summary.slice(0, 3).map((point) => <li key={point.slice(0, 32)}>{point}</li>)}
+              {summary.map((point, index) => <li key={index}>{point}</li>)}
             </ul>
           ) : null}
           <span className="sa-tools-note">مولّد آليًا من نص المادة — راجع النص الكامل قبل الاقتباس.</span>

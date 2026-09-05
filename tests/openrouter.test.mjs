@@ -143,7 +143,7 @@ test("metadata generation uses one request and returns only complete validated s
   assert.deepEqual(result.metadata.seo.keywords,['تقنية','علوم']);assert.equal(result.metadata.classify.seriesSlug,'limatha');
   assert.deepEqual(input,{title:'العنوان الأصلي',body:'المتن الأصلي'});
   pack.section='unknown';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/ناقصة/});
-  pack.section='sciences';pack.excerpt='س'.repeat(181);await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/الحدود/);
+  pack.section='sciences';pack.excerpt='س'.repeat(181);await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/180 حرفًا/});
   pack.excerpt='موجز';pack.seriesSlug='imaginary-series';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
   pack.seriesSlug=null;pack.seoTitle='';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
   malformed=true;await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/تعذر قراءة مخرج النموذج/});
