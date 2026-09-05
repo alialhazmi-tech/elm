@@ -23,7 +23,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https://dash.alelm.net https://www.googletagmanager.com https://*.google-analytics.com",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
-  "media-src 'self' https:",
+  "media-src 'self' blob: https:",
   "object-src 'none'",
   `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",

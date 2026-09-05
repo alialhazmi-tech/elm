@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ListenMeter } from "@/app/_components/article-listen";
+import { SummaryListen } from "@/app/_components/summary-listen";
 import { EndingPoll } from "@/app/_components/poll";
 import { toLatinDigits } from "@/lib/format";
 
@@ -152,7 +152,6 @@ export function ArticleToolbar({
   excerpt: string;
 }) {
   const [state] = useArticleState(storyId);
-  const [listening, setListening] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summary, setSummary] = useState<string[] | null>(null);
   const [answer, setAnswer] = useState<string[] | null>(null);
@@ -160,34 +159,6 @@ export function ArticleToolbar({
   const [busy, setBusy] = useState<"summary" | "discuss" | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // القراءة الصوتية لا تتبع القارئ إلى صفحة أخرى.
-  useEffect(() => () => {
-    if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
-  }, []);
-
-  const toggleListen = () => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setError("الاستماع غير متاح في هذا المتصفح.");
-      return;
-    }
-    if (listening) {
-      window.speechSynthesis.cancel();
-      setListening(false);
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(excerpt.slice(0, 1400));
-    utterance.lang = "ar-SA";
-    utterance.onstart = () => {
-      if (state.signedIn) void postJson("/api/me/events", { events: [{ type: "listen", storyId }] });
-    };
-    utterance.onend = () => setListening(false);
-    utterance.onerror = () => setListening(false);
-    setError(null);
-    setListening(true);
-    window.speechSynthesis.speak(utterance);
-  };
 
   /** يفصل نص الأداة إلى نقاط — الخدمة تردّ أسطرًا، وقد تسبقها شرطة. */
   const asPoints = (text: string) =>
@@ -252,14 +223,9 @@ export function ArticleToolbar({
       </span>
 
       <div className="sa-tools-grid">
-        <button
-          type="button"
-          className={listening ? "sa-tool is-on" : "sa-tool"}
-          aria-pressed={listening}
-          onClick={toggleListen}
-        >
-          <span aria-hidden="true">{listening ? "⏸" : "▶"}</span> {listening ? "إيقاف" : "استمع"}
-        </button>
+        <SummaryListen key={`${storyId}:${excerpt}`} storyId={storyId} onStarted={() => {
+          if (state.signedIn) void postJson("/api/me/events", { events: [{ type: "listen", storyId }] });
+        }} />
 
         {state.signedIn ? (
           <button
@@ -299,7 +265,6 @@ export function ArticleToolbar({
         </div>
       ) : null}
 
-      {listening ? <ListenMeter /> : null}
 
       {answer?.length ? (
         <div className="sa-tools-panel">

@@ -84,7 +84,7 @@ test("قالب المقال يشغّل الحلقات بمشغل «الطبعة 
   assert.match(dock, /skip\(-15\)/u, "لا قفز للخلف");
   assert.match(dock, /pp-bar/u, "لا شريط تشغيل ثابت");
   assert.match(dock, /position: fixed|PodcastDockProvider/u);
-  assert.match(config, /media-src 'self' https:/u, "CSP يمنع بث الحلقات");
+  assert.match(config, /media-src 'self' blob: https:/u, "CSP يسمح ببث الحلقات وملفات الموجز الصوتية المحلية");
   const shows = await readFile(new URL("../lib/podcasts.ts", import.meta.url), "utf8");
   assert.match(shows, /accent: "#/u);
 });

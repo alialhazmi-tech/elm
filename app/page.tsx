@@ -1,4 +1,5 @@
 import "./home.css";
+import { BriefListen } from "./_components/home-brief-listen";
 import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -160,6 +161,7 @@ export default async function Home() {
                 </span>
               ) : null}
             </div>
+            <BriefListen key={home.brief.map(item => item.title).join("|")} />
             <ol className="sh-brief-list">
               {home.brief.map((item, index) => (
                 <li key={item.href}>
