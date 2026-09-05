@@ -4,6 +4,7 @@ import { readingOrigin } from "@/lib/personalization/reading-input";
 import { consumeLimit } from "@/lib/tahrir/rate-limit";
 import { getStoredVoice, putStoredVoice } from "@/lib/storage/voice";
 import { audioKey, speechChunks, synthesizeSummary, voiceConfig } from "@/lib/voice/humain";
+import { homeBriefScript } from "@/lib/voice/home-brief";
 
 export const runtime = "nodejs";
 const json = (error: string, status: number, retry?: number) => Response.json({ error }, { status,
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     let text: string;
     if (input.kind === "home") {
       const home = await seedContentProvider.getHome();
-      text = home.brief.map(item => item.title).join(". ");
+      text = homeBriefScript(home.brief);
     } else {
       const story = await seedContentProvider.getStory(input.storyId);
       if (!story) return json("المادة غير متاحة.", 404);

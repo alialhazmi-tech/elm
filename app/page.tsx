@@ -1,5 +1,7 @@
 import "./home.css";
+import { createHash } from "node:crypto";
 import { BriefListen } from "./_components/home-brief-listen";
+import { homeBriefScript } from "@/lib/voice/home-brief";
 import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 import type { Metadata } from "next";
 import Image from "next/image";
@@ -54,6 +56,7 @@ export default async function Home() {
     seedContentProvider.getHome(),
     seriesDirectory().catch(() => ({} as Awaited<ReturnType<typeof seriesDirectory>>)),
   ]);
+  const briefText = homeBriefScript(home.brief);
   const hero = home.hero;
   // التدفّق: يستبعد ما تعرضه الصدارة و«وراء الخبر» ومختارات من الأرشيف حتى لا يتكرر خبر في الصفحة.
   const shownIds = new Set<string>([hero?.id, ...home.mosaic.map((s) => s.id), ...home.mostRead.map((s) => s.id)].filter((id): id is string => Boolean(id)));
@@ -161,7 +164,7 @@ export default async function Home() {
                 </span>
               ) : null}
             </div>
-            <BriefListen key={home.brief.map(item => item.title).join("|")} />
+            <BriefListen key={createHash("sha256").update(briefText).digest("hex")} />
             <ol className="sh-brief-list">
               {home.brief.map((item, index) => (
                 <li key={item.href}>
@@ -183,6 +186,10 @@ export default async function Home() {
             <p className="sh-brief-why">
               لماذا هذه المواد؟ مختارات آلية من أحدث المواد عبر الأقسام. كل عنوان يحيل إلى مادته المنشورة.
             </p>
+            <details className="sh-brief-transcript">
+              <summary>نص النشرة الصوتية</summary>
+              <p>{briefText}</p>
+            </details>
           </aside>
         ) : null}
         </div>
@@ -354,7 +361,7 @@ export default async function Home() {
         <section className="sh-section" aria-label="السلاسل">
           <div className="section-head">
             <h2>السلاسل</h2>
-            <span className="sub">ثماني طرق لفهم الخبر</span>
+            <span className="sub">زوايا متعددة لفهم الخبر</span>
             <Link className="more" href="/series">كل السلاسل</Link>
           </div>
           <div className="sh-series">
@@ -371,9 +378,7 @@ export default async function Home() {
                   <span className="slatest">{entry?.latest?.title ?? series.description}</span>
                   {entry?.count ? (
                     <span className="scount">{toLatinDigits(String(entry.count))} مادة</span>
-                  ) : (
-                    <span className="scount">{series.description}</span>
-                  )}
+                  ) : null}
                 </Link>
               );
             })}

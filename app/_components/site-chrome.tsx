@@ -174,7 +174,7 @@ export async function SiteHeader({
         ))}
       </nav>
       )}
-      {rail ? <SeriesRail series={SERIES.filter((item) => !item.archived).slice(0, 8)} /> : null}
+      {rail ? <SeriesRail series={SERIES} /> : null}
     </>
   );
 }
@@ -205,7 +205,7 @@ export function SiteFooter() {
           <div className="ft-col">
             <h3 className="ft-head">السلاسل</h3>
             <ul className="ft-nav-list ft-series-list">
-              {SERIES.slice(0, 8).map((item) => (
+              {SERIES.map((item) => (
                 <li key={item.slug}>
                   <Link href={`/series/${item.slug}`} className="ft-series-link">
                     <span className="ft-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />

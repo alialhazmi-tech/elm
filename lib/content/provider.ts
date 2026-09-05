@@ -455,7 +455,7 @@ export async function seriesDirectory(): Promise<Record<string, SeriesDirectoryE
           latest: null,
         };
       }
-      // أحدث مادة للنشطة فقط (الفهرس يعرضها لها وحدها) — 8 استعلامات خفيفة بكاش دقيقة.
+      // أحدث مادة للنشطة فقط (الفهرس يعرضها لها وحدها) — استعلام خفيف لكل سلسلة بكاش دقيقة.
       await Promise.all(
         SERIES.map(async (series) => {
           const rows = await db
@@ -700,6 +700,7 @@ function composeHome(articles: Story[], videos: Story[], stories: Story[]): Home
       return {
         title: story.title,
         href: storyHref(story),
+        excerpt: story.excerpt,
         color: storySeries?.color ?? "#3d6fad",
         label: storySeries?.name ?? sectionName(story.section),
         publishedAt: story.publishedAt,

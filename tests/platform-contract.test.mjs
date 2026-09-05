@@ -52,8 +52,8 @@ test("deduplicates canonical story IDs across the entire homepage", async () => 
 
   assert.ok(ids.length >= 7, "expected hero and section stories");
   assert.equal(new Set(ids).size, ids.length, `duplicate IDs found: ${ids.join(", ")}`);
-  // «الناعم v2»: السلاسل الثماني تظهر مرتين — مسطرة الهيدر وبلاطات القسم.
-  assert.equal((html.match(/class="series-lens"/g) ?? []).length, 16, "بوابة السلاسل الثماني مفقودة");
+  // «الناعم v2»: السلاسل التسع تظهر مرتين — مسطرة الهيدر وبلاطات القسم.
+  assert.equal((html.match(/class="series-lens"/g) ?? []).length, 18, "بوابة السلاسل التسع مفقودة");
   assert.equal((html.match(/class="series-rail-inner"/g) ?? []).length, 1, "مسطرة السلاسل مفقودة من الهيدر");
 });
 
@@ -128,11 +128,11 @@ test("production CSP never leaks the development eval and websocket allowances",
 test("keeps the M0 homepage and social card deliberately small", async () => {
   const html = await readFile(htmlPath);
   // العقد يقيس ما يعبر الشبكة فعلًا — كالميزانية المضغوطة لـJS (قرار المالك 2026-08-28).
-  // سقف 26KiB يشمل روابط التواصل وميتا المشاركة وكود GTM؛ يبقى قياسًا لحجم النقل المضغوط.
+  // سقف 28KiB يشمل النص المقروء للنشرة الصوتية والسلسلة التاسعة وروابط التواصل وميتا المشاركة وكود GTM؛ يبقى قياسًا لحجم النقل المضغوط.
   const compressed = gzipSync(html, { level: 6 }).length;
   const { width, height, format, hasAlpha } = await sharp(await readFile(ogPath)).metadata();
 
-  assert.ok(compressed < 26 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 26KiB`);
+  assert.ok(compressed < 28 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 28KiB`);
   assert.deepEqual({ width, height }, { width: 1200, height: 630 });
   assert.equal(format, "jpeg");
   assert.equal(hasAlpha, false);

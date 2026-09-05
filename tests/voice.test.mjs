@@ -11,6 +11,8 @@ await build({entryPoints:['lib/voice/humain.ts'],outfile:`${dir}/voice.mjs`,bund
   b.onLoad({filter:/.*/,namespace:'test'},()=>({contents:'export const io=(...args)=>globalThis.__voiceSocket(...args)'}));
 }}]});
 const voice=await import(`${dir}/voice.mjs`);
+await build({entryPoints:['lib/voice/home-brief.ts'],outfile:`${dir}/brief.mjs`,bundle:true,platform:'node',format:'esm'});
+const {homeBriefScript}=await import(`${dir}/brief.mjs`);
 const config={key:'test-secret',origin:'https://api.voice.humain.com',path:'/socket.io',voice:'test-voice',model:'nebula'};
 
 test('audio cache changes with text and voice, WAV sizes are correct, chunks do not drop words',()=>{
@@ -49,13 +51,13 @@ test('synthesis waits for final matching frame and closes sockets on success, ca
 });
 
 test('listen endpoint uses published server text, caches audio, and stops duplicate or invalid generation',async()=>{
-  const state={text:'موجز منشور',cache:new Map(),generated:0,locks:new Set(),exists:true};
+  const state={text:'موجز منشور',cache:new Map(),generated:0,locks:new Set(),exists:true,excerpt:'',spoken:''};
   globalThis.__voiceRoute={
-    async getHome(){return{brief:[{title:state.text}]}},async getStory(){return state.exists?{excerpt:state.text}:null},
+    async getHome(){return{brief:[{title:state.text,excerpt:state.excerpt}]}},async getStory(){return state.exists?{excerpt:state.text}:null},
     async consumeLimit(scope,key){if(scope!=='voice-generation-lock')return true;if(state.locks.has(key))return false;state.locks.add(key);return true},
     async getStoredVoice(key){return state.cache.get(key)??null},async putStoredVoice(key,bytes){state.cache.set(key,bytes)},
     voiceConfig:()=>config,audioKey:voice.audioKey,speechChunks:voice.speechChunks,
-    async synthesizeSummary(text){state.generated++;return voice.pcmToWav(new Uint8Array([text.length,0]))},
+    async synthesizeSummary(text){state.spoken=text;state.generated++;return voice.pcmToWav(new Uint8Array([text.length,0]))},
   };
   await build({entryPoints:['app/api/content/listen/route.ts'],outfile:`${dir}/route.mjs`,bundle:true,platform:'node',format:'esm',packages:'external',plugins:[{name:'fixture',setup(b){
     b.onResolve({filter:/^@\/lib\/(content\/provider|storage\/voice|voice\/humain|tahrir\/rate-limit)$/},args=>({path:args.path,namespace:'test'}));
@@ -71,6 +73,34 @@ test('listen endpoint uses published server text, caches audio, and stops duplic
     state.exists=false;assert.equal((await POST(request({kind:'story',storyId:'private-draft'}))).status,404);
     assert.equal((await POST(request({kind:'home',text:'نص زائر'}))).status,400);
     assert.equal((await POST(request({kind:'home'},'https://evil.invalid'))).status,403);
+    state.text='عنوان المادة';state.excerpt='موجز منشور يشرح تفاصيل الخبر.';
+    assert.equal((await POST(request({kind:'home'}))).status,200);assert.equal(state.generated,3);
+    assert.match(state.spoken,/أهلًا بكم في موجز العلم/);assert.match(state.spoken,/موجز منشور يشرح تفاصيل الخبر/);assert.match(state.spoken,/شكرًا لاستماعكم/);
+    assert.equal((await POST(request({kind:'home'}))).status,200);assert.equal(state.generated,3);
+    state.excerpt='الموجز بعد تصحيح تفاصيل الخبر.';
+    assert.equal((await POST(request({kind:'home'}))).status,200);assert.equal(state.generated,4);
+    assert.match(state.spoken,/بعد تصحيح/);
+
   }finally{delete globalThis.__voiceRoute;}
+});
+test('home bulletin preserves published context and ends with a reading invitation',()=>{
+  const items=[{title:'الخبر الأول',excerpt:'انخفض المؤشر بنسبة 3.5%، وفق التقرير المنشور.'},{title:'هل يتغير القرار؟',excerpt:'لم يُعتمد القرار بعد.'}];
+  const text=homeBriefScript(items);
+  assert.ok(text.indexOf(items[0].title)<text.indexOf(items[1].title));
+  assert.match(text,/3\.5%، وفق التقرير المنشور/);assert.match(text,/لم يُعتمد القرار بعد/);
+  assert.match(text,/هل يتغير القرار؟ لم/);assert.doesNotMatch(text,/؟\./);
+  assert.match(text,/عناوين المواد في هذه القائمة/);assert.ok(text.endsWith('شكرًا لاستماعكم.'));
+  assert.equal(homeBriefScript([]),'');
+  assert.equal(homeBriefScript([{title:'   ',excerpt:'لا عنوان'}]),'');
+});
+test('home bulletin skips clipped or duplicate excerpts and keeps every headline within the voice limit',()=>{
+  const duplicate=homeBriefScript([{title:'عنوان الخبر',excerpt:'عنوانُ الخبر.'}]);
+  assert.equal(duplicate.split('عنوان الخبر').length,2);
+  assert.doesNotMatch(homeBriefScript([{title:'عنوان',excerpt:'تفاصيل مقطوعة…'}]),/مقطوعة/);
+  const items=Array.from({length:5},(_,i)=>({title:`العنوان ${i} `+'خبر '.repeat(30),excerpt:'تفصيل '.repeat(38)+'.'}));
+  const text=homeBriefScript(items);assert.ok(Array.from(text).length<=2000);
+  for(let i=0;i<5;i++)assert.ok(text.includes(`العنوان ${i}`));
+  assert.ok(text.endsWith('شكرًا لاستماعكم.'));assert.ok(voice.speechChunks(text).length>1);
+  assert.doesNotMatch(homeBriefScript([{title:'<b>عنوان</b>',excerpt:'<p>نص منشور.</p>'}]),/<[^>]+>/);
 });
 test.after(async()=>{await rm(dir,{recursive:true,force:true})});
