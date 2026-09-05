@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 export const SITE_TITLE = "العلم | المعرفة وراء الخبر";
 export const SITE_DESCRIPTION = "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر عبر السلاسل والبيانات والفيديو والبودكاست.";
-// نطاق النسخة الجديدة المتحقق منه؛ alelm.net ما زال يخدم الموقع السابق.
-const DEPLOYED_ORIGIN = "https://elm-production-ea24.up.railway.app";
+// بعد نقل النطاق، روابط المشاركة والصور تعلن عنوان الموقع العام.
+const PUBLIC_ORIGIN = "https://alelm.net";
 
 type SharingEnvironment = {
   [key: string]: string | undefined;
@@ -12,10 +12,9 @@ type SharingEnvironment = {
   NEXT_PUBLIC_SITE_URL?: string;
 };
 
-/** أصول المشاركة تُخدم من النشر الفعلي؛ canonical يبقى مستقلًا أثناء النقل. */
+/** نطاق المعاينة يحتاج ضبطًا صريحًا؛ نطاق الاستضافة لا يغير هوية الموقع العام. */
 export function sharingOrigin(env: SharingEnvironment = process.env): string {
-  const railwayDomain = env.RAILWAY_PUBLIC_DOMAIN?.trim();
-  const value = env.SHARING_ORIGIN || (railwayDomain && /^[a-z0-9-]+\.up\.railway\.app$/i.test(railwayDomain) ? `https://${railwayDomain}` : DEPLOYED_ORIGIN);
+  const value = env.SHARING_ORIGIN?.trim() || env.NEXT_PUBLIC_SITE_URL?.trim() || PUBLIC_ORIGIN;
   const url = new URL(value);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) throw new Error("Invalid public sharing origin");
   return url.origin;
