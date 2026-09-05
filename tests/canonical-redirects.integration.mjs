@@ -36,8 +36,8 @@ try {
   await write('package.json', JSON.stringify({ private: true, type: 'module' }));
   await write('tsconfig.json', JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@/*': ['./*'] } } }));
   await write('lib/content/redirects.ts', await readFile('lib/content/redirects.ts', 'utf8'));
-  await write('next.config.ts', `import {LEGACY_REDIRECTS} from './lib/content/redirects';
-    export default { experimental: { cpus: 2 }, async redirects() {return LEGACY_REDIRECTS} };`);
+  await write('next.config.ts', `import {LEGACY_REDIRECTS,LEGACY_STORY_REWRITES} from './lib/content/redirects';
+    export default { experimental: { cpus: 2 }, async redirects() {return LEGACY_REDIRECTS}, async rewrites() {return LEGACY_STORY_REWRITES} };`);
   // Exercise the actual short-link handler and URL builder on a production server.
   // The provider boundary exposes a published story, or null for missing/draft IDs.
   await write('app/[section]/[id]/route.ts', await readFile('app/[section]/[id]/route.ts', 'utf8'));
@@ -45,11 +45,15 @@ try {
   await write('lib/content/provider.ts', `export const seedContentProvider = {
     async getStory(id: string): Promise<any> {
       if (id === '264631') return {id, section:'sciences', slug:'طعام-المستقبل'};
+      if (id === '74689') return {id, section:'varieties', slug:'حقيقة-الدرج-اللانهائي'};
       return null;
     }
   };`);
   await write('app/[section]/[id]/[slug]/page.jsx', `export default async function Page({params}) {
     return <main>{(await params).id}</main> }`);
+  // A competing one-segment section route reproduces the original routing bug.
+  await write('app/[section]/page.jsx', `export default async function Page({params}) {
+    return <main>section:{(await params).section}</main> }`);
   await write('app/layout.jsx', 'export default function Layout({children}) { return <html><body>{children}</body></html> }');
   await write('app/page.jsx', 'export default function Page() {return <main>ready</main>}');
   for (const [route, method] of [['permanent', 'permanentRedirect'], ['temporary', 'redirect']]) {
@@ -114,6 +118,35 @@ try {
   assert.equal(short.headers.location, canonical + query);
   assert.equal((await response(port, short.headers.location)).statusCode, 200);
   console.log('Social short links: GET/HEAD, old sections, Arabic paths, query strings, trailing slash and missing/draft IDs passed.');
+  for (const method of ['GET', 'HEAD']) {
+    for (const [id, target] of [['264631', canonical], ['74689', '/varieties/74689/'+encodeURIComponent('حقيقة-الدرج-اللانهائي')]]) {
+      for (const query of ['', '?utm_source=google&ref=%D8%A7%D9%84%D8%B9%D9%84%D9%85', '?id=999&section=wrong&ref=a&ref=b']) {
+        const result = await response(port, '/'+id+query, method);
+        assert.equal(result.statusCode, 301, `${method} /${id}${query}`);
+        assert.equal(result.headers.location, target+query);
+        assert.equal(result.rawHeaders.filter((value, index) => index % 2 === 0 && value.toLowerCase() === 'location').length, 1);
+        assert.equal((await response(port, result.headers.location, method)).statusCode, 200);
+      }
+    }
+    for (const id of ['999999999', '0', '264631'+'0'.repeat(64)]) {
+      const missing = await response(port, '/'+id, method);
+      assert.equal(missing.statusCode, 404);
+      assert.equal(missing.headers.location, undefined);
+      assert.equal(missing.headers['cache-control'], 'no-store');
+    }
+  }
+  const numericSlash = await response(port, '/74689/?utm_source=google');
+  assert.equal(numericSlash.statusCode, 308);
+  assert.equal(numericSlash.headers.location, '/74689?utm_source=google');
+  assert.equal((await response(port, numericSlash.headers.location)).statusCode, 301);
+  for (const section of ['sciences', 'news', '123abc']) {
+    const result = await response(port, '/'+section);
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.headers.location, undefined);
+    const html = await (await fetch(`http://127.0.0.1:${port}/${section}`)).text();
+    assert.match(html.replace(/<!--.*?-->/g, ''), new RegExp('section:'+section));
+  }
+  console.log('Indexed numeric links: direct GET/HEAD 301 to canonical, preserved queries, section isolation, missing IDs and trailing slash passed.');
 } finally {
   if (server && server.exitCode === null) { server.kill('SIGTERM'); await once(server, 'exit'); }
   await rm(directory, { recursive: true, force: true });

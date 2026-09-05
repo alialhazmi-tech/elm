@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
-import { LEGACY_REDIRECTS } from "./lib/content/redirects";
+import { LEGACY_REDIRECTS, LEGACY_STORY_REWRITES } from "./lib/content/redirects";
 
 /**
  * وضع التطوير يحتاج eval(): React وHMR وأدوات Next تستخدمه لإعادة بناء المكدسات
@@ -84,6 +84,10 @@ const nextConfig: NextConfig = {
   async redirects() {
     // طبقة 301 للروابط القديمة (وسوم السلاسل و«غير مصنف») — تفاصيلها في lib/content/redirects.
     return LEGACY_REDIRECTS;
+  },
+  async rewrites() {
+    // تُفحص قبل المسارات الديناميكية كي لا يُفسّر /74689 كاسم قسم.
+    return LEGACY_STORY_REWRITES;
   },
 };
 
