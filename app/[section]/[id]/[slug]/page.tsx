@@ -269,22 +269,22 @@ export default async function ArticlePage({ params }: Params) {
                   <h1>{story.title}</h1>
                   {dek ? <p className="sa-dek">{dek}</p> : null}
                 </div>
-                <div className="sa-head-bottom">
-                  <div className="sa-byline">
-                    <span className="sa-avatar" aria-hidden="true">ع</span>
-                    <div>
-                      <b>فريق العلم</b>
-                      <span className="meta">
-                        {published && story.publishedAt ? (
-                          <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
-                        ) : null}
-                        {published ? " · " : ""}
-                        قراءة {formatReadingMinutes(story.readingMinutes)}
-                      </span>
-                    </div>
+              </div>
+              <div className="sa-head-bottom">
+                <div className="sa-byline">
+                  <span className="sa-avatar" aria-hidden="true">ع</span>
+                  <div>
+                    <b>فريق العلم</b>
+                    <span className="meta">
+                      {published && story.publishedAt ? (
+                        <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
+                      ) : null}
+                      {published ? " · " : ""}
+                      قراءة {formatReadingMinutes(story.readingMinutes)}
+                    </span>
                   </div>
-                  <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleLikeButton storyId={story.id} /><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
                 </div>
+                <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleLikeButton storyId={story.id} /><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
               </div>
               {videoUrl ? (
                 <figure className="sa-media sa-video">
