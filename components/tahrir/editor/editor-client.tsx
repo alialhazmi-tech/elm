@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { FullEditProgressStage, MetadataResult } from "@/lib/ai/editorial";
 import { stripHtmlToText } from "@/lib/content/html";
-import { youtubeIdFrom } from "@/lib/content/video";
+import { normalizeVideoUrl } from "@/lib/content/video";
 import type { Finding, GuardReport } from "@/lib/policy/types";
 import type { GuardControls } from "@/lib/policy";
 import { cn } from "@/lib/utils";
@@ -111,12 +111,12 @@ const wordCount = (text: string) => text.trim().split(/\s+/u).filter(Boolean).le
 function autoGrow(event: React.FormEvent<HTMLTextAreaElement>) {
   const element = event.currentTarget;
   element.style.height = "auto";
-  element.style.height = `${element.scrollHeight}px`;
+  element.style.height = `${element.scrollHeight + element.offsetHeight - element.clientHeight}px`;
 }
 function autoGrowOnMount(element: HTMLTextAreaElement | null) {
   if (!element) return;
   element.style.height = "auto";
-  element.style.height = `${element.scrollHeight}px`;
+  element.style.height = `${element.scrollHeight + element.offsetHeight - element.clientHeight}px`;
 }
 
 /**
@@ -176,7 +176,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
   const autosave = useDraftAutosave({
     snapshot: recoverySnapshot,
     enabled: recovery.ready && !recovery.recovery && !busy && !workflowBusy && status === "draft"
-      && Boolean(id || title.trim() || stripHtmlToText(body).trim()) && (format !== "videos" || Boolean(youtubeIdFrom(videoUrl))),
+      && Boolean(id || title.trim() || stripHtmlToText(body).trim()) && (format !== "videos" || Boolean(normalizeVideoUrl(videoUrl))),
     onSave: () => save(true),
   });
   function restoreLocalDraft() {
@@ -454,9 +454,9 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
 
   async function save(automatic = false): Promise<string | null> {
     if (saveLock.current || (automatic && workflowBusy)) return null;
-    if (format === "videos" && !youtubeIdFrom(videoUrl)) {
+    if (format === "videos" && !normalizeVideoUrl(videoUrl)) {
       setInspectorTab("details");
-      setMessage({ kind: "err", text: "أدخل رابط يوتيوب صحيحًا لإكمال المادة المرئية." });
+      setMessage({ kind: "err", text: "أدخل رابط يوتيوب أو تغريدة من X صحيحًا لإكمال المادة المرئية." });
       return null;
     }
     const savedSnapshot = { ...recoverySnapshot, body: richRef.current?.getHtml() ?? body };
@@ -666,9 +666,9 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
 
       <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         <Card className="gap-0 overflow-hidden py-0">
-          <div className="grid gap-1 px-5 pt-4 pb-3">
+          <div className="grid gap-2 px-5 pt-5 pb-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="story-title" className="text-[11px] font-semibold text-muted-foreground">العنوان</label>
+              <label htmlFor="story-title" className="text-xs font-semibold text-foreground">العنوان</label>
               <span className={cn("text-[10.5px] tabular-nums", titleWords > 10 ? "text-(--t-block)" : "text-muted-foreground")}>{titleWords} من 10 كلمات</span>
             </div>
             <Textarea
@@ -679,18 +679,18 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
               onChange={(event) => onTitle(event.target.value)}
               onInput={autoGrow}
               ref={autoGrowOnMount}
-              className="min-h-0 resize-none overflow-hidden rounded-none border-0 bg-transparent px-0 py-1 font-display text-[22px] leading-snug font-extrabold shadow-none focus-visible:ring-0 md:text-[22px] dark:bg-transparent"
+              className="min-h-20 resize-none overflow-hidden rounded-lg border-input bg-muted/20 px-3.5 py-3 font-display text-[22px] leading-relaxed font-bold text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/55 focus-visible:bg-background focus-visible:ring-2 md:text-[22px] dark:bg-muted/20"
             />
             <FieldGenerator tool="headlines" getDraft={() => ({ title, body: bodyText(), revision: draftRevision.current })} onApply={onTitle} disabled={fullBusy || busy} />
           </div>
-          <div className="grid gap-1 border-t px-5 pt-3 pb-3">
+          <div className="grid gap-2 border-t px-5 py-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="story-excerpt" className="text-[11px] font-semibold text-muted-foreground">قبل القراءة</label>
+              <label htmlFor="story-excerpt" className="text-xs font-semibold text-foreground">الموجز — قبل القراءة</label>
               <span className={cn("text-[10.5px] tabular-nums", excerpt.length > 180 ? "text-(--t-block)" : "text-muted-foreground")}>{excerpt.length} من 180 حرفًا</span>
             </div>
             <Textarea
               id="story-excerpt"
-              placeholder="✦ قبل القراءة — خلاصة في سطر واحد"
+              placeholder="اكتب خلاصة المادة في سطر أو سطرين…"
               maxLength={220}
               rows={2}
               value={excerpt}
@@ -698,7 +698,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
                 markDraftChanged();
                 setExcerpt(event.target.value);
               }}
-              className="min-h-0 resize-none rounded-none border-0 bg-transparent px-0 py-1 text-[14px] leading-relaxed text-muted-foreground shadow-none focus-visible:ring-0 dark:bg-transparent"
+              className="min-h-22 resize-none rounded-lg border-input bg-muted/20 px-3.5 py-3 text-[14px] leading-relaxed text-foreground shadow-none placeholder:text-muted-foreground/55 focus-visible:bg-background focus-visible:ring-2 dark:bg-muted/20"
             />
             <FieldGenerator tool="excerpt" getDraft={() => ({ title, body: bodyText(), revision: draftRevision.current })} onApply={(text) => { markDraftChanged(); setExcerpt(text); }} disabled={fullBusy || busy} />
           </div>
@@ -717,7 +717,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
             />
           ) : null}
 
-          <ArticleLinks identity={savedIdentity} editorId={id} published={status === "published" || Boolean(initial?.publishedAt)} dirty={autosave.dirty || busy} />
+          <ArticleLinks identity={savedIdentity} published={status === "published" || Boolean(initial?.publishedAt)} dirty={autosave.dirty || busy} />
           <RichBody ref={richRef} initial={initial?.body ?? ""} onChange={(html, text) => onBody(html, text)} />
         </Card>
 

@@ -1,6 +1,6 @@
 /**
- * روابط الفيديو — يوتيوب فقط حاليًا. وحدة نقية بلا اعتماديات تستوردها الواجهة والخادم وسكربت الهجرة.
- * القرار التحريري: نضمّن الفيديو وحده بلا قائمة تشغيل، حتى لا ينتقل القارئ بعده إلى مواد لا نتحكم بترتيبها.
+ * روابط الفيديو — يوتيوب وتغريدات X. وحدة نقية تستوردها الواجهة والخادم وسكربت الهجرة.
+ * يوتيوب يُحفظ بلا قائمة تشغيل؛ X يعرض مشغّل الفيديو المنفصل.
  */
 
 const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/;
@@ -15,6 +15,7 @@ export function youtubeIdFrom(input: string | null | undefined): string | null {
   } catch {
     return null;
   }
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.port) return null;
   const host = url.hostname.replace(/^www\./, "").replace(/^m\./, "");
   let id: string | null = null;
   if (host === "youtu.be") id = url.pathname.split("/").filter(Boolean)[0] ?? null;
@@ -27,16 +28,30 @@ export function youtubeIdFrom(input: string | null | undefined): string | null {
   return id && YOUTUBE_ID.test(id) ? id : null;
 }
 
-/** الرابط القياسي المخزَّن: مشاهدة بلا قائمة تشغيل ولا توقيت — أو null إن لم يكن يوتيوب. */
-export function normalizeVideoUrl(input: string | null | undefined): string | null {
-  const id = youtubeIdFrom(input);
-  return id ? `https://www.youtube.com/watch?v=${id}` : null;
+/** رابط تغريدة عامة، وليس رابط حساب أو بحث أو مضيف يشبه X. */
+export function xPostIdFrom(input: string | null | undefined): string | null {
+  let url: URL;
+  try { url = new URL((input ?? "").trim()); } catch { return null; }
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.port) return null;
+  if (!/^(?:(?:www|mobile|m)\.)?(?:x|twitter)\.com$/.test(url.hostname)) return null;
+  const match = url.pathname.match(/^\/(?:[A-Za-z0-9_]{1,15}\/status|i\/(?:web\/)?status)\/([1-9][0-9]{0,19})(?:\/(?:video|photo)\/[1-9][0-9]*)?\/?$/);
+  return match?.[1] ?? null;
 }
 
-/** رابط التضمين بالنسخة الخاصة بالخصوصية — الوحيد المسموح في frame-src. */
+/** الرابط القياسي المخزَّن بلا معلمات تتبع أو قائمة تشغيل. */
+export function normalizeVideoUrl(input: string | null | undefined): string | null {
+  const id = youtubeIdFrom(input);
+  if (id) return `https://www.youtube.com/watch?v=${id}`;
+  const postId = xPostIdFrom(input);
+  return postId ? `https://x.com/i/status/${postId}` : null;
+}
+
+/** مشغّل الفيديو وحده: يوتيوب أو مشغّل فيديو التغريدة المستقل. */
 export function videoEmbedUrl(input: string | null | undefined): string | null {
   const id = youtubeIdFrom(input);
-  return id ? `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&hl=ar` : null;
+  if (id) return `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1&hl=ar`;
+  const postId = xPostIdFrom(input);
+  return postId ? `https://twitter.com/i/videos/tweet/${postId}?language_code=ar&dnt=true` : null;
 }
 
 const YOUTUBE_IN_TEXT = /https?:\/\/(?:www\.|m\.)?(?:youtube\.com|youtu\.be|youtube-nocookie\.com)\/[^\s"'<>)]+/gi;

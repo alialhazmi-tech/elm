@@ -22,6 +22,10 @@ const TOKEN = /<\/?([a-zA-Z][a-zA-Z0-9]*)((?:[^"'>]|"[^"]*"|'[^']*')*)\/?>/g;
 const escapeText = (text: string) => text.replace(/</g, "&lt;");
 
 function openTag(tag: string, attrs: string): string {
+  if (tag === "blockquote") {
+    const post = /(?:^|\s)data-x-post\s*=\s*(?:"([1-9][0-9]{0,19})"|'([1-9][0-9]{0,19})')(?=\s|$)/i.exec(attrs);
+    if (post) return `<blockquote data-x-post="${post[1] ?? post[2]}">`;
+  }
   if (tag === "a") {
     const href = /href\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(attrs);
     const url = (href?.[1] ?? href?.[2] ?? "").trim();

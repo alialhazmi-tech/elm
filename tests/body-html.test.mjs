@@ -61,3 +61,16 @@ test("النص الإرثي لا يتغير في strip واكتشاف HTML دق�
 test("textToHtml يهرّب الأقواس ويقسم الفقرات", () => {
   assert.equal(textToHtml("أ < ب\n\nج"), "<p>أ &lt; ب</p><p>ج</p>");
 });
+
+test("embedded posts retain only a numeric identity and survive repeated saving between paragraphs", () => {
+  const body = '<p>قبل التغريدة</p><blockquote data-x-post="1293593516040269825"><a href="https://x.com/i/status/1293593516040269825" target="_blank" rel="noopener noreferrer">عرض التغريدة على X</a></blockquote><p>بعد التغريدة</p>';
+  assert.equal(sanitizeBodyHtml(body), body);
+  assert.equal(sanitizeBodyHtml(sanitizeBodyHtml(body)), body);
+  assert.equal(looksLikeHtml(body), true);
+  assert.match(stripHtmlToText(body), /قبل التغريدة[\s\S]*بعد التغريدة/);
+  for (const id of ['javascript:alert(1)', '0', '12&amp;34', '1 onmouseover=alert(1)', '123456789012345678901']) {
+    assert.doesNotMatch(sanitizeBodyHtml(`<blockquote data-x-post="${id}" onclick="bad()">نص</blockquote>`), /data-x-post|onclick|javascript/);
+  }
+  assert.equal(sanitizeBodyHtml('<blockquote data-x-post="123" onclick="bad()"><script>bad()</script>نص</blockquote>'), '<blockquote data-x-post="123">نص</blockquote>');
+  assert.match(sanitizeBodyHtml('<blockquote><p>اقتباس عادي</p></blockquote>'), /^<blockquote><p>اقتباس عادي/);
+});

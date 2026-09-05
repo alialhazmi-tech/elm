@@ -17,8 +17,10 @@ import {
   ArticleTracker,
   PersonalizedRelated,
 } from "@/app/_components/article-experience";
+import { BodyHtml } from "@/components/content/body-html";
+import { VideoPlayer } from "@/components/content/video-player";
 import { ReadingProgress } from "@/app/_components/reading-progress";
-import { videoEmbedUrl } from "@/lib/content/video";
+import { normalizeVideoUrl } from "@/lib/content/video";
 import { brandDate, formatArticleDek, formatReadingBrief, formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
@@ -180,7 +182,7 @@ export default async function ArticlePage({ params }: Params) {
   const dek = readingBrief;
   const fullExcerpt = formatArticleDek(story.excerpt);
   // مواد الفيديو: المشغّل يحل محل الصورة البارزة في الرأس (الصورة تبقى للبطاقات والمشاركة).
-  const videoEmbed = story.format === "videos" ? videoEmbedUrl(story.videoUrl) : null;
+  const videoUrl = story.format === "videos" ? normalizeVideoUrl(story.videoUrl) : null;
   const showBrief = Boolean(story.body?.trim()) && fullExcerpt.length > readingBrief.length + 80;
   // الجانب: التالي في السلسلة نفسها (حتى 3)، والذيل: مواد من سلاسل أخرى.
   const sameSeries = series ? related.filter((item) => item.series === series.slug).slice(0, 3) : [];
@@ -249,7 +251,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
             </header>
           ) : (
-            <header className={`sa-head${videoEmbed ? " has-video" : (isInfographicStory || !story.image) ? " no-media" : ""}`}>
+            <header className={`sa-head${videoUrl ? " has-video" : (isInfographicStory || !story.image) ? " no-media" : ""}`}>
               <div className="sa-head-copy">
                 <div className="sa-head-top">
                   <nav className="breadcrumb" aria-label="مسار التصفح">
@@ -283,16 +285,9 @@ export default async function ArticlePage({ params }: Params) {
                   <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleLikeButton storyId={story.id} /><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
                 </div>
               </div>
-              {videoEmbed ? (
+              {videoUrl ? (
                 <figure className="sa-media sa-video">
-                  <iframe
-                    src={videoEmbed}
-                    title={story.title}
-                    loading="lazy"
-                    allow="accelerometer; encrypted-media; picture-in-picture; web-share"
-                    allowFullScreen
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
+                  <VideoPlayer url={videoUrl} title={story.title} />
                 </figure>
               ) : story.image && !isInfographicStory ? (
                 <figure className="sa-media">
@@ -332,7 +327,7 @@ export default async function ArticlePage({ params }: Params) {
                 <div className="article-body" id="article-body">
                   {story.body && looksLikeHtml(story.body) ? (
                     // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
-                    <div dangerouslySetInnerHTML={{ __html: reading.body }} />
+                    <BodyHtml html={reading.body} />
                   ) : story.body ? (
                     story.body
                       .split(/\n{2,}/)

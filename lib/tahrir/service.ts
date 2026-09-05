@@ -78,7 +78,7 @@ export interface DraftInput {
   seoTitle?: string;
   seoDescription?: string;
   keywords?: string[];
-  /** رابط يوتيوب لمواد الفيديو — null يمسحه. */
+  /** رابط يوتيوب أو تغريدة X لمواد الفيديو — null يمسحه. */
   videoUrl?: string | null;
   /** undefined = لا تغيير — التثبيت والعاجل من صلاحية المعتمدين فقط. */
   pinned?: boolean;

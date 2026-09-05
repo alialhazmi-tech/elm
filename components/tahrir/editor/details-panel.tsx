@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { videoEmbedUrl, youtubeIdFrom } from "@/lib/content/video";
+import { normalizeVideoUrl } from "@/lib/content/video";
+import { VideoPlayer } from "@/components/content/video-player";
 import { cn } from "@/lib/utils";
 
 export interface DetailsPanelProps {
@@ -167,7 +168,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
           <span className="grid gap-0.5">
             <b className="font-display text-[12.5px]">تفعيل فيديو للمادة</b>
             <span className="text-[10.5px] leading-relaxed text-muted-foreground">
-              يعرض مشغّل يوتيوب بعرض الصفحة أسفل عنوان المادة.
+              يعرض الفيديو وحده أسفل عنوان المادة؛ المصدر يوتيوب أو فيديو تغريدة.
             </span>
           </span>
         </label>
@@ -176,27 +177,21 @@ export function DetailsPanel(props: DetailsPanelProps) {
           <div id="story-video-fields" className="grid gap-2">
             <Input
               dir="ltr"
-              placeholder="https://www.youtube.com/watch?v=…"
+              placeholder="رابط فيديو يوتيوب أو تغريدة X"
+              aria-label="رابط الفيديو أو التغريدة"
               value={props.videoUrl}
               onChange={(event) => props.onVideoUrl(event.target.value)}
-              aria-invalid={props.videoUrl.trim() !== "" && !youtubeIdFrom(props.videoUrl)}
+              aria-invalid={props.videoUrl.trim() !== "" && !normalizeVideoUrl(props.videoUrl)}
             />
-            {props.videoUrl.trim() && !youtubeIdFrom(props.videoUrl) ? (
-              <div className="text-[11px] text-(--t-block)">يُقبل رابط يوتيوب فقط (مشاهدة أو youtu.be أو تضمين).</div>
+            {props.videoUrl.trim() && !normalizeVideoUrl(props.videoUrl) ? (
+              <div className="text-[11px] text-(--t-block)">أدخل رابط يوتيوب أو رابط تغريدة من x.com أو twitter.com.</div>
             ) : !props.videoUrl.trim() ? (
-              <div className="text-[11px] text-muted-foreground">ألصق رابط يوتيوب لإكمال المادة المرئية.</div>
+              <div className="text-[11px] text-muted-foreground">ألصق رابط يوتيوب أو تغريدة عامة تحتوي على فيديو.</div>
             ) : null}
-            {youtubeIdFrom(props.videoUrl) ? (
-              <iframe
-                src={videoEmbedUrl(props.videoUrl) ?? undefined}
-                title="معاينة الفيديو"
-                loading="lazy"
-                allow="encrypted-media; picture-in-picture"
-                allowFullScreen
-                className="aspect-video w-full rounded-md border bg-black"
-              />
+            {normalizeVideoUrl(props.videoUrl) ? (
+              <VideoPlayer url={props.videoUrl} title="معاينة الفيديو" />
             ) : null}
-            <div className="text-[10px] text-muted-foreground">يُحفظ رابط الفيديو وحده بلا قائمة تشغيل — القارئ يبقى في المادة.</div>
+            <div className="text-[10px] text-muted-foreground">يُحفظ رابط الفيديو أو التغريدة دون معلمات التتبع. لإظهار التغريدة كاملة داخل الخبر، استخدم «إدراج تغريدة» في أدوات المتن.</div>
           </div>
         ) : null}
       </Section>
