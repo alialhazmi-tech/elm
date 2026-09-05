@@ -187,6 +187,7 @@ export const users = pgTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   displayName: text("display_name").notNull(),
+  avatarUrl: text("avatar_url"),
   email: text("email").notNull().default(""),
   role: text("role").notNull().default("editor"),
   /** PBKDF2-SHA256: صيغة salt:iterations:hash بترميز hex. */
@@ -242,6 +243,9 @@ export const auditLog = pgTable("audit_log", {
 /** ملف عضو الموقع العام — المعرّف يأتي من Neon Auth ولا يختلط بمستخدمي التحرير. */
 export const memberProfiles = pgTable("member_profiles", {
   authUserId: text("auth_user_id").primaryKey(),
+  avatarUrl: text("avatar_url"),
+  status: text("status").notNull().default("active"),
+  suspendReason: text("suspend_reason").notNull().default(""),
   onboardingCompleted: integer("onboarding_completed").notNull().default(0),
   personalizationEnabled: integer("personalization_enabled").notNull().default(1),
   createdAt: text("created_at").notNull(),

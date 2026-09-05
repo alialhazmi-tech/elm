@@ -1,7 +1,8 @@
 "use server";
+import { getMemberSession } from "@/lib/membership/session";
 
 import { redirect } from "next/navigation";
-import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { memberAuthConfigured } from "@/lib/membership/auth";
 import { saveMemberInterests } from "@/lib/membership/profile";
 
 export type InterestsState = { error?: string };
@@ -11,7 +12,7 @@ export async function completeOnboarding(
   formData: FormData,
 ): Promise<InterestsState> {
   if (!memberAuthConfigured) return { error: "خدمة العضوية غير مهيأة حاليًا." };
-  const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
+  const { data } = await getMemberSession();
   if (!data?.user) redirect("/join");
 
   const ids = formData.getAll("interests").map(String);

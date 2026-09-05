@@ -241,3 +241,17 @@
   .topbar .member-entry { display: inline-flex; padding: 0 9px; min-height: 36px; height: 36px; font-size: 11px; gap: 5px; margin-inline-start: 0; }
   .topbar .member-entry svg { width: 14px; height: 14px; }
 }
+
+.account-menu { position:relative; }
+.account-menu > summary { list-style:none;cursor:pointer; }
+.account-menu > summary::-webkit-details-marker { display:none; }
+.account-menu > summary:focus-visible { outline:2px solid var(--navy);outline-offset:3px; }
+.account-menu-name { max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.account-menu-caret { flex-shrink:0; }
+.account-menu[open] .account-menu-caret { transform:rotate(180deg); }
+.account-menu-panel { position:absolute;inset-inline-end:0;top:calc(100% + 10px);z-index:60;width:230px;max-width:calc(100vw - 32px);padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 32px #00000014; }
+.topbar .account-menu-panel a { display:flex;align-items:center;gap:10px;padding:11px 12px;color:var(--ink);text-decoration:none;border-radius:9px;font-size:13px; }
+.account-menu-identity { display:grid;gap:3px;min-width:0; }
+.account-menu-panel small { color:var(--muted);font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.topbar .account-menu-panel a:hover,.topbar .account-menu-panel a:focus-visible { background:var(--surface-2); }
+@media(max-width:600px) { .account-menu-name {display:none;} .topbar .account-menu > summary {padding:0 7px;} }

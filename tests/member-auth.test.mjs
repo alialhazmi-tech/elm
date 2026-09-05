@@ -60,7 +60,7 @@ test("زر العضوية ظاهر في الهيدر ومسار التسجيل �
     read("app/join/join-form.tsx"),
   ]);
   assert.match(header, /<MemberEntry/);
-  assert.match(account, /memberAuth\.getSession/);
+  assert.match(account, /getMemberSession/);
   assert.match(account, /redirect\("\/join"\)/);
   assert.match(signup, /JoinForm/);
   assert.match(form, /useActionState\(\s*signUpMember,\s*initialState,?\s*\)/);
@@ -78,6 +78,6 @@ test("نجاح التسجيل يبدأ الترحيب والاهتمامات ث�
   assert.match(ready, /جهّزنا العلم لك/);
   assert.match(feed, /صباح المعرفة/);
   assert.match(account, /getMemberAccountData/);
-  assert.match(header, /\/api\/auth\/get-session/);
-  assert.match(header, /حسابي/);
+  assert.match(header, /\/api\/viewer/);
+  assert.match(header, /الملف الشخصي/);
 });

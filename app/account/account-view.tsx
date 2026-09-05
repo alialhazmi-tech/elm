@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { ProfileAvatar } from "@/components/profile-avatar";
+import { AvatarUpload } from "@/components/avatar-upload";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -270,7 +272,7 @@ export function AccountView({
           <aside className="ac-sidebar" aria-label="ملف العضو">
             <div className="ac-identity">
               <div className="ac-avatar" aria-hidden="true">
-                {firstName.slice(0, 1) || "ع"}
+                <ProfileAvatar name={user.name} image={user.image} size={64} />
               </div>
               <h2>{user.name}</h2>
               <span className="ac-member-badge">
@@ -534,6 +536,7 @@ export function AccountView({
                     <div className="ac-settings-grid">
                       <section className="ac-section ac-padded">
                         <SectionHead title="البيانات الشخصية" />
+                        <AvatarUpload name={user.name} image={user.image} endpoint="/api/account/avatar" />
                         <DetailsForm
                           name={user.name}
                           email={user.email}

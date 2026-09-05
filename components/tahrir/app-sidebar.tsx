@@ -6,7 +6,7 @@ import { useState } from "react";
 import { ChevronsUpDownIcon, LogOutIcon, MoonIcon, SearchIcon } from "lucide-react";
 import { useTheme } from "next-themes";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +42,7 @@ import { useLogout } from "./use-logout";
 
 export interface SidebarUser {
   displayName: string;
+  avatarUrl?: string | null;
   roleLabel: string;
   /** مفاتيح صلاحيات العضو — ترشّح القوائم فلا يرى بابًا مغلقًا. */
   permissions: string[];
@@ -166,7 +167,6 @@ function NavUser({ user }: { user: SidebarUser }) {
   const { isMobile } = useSidebar();
   const { resolvedTheme, setTheme } = useTheme();
   const logout = useLogout();
-  const initial = user.displayName.trim().slice(0, 1) || "؟";
 
   return (
     <SidebarMenu>
@@ -177,11 +177,7 @@ function NavUser({ user }: { user: SidebarUser }) {
               size="lg"
               className="data-open:bg-sidebar-accent data-open:text-sidebar-accent-foreground"
             >
-              <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg bg-sidebar-primary font-display font-bold text-sidebar-primary-foreground">
-                  {initial}
-                </AvatarFallback>
-              </Avatar>
+              <ProfileAvatar name={user.displayName} image={user.avatarUrl} size={32} />
               <span className="grid flex-1 text-start leading-tight">
                 <span className="truncate text-sm font-semibold text-sidebar-foreground">
                   {user.displayName}
@@ -197,9 +193,12 @@ function NavUser({ user }: { user: SidebarUser }) {
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="grid leading-tight">
-              <span className="truncate font-semibold">{user.displayName}</span>
-              <span className="truncate text-xs font-normal text-muted-foreground">{user.roleLabel}</span>
+            <DropdownMenuLabel className="flex items-center gap-2 leading-tight">
+              <ProfileAvatar name={user.displayName} image={user.avatarUrl} size={36} />
+              <span className="grid min-w-0 gap-1">
+                <span className="truncate font-semibold">{user.displayName}</span>
+                <span className="truncate text-xs font-normal text-muted-foreground">{user.roleLabel}</span>
+              </span>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -213,6 +212,7 @@ function NavUser({ user }: { user: SidebarUser }) {
               <Switch checked={resolvedTheme === "dark"} className="ms-auto" aria-hidden tabIndex={-1} />
             </DropdownMenuItem>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild><Link href="/tahrir/profile">ملفي الشخصي</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link href="/tahrir/security">أمان الحساب</Link></DropdownMenuItem>
             <DropdownMenuItem variant="destructive" onSelect={() => void logout()}>
               <LogOutIcon />

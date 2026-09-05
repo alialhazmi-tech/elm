@@ -41,7 +41,8 @@
 .ac-avatar {
   width: 64px;
   height: 64px;
-  border-radius: 22px;
+  border-radius: 50%;
+  overflow: hidden;
   background: #214c85;
   color: #fff;
   display: grid;
@@ -847,7 +848,26 @@
     min-width: 0;
   }
   .ac-identity {
-    display: none;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    column-gap: 14px;
+    row-gap: 4px;
+    align-items: center;
+    text-align: start;
+    padding: 4px 0 20px;
+  }
+  .ac-identity .ac-avatar {
+    grid-row: 1 / 4;
+    margin: 0;
+  }
+  .ac-identity h2 {
+    margin: 0;
+  }
+  .ac-identity .ac-member-badge {
+    justify-self: start;
+  }
+  .ac-identity > small {
+    margin-top: 0;
   }
   .ac-nav {
     display: flex;

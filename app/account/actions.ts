@@ -1,4 +1,5 @@
 "use server";
+import { getMemberSession } from "@/lib/membership/session";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
@@ -17,7 +18,7 @@ import { getDb } from "@/lib/db";
 export type AccountFormState = { error?: string; success?: string };
 async function currentMember() {
   if (!memberAuthConfigured) return null;
-  const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
+  const { data } = await getMemberSession();
   return data?.user ?? null;
 }
 const expired = { error: "انتهت جلستك. سجّل الدخول مرة أخرى لحفظ التغييرات." };

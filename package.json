@@ -23,7 +23,7 @@
     "db:seed": "node --env-file=.env.local scripts/db-seed.mjs",
     "migrate:wp": "node --env-file=.env.local scripts/wp-migrate.mjs",
     "media:migrate": "node --env-file=.env.local scripts/wp-media-migrate.mjs",
-    "test:integration": "node tests/migration-adoption.integration.mjs && node tests/workflow.integration.mjs && node tests/member-account.integration.mjs && node tests/public-readings.integration.mjs && node tests/dashboard-performance.integration.mjs && node tests/public-cache.integration.mjs",
+    "test:integration": "node tests/migration-adoption.integration.mjs && node tests/workflow.integration.mjs && node tests/member-account.integration.mjs && node tests/profiles-audience.integration.mjs && node tests/public-readings.integration.mjs && node tests/dashboard-performance.integration.mjs && node tests/public-cache.integration.mjs",
     "db:migrate": "node scripts/migrate-db.mjs",
     "db:check": "node --env-file-if-exists=.env.local scripts/check-db.mjs",
     "scheduler:tick": "node scripts/scheduler-tick.mjs",

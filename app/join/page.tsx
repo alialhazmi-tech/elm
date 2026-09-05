@@ -3,8 +3,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Bookmark, BookOpen, Compass, ShieldCheck } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
+import { getMemberSession } from "@/lib/membership/session";
+import { signOutMember } from "@/app/account/actions";
 import { JoinForm } from "./join-form";
 import { safeInternalPath } from "@/lib/membership/paths";
 import "./member-auth.css";
@@ -24,9 +26,31 @@ export default async function JoinPage({
   const { next: nextRaw, mode } = await searchParams;
   const next = safeInternalPath(nextRaw);
   if (memberAuthConfigured) {
-    const { data } = await memberAuth
-      .getSession()
-      .catch(() => ({ data: null }));
+    const { data, suspended } = await getMemberSession();
+    if (suspended)
+      return (
+        <>
+          <SiteHeader />
+          <main className="member-auth-shell">
+            <section className="member-auth-panel">
+              <h1>حسابك معلّق</h1>
+              <p>
+                الوصول إلى خدمات العضوية موقوف حاليًا. تواصل مع إدارة العلم
+                لمراجعة حالة حسابك.
+              </p>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOutMember();
+                }}
+              >
+                <button className="member-auth-submit">تسجيل الخروج</button>
+              </form>
+            </section>
+          </main>
+          <SiteFooter />
+        </>
+      );
     if (data?.user) {
       const profile = await getMemberProfile(data.user.id);
       redirect(profile.onboardingCompleted ? (next ?? "/account") : "/welcome");

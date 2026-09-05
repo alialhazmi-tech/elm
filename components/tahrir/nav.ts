@@ -91,6 +91,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "الإدارة",
     items: [
       { title: "الأعضاء", href: "/tahrir/members", icon: UsersIcon, permission: "users.view" },
+      { title: "الحسابات الإدارية", href: "/tahrir/admin-accounts", icon: ShieldCheckIcon, permission: "users.view" },
       { title: "الأدوار والصلاحيات", href: "/tahrir/roles", icon: ShieldCheckIcon, permission: "roles.manage" },
     ],
   },
@@ -126,5 +127,6 @@ export function pageTitleFor(pathname: string, status: string | null): string {
       if (isNavActive(item, pathname, status)) return item.title;
     }
   }
+  if (pathname === "/tahrir/profile") return "ملفي الشخصي";
   return "تحرير العلم";
 }

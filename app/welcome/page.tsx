@@ -1,7 +1,8 @@
+import { getMemberSession } from "@/lib/membership/session";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/app/_components/site-chrome";
-import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
+import { memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
 import { InterestPicker } from "./interest-picker";
 import "./welcome.css";
@@ -11,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export default async function WelcomePage() {
   if (!memberAuthConfigured) redirect("/join");
-  const { data } = await memberAuth.getSession().catch(() => ({ data: null }));
+  const { data } = await getMemberSession();
   if (!data?.user) redirect("/join");
   const profile = await getMemberProfile(data.user.id);
 

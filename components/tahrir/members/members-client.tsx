@@ -23,7 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,7 @@ async function call(url: string, method: string, body?: unknown) {
 
 type Filter = "all" | "active" | "suspended";
 
-/** جدول الأعضاء: الاسم والدور والحالة وآخر دخول، وإجراءات لكل صف؛ الإنشاء والتعديل في لوح جانبي. */
+/** جدول الحسابات الإدارية: الاسم والدور والحالة وآخر دخول، وإجراءات لكل صف؛ الإنشاء والتعديل في لوح جانبي. */
 export function MembersClient({ members, roles, groups, me, can }: Props) {
   const router = useRouter();
   const [action, setAction] = useState<Action | null>(null);
@@ -119,7 +119,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
       reason,
     });
     setBusy(false);
-    if (result.ok) done(action.kind === "suspend" ? "عُلّقت العضوية — تسري فورًا." : "استُؤنفت العضوية.");
+    if (result.ok) done(action.kind === "suspend" ? "عُلّق الحساب — تسري فورًا." : "أُعيد تفعيل الحساب.");
     else toast.error(result.error ?? "تعذر تغيير الحالة.");
   }
 
@@ -134,7 +134,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
               onChange={(event) => setQ(event.target.value)}
               placeholder="ابحث بالاسم أو البريد…"
               className="h-8 w-52 bg-card ps-8 text-xs sm:w-60"
-              aria-label="بحث في الأعضاء"
+              aria-label="بحث في الحسابات الإدارية"
             />
           </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -178,7 +178,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
         {can.manage ? (
           <Button size="sm" className="h-8 font-display font-bold shadow-xs" onClick={() => setAction({ kind: "create" })}>
             <UserPlusIcon data-icon="inline-start" className="size-3.5" />
-            إضافة عضو
+            إضافة حساب إداري
           </Button>
         ) : null}
       </div>
@@ -187,7 +187,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
         <Table>
           <TableHeader>
             <TableRow className="border-b border-border/80 bg-muted/20 hover:bg-muted/20">
-              <TableHead className="ps-4 font-display text-xs font-semibold">العضو</TableHead>
+              <TableHead className="ps-4 font-display text-xs font-semibold">الحساب</TableHead>
               <TableHead className="w-40 hidden font-display text-xs font-semibold md:table-cell">الدور</TableHead>
               <TableHead className="w-48 font-display text-xs font-semibold">الحالة</TableHead>
               <TableHead className="w-36 hidden font-display text-xs font-semibold lg:table-cell">آخر دخول</TableHead>
@@ -199,7 +199,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
             {visible.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center text-xs text-muted-foreground">
-                  لا أعضاء بهذا الفلتر.
+                  لا حسابات إدارية تطابق الفلاتر.
                 </TableCell>
               </TableRow>
             ) : null}
@@ -209,9 +209,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                 <TableRow key={member.id} className={cn("transition-colors hover:bg-muted/30", member.status === "suspended" && "opacity-75")}>
                   <TableCell className="ps-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <Avatar className="size-8">
-                        <AvatarFallback className="font-display text-xs font-bold">{member.displayName.slice(0, 1)}</AvatarFallback>
-                      </Avatar>
+                      <ProfileAvatar name={member.displayName} image={member.avatarUrl} size={36} />
                       <div className="grid min-w-0 leading-tight">
                         <span className="truncate text-[13px] font-semibold">
                           {member.displayName}
@@ -237,13 +235,13 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                         <Switch
                           checked={member.status === "active"}
                           disabled={isMe || busy}
-                          aria-label={member.status === "active" ? `تعليق عضوية ${member.displayName}` : `استئناف عضوية ${member.displayName}`}
+                          aria-label={member.status === "active" ? `تعليق حساب ${member.displayName}` : `تفعيل حساب ${member.displayName}`}
                           title={
                             isMe
                               ? "لا يمكنك تعليق حسابك الحالي"
                               : member.status === "active"
-                                ? "انقر لتعليق العضوية"
-                                : "انقر لاستئناف العضوية"
+                                ? "انقر لتعليق الحسابية"
+                                : "انقر لتفعيل الحساب"
                           }
                           onCheckedChange={(checked) => {
                             if (!checked) {
@@ -340,10 +338,11 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
 
       <AlertDialog open={action?.kind === "suspend" || action?.kind === "reactivate"} onOpenChange={(open) => (!open ? setAction(null) : null)}>
         <AlertDialogContent>
+          {action && "member" in action && <ProfileAvatar name={action.member.displayName} image={action.member.avatarUrl} size={56} />}
           {action?.kind === "suspend" ? (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle>تعليق عضوية {action.member.displayName}؟</AlertDialogTitle>
+                <AlertDialogTitle>تعليق حساب {action.member.displayName}؟</AlertDialogTitle>
                 <AlertDialogDescription>
                   يُمنع فورًا من أي إجراء وتنتهي جلسته عند أول تنقل. لا يُحذف شيء — مواده وسجلّه يبقيان، ويمكن الاستئناف في أي وقت.
                 </AlertDialogDescription>
@@ -362,7 +361,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
           ) : action?.kind === "reactivate" ? (
             <>
               <AlertDialogHeader>
-                <AlertDialogTitle>استئناف عضوية {action.member.displayName}؟</AlertDialogTitle>
+                <AlertDialogTitle>تفعيل حساب {action.member.displayName}؟</AlertDialogTitle>
                 <AlertDialogDescription>
                   يعود بدوره «{action.member.roleLabel}» وصلاحياته كما كانت.
                   {action.member.mustChangePassword ? " كلمة مروره مؤقتة وسيُجبر على تغييرها عند الدخول." : ""}
@@ -417,14 +416,15 @@ function MemberForm({
           password,
         });
     setBusy(false);
-    if (result.ok) onDone(editing ? "حُفظت بيانات العضو." : "أُضيف العضو بكلمة مرور مؤقتة.");
+    if (result.ok) onDone(editing ? "حُفظت بيانات الحساب." : "أُضيف الحساب بكلمة مرور مؤقتة.");
     else toast.error(result.error ?? "تعذر الحفظ.");
   }
 
   return (
     <form onSubmit={submit} className="grid gap-4 p-4">
       <SheetHeader className="p-0">
-        <SheetTitle>{editing ? `تعديل ${editing.displayName}` : "عضو جديد"}</SheetTitle>
+        {editing && <ProfileAvatar name={editing.displayName} image={editing.avatarUrl} size={64} />}
+        <SheetTitle>{editing ? `تعديل ${editing.displayName}` : "حساب إداري جديد"}</SheetTitle>
         <SheetDescription>
           {editing ? "اسم المستخدم ثابت؛ الدور الجديد يسري على الطلب التالي مباشرة." : "يدخل بكلمة مرور مؤقتة ويُجبر على تغييرها أول مرة."}
         </SheetDescription>
@@ -467,7 +467,7 @@ function MemberForm({
               <RefreshCwIcon />
             </Button>
           </div>
-          <span className="text-[11px] text-muted-foreground">انسخها للعضو الآن — لا تُعرض بعد الحفظ.</span>
+          <span className="text-[11px] text-muted-foreground">انسخها لصاحب الحساب الآن — لا تُعرض بعد الحفظ.</span>
         </div>
       ) : null}
       <SheetFooter className="p-0">
@@ -497,15 +497,16 @@ function PasswordForm({
     setBusy(true);
     const result = await call(`/api/tahrir/admin/members/${member.id}/password`, "POST", { password });
     setBusy(false);
-    if (result.ok) onDone("وُضعت كلمة مؤقتة — يُجبر العضو على تغييرها عند الدخول.");
+    if (result.ok) onDone("وُضعت كلمة مؤقتة — يُجبر صاحب الحساب على تغييرها عند الدخول.");
     else toast.error(result.error ?? "تعذر إعادة التعيين.");
   }
 
   return (
     <form onSubmit={submit} className="grid gap-4 p-4">
       <SheetHeader className="p-0">
+        <ProfileAvatar name={member.displayName} image={member.avatarUrl} size={64} />
         <SheetTitle>كلمة مرور مؤقتة لـ {member.displayName}</SheetTitle>
-        <SheetDescription>تحل محل الحالية فورًا، ويُطلب من العضو اختيار كلمته الخاصة عند الدخول التالي.</SheetDescription>
+        <SheetDescription>تحل محل الحالية فورًا، ويُطلب من صاحب الحساب اختيار كلمته الخاصة عند الدخول التالي.</SheetDescription>
       </SheetHeader>
       <div className="grid gap-1.5">
         <Label htmlFor="p-password">الكلمة المؤقتة</Label>
@@ -515,7 +516,7 @@ function PasswordForm({
             <RefreshCwIcon />
           </Button>
         </div>
-        <span className="text-[11px] text-muted-foreground">انسخها للعضو الآن — لا تُعرض بعد الحفظ.</span>
+        <span className="text-[11px] text-muted-foreground">انسخها لصاحب الحساب الآن — لا تُعرض بعد الحفظ.</span>
       </div>
       <SheetFooter className="p-0">
         <Button type="submit" disabled={busy}>
@@ -566,6 +567,7 @@ function OverridesForm({
   return (
     <form onSubmit={submit} className="grid gap-4 p-4">
       <SheetHeader className="p-0">
+        <ProfileAvatar name={member.displayName} image={member.avatarUrl} size={64} />
         <SheetTitle>استثناءات {member.displayName}</SheetTitle>
         <SheetDescription>
           فوق دوره «{member.roleLabel}»: امنح صلاحية لا يملكها الدور، أو امنع واحدة يملكها — دون إنشاء دور جديد.
