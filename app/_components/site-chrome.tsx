@@ -9,6 +9,8 @@ import { NewsStrip } from "./news-strip";
 import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
 import { MemberEntry } from "./member-entry";
+import { MobileNavigation } from "./mobile-navigation";
+import { FooterNavigation } from "./footer-navigation";
 
 /** الأقسام — تحت «الأخبار» في قائمة منسدلة. */
 const SECTIONS = [
@@ -20,37 +22,14 @@ const SECTIONS = [
   { label: "رياضة", href: "/sport" },
   { label: "ثقافة", href: "/culture" },
   { label: "عالم", href: "/world" },
-  { label: "إنفوجرافيك", href: "/infographics" },
+  { label: "منوعات", href: "/varieties" },
 ];
 
-const MOBILE_NAV = [
-  { label: "الرئيسية", href: "/" },
-  { label: "السلاسل", href: "/series" },
+const FORMATS = [
   { label: "إنفوجرافيك", href: "/infographics" },
   { label: "بودكاست", href: "/podcasts" },
   { label: "فيديو", href: "/videos" },
-  ...SECTIONS.filter((item) => item.href !== "/infographics"),
 ];
-
-const FOOTER_SECTIONS = [
-  { label: "سياسة وسياق", href: "/politics" },
-  { label: "اقتصاد واستثمار", href: "/economy" },
-  { label: "تقنية وذكاء اصطناعي", href: "/technology" },
-  { label: "علوم ومعرفة", href: "/sciences" },
-  { label: "صحة وجودة حياة", href: "/health" },
-  { label: "رياضة وصناعة", href: "/sport" },
-  { label: "ثقافة وفكر", href: "/culture" },
-  { label: "عالم وجيوسياسة", href: "/world" },
-  { label: "منوعات وظواهر", href: "/varieties" },
-];
-
-const FOOTER_FORMATS = [
-  { label: "إنفوجرافيك وبيانات", href: "/infographics" },
-  { label: "مرئي ووثائقي", href: "/videos" },
-  { label: "بودكاست العلم", href: "/podcasts" },
-  { label: "البحث التحريري", href: "/search" },
-];
-
 
 /**
  * شريط الأخبار: العاجل الساري يتقدّم، ثم تتناوب أحدث المواد المنشورة.
@@ -102,7 +81,7 @@ export async function SiteHeader({
                 الأخبار <Caret />
               </Link>
               <div className="nav-panel" role="menu">
-                {SECTIONS.filter((item) => item.href !== "/infographics").map((item) => (
+                {SECTIONS.map((item) => (
                   <Link key={item.href} href={item.href} role="menuitem" className={item.href === active ? "is-active" : undefined}>
                     {item.label}
                   </Link>
@@ -130,29 +109,35 @@ export async function SiteHeader({
           </nav>
 
           <div className="top-tools">
+            <MobileNavigation>
+              <Link className="site-drawer-home" href="/" aria-current={active === "/" ? "page" : undefined}>الرئيسية <span aria-hidden="true">←</span></Link>
+              <section className="site-drawer-section" aria-label="الأقسام">
+                <h3>الأقسام</h3>
+                <div className="site-drawer-grid">
+                  {SECTIONS.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
+                </div>
+              </section>
+              <section className="site-drawer-section" aria-label="السلاسل">
+                <div className="site-drawer-section-heading"><h3>السلاسل</h3><Link href="/series">كل السلاسل <span aria-hidden="true">←</span></Link></div>
+                <div className="site-drawer-grid">
+                  {SERIES.map((item) => <Link key={item.slug} href={`/series/${item.slug}`} aria-current={activeSeries === item.slug ? "page" : undefined}>
+                    <i className="site-drawer-dot" style={{ background: item.color }} aria-hidden="true" />{item.name}
+                  </Link>)}
+                </div>
+              </section>
+              <section className="site-drawer-section" aria-label="مرئي وصوتي">
+                <h3>مرئي وصوتي</h3>
+                <div className="site-drawer-grid">
+                  {FORMATS.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
+                </div>
+              </section>
+            </MobileNavigation>
             <Link className="icon-btn" href="/search" aria-label="ابحث في العلم">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             </Link>
-            <MemberEntry />
             <ThemeToggle />
-            <details className="mnav">
-              <summary aria-label="القائمة">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
-              </summary>
-              <nav className="mobile-nav" aria-label="التنقل الرئيسي للجوال">
-                {MOBILE_NAV.map((item) => (
-                  <Link key={item.href} href={item.href} className={active === item.href ? "is-active" : undefined}>
-                    {item.label}
-                  </Link>
-                ))}
-                <span className="mnav-lbl">السلاسل</span>
-                {SERIES.map((item) => (
-                  <Link key={item.slug} href={`/series/${item.slug}`} style={{ "--sc": item.color } as React.CSSProperties} className="mnav-series">
-                    {item.name}
-                  </Link>
-                ))}
-              </nav>
-            </details>
+            <MemberEntry />
+
           </div>
         </div>
       </header>
@@ -183,62 +168,18 @@ export function SiteFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="footer">
+    <footer id="site-footer" className="footer footer-site">
       <div className="footer-shell">
-        <div className="footer-grid">
-          {/* العمود الأول: الهوية والرسالة */}
-          <div className="ft-col ft-col-brand">
+        <div className="footer-intro">
+          <div className="ft-col-brand">
             <Link href="/" className="ft-brand" aria-label="العلم - الصفحة الرئيسية">
-              <BrandMark variant="lockup" />
+              <BrandMark variant="official" />
             </Link>
             <p className="ft-tagline">
               منصة إعلام ومعرفة سعودية تضع الخبر في سياقه، وتفكك الأحداث عبر السلاسل التفسيرية وصحافة البيانات والتحليل المعمّق.
             </p>
-            <div className="ft-pills">
-              <span className="ft-pill-item">صحافة سياق</span>
-              <span className="ft-pill-item">بيانات موثقة</span>
-              <span className="ft-pill-item">بلا ضوضاء</span>
-            </div>
           </div>
-
-          {/* العمود الثاني: سلاسل المعرفة */}
-          <div className="ft-col">
-            <h3 className="ft-head">السلاسل</h3>
-            <ul className="ft-nav-list ft-series-list">
-              {SERIES.map((item) => (
-                <li key={item.slug}>
-                  <Link href={`/series/${item.slug}`} className="ft-series-link">
-                    <span className="ft-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />
-                    <span className="ft-series-name">{item.name}</span>
-                    <small className="ft-series-sub">{item.description}</small>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <Link className="ft-all-series" href="/series">
-              كل السلاسل والأرشيف <span aria-hidden="true">←</span>
-            </Link>
-          </div>
-
-          {/* العمود الثالث: الأقسام والتغطيات */}
-          <div className="ft-col">
-            <h3 className="ft-head">الأقسام</h3>
-            <ul className="ft-nav-list ft-cols">
-              {FOOTER_SECTIONS.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href}>{item.label}</Link>
-                </li>
-              ))}
-              {FOOTER_FORMATS.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href}>{item.label}</Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* العمود الرابع: النشرة البريدية */}
-          <div className="ft-col ft-col-newsletter">
+          <div className="ft-col-newsletter">
             <h3 className="ft-head">نشرة «ما وراء العناوين»</h3>
             <p className="ft-newsletter-sub">
               سجّل بريدك في قائمة نشرة «العلم» لتصلك الإصدارات عند إطلاقها.
@@ -246,6 +187,33 @@ export function SiteFooter() {
             <NewsletterForm source="footer" />
           </div>
         </div>
+
+        <FooterNavigation>
+          <details className="footer-link-group" open>
+            <summary><h3>الأقسام</h3><Caret /></summary>
+            <ul className="ft-nav-list ft-cols">
+              {SECTIONS.map((item) => <li key={item.href}><Link href={item.href}>{item.label}</Link></li>)}
+            </ul>
+          </details>
+          <details className="footer-link-group" open>
+            <summary><h3>السلاسل</h3><Caret /></summary>
+            <ul className="ft-nav-list ft-cols">
+              {SERIES.map((item) => <li key={item.slug}>
+                <Link href={`/series/${item.slug}`} className="ft-series-link">
+                  <span className="ft-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.name}
+                </Link>
+              </li>)}
+            </ul>
+            <Link className="ft-all-series" href="/series">كل السلاسل والأرشيف</Link>
+          </details>
+          <details className="footer-link-group" open>
+            <summary><h3>مرئي وصوتي</h3><Caret /></summary>
+            <ul className="ft-nav-list">
+              {FORMATS.map((item) => <li key={item.href}><Link href={item.href}>{item.label}</Link></li>)}
+              <li><Link href="/search">البحث</Link></li>
+            </ul>
+          </details>
+        </FooterNavigation>
 
         <nav className="ft-social" aria-label="حسابات العلم على منصات التواصل" dir="rtl">
           <h3 className="ft-head">تابع العلم</h3>
