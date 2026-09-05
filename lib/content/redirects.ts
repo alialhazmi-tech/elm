@@ -20,6 +20,13 @@ const redirect = (source: string, destination: string): LegacyRedirect => ({
   permanent: true,
 });
 
+/** روابط WordPress الرقمية المفهرسة تصل إلى محلل المعرّف قبل مسار القسم.
+ * إعادة كتابة داخلية فقط؛ المحلل يعيد 301 مباشرة إلى canonical المنشور.
+ */
+export const LEGACY_STORY_REWRITES = [
+  { source: "/:id(\\d+)", destination: "/legacy/:id" },
+];
+
 /** وسم السلسلة القديم (بصيغتي الشرطة والشرطة السفلية) → صفحة السلسلة. */
 export const TAG_TO_SERIES: Record<string, string> = {
   "أبسط": "absat",

@@ -58,6 +58,7 @@ test("إعداد Next يفعّل طبقة التحويلات ويمنع فهرس
   const config = await read("next.config.ts");
   assert.match(config, /async redirects\(\)/u, "لا توجد redirects() في الإعداد");
   assert.match(config, /LEGACY_REDIRECTS/u);
+  assert.match(config, /async rewrites\(\)[\s\S]*return LEGACY_STORY_REWRITES/u, "روابط WordPress الرقمية بلا مسار إلى محلل المعرّف");
   assert.match(config, /X-Robots-Tag/u, "أصل Railway بلا noindex — ازدواج فهرسة مع الموقع القديم");
   assert.match(config, /railway/u);
 });
