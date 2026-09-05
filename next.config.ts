@@ -18,16 +18,16 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  // مشغّل يوتيوب الخاص بالخصوصية وإطار GTM البديل عند تعطيل JavaScript.
-  "frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com",
+  // مشغّل يوتيوب وتضمين X الرسمي وإطار GTM البديل عند تعطيل JavaScript.
+  "frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://twitter.com/i/videos/tweet/ https://x.com/i/videos/tweet/",
   "img-src 'self' data: blob: https://dash.alelm.net https://www.googletagmanager.com https://*.google-analytics.com",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
   "media-src 'self' https:",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
+  `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  `connect-src 'self' ${googleConnectSources}${isDevelopment ? " ws: wss:" : ""}`,
+  `connect-src 'self' ${googleConnectSources} https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com${isDevelopment ? " ws: wss:" : ""}`,
   // ترقية HTTP منطقية في الإنتاج فقط؛ في التطوير تحوّل أصول localhost إلى HTTPS
   // وتمنع المعاينة على الأجهزة والشاشات الأخرى في الشبكة المحلية.
   ...(isDevelopment ? [] : ["upgrade-insecure-requests"]),

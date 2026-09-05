@@ -122,7 +122,7 @@ test("production CSP never leaks the development eval and websocket allowances",
   // التطوير يحتاج unsafe-eval وws: لأجل React وHMR؛ الإنتاج يجب أن يبقى صارمًا.
   assert.doesNotMatch(csp, /unsafe-eval/, "unsafe-eval تسرّب إلى بناء الإنتاج");
   const connect = csp.split("; ").find(value => value.startsWith("connect-src "));
-  assert.equal(connect, "connect-src 'self' https://www.googletagmanager.com https://www.google.com https://*.google-analytics.com https://*.analytics.google.com");
+  assert.equal(connect, "connect-src 'self' https://www.googletagmanager.com https://www.google.com https://*.google-analytics.com https://*.analytics.google.com https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com");
 });
 
 test("keeps the M0 homepage and social card deliberately small", async () => {

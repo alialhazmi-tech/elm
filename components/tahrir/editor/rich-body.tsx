@@ -39,6 +39,8 @@ import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
 import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText, textToHtml } from "@/lib/content/html";
 import { cn } from "@/lib/utils";
+import { xPostIdFrom } from "@/lib/content/video";
+import { XPostNode } from "./x-post-node";
 
 export interface RichBodyHandle {
   getHtml(): string;
@@ -65,6 +67,7 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
+      XPostNode,
       StarterKit.configure({
         heading: { levels: [2, 3] },
         code: false,
@@ -178,6 +181,9 @@ function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
   });
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [postOpen, setPostOpen] = useState(false);
+  const [postUrl, setPostUrl] = useState("");
+  const [postError, setPostError] = useState("");
   if (!editor || !state) return <div className="h-11 border-b" />;
 
   const keepSelection = (event: React.MouseEvent) => event.preventDefault();
@@ -225,6 +231,26 @@ function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
       <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-5" />
       {tool("قائمة نقطية", state.bullet, ListIcon, () => chain().toggleBulletList().run())}
       {tool("قائمة مرقمة", state.ordered, ListOrderedIcon, () => chain().toggleOrderedList().run())}
+      <Popover open={postOpen} onOpenChange={setPostOpen}>
+        <PopoverTrigger asChild>
+          <Button type="button" size="sm" variant="ghost" onMouseDown={keepSelection}>إدراج تغريدة</Button>
+        </PopoverTrigger>
+        <PopoverContent align="start" className="w-80 p-3" dir="rtl">
+          <form className="grid gap-2" onSubmit={event => {
+            event.preventDefault();
+            const postId = xPostIdFrom(postUrl);
+            if (!postId) { setPostError("أدخل رابط تغريدة صحيحًا من x.com أو twitter.com."); return; }
+            chain().insertContent({ type: "xPost", attrs: { postId } }).run();
+            setPostOpen(false); setPostUrl(""); setPostError("");
+          }}>
+            <label htmlFor="body-post-url" className="text-sm">رابط التغريدة</label>
+            <Input id="body-post-url" dir="ltr" value={postUrl} onChange={e => { setPostUrl(e.target.value); setPostError(""); }} placeholder="https://x.com/…/status/…" />
+            <p className="text-xs text-muted-foreground">تظهر التغريدة كاملة في موضع المؤشر داخل الخبر.</p>
+            {postError && <p role="alert" className="text-xs text-destructive">{postError}</p>}
+            <Button type="submit" size="sm">إدراج في المتن</Button>
+          </form>
+        </PopoverContent>
+      </Popover>
       <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-5" />
       <Popover
         open={linkOpen}

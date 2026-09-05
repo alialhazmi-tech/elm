@@ -163,6 +163,8 @@ body { background: var(--bg); color: var(--ink); }
 .sa-media .soft-img { aspect-ratio: 600 / 420; border-radius: 20px; }
 .sa-video { width: 100%; overflow: hidden; border-radius: 20px; background: #000; }
 .sa-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
+.article-body blockquote[data-x-post] { margin: 24px 0; padding: 0; border: 0; background: none; font-style: normal; }
+.article-html--enhanced blockquote[data-x-post] > a { display: none; }
 
 .sa-layout { margin-top: 40px; display: grid; grid-template-columns: minmax(0, 740px) minmax(0, 1fr); gap: 64px; align-items: start; }
 .sa-body { display: flex; flex-direction: column; gap: 28px; min-width: 0; }
