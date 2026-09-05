@@ -604,7 +604,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       {recovery.recovery ? <Alert><AlertDescription>وجدنا نسخة محلية تختلف عن آخر نسخة على الخادم. راجعها قبل الاستعادة. <Button variant="outline" onClick={restoreLocalDraft}>استعادة كتابتي</Button> <Button variant="ghost" onClick={() => recovery.dismiss()}>تجاهل النسخة</Button></AlertDescription></Alert> : null}
       {recovery.unavailable ? <Alert><AlertDescription>الحفظ الاحتياطي المحلي غير متاح في هذا المتصفح؛ تابع مؤشر الحفظ على الخادم قبل المغادرة.</AlertDescription></Alert> : null}
       {revisionOf ? <Alert><AlertDescription>مسودة تعديل على مادة معتمدة. لن تتغير النسخة العامة حتى اعتماد هذه المسودة ونشرها.</AlertDescription></Alert> : null}
-      <Card className="sticky top-[calc(var(--header-height)+0.5rem)] z-30 gap-0 py-0 shadow-md">
+      <Card className="gap-0 py-0 shadow-md">
         <div className="flex flex-wrap items-center gap-2 px-3 py-2">
           <span className="text-[11px] text-muted-foreground">{initial ? "تحرير المادة" : "مادة جديدة"}</span>
           <StatusPill status={status} label={STATUS_LABELS[status] ?? status} />
@@ -665,7 +665,8 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       ) : null}
 
       <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <Card className="gap-0 overflow-hidden py-0">
+        {/* clip يحافظ على الزوايا دون إنشاء حاوية تمرير تعطل تثبيت أدوات التنسيق. */}
+        <Card className="min-w-0 gap-0 overflow-clip py-0">
           <div className="grid gap-2 px-5 pt-5 pb-4">
             <div className="flex items-center justify-between">
               <label htmlFor="story-title" className="text-xs font-semibold text-foreground">العنوان</label>

@@ -48,6 +48,7 @@ test('AI route settles measured output on parse failure and retains only uncerta
 
 test('empty text or missing provider key never creates a reservation',()=>isolated(async state=>{
   assert.equal((await post('full_edit','')).status,400);
+  assert.equal((await post('full_edit','ن'.repeat(40001))).status,400);
   state.key=false;assert.equal((await post()).status,503);
   assert.equal(state.entries.length,0);assert.equal(state.reservations.length,0);
 }));

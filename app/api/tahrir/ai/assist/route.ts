@@ -168,6 +168,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "الأداة معطلة من إعدادات الذكاء." }, { status: 403 });
   }
 
+  if (typeof input?.body === "string" && input.body.length > 40_000) {
+    return NextResponse.json({ error: "المادة أطول من الحد المتاح للتحليل الكامل حاليًا؛ قسّمها قبل إعادة المحاولة." }, { status: 400 });
+  }
   const normalizedInput: EditorialInput = {
     title: typeof input?.title === "string" ? input.title.slice(0, 500) : "",
     body: typeof input?.body === "string" ? input.body.slice(0, 40_000) : "",
