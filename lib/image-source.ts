@@ -28,6 +28,9 @@ export function imageVariantUrl(src: string, width: number): string {
   // نختصرها فقط إذا أعاد URL بناء العنوان نفسه، لحفظ أسماء الملفات التي تحتوي % حرفيًا.
   const readable = decodeURI(value);
   const compact = new URL(readable, "https://alelm.net").href === new URL(value, "https://alelm.net").href ? readable : value;
+  // حروف Unicode صالحة في HTML؛ المتصفح يرمزها عند الطلب. نرَمّز فواصل الاستعلام
+  // و% كما هي، ونترك الحروف العربية مقروءة لتقليل srcset دون تغيير عنوان المصدر.
+  const encoded = Array.from(compact, (char) => char.codePointAt(0)! > 127 ? char : encodeURIComponent(char)).join("");
   const size = IMAGE_WIDTHS.find((size) => size >= width) ?? IMAGE_WIDTHS.at(-1)!;
-  return `/image-variants?src=${encodeURIComponent(compact)}&w=${size}&v=1`;
+  return `/image-variants?src=${encoded}&w=${size}&v=1`;
 }

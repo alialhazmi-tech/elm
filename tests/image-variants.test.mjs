@@ -9,7 +9,7 @@ test('variants normalize stored URLs and leave unsupported assets untouched', ()
   const path = `/uploads/${filename}`;
   assert.equal(imageVariantUrl(path, 168), imageVariantUrl('https://alelm.net' + path, 168));
   assert.equal(new URL(imageVariantUrl(path, 170), 'https://alelm.net').searchParams.get('w'), '360');
-  for (const name of ['صورة-الخبر.webp', 'literal%2520.webp', 'file%23name.webp']) {
+  for (const name of ['صورة-الخبر.webp', 'صورة🌍.webp', 'صورة%20%26%2B%23.webp', 'literal%2520.webp', 'file%23name.webp']) {
     const url = new URL('https://dash.alelm.net/wp-content/uploads/' + name).href;
     const query = new URL(imageVariantUrl(url,168), 'https://alelm.net').searchParams.get('src');
     assert.deepEqual(imageVariantSource(query), {url});
