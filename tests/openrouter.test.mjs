@@ -134,18 +134,19 @@ test("metadata generation uses one request and returns only complete validated s
   const output=await build({entryPoints:['lib/ai/editorial.ts'],bundle:true,platform:'node',format:'cjs',packages:'external',write:false});
   const compiled={exports:{}};new Function('require','module','exports',output.outputFiles[0].text)(createRequire(import.meta.url),compiled,compiled.exports);
   const pack={title:'ignored title',body:'ignored body',excerpt:'موجز المادة',seoTitle:'عنوان بحث',seoDescription:'وصف نتائج البحث',keywords:['#تقنية','علوم','تقنية'],section:'sciences',format:'reports',seriesSlug:'limatha'};
-  let calls=0;
-  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);assert.equal(request.model,'anthropic/claude-haiku-4.5');assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
+  let calls=0,malformed=false;
+  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);assert.equal(request.model,'anthropic/claude-haiku-4.5');assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:malformed?'invalid JSON':JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
   const settings={models:effectiveModels(models),tone:'اختبار',governance:{editorialGuard:false,requireImageRights:true}};
   const input={title:'العنوان الأصلي',body:'المتن الأصلي'};
   const result=await compiled.exports.runEditorialTool('metadata',input,settings);
   assert.equal(calls,1);assert.equal(result.fullEdit,undefined);assert.deepEqual(Object.keys(result.metadata).sort(),['classify','excerpt','seo']);
   assert.deepEqual(result.metadata.seo.keywords,['تقنية','علوم']);assert.equal(result.metadata.classify.seriesSlug,'limatha');
   assert.deepEqual(input,{title:'العنوان الأصلي',body:'المتن الأصلي'});
-  pack.section='unknown';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
+  pack.section='unknown';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/ناقصة/});
   pack.section='sciences';pack.excerpt='س'.repeat(181);await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/الحدود/);
   pack.excerpt='موجز';pack.seriesSlug='imaginary-series';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
   pack.seriesSlug=null;pack.seoTitle='';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
+  malformed=true;await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/تعذر قراءة مخرج النموذج/});
 }));
 
 

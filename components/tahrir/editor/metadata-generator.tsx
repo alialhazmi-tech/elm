@@ -5,6 +5,7 @@ import { SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { MetadataResult } from "@/lib/ai/editorial";
+import { readAssistResponse } from "@/lib/ai/read-assist-response";
 
 export function MetadataGenerator({ disabled, lockedSection, getDraft, onApply, onBusyChange, sections, series, formats }: {
   disabled: boolean;
@@ -28,8 +29,8 @@ export function MetadataGenerator({ disabled, lockedSection, getDraft, onApply, 
     lock.current = true; setBusy(true); onBusyChange(true);
     try {
       const response = await fetch("/api/tahrir/ai/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tool: "metadata", title: draft.title, body: draft.body }) });
-      const data = await response.json();
-      if (!response.ok || !data?.metadata) throw new Error(data?.error ?? "تعذر توليد الملحقات.");
+      const data = await readAssistResponse(response);
+      if (!data.metadata) throw new Error("لم يعد المساعد بملحقات صالحة. أعد التوليد.");
       setProposal({ data: data.metadata, revision: draft.revision });
     } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذر الاتصال بالمساعد."); }
     finally { lock.current = false; setBusy(false); onBusyChange(false); }

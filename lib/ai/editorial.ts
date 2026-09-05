@@ -14,6 +14,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { textClient as client } from "./text-client";
 import { reserveTextCents } from "./pricing";
 import { missingTextKeyMessage } from "./provider-config";
+import { EditorialOutputError } from "./output-error";
 
 import { runPolicyGuard } from "@/lib/policy";
 import type { Finding } from "@/lib/policy/types";
@@ -409,7 +410,7 @@ export async function runEditorialTool(
   try {
     parsed = parseJsonObject(raw) as typeof parsed;
   } catch {
-    throw new Error("تعذر قراءة مخرج النموذج — أعد المحاولة.");
+    throw new EditorialOutputError("تعذر قراءة مخرج النموذج — أعد المحاولة.");
   }
 
   if (tool === "classify") {
@@ -440,7 +441,7 @@ export async function runEditorialTool(
     if (!excerpt || excerpt.length > 180 || !seoTitle || seoTitle.length > 60 || !seoDescription || seoDescription.length > 155
       || !cleanKeywords.length || !sections.includes(parsed.section ?? "") || !formats.includes(parsed.format ?? "")
       || (parsed.seriesSlug !== null && !series.includes(parsed.seriesSlug ?? ""))) {
-      throw new Error("ملحقات المادة ناقصة أو تجاوزت الحدود المطلوبة. أعد التوليد.");
+      throw new EditorialOutputError("ملحقات المادة ناقصة أو تجاوزت الحدود المطلوبة. أعد التوليد.");
     }
     return { suggestions: [], usage, metadata: {
       excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment", settings.governance.editorialGuard) },

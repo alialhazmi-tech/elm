@@ -4,7 +4,7 @@ import { build } from 'esbuild';
 import { createRequire } from 'node:module';
 
 const settings = { caps: { dailyUsd: 10, monthlyUsd: 150 }, models: { fast: 'fast' }, tools: { full_edit: true, metadata: true } };
-const output = await build({ entryPoints: ['app/api/tahrir/ai/assist/route.ts'], bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false,
+const output = await build({ stdin: { contents: "export {POST} from './app/api/tahrir/ai/assist/route'; export {EditorialOutputError} from './lib/ai/output-error';", loader: 'ts', resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false,
   plugins: [{ name: 'route-dependencies', setup(builder) {
     const sources = {
       '@/lib/ai/editorial': `export const AI_TOOLS=['metadata','full_edit']; export const editorialReservationCents=()=>37; export const runEditorialTool=(...args)=>globalThis.__aiTest.run(...args);`,
@@ -50,6 +50,16 @@ test('empty text or missing provider key never creates a reservation',()=>isolat
   assert.equal((await post('full_edit','')).status,400);
   state.key=false;assert.equal((await post()).status,503);
   assert.equal(state.entries.length,0);assert.equal(state.reservations.length,0);
+}));
+
+test('rejected model output returns an actionable JSON response and settles completed usage once',()=>isolated(async(state,logs)=>{
+  const message='ملحقات المادة ناقصة أو تجاوزت الحدود المطلوبة. أعد التوليد.';
+  state.run=async(_tool,_input,_settings,options)=>{options.onUsage(usage);throw new compiled.exports.EditorialOutputError(message);};
+  const r=await post();assert.equal(r.status,422);assert.match(r.headers.get('Content-Type'),/application\/json/);
+  assert.deepEqual(await r.json(),{error:message});
+  assert.equal(state.reservations.length,1);assert.equal(state.entries.length,1);assert.equal(state.entries[0].costCents,5);
+  assert.equal(state.entries[0].tool,'metadata:failed');
+  assert.equal(logs.find(([name])=>name==='AI_GENERATION_FAILED')[1].errorType,'EditorialOutputError');
 }));
 
 test('full-edit response sends heartbeat while working then settles and returns a clear error',()=>isolated(async state=>{

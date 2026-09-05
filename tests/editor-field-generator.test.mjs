@@ -34,6 +34,8 @@ test('field generation requires content, proposes before applying, protects edit
     await find('توليد العنوان').props.onClick(); find('اعتماد العنوان').props.onClick(); assert.deepEqual(applied,['عنوان مقترح']);
     globalThis.fetch=async()=>Response.json({error:'سقف الإنفاق الداخلي'}, {status:429});
     await find('توليد العنوان').props.onClick(); assert.match(text(),/سقف الإنفاق الداخلي/); assert.equal(find('اعتماد العنوان'),undefined);
+    globalThis.fetch=async()=>new Response('<html>Bad Gateway</html>',{status:502});
+    await find('توليد العنوان').props.onClick(); assert.match(text(),/تعذّر إكمال التوليد \(502\)/); assert.equal(find('اعتماد العنوان'),undefined);
     props.tool='excerpt';
     globalThis.fetch=async()=>Response.json({suggestions:[{text:'خ'.repeat(181),guard:{ok:true,findings:[]}}]});
     await find('توليد الموجز الذكي').props.onClick(); assert.equal(find('اعتماد الموجز').props.disabled,true);
