@@ -36,7 +36,7 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/cache$/ }, () => ({ path: "cache", namespace: "test" }));
@@ -168,7 +168,21 @@ try {
   const accepted = reservations.find(r => r.ok);
   await withDb(() => subject.logUsage({ reservationId: accepted.reservationId, tool: "test", model: "test", inputTokens: 1, outputTokens: 1, costCents: 5, actor: "test" }));
   assert.equal((await admin.query("select sum(cost_cents)::int as n from ai_usage")).rows[0].n, 65);
+  const denied = await withDb(() => subject.budgetGate({ dailyUsd: 1, monthlyUsd: 1 }, 50));
+  assert.equal(denied.ok, false);
+  assert.match(denied.reason, /الحجز المطلوب 0.50 دولار/);
+  assert.match(denied.reason, /المتاح اليوم 0.35 دولار/);
+  assert.match(denied.reason, /حجوزات غير مسوّاة بقيمة 0.60 دولار/);
+  assert.equal((await admin.query("select sum(cost_cents)::int as n from ai_usage")).rows[0].n, 65);
   await assert.rejects(withDb(() => subject.logUsage({ reservationId: accepted.reservationId, tool: "test", model: "test", inputTokens: 1, outputTokens: 1, costCents: 0, actor: "test" })), /ALREADY_SETTLED/); checks++;
+  // Unmeasured transport is retained, while explicit rejection releases its reservation exactly once.
+  const open = reservations.filter(r => r.ok && r.reservationId !== accepted.reservationId);
+  await withDb(() => subject.logUsage({ reservationId: open[0].reservationId, tool: "full_edit:unmeasured", model: "test", inputTokens: 2, outputTokens: 3, costCents: 12, actor: "test" }));
+  await withDb(() => subject.logUsage({ reservationId: open[1].reservationId, tool: "full_edit:failed", model: "test", inputTokens: 0, outputTokens: 0, costCents: 0, actor: "test" }));
+  assert.equal((await admin.query("select sum(cost_cents)::int as n from ai_usage")).rows[0].n, 17);
+  const uncertainDenied = await withDb(() => subject.budgetGate({ dailyUsd: 1, monthlyUsd: 1 }, 90));
+  assert.match(uncertainDenied.reason, /حجوزات غير مسوّاة بقيمة 0.12 دولار/);
+  await assert.rejects(withDb(() => subject.logUsage({ reservationId: open[0].reservationId, tool: "full_edit", model: "test", inputTokens: 0, outputTokens: 0, costCents: 0, actor: "test" })), /ALREADY_SETTLED/); checks++;
   await withDb(() => subject.setSaved("alice", "original", true));
   await withDb(() => subject.setSaved("alice", "original", true));
   assert.equal(await withDb(() => subject.getSaved("alice", "original")), true);
@@ -252,6 +266,26 @@ try {
   assert.equal((await withDb(() => subject.pageByKeyword("%' OR true --", '1'))).total, 0);
   assert.equal((await withDb(() => subject.pageByKeyword('التقنية', '999'))).page, 2);
   checks++;
+  // Autosave uses the same permission/version guards, creates once, and never changes published content.
+  const priorSession = globalThis.__alelmSession;
+  await admin.query("insert into user_permissions(user_id,permission_key,effect) values('login-fixture','story.create','allow'),('login-fixture','story.edit.own','allow') on conflict do nothing");
+  const autoUser = (await admin.query("select id,session_version from users where id='login-fixture'")).rows[0];
+  globalThis.__alelmSession = { userId: autoUser.id, sessionVersion: autoUser.session_version };
+  const autoRequest = value => new Request('https://test.invalid/api/tahrir/story',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});
+  const autoInput = {id:'autosave-draft',expectedVersion:0,title:'',body:'متن قبل توليد العنوان',autosave:true};
+  const createdAuto = await withDb(()=>subject.storySaveApi(autoRequest(autoInput)));
+  assert.equal(createdAuto.status,200); const autoData=await createdAuto.json();
+  assert.equal(autoData.version,1); assert.equal(autoData.status,'draft');
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest(autoInput)))).status,409);
+  assert.equal((await admin.query("select count(*)::int n from stories where id='autosave-draft'")).rows[0].n,1);
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...autoInput,autosave:false,expectedVersion:1})))).status,400);
+  const updatedAuto=await withDb(()=>subject.storySaveApi(autoRequest({...autoInput,expectedVersion:1,title:'عنوان بعد التوليد',section:'health',slug:'draft-completed'})));
+  assert.equal(updatedAuto.status,200);
+  const updatedAutoData=await updatedAuto.json();assert.equal(updatedAutoData.section,'health');assert.equal(updatedAutoData.slug,'draft-completed');
+  await admin.query("update stories set status='published' where id='autosave-draft'");
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...autoInput,expectedVersion:2,title:'لا يطبق تلقائيا'})))).status,409);
+  assert.equal((await withDb(()=>subject.getStory('autosave-draft'))).title,'عنوان بعد التوليد');
+  globalThis.__alelmSession = priorSession; checks++;
   console.log(`PostgreSQL workflow integration: ${checks} checks passed (including concurrent publish and shared limits).`);
 } finally {
   await admin.end();

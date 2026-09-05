@@ -10,6 +10,26 @@ import { parseOpenRouterImages } from "../lib/ai/openrouter-images.ts";
 const models = { editorial: "claude-opus-5", fast: "claude-sonnet-5", light: "claude-haiku-4-5", image: "gemini-3.1-flash-image" };
 const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6AAAAABJRU5ErkJggg==";
 
+function messageResponse(request, text, { stop = "end_turn", input = 10, output = 4 } = {}) {
+  const message = { id: "msg_test", type: "message", role: "assistant", content: [{ type: "text", text }], model: request.model, stop_reason: stop, stop_sequence: null, usage: { input_tokens: input, output_tokens: output } };
+  if (!request.stream) return Response.json(message);
+  const events = [
+    { type: "message_start", message: { ...message, content: [], stop_reason: null, usage: { input_tokens: input, output_tokens: 0 } } },
+    { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
+    { type: "content_block_delta", index: 0, delta: { type: "text_delta", text } },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_delta", delta: { stop_reason: stop, stop_sequence: null }, usage: { output_tokens: output } },
+    { type: "message_stop" },
+  ];
+  return new Response(events.map(event => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`).join(""), { headers: { "Content-Type": "text/event-stream" } });
+}
+async function editorialModule() {
+  const output = await build({ entryPoints: ["lib/ai/editorial.ts"], bundle: true, platform: "node", format: "cjs", packages: "external", write: false });
+  const compiled = { exports: {} };
+  new Function("require", "module", "exports", output.outputFiles[0].text)(createRequire(import.meta.url), compiled, compiled.exports);
+  return compiled.exports;
+}
+
 async function isolated(fn) {
   const keys = ["AI_PROVIDER", "OPENROUTER_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY"];
   const before = Object.fromEntries(keys.map(key => [key, process.env[key]]));
@@ -95,7 +115,8 @@ test("full editorial generation retains independent fields, usage and real progr
     assert.equal(String(url), "https://openrouter.ai/api/v1/messages");
     const request = JSON.parse(init.body);
     const text = request.model.includes("haiku") ? JSON.stringify({ title: "عنوان مقترح", excerpt: "موجز مقترح", seoTitle: "عنوان بحث", seoDescription: "وصف البحث", keywords: ["تقنية"], section: "technology", format: "news", seriesSlug: null }) : "متن محرر يحافظ على المعلومات.";
-    return Response.json({ id: "msg_test", type: "message", role: "assistant", content: [{ type: "text", text }], model: request.model, stop_reason: "end_turn", stop_sequence: null, usage: { input_tokens: 10, output_tokens: 4 } });
+    assert.equal(request.stream, true);
+    return messageResponse(request, text);
   };
   const stages = [];
   const settings = { models: effectiveModels(models), tone: "نبرة اختبار", governance: { editorialGuard: false, requireImageRights: true } };
@@ -107,4 +128,91 @@ test("full editorial generation retains independent fields, usage and real progr
   assert.equal(stages[0], "accepted");
   assert.equal(stages.at(-1), "complete");
   for (const stage of ["body_started", "pack_started", "body_ready", "pack_ready", "guard_checking"]) assert.ok(stages.includes(stage));
+}));
+
+test("metadata generation uses one request and returns only complete validated supplements", () => isolated(async () => {
+  const output=await build({entryPoints:['lib/ai/editorial.ts'],bundle:true,platform:'node',format:'cjs',packages:'external',write:false});
+  const compiled={exports:{}};new Function('require','module','exports',output.outputFiles[0].text)(createRequire(import.meta.url),compiled,compiled.exports);
+  const pack={title:'ignored title',body:'ignored body',excerpt:'موجز المادة',seoTitle:'عنوان بحث',seoDescription:'وصف نتائج البحث',keywords:['#تقنية','علوم','تقنية'],section:'sciences',format:'reports',seriesSlug:'limatha'};
+  let calls=0;
+  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);assert.equal(request.model,'anthropic/claude-haiku-4.5');assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
+  const settings={models:effectiveModels(models),tone:'اختبار',governance:{editorialGuard:false,requireImageRights:true}};
+  const input={title:'العنوان الأصلي',body:'المتن الأصلي'};
+  const result=await compiled.exports.runEditorialTool('metadata',input,settings);
+  assert.equal(calls,1);assert.equal(result.fullEdit,undefined);assert.deepEqual(Object.keys(result.metadata).sort(),['classify','excerpt','seo']);
+  assert.deepEqual(result.metadata.seo.keywords,['تقنية','علوم']);assert.equal(result.metadata.classify.seriesSlug,'limatha');
+  assert.deepEqual(input,{title:'العنوان الأصلي',body:'المتن الأصلي'});
+  pack.section='unknown';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
+  pack.section='sciences';pack.excerpt='س'.repeat(181);await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/الحدود/);
+  pack.excerpt='موجز';pack.seriesSlug='imaginary-series';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
+  pack.seriesSlug=null;pack.seoTitle='';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
+}));
+
+
+test("full edit waits for both calls and preserves completed usage when the other is rejected", () => isolated(async () => {
+  const subject = await editorialModule();
+  const settings = { models: effectiveModels(models), tone: "اختبار", governance: { editorialGuard: false } };
+  const usages = []; const uncertain = [];
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    if (request.model.includes("haiku")) return Response.json({ error: { message: "rejected" } }, { status: 429 });
+    await new Promise(resolve => setTimeout(resolve, 25));
+    return messageResponse(request, "المتن المكتمل.");
+  };
+  await assert.rejects(subject.runEditorialTool("full_edit", { title: "اختبار", body: "نص" }, settings, { onUsage: usage => usages.push(usage), onUnmeasured: cents => uncertain.push(cents) }), /429/);
+  assert.equal(usages.length, 1); assert.equal(usages[0].outputTokens, 4); assert.deepEqual(uncertain, []);
+}));
+
+test("invalid or truncated output retains actual usage and never exposes incomplete full edit", () => isolated(async () => {
+  const subject = await editorialModule();
+  const settings = { models: effectiveModels(models), tone: "اختبار", governance: { editorialGuard: false } };
+  let truncated = false; let count = 0;
+  globalThis.fetch = async (_url, init) => {
+    const request = JSON.parse(init.body);
+    return messageResponse(request, request.model.includes("haiku") ? "invalid-json" : "المتن", { stop: truncated ? "max_tokens" : "end_turn" });
+  };
+  await assert.rejects(subject.runEditorialTool("full_edit", { title: "اختبار", body: "نص" }, settings, { onUsage: () => count++ }), /قراءة ملحقات/);
+  assert.equal(count, 2);
+  truncated = true;
+  await assert.rejects(subject.runEditorialTool("full_edit", { title: "اختبار", body: "نص" }, settings, { onUsage: () => count++ }), /قبل اكتمالها/);
+  assert.equal(count, 4);
+}));
+
+test("uncertain transport retains only its request estimate; explicit rejection and pre-cancel retain none", () => isolated(async () => {
+  const subject = await editorialModule();
+  const settings = { models: effectiveModels(models), tone: "اختبار", governance: { editorialGuard: false } };
+  const input = { title: "اختبار", body: "نص" };
+  const uncertain = [];
+  globalThis.fetch = async () => { throw new TypeError("network failure"); };
+  await assert.rejects(subject.runEditorialTool("metadata", input, settings, { onUnmeasured: value => uncertain.push(value) }));
+  assert.deepEqual(uncertain, [subject.editorialReservationCents("metadata", input, settings)]);
+  assert.ok(uncertain[0] < 500);
+  const full = subject.editorialReservationCents("full_edit", input, settings);
+  assert.ok(full > uncertain[0] && full < 500);
+  assert.ok(subject.editorialReservationCents("metadata", { ...input, body: "نص عربي ".repeat(2000) }, settings) > uncertain[0]);
+  globalThis.fetch = async () => Response.json({ error: { message: "rejected" } }, { status: 401 });
+  await assert.rejects(subject.runEditorialTool("metadata", input, settings, { onUnmeasured: value => uncertain.push(value) }));
+  assert.equal(uncertain.length, 1);
+  globalThis.fetch = async () => { throw new Error("must not request"); };
+  await assert.rejects(subject.runEditorialTool("full_edit", input, settings, { signal: AbortSignal.abort(), onUnmeasured: value => uncertain.push(value) }), /قبل إرساله/);
+  assert.equal(uncertain.length, 1);
+}));
+
+test("full-edit streaming deadline stops both calls and retains uncertain consumption", () => isolated(async () => {
+  const subject = await editorialModule();
+  const settings = { models: effectiveModels(models), tone: "اختبار", governance: { editorialGuard: false } };
+  const timeout = AbortSignal.timeout; const deadlines = []; const uncertain = []; let requests = 0;
+  AbortSignal.timeout = ms => { assert.equal(ms, 120_000); const controller = new AbortController(); deadlines.push(controller); return controller.signal; };
+  globalThis.fetch = async (_url, init) => {
+    requests++;
+    return new Promise((_resolve,reject) => { init.signal.addEventListener('abort',()=>reject(new DOMException('Aborted','AbortError')),{once:true}); });
+  };
+  try {
+    const pending = subject.runEditorialTool('full_edit',{title:'اختبار',body:'نص'},settings,{onUnmeasured:cents=>uncertain.push(cents)});
+    const rejected = assert.rejects(pending,/انتهت مهلة مزوّد الذكاء بعد دقيقتين/);
+    while(requests<2)await new Promise(resolve=>setImmediate(resolve));
+    for(const deadline of deadlines)deadline.abort();
+    await rejected;
+    assert.equal(uncertain.length,2);assert.equal(requests,2);
+  } finally { AbortSignal.timeout=timeout; }
 }));

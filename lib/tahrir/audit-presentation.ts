@@ -63,6 +63,7 @@ const actions: Record<string, [string, AuditGroup, AuditTone?]> = {
   "ai:infographic-images": ["توليد صور الإنفوجرافيك", "ai"],
   "ai:jak-plan": ["تخطيط جاك العلم", "ai"],
   "ai:full_edit": ["تحرير شامل بالذكاء", "ai"],
+  "ai:metadata": ["توليد ملحقات المادة", "ai"],
 };
 export function auditMeta(action: string): Meta {
   const known = actions[action];

@@ -1,7 +1,7 @@
 import { writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
-import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
+import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText } from "@/lib/content/html";
 import { normalizeVideoUrl } from "@/lib/content/video";
 import { canEditStory, requireActor } from "@/lib/tahrir/access";
 import { deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
@@ -17,6 +17,7 @@ async function saveStory(request: Request) {
   const input = (await request.json().catch(() => null)) as {
     id?: string;
     expectedVersion?: number;
+    autosave?: boolean;
     title?: string;
     excerpt?: string;
     body?: string;
@@ -33,7 +34,8 @@ async function saveStory(request: Request) {
     videoUrl?: string | null;
   } | null;
 
-  if (!input || typeof input.title !== "string" || !input.title.trim()) {
+  const automatic = input?.autosave === true;
+  if (!input || typeof input.title !== "string" || (!input.title.trim() && !automatic)) {
     return NextResponse.json({ error: "العنوان مطلوب." }, { status: 400 });
   }
   for (const field of ["id", "excerpt", "body", "section", "slug", "seriesSlug", "image", "format", "seoTitle", "seoDescription", "videoUrl"] as const) {
@@ -50,6 +52,12 @@ async function saveStory(request: Request) {
   const existing = input.id?.trim() ? await getStory(id) : null;
   if (!canEditStory(session, existing)) {
     return NextResponse.json({ error: existing ? "لا تملك صلاحية تحرير هذه المادة." : "ليست لديك صلاحية إنشاء مادة." }, { status: 403 });
+  }
+  if (automatic && existing && existing.status !== "draft") {
+    return NextResponse.json({ error: "تغيّرت حالة المادة؛ الحفظ التلقائي للمسودات فقط. راجع أحدث نسخة قبل حفظ التعديل." }, { status: 409 });
+  }
+  if (automatic && !existing && !input.title.trim() && !stripHtmlToText(input.body ?? "").trim()) {
+    return NextResponse.json({ error: "أضف عنوانًا أو متنًا لبدء حفظ المسودة." }, { status: 400 });
   }
   // متن المحرر الغني يُنقّى عند الحفظ — والعرض ينقّي ثانية (القاعدة ليست مصدر ثقة).
   const rawBody = input.body ?? "";
