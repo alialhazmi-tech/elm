@@ -8,6 +8,7 @@ import { NewsletterForm } from "./newsletter-form";
 import { NewsStrip } from "./news-strip";
 import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
+import { MemberEntry } from "./member-entry";
 
 /** الأقسام — تحت «الأخبار» في قائمة منسدلة. */
 const SECTIONS = [
@@ -132,6 +133,7 @@ export async function SiteHeader({
             <Link className="icon-btn" href="/search" aria-label="ابحث في العلم">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             </Link>
+            <MemberEntry />
             <ThemeToggle />
             <details className="mnav">
               <summary aria-label="القائمة">

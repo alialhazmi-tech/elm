@@ -1,8 +1,28 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { runInNewContext } from "node:vm";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("رابط استعادة كلمة المرور لا يحمّل متتبعًا يقرأ رمز الاستعادة", async () => {
+  const layout = await read("app/layout.tsx");
+  const assignment = layout.match(/const tagManagerInit = `[^`]+`;/)?.[0];
+  assert.ok(assignment);
+  const script = runInNewContext(`${assignment}; tagManagerInit`);
+  for (const pathname of ["/join/reset", "/join/reset/"]) {
+    runInNewContext(script, {
+      window: { location: { pathname } },
+      document: { createElement() { throw new Error("Tracker must not load on reset page"); } },
+    });
+  }
+  let loaded = 0;
+  runInNewContext(script, {
+    window: { location: { pathname: "/" } },
+    document: { createElement: () => ({}), getElementsByTagName: () => [{ parentNode: { insertBefore() { loaded++; } } }] },
+  });
+  assert.equal(loaded, 1);
+});
 
 test("عضوية الجمهور تستخدم Neon Auth ولا تعيد استخدام جلسة التحرير", async () => {
   const [memberAuth, tahrirAuth] = await Promise.all([
@@ -32,19 +52,19 @@ test("نموذج التسجيل يتحقق خادميًا ولا يكشف وجو
   assert.doesNotMatch(actions, /console\.(log|error).*password/);
 });
 
-test("زر العضوية مخفي من الهيدر ومسار التسجيل والحساب المحمي متاحان", async () => {
+test("زر العضوية ظاهر في الهيدر ومسار التسجيل والحساب المحمي متاحان", async () => {
   const [header, account, signup, form] = await Promise.all([
     read("app/_components/site-chrome.tsx"),
     read("app/account/page.tsx"),
     read("app/join/page.tsx"),
     read("app/join/join-form.tsx"),
   ]);
-  assert.doesNotMatch(header, /MemberEntry/);
+  assert.match(header, /<MemberEntry/);
   assert.match(account, /memberAuth\.getSession/);
   assert.match(account, /redirect\("\/join"\)/);
   assert.match(signup, /JoinForm/);
-  assert.match(form, /useActionState\(signUpMember, initialState\)/);
-  assert.match(form, /useActionState\(signInMember, initialState\)/);
+  assert.match(form, /useActionState\(\s*signUpMember,\s*initialState,?\s*\)/);
+  assert.match(form, /useActionState\(\s*signInMember,\s*initialState,?\s*\)/);
   assert.doesNotMatch(form, /const action = mode ===/);
 });
 
@@ -57,7 +77,7 @@ test("نجاح التسجيل يبدأ الترحيب والاهتمامات ث�
   assert.match(welcome, /InterestPicker/);
   assert.match(ready, /جهّزنا العلم لك/);
   assert.match(feed, /صباح المعرفة/);
-  assert.match(account, /getMemberProfile/);
+  assert.match(account, /getMemberAccountData/);
   assert.match(header, /\/api\/auth\/get-session/);
   assert.match(header, /حسابي/);
 });

@@ -16,7 +16,7 @@ test("عقد الرئيسية للموبايل يصدر بطاقات بلا مت
   assert.match(mapper, /absoluteMedia/);
   assert.doesNotMatch(mapper, /body:\s*story/);
   assert.match(route, /X-Content-Contract/);
-  assert.match(route, /s-maxage=120/);
+  assert.match(route, /PUBLIC_CONTENT_CACHE_CONTROL/);
   assert.match(route, /toMobileHome/);
   assert.match(docs, /GET \/api\/mobile\/v1\/home/);
 });

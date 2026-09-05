@@ -48,6 +48,9 @@ const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR ?? ".next",
   poweredByHeader: false,
   compress: true,
+  // النشر يبطل كاش الخادم، لكن لا يصل إلى كاش التنقل في متصفح مفتوح.
+  // أعد التحقق عند فتح الصفحة بدل استخدام نسخة prefetch لمدة خمس دقائق.
+  experimental: { staleTimes: { dynamic: 0, static: 0 } },
   images: {
     // webp فقط: ترميز AVIF أبطأ بمرات على حاوية Railway المشتركة مع الـ API،
     // وwebp مقروء في التطبيق والمتصفحات كلها.

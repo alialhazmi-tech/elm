@@ -1,3 +1,4 @@
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import { listRecent } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 
@@ -57,7 +58,7 @@ export async function GET() {
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
     },
   });
 }

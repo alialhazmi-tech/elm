@@ -1,3 +1,4 @@
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import { contentSource, getBreaking, seedContentProvider } from "@/lib/content/provider";
 import { MOBILE_HOME_CONTRACT, requestOrigin, toMobileHome } from "@/lib/mobile/home";
 
@@ -7,7 +8,7 @@ export async function GET(request: Request) {
 
   return Response.json(payload, {
     headers: {
-      "Cache-Control": "public, max-age=60, s-maxage=120, stale-while-revalidate=600",
+      "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL,
       "X-Content-Contract": MOBILE_HOME_CONTRACT,
       "X-Content-Source": await contentSource(),
     },

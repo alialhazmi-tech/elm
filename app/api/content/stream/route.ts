@@ -1,3 +1,4 @@
+import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import { homeRiver } from "@/lib/content/homeStream";
 import { storyHref } from "@/lib/content/types";
 import { relativeTimeAr } from "@/lib/format";
@@ -24,6 +25,6 @@ export async function GET(request: Request) {
         };
       }),
     },
-    { headers: { "Cache-Control": "public, max-age=60, stale-while-revalidate=120" } },
+    { headers: { "Cache-Control": PUBLIC_CONTENT_CACHE_CONTROL } },
   );
 }

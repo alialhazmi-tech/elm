@@ -36,9 +36,10 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
+      builder.onResolve({ filter: /^next\/cache$/ }, () => ({ path: "cache", namespace: "test" }));
       builder.onResolve({ filter: /^next\/server$/ }, () => ({ path: "next/server.js", external: true }));
       builder.onResolve({ filter: /^@\/lib\/tahrir\/auth$/ }, () => ({ path: `${process.cwd()}/lib/tahrir/crypto.ts` }));
       builder.onResolve({ filter: /^(?:@\/lib\/db|\.\.\/db\.ts)$/ }, () => ({ path: "db", namespace: "test" }));
@@ -46,6 +47,7 @@ try {
       builder.onResolve({ filter: /^@\/lib\/content\/provider$/ }, () => ({ path: "provider", namespace: "test" }));
       builder.onResolve({ filter: /^\.\/auth$/ }, args => args.importer.endsWith('/access.ts') ? ({ path: "auth", namespace: "test" }) : undefined);
       builder.onLoad({ filter: /.*/, namespace: "test" }, args => ({ contents: ({
+        cache: "export const unstable_cache = load => load; export function revalidateTag(){}",
         db: "export function getDb(){return globalThis.__alelmDb.getStore()}",
         session: "export async function getSessionMemberId(){return globalThis.__alelmMemberId ?? null} export function privateJson(value,status=200){return Response.json(value,{status})}",
         provider: "export const seedContentProvider={getStory:async id=>id==='original'?{id}:null}",
@@ -66,6 +68,21 @@ try {
     assert.equal(story?.body, 'Full published body');
     assert.equal(await subject.publicContentProvider.getStory('legacy-archived'), null);
     assert.equal(await subject.publicContentProvider.getStory('legacy-missing'), null);
+    checks++;
+  });
+  // Sitemap cache chunks must preserve every published URL across page boundaries.
+  await withDb(async () => {
+    const client = context.getStore().$client;
+    await client.query("create temporary table stories (like public.stories including defaults)");
+    await client.query(`insert into pg_temp.stories (id,slug,section,title,body,status,published_at)
+      select 'sitemap-' || lpad(i::text, 5, '0'), 'slug-' || i, 'health', 'Fixture', '',
+        case when i=2106 then 'draft' else 'published' end, '2026-09-01T00:00:00.000Z'
+      from generate_series(1,2106) i`);
+    const entries = await subject.listSitemapEntries();
+    assert.equal(entries.length, 2105);
+    assert.equal(new Set(entries.map(entry => entry.id)).size, 2105);
+    assert.equal(entries[0].id, 'sitemap-00001');
+    assert.equal(entries.at(-1).id, 'sitemap-02105');
     checks++;
   });
   // Exercise the real login handler and signed session against the migrated database.

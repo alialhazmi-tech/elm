@@ -139,7 +139,7 @@ test("Haiku للتصنيف وأدوات القارئ لا في مسار فتح �
 test("الخصوصية: مسح الإشارات وإيقاف التخصيص دون لمس الاهتمامات الصريحة في المسح الجزئي", async () => {
   const [privacy, account, interests] = await Promise.all([
     read("lib/personalization/privacy.ts"),
-    read("app/account/page.tsx"),
+    read("app/account/account-view.tsx"),
     read("lib/personalization/interests.ts"),
   ]);
   assert.match(privacy, /clearBehavioralData/);
