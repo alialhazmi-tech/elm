@@ -1,5 +1,4 @@
 import { verifyMfa } from "@/lib/tahrir/mfa";
-import { consumeLimit } from "@/lib/tahrir/rate-limit";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -26,12 +25,7 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    const accountAllowed = await consumeLimit("login-account", username.trim().toLowerCase(), 10, 900);
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const networkAllowed = await consumeLimit("login-network", ip, 40, 900);
-    if (!accountAllowed || !networkAllowed) return NextResponse.json({ error: "محاولات كثيرة. حاول بعد 15 دقيقة." }, { status: 429, headers: { "Retry-After": "900" } });
-  } catch { return NextResponse.json({ error: "الدخول غير متاح مؤقتًا." }, { status: 503 }); }
+  // أُوقف حظر تكرار محاولات الدخول مؤقتًا بطلب الإدارة.
   const user = await findUser(username.trim());
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
     return NextResponse.json({ error: "بيانات الدخول غير صحيحة." }, { status: 401 });

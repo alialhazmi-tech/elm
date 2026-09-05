@@ -90,6 +90,13 @@ try {
   process.env.AUTH_SECRET = 'isolated-integration-session-secret';
   await admin.query("insert into users(id,username,display_name,password_hash,created_at) values($1,$2,$3,$4,$5)", ['login-fixture','login-fixture','Local fixture',await hashPassword('fixture-password-123'),new Date().toISOString()]);
   const loginRequest = password => new Request('https://test.invalid/api/tahrir/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:'login-fixture',password})});
+  // Existing account/network lockouts must no longer prevent password or MFA checks.
+  await withDb(async () => {
+    for (let attempt = 0; attempt < 41; attempt++) {
+      await subject.consumeLimit('login-account', 'login-fixture', 10, 900);
+      await subject.consumeLimit('login-network', 'unknown', 40, 900);
+    }
+  });
   assert.equal((await withDb(() => subject.loginApi(loginRequest('wrong-password')))).status,401);
   const loggedIn = await withDb(() => subject.loginApi(loginRequest('fixture-password-123')));
   assert.equal(loggedIn.status,200);
