@@ -1,0 +1,134 @@
+{
+  "branch": {
+    "beforeAt": "2026-09-05T18:05:31.791Z",
+    "afterAt": "2026-09-05T18:06:12.930Z",
+    "counts": {
+      "stories": "29193",
+      "media": "29852"
+    },
+    "queries": {
+      "latest": {
+        "beforeMs": 0.469,
+        "afterMs": 0.071,
+        "beforeBlocks": 11,
+        "afterBlocks": 11,
+        "resultSignature": "3994aac9af6c67ccc968d17cb5672ee11a14b01c4151ef09589571a7fb87dd41"
+      },
+      "media": {
+        "beforeMs": 0.048,
+        "afterMs": 0.044,
+        "beforeBlocks": 4,
+        "afterBlocks": 4,
+        "resultSignature": "025f3edbc1a216349c3f423afb4cb2e85d6dabfc321fb555e7b369bf539bdb61"
+      },
+      "statuses": {
+        "beforeMs": 11.556,
+        "afterMs": 5.199,
+        "beforeBlocks": 3665,
+        "afterBlocks": 36,
+        "resultSignature": "dbd1e7f2443c24f45260dd643203e8685bc02a74e581816c0a238276ad22f52c"
+      },
+      "searchSaudi": {
+        "beforeMs": 36.36,
+        "afterMs": 3.582,
+        "beforeBlocks": 4082,
+        "afterBlocks": 1264,
+        "resultSignature": "9ba97579e481c47127d28d5caab000fe43fe77dad571e3dcea3856ac5e575289"
+      },
+      "searchAI": {
+        "beforeMs": 38.443,
+        "afterMs": 1.812,
+        "beforeBlocks": 4082,
+        "afterBlocks": 565,
+        "resultSignature": "c00d872b464319ec0c3bb9da17df894f65cd4ece9ba2254f13bd949fa2adf9fe"
+      },
+      "searchMissing": {
+        "beforeMs": 26.123,
+        "afterMs": 0.085,
+        "beforeBlocks": 4082,
+        "afterBlocks": 46,
+        "resultSignature": "59fbab4bac7cb12eee5b33c7df3f95e89686eb8f430c84695e63c7557c702414"
+      },
+      "searchShort": {
+        "beforeMs": 33.467,
+        "afterMs": 33.271,
+        "beforeBlocks": 4082,
+        "afterBlocks": 4082,
+        "resultSignature": "8e7f4af8a618df5b543fa993ca627db16bc8d5ce7527371e84204bba6a4e6ee4"
+      },
+      "searchEscaped": {
+        "beforeMs": 24.835,
+        "afterMs": 25.312,
+        "beforeBlocks": 4082,
+        "afterBlocks": 4082,
+        "resultSignature": "59fbab4bac7cb12eee5b33c7df3f95e89686eb8f430c84695e63c7557c702414"
+      }
+    }
+  },
+  "production": {
+    "beforeAt": "2026-09-05T18:05:44.135Z",
+    "afterAt": "2026-09-05T18:07:34.350Z",
+    "counts": {
+      "stories": "29193",
+      "media": "29852"
+    },
+    "queries": {
+      "latest": {
+        "beforeMs": 0.077,
+        "afterMs": 0.076,
+        "beforeBlocks": 11,
+        "afterBlocks": 11,
+        "resultSignature": "3994aac9af6c67ccc968d17cb5672ee11a14b01c4151ef09589571a7fb87dd41"
+      },
+      "media": {
+        "beforeMs": 0.044,
+        "afterMs": 0.045,
+        "beforeBlocks": 4,
+        "afterBlocks": 4,
+        "resultSignature": "025f3edbc1a216349c3f423afb4cb2e85d6dabfc321fb555e7b369bf539bdb61"
+      },
+      "statuses": {
+        "beforeMs": 12.013,
+        "afterMs": 5.228,
+        "beforeBlocks": 3665,
+        "afterBlocks": 36,
+        "resultSignature": "dbd1e7f2443c24f45260dd643203e8685bc02a74e581816c0a238276ad22f52c"
+      },
+      "searchSaudi": {
+        "beforeMs": 39.822,
+        "afterMs": 3.42,
+        "beforeBlocks": 4082,
+        "afterBlocks": 1264,
+        "resultSignature": "9ba97579e481c47127d28d5caab000fe43fe77dad571e3dcea3856ac5e575289"
+      },
+      "searchAI": {
+        "beforeMs": 36.741,
+        "afterMs": 1.981,
+        "beforeBlocks": 4082,
+        "afterBlocks": 565,
+        "resultSignature": "c00d872b464319ec0c3bb9da17df894f65cd4ece9ba2254f13bd949fa2adf9fe"
+      },
+      "searchMissing": {
+        "beforeMs": 25.648,
+        "afterMs": 0.088,
+        "beforeBlocks": 4082,
+        "afterBlocks": 46,
+        "resultSignature": "59fbab4bac7cb12eee5b33c7df3f95e89686eb8f430c84695e63c7557c702414"
+      },
+      "searchShort": {
+        "beforeMs": 32.842,
+        "afterMs": 33.178,
+        "beforeBlocks": 4082,
+        "afterBlocks": 4082,
+        "resultSignature": "8e7f4af8a618df5b543fa993ca627db16bc8d5ce7527371e84204bba6a4e6ee4"
+      },
+      "searchEscaped": {
+        "beforeMs": 24.681,
+        "afterMs": 24.708,
+        "beforeBlocks": 4082,
+        "afterBlocks": 4082,
+        "resultSignature": "59fbab4bac7cb12eee5b33c7df3f95e89686eb8f430c84695e63c7557c702414"
+      }
+    }
+  }
+}
