@@ -18,9 +18,14 @@ export async function readAvatarFile(request: Request): Promise<File> {
   if (!reader) throw new AvatarError("اختر صورة أولًا.");
   const chunks: Uint8Array[] = [];
   let size = 0;
+  const deadline = AbortSignal.timeout(20_000);
+  const cancel = () => { void reader.cancel().catch(() => undefined); };
+  deadline.addEventListener("abort", cancel, { once: true });
   try {
     for (;;) {
       const { done, value } = await reader.read();
+      if (deadline.aborted)
+        throw new AvatarError("انتهت مهلة رفع الصورة. تحقق من اتصالك وحاول مرة أخرى.", 408);
       if (done) break;
       size += value.byteLength;
       if (size > limit) {
@@ -30,6 +35,7 @@ export async function readAvatarFile(request: Request): Promise<File> {
       chunks.push(value);
     }
   } finally {
+    deadline.removeEventListener("abort", cancel);
     reader.releaseLock();
   }
   const form = await new Response(Buffer.concat(chunks), {
@@ -73,6 +79,13 @@ export async function prepareAvatar(file: File) {
 export async function storeAvatar(file: File) {
   const body = await prepareAvatar(file);
   const filename = `${crypto.randomUUID()}.webp`;
-  await putStoredImage({ filename, body, contentType: "image/webp" });
+  const signal = AbortSignal.timeout(15_000);
+  try {
+    await putStoredImage({ filename, body, contentType: "image/webp", signal });
+  } catch (error) {
+    if (signal.aborted)
+      throw new AvatarError("تعذر الاتصال بمخزن الصور في الوقت المحدد. حاول مرة أخرى.", 504);
+    throw error;
+  }
   return `/uploads/${filename}`;
 }

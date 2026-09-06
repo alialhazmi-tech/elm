@@ -9,9 +9,12 @@ import { consumeLimit } from "@/lib/tahrir/rate-limit";
 async function change(request: Request, mode: "name" | "image" | "remove") {
   if (!readingOrigin(request))
     return privateJson({ error: "طلب غير مسموح." }, 403);
-  const gate = await requireActor();
-  if (!gate.ok) return gate.response;
+  const started = performance.now();
+  let stage = "session";
   try {
+    const gate = await requireActor();
+    if (!gate.ok) return gate.response;
+    stage = "rate-limit";
     if (!(await consumeLimit("editor-profile", gate.actor.userId, 20, 3600)))
       return privateJson({ error: "محاولات كثيرة. حاول لاحقًا." }, 429);
     const patch: {
@@ -25,11 +28,15 @@ async function change(request: Request, mode: "name" | "image" | "remove") {
       if (name.length < 2 || name.length > 80)
         return privateJson({ error: "اكتب اسمًا من حرفين إلى 80 حرفًا." }, 400);
       patch.displayName = name;
-    } else
-      patch.avatarUrl =
-        mode === "remove"
-          ? null
-          : await storeAvatar(await readAvatarFile(request));
+    } else if (mode === "remove") patch.avatarUrl = null;
+    else {
+      stage = "upload";
+      const file = await readAvatarFile(request);
+      console.info(JSON.stringify({ event: "profile-avatar:received", bytes: file.size, elapsedMs: Math.round(performance.now() - started) }));
+      stage = "storage";
+      patch.avatarUrl = await storeAvatar(file);
+    }
+    stage = "database";
     const db = getDb();
     if (!db) throw new Error("Database unavailable");
     await db.batch([
@@ -46,6 +53,7 @@ async function change(request: Request, mode: "name" | "image" | "remove") {
     ]);
     return privateJson({ ok: true, image: patch.avatarUrl });
   } catch (error) {
+    console.warn(JSON.stringify({ event: "profile:failed", mode, stage, elapsedMs: Math.round(performance.now() - started), status: error instanceof AvatarError ? error.status : 503 }));
     return privateJson(
       {
         error:

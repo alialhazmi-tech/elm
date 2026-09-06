@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ProfileAvatar } from "./profile-avatar";
+import { prepareAvatarUpload, saveAvatarRequest } from "@/lib/avatar-client";
 export function AvatarUpload({
   name,
   image,
@@ -27,15 +28,8 @@ export function AvatarUpload({
     setMessage("");
     setError(false);
     try {
-      const body = new FormData();
-      if (file) body.set("file", file);
-      const response = await fetch(endpoint, {
-        method: file ? "POST" : "DELETE",
-        body: file ? body : undefined,
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "تعذر حفظ الصورة.");
-      setPreview(result.image);
+      const prepared = file ? await prepareAvatarUpload(file) : undefined;
+      setPreview(await saveAvatarRequest(endpoint, prepared));
       setMessage(
         file ? "تم تحديث صورتك الشخصية." : "تمت إزالة الصورة الشخصية.",
       );

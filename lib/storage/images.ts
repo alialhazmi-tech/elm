@@ -46,6 +46,7 @@ export async function putStoredImage(input: {
   filename: string;
   body: Uint8Array;
   contentType: string;
+  signal?: AbortSignal;
 }) {
   const { s3, bucket } = storageClient();
   await s3.send(
@@ -56,11 +57,12 @@ export async function putStoredImage(input: {
       ContentType: input.contentType,
       CacheControl: "public, max-age=31536000, immutable",
     }),
+    { abortSignal: input.signal },
   );
   const stored = await s3.send(new HeadObjectCommand({
     Bucket: bucket,
     Key: imageObjectKey(input.filename),
-  }));
+  }), { abortSignal: input.signal });
   if (stored.ContentLength !== input.body.byteLength) {
     throw new Error("تعذر التحقق من اكتمال حفظ الصورة في المخزن.");
   }
