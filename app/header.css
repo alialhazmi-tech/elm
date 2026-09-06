@@ -261,6 +261,18 @@
 .account-menu-identity { display:grid;gap:3px;min-width:0; }
 .account-menu-panel small { color:var(--muted);font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .topbar .account-menu-panel a:hover,.topbar .account-menu-panel a:focus-visible { background:var(--surface-2); }
+.account-menu-signout { margin-top:6px;padding-top:6px;border-top:1px solid var(--line); }
+.account-menu-signout button { display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:11px 12px;border:0;border-radius:9px;background:transparent;color:#b42318;font:inherit;font-size:14px;font-weight:600;text-align:start;cursor:pointer; }
+.account-menu-signout button:hover,.account-menu-signout button:focus-visible { background:#fff1ef; }
+.account-menu-signout button:focus-visible { outline:2px solid currentColor;outline-offset:-2px; }
+.account-menu-signout button:disabled { opacity:.6;cursor:wait; }
+.account-menu-signout p { margin:6px 12px;color:#b42318;font-size:13px;white-space:normal; }
+[data-theme="dark"] .account-menu-signout :is(button,p) { color:#fda29b; }
+[data-theme="dark"] .account-menu-signout button:hover,[data-theme="dark"] .account-menu-signout button:focus-visible { background:#4a2424; }
+@media (prefers-color-scheme:dark) {
+  :root:not([data-theme="light"]) .account-menu-signout :is(button,p) { color:#fda29b; }
+  :root:not([data-theme="light"]) .account-menu-signout button:hover,:root:not([data-theme="light"]) .account-menu-signout button:focus-visible { background:#4a2424; }
+}
 @media(max-width:600px) { .account-menu-name {display:none;} .topbar .account-menu > summary {padding:0 7px;} }
 
 /* أدوات الهيدر بترتيب RTL: القائمة، البحث، المظهر، ثم العضوية أقصى اليسار. */

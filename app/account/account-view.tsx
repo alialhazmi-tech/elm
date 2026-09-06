@@ -325,7 +325,7 @@ export function AccountView({
               <AccountAction
                 action={signOutMember}
                 label="تسجيل الخروج"
-                className="ac-text-button"
+                className="ac-text-button ac-signout-button"
                 pendingLabel="جارٍ تسجيل الخروج…"
               />
             </div>
@@ -658,7 +658,7 @@ export function AccountView({
                         <AccountAction
                           action={signOutMember}
                           label="تسجيل الخروج من الحساب"
-                          className="ac-text-button"
+                          className="ac-text-button ac-signout-button"
                           pendingLabel="جارٍ تسجيل الخروج…"
                         />
                       </div>

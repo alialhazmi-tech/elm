@@ -239,12 +239,17 @@ export async function verifyMemberEmail(
     return failed;
   }
 }
-export async function signOutMember(): Promise<AccountFormState> {
+export async function endMemberSession(): Promise<AccountFormState> {
   try {
     const result = await memberAuth.signOut();
     if (result.error) return { error: "تعذر تسجيل الخروج. حاول مرة أخرى." };
   } catch {
     return { error: "تعذر تسجيل الخروج. حاول مرة أخرى." };
   }
+  return { success: "تم تسجيل الخروج." };
+}
+export async function signOutMember(): Promise<AccountFormState> {
+  const result = await endMemberSession();
+  if (result.error) return result;
   redirect("/");
 }
