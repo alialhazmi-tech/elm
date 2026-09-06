@@ -8,6 +8,7 @@ import {
   BookOpen,
   Check,
   Clock3,
+  ChevronDown,
   Compass,
   Heart,
   LayoutGrid,
@@ -30,6 +31,7 @@ import { sectionName, seriesOf } from "@/lib/content/provider";
 import {
   AccountAction,
   DetailsForm,
+  EmailVerificationNotice,
   InterestsForm,
   PasswordForm,
 } from "./account-forms";
@@ -250,7 +252,6 @@ export function AccountView({
   basePath?: "/account" | "/prototype/account";
 }) {
   const { user, profile, stats } = data;
-  const firstName = user.name.trim().split(/\s+/)[0];
   const joined = user.joinedAt
     ? new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
         month: "long",
@@ -268,19 +269,33 @@ export function AccountView({
           <span>/</span>
           <span>ملفي الشخصي</span>
         </div>
+        <header className="ac-profile-head">
+          <div className="ac-profile-person">
+            <div className="ac-avatar" aria-hidden="true">
+              <ProfileAvatar name={user.name} image={user.image} size={80} />
+            </div>
+            <div className="ac-profile-info">
+              <p className="ac-profile-greeting">أهلًا بك في العلم</p>
+              <h2>{user.name}</h2>
+              <bdi dir="ltr">{user.email}</bdi>
+            </div>
+          </div>
+          <div className="ac-profile-status">
+            <span className={`ac-member-badge${user.emailVerified ? " is-verified" : ""}`}>
+              {user.emailVerified ? <ShieldCheck size={18} /> : <UserRound size={18} />}
+              {user.emailVerified ? "بريدك الإلكتروني موثّق" : "عضو في العلم"}
+            </span>
+            {joined && <span>عضو منذ {joined}</span>}
+          </div>
+        </header>
+        {!user.emailVerified && (
+          <div className="ac-verification-banner">
+            <EmailVerificationNotice key={user.email} email={user.email} />
+          </div>
+        )}
         <div className="ac-layout">
           <aside className="ac-sidebar" aria-label="ملف العضو">
-            <div className="ac-identity">
-              <div className="ac-avatar" aria-hidden="true">
-                <ProfileAvatar name={user.name} image={user.image} size={64} />
-              </div>
-              <h2>{user.name}</h2>
-              <span className="ac-member-badge">
-                <Check size={12} />
-                عضو في العلم
-              </span>
-              {joined && <small>منذ {joined}</small>}
-            </div>
+            <p className="ac-nav-title">حسابي</p>
             <nav className="ac-nav" aria-label="أقسام حسابي">
               {navigation.map((item) => (
                 <Link
@@ -304,7 +319,7 @@ export function AccountView({
             <div className="ac-sidebar-foot">
               <Link href="/for-you">
                 <Compass size={17} />
-                انتقل إلى صفحة «لك»
+                قراءات مقترحة لك
                 <ArrowLeft size={14} />
               </Link>
               <AccountAction
@@ -318,11 +333,10 @@ export function AccountView({
           <div className="ac-content">
             <header className="ac-page-head">
               <div>
-                <span>مساحتك في العلم</span>
-                <h1>{tab === "overview" ? `أهلًا، ${firstName}` : title}</h1>
+                <h1>{tab === "overview" ? "حسابك في لمحة" : title}</h1>
                 <p>
                   {tab === "overview"
-                    ? "كل ما يهمّك، وما ترغب في العودة إليه."
+                    ? "قراءاتك ومحفوظاتك والموضوعات التي تهمّك، في مكان واحد."
                     : tab === "saved"
                       ? "المواد التي اخترت الاحتفاظ بها، في مكان واحد."
                       : tab === "liked"
@@ -331,7 +345,7 @@ export function AccountView({
                           ? "عُد إلى آخر قراءاتك وتابع الاستكشاف."
                           : tab === "interests"
                             ? "اختر ما تحب متابعته. يمكنك تغيير اختياراتك في أي وقت."
-                            : "بياناتك وأمان حسابك وخصوصيتك، تحت سيطرتك."}
+                            : "عدّل بياناتك، واحمِ حسابك، واختر ما يناسبك من إعدادات الخصوصية."}
                 </p>
               </div>
               {tab === "overview" && (
@@ -374,7 +388,7 @@ export function AccountView({
                       <div>
                         <BookOpen size={18} />
                         <strong>{stats.articlesRead}</strong>
-                        <span>مواد وصلت لنهايتها</span>
+                        <span>مواد أكملت قراءتها</span>
                       </div>
                       <div>
                         <Clock3 size={18} />
@@ -382,7 +396,7 @@ export function AccountView({
                           {stats.activeMinutes}
                           <small>دقيقة</small>
                         </strong>
-                        <span>وقت القراءة النشط</span>
+                        <span>دقائق قضيتها في القراءة</span>
                       </div>
                       <div>
                         <Bookmark size={18} />
@@ -400,10 +414,10 @@ export function AccountView({
                         <Compass size={28} strokeWidth={1.4} />
                       </div>
                       <div>
-                        <h2>معرفة على قدر فضولك</h2>
+                        <h2>قراءات تناسب اهتماماتك</h2>
                         <p>
                           {profile.interests.length
-                            ? `${profile.interests.length} اهتمامات اخترتها تشكّل بداية ترشيحاتك.`
+                            ? `${profile.interests.length} موضوعات اخترتها تساعدنا في اقتراح قراءات لك.`
                             : "ابدأ باختيار اهتماماتك لنرتّب لك ما يستحق القراءة."}
                         </p>
                       </div>
@@ -515,7 +529,7 @@ export function AccountView({
                     <HistoryList items={data.recentHistory} />
                     <Pagination data={data} tab={tab} basePath={basePath} />
                     <p className="ac-section-note">
-                      نسبة التقدم تعبّر عن الموضع الذي وصلت إليه في المادة.
+                      نسبة القراءة توضّح أين توقفت في كل مادة.
                       يمكنك مسح السجل من إعدادات الخصوصية.
                     </p>
                   </section>
@@ -526,8 +540,8 @@ export function AccountView({
                       initial={profile.interests.map((item) => item.id)}
                     />
                     <p className="ac-section-note">
-                      اختياراتك محفوظة حتى لو أوقفت التخصيص. ولا نضيف اهتمامات
-                      إلى هذه القائمة نيابةً عنك.
+                      يمكنك اختيار أكثر من موضوع. تبقى اختياراتك محفوظة حتى لو أوقفت
+                      اقتراح القراءات حسب اهتماماتك.
                     </p>
                   </section>
                 )}
@@ -536,29 +550,34 @@ export function AccountView({
                     <div className="ac-settings-grid">
                       <section className="ac-section ac-padded">
                         <SectionHead title="البيانات الشخصية" />
-                        <AvatarUpload name={user.name} image={user.image} endpoint="/api/account/avatar" />
-                        <DetailsForm
-                          name={user.name}
-                          email={user.email}
-                          verified={!!user.emailVerified}
-                        />
+                        <p className="ac-panel-description">اسمك وصورتك كما يظهران في حسابك.</p>
+                        <div className="ac-avatar-editor">
+                          <AvatarUpload name={user.name} image={user.image} endpoint="/api/account/avatar" />
+                        </div>
+                        <DetailsForm name={user.name} email={user.email} />
                       </section>
                       <section className="ac-section ac-padded">
                         <SectionHead title="أمان الحساب" />
-                        <div className="ac-setting-intro">
-                          <LockKeyhole size={19} />
-                          <p>حافظ على كلمة مرور خاصة بحسابك.</p>
-                        </div>
-                        <PasswordForm />
+                        <details className="ac-password-disclosure">
+                          <summary>
+                            <LockKeyhole size={22} aria-hidden="true" />
+                            <span>
+                              <strong>تغيير كلمة المرور</strong>
+                              <span>اختر كلمة مرور قوية لا تستخدمها في حساب آخر.</span>
+                            </span>
+                            <ChevronDown size={20} className="ac-disclosure-chevron" aria-hidden="true" />
+                          </summary>
+                          <PasswordForm />
+                        </details>
                       </section>
                     </div>
                     <section className="ac-section ac-padded">
-                      <SectionHead title="الاشتراكات والخصوصية" />
+                      <SectionHead title="البريد والخصوصية" />
                       <div className="ac-setting-row">
                         <Mail size={21} />
                         <div>
                           <h3>النشرة البريدية</h3>
-                          <p>الاشتراك مرتبط ببريد حسابك. يمكنك إلغاؤه هنا.</p>
+                          <p>استقبل النشرة على بريد حسابك. يمكنك إلغاء الاشتراك في أي وقت.</p>
                           <span className="ac-status-pill">
                             {data.newsletterSubscribed ? "مشترك" : "غير مشترك"}
                           </span>
@@ -581,10 +600,10 @@ export function AccountView({
                       <div className="ac-setting-row">
                         <Sparkles size={21} />
                         <div>
-                          <h3>تخصيص الترشيحات</h3>
+                          <h3>اقتراح قراءات تناسبك</h3>
                           <p>
-                            استخدام اهتماماتك وتفاعلاتك داخل العلم لترتيب المواد
-                            التي تظهر لك.
+                            نستخدم الموضوعات التي اخترتها ونشاط قراءتك لاقتراح مواد
+                            تهمّك في صفحة «لك».
                           </p>
                           <span className="ac-status-pill">
                             {profile.personalizationEnabled ? "مفعّل" : "متوقف"}
@@ -594,8 +613,8 @@ export function AccountView({
                           action={togglePersonalization}
                           label={
                             profile.personalizationEnabled
-                              ? "إيقاف التخصيص"
-                              : "تشغيل التخصيص"
+                              ? "إيقاف الاقتراحات المخصصة"
+                              : "تفعيل الاقتراحات المخصصة"
                           }
                         >
                           <input
@@ -608,14 +627,14 @@ export function AccountView({
                       <div className="ac-setting-row ac-clear-row">
                         <ShieldCheck size={21} />
                         <div>
-                          <h3>سجل القراءة والإشارات المستنتجة</h3>
+                          <h3>مسح سجل القراءة</h3>
                           <p>
-                            يمسح سجل القراءة والتفاعلات المستنتجة. تبقى محفوظاتك
-                            وإعجاباتك واهتماماتك المختارة.
+                            يحذف سجل قراءتك وما تعلّمناه منه لتخصيص الاقتراحات.
+                            لن تُحذف محفوظاتك أو إعجاباتك أو الموضوعات التي اخترتها.
                           </p>
                           <details className="ac-confirm">
                             <summary>
-                              مسح الإشارات المستنتجة وسجل القراءة
+                              مسح سجل القراءة وبيانات التخصيص
                             </summary>
                             <p>
                               هذا الإجراء لا يمكن التراجع عنه. هل ترغب في

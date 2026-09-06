@@ -144,6 +144,7 @@ test("الخصوصية: مسح الإشارات وإيقاف التخصيص دو
   ]);
   assert.match(privacy, /clearBehavioralData/);
   assert.match(privacy, /setPersonalizationEnabled/);
-  assert.match(account, /مسح الإشارات المستنتجة/);
+  assert.match(account, /مسح سجل القراءة وبيانات التخصيص/);
+  assert.match(account, /لن تُحذف محفوظاتك أو إعجاباتك أو الموضوعات التي اخترتها/);
   assert.match(interests, /ne\(memberTopicScores.source, "explicit"\)/);
 });

@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export default async function AccountPreview({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; empty?: string }>;
+  searchParams: Promise<{ tab?: string; empty?: string; unverified?: string }>;
 }) {
   if (
     process.env.NODE_ENV === "production" &&
@@ -29,7 +29,7 @@ export default async function AccountPreview({
   );
   data.available = true;
   data.user.joinedAt = "2026-08-01T10:00:00Z";
-  data.user.emailVerified = true;
+  data.user.emailVerified = params.unverified !== "1";
   if (params.empty !== "1") {
     data.profile = {
       onboardingCompleted: true,
@@ -57,7 +57,7 @@ export default async function AccountPreview({
   }
   return (
     <>
-      <SiteHeader />
+      <SiteHeader memberPreview={{ name: data.user.name, emailVerified: data.user.emailVerified }} />
       <div
         style={{
           textAlign: "center",

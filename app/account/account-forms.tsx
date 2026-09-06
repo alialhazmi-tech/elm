@@ -1,6 +1,6 @@
 "use client";
 import { useActionState, useEffect, useState, type ReactNode } from "react";
-import { Check, Eye, EyeOff, LoaderCircle } from "lucide-react";
+import { Check, Eye, EyeOff, LoaderCircle, MailCheck } from "lucide-react";
 import { MEMBER_INTERESTS } from "@/lib/membership/interests";
 import {
   changeMemberPassword,
@@ -60,11 +60,9 @@ function FormFeedback({ state }: { state: AccountFormState }) {
 export function DetailsForm({
   name,
   email,
-  verified,
 }: {
   name: string;
   email: string;
-  verified: boolean;
 }) {
   const [state, action, pending] = useActionState(updateMemberDetails, {});
   useEffect(() => {
@@ -72,7 +70,7 @@ export function DetailsForm({
   }, [state]);
   return (
     <>
-      <form action={action} className="ac-edit-form">
+      <form action={action} className="ac-edit-form ac-details-form">
         <label>
           الاسم
           <input
@@ -93,31 +91,47 @@ export function DetailsForm({
             dir="ltr"
             aria-describedby="email-note"
           />
+          <span className="ac-field-note" id="email-note">
+            هذا بريد تسجيل الدخول. لا يمكن تغييره من هنا.
+          </span>
         </label>
-        <p className="ac-field-note" id="email-note">
-          البريد مرتبط بهوية تسجيل الدخول، ولا يتغير من هذا النموذج.
-        </p>
         <FormFeedback state={state} />
         <button className="ac-button ac-button-primary" disabled={pending}>
           {pending ? "جارٍ الحفظ…" : "حفظ البيانات"}
         </button>
       </form>
-      {!verified && (
-        <div className="ac-verify">
-          <span>بريدك الإلكتروني لم يُوثّق بعد.</span>
-          <VerificationForm />
-        </div>
-      )}
     </>
   );
 }
-function VerificationForm() {
+export function EmailVerificationNotice({ email }: { email: string }) {
   const [sent, send, sending] = useActionState(sendMemberVerification, {});
-  const [verified, verify, verifying] = useActionState(verifyMemberEmail, {});
+  const [verified, verify, verifying] = useActionState(
+    async (state: AccountFormState, form: FormData) => {
+      const result = await verifyMemberEmail(state, form);
+      if (result.success)
+        window.dispatchEvent(new Event("alelm:profile-updated"));
+      return result;
+    },
+    {},
+  );
+  if (verified.success) return <FormFeedback state={verified} />;
   return (
-    <div>
+    <section className="ac-verify" aria-labelledby="ac-verify-title">
+      <div className="ac-verify-intro">
+        <MailCheck size={28} aria-hidden="true" />
+        <div>
+          <h2 id="ac-verify-title">وثّق بريدك الإلكتروني</h2>
+          <p>أكمل توثيق حسابك برمز نرسله إلى بريدك الإلكتروني.</p>
+          <bdi className="ac-verify-email" dir="ltr">
+            {email}
+          </bdi>
+        </div>
+      </div>
       <form action={send} className="ac-action-form">
-        <button className="ac-button ac-button-secondary" disabled={sending}>
+        <button
+          className="ac-button ac-button-primary"
+          disabled={sending || verifying}
+        >
           {sending
             ? "جارٍ الإرسال…"
             : sent.success
@@ -127,11 +141,12 @@ function VerificationForm() {
         <FormFeedback state={sent} />
       </form>
       {sent.success && (
-        <form action={verify} className="ac-edit-form">
+        <form action={verify} className="ac-edit-form ac-verify-code">
           <label>
             رمز التحقق
             <input
               name="otp"
+              type="text"
               inputMode="numeric"
               autoComplete="one-time-code"
               pattern="[0-9]{6}"
@@ -147,7 +162,7 @@ function VerificationForm() {
           <FormFeedback state={verified} />
         </form>
       )}
-    </div>
+    </section>
   );
 }
 function SecretField({
@@ -193,7 +208,7 @@ export function PasswordForm() {
       <SecretField name="newPassword" label="كلمة المرور الجديدة" />
       <SecretField name="confirmPassword" label="تأكيد كلمة المرور الجديدة" />
       <p className="ac-field-note">
-        من 8 إلى 128 حرفًا. يؤدي التغيير إلى تسجيل الخروج من أجهزتك الأخرى.
+        استخدم من 8 إلى 128 حرفًا. بعد التغيير، ستحتاج إلى تسجيل الدخول مجددًا على أجهزتك الأخرى.
       </p>
       <FormFeedback state={state} />
       <button className="ac-button ac-button-secondary" disabled={pending}>

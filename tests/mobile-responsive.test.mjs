@@ -51,7 +51,7 @@ test("قائمة الهاتف تفصل الأقسام والسلاسل والص�
   const tools = chrome.slice(chrome.indexOf('className="top-tools"'));
   assert.ok(tools.indexOf('<MobileNavigation>') < tools.indexOf('href="/search"'));
   assert.ok(tools.indexOf('href="/search"') < tools.indexOf('<ThemeToggle />'));
-  assert.ok(tools.indexOf('<ThemeToggle />') < tools.indexOf('<MemberEntry />'));
+  assert.ok(tools.indexOf('<ThemeToggle />') < tools.search(/<MemberEntry\b/));
 });
 
 test("قوائم المواد على الهاتف بطاقات أفقية كثيفة", async () => {
