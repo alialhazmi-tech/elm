@@ -243,6 +243,13 @@
 }
 
 .account-menu { position:relative; }
+.account-menu-avatar { display:inline-flex;position:relative;flex:none; }
+.account-menu-alert-dot { position:absolute;top:-2px;inset-inline-start:-2px;width:12px;height:12px;border:2px solid var(--surface);border-radius:50%;background:#d92d20; }
+.account-menu-alert-marker { width:9px;height:9px;border-radius:50%;background:#d92d20;flex:none; }
+.topbar .account-menu-panel .account-menu-alert { background:#fff1ef;color:#9b261c;margin-bottom:6px; }
+.topbar .account-menu-panel .account-menu-alert:hover,.topbar .account-menu-panel .account-menu-alert:focus-visible { background:#ffe3df; }
+.account-menu-panel .account-menu-alert small { color:#9b261c;font-size:14px;white-space:normal; }
+.account-menu-panel .account-menu-alert strong { font-size:15px; }
 .account-menu > summary { list-style:none;cursor:pointer; }
 .account-menu > summary::-webkit-details-marker { display:none; }
 .account-menu > summary:focus-visible { outline:2px solid var(--navy);outline-offset:3px; }

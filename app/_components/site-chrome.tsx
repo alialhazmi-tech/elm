@@ -8,7 +8,7 @@ import { NewsletterForm } from "./newsletter-form";
 import { NewsStrip } from "./news-strip";
 import { SeriesRail } from "./series-navigator";
 import { ThemeToggle } from "./theme-toggle";
-import { MemberEntry } from "./member-entry";
+import { MemberEntry, type MemberIdentity } from "./member-entry";
 import { MobileNavigation } from "./mobile-navigation";
 import { FooterNavigation } from "./footer-navigation";
 
@@ -58,11 +58,14 @@ export async function SiteHeader({
   active,
   activeSeries,
   rail,
+  memberPreview,
 }: {
   active?: string;
   activeSeries?: string;
   /** مسطرة السلاسل تحت الهيدر — الرئيسية وحدها، تلتصق وحدها إذا تحركت الصفحة. */
   rail?: boolean;
+  /** Synthetic identity supplied only by the gated account design preview. */
+  memberPreview?: MemberIdentity;
 }) {
   const sectionActive = SECTIONS.some((item) => item.href === active);
   const seriesActive = active === "/series";
@@ -136,7 +139,7 @@ export async function SiteHeader({
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             </Link>
             <ThemeToggle />
-            <MemberEntry />
+            <MemberEntry preview={memberPreview} />
 
           </div>
         </div>

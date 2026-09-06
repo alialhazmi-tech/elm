@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ProfileAvatar } from "@/components/profile-avatar";
 type Identity = { name: string; image?: string | null };
-export function MemberEntry() {
-  const [viewer, setViewer] = useState<{
-    member?: Identity;
+export type MemberIdentity = Identity & { emailVerified: boolean };
+export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
+  const [liveViewer, setViewer] = useState<{
+    member?: MemberIdentity;
     editor?: Identity;
   }>({});
-  const [loaded, setLoaded] = useState(false);
+  const [liveLoaded, setLoaded] = useState(false);
+  const viewer = preview ? { member: preview, editor: undefined } : liveViewer;
+  const loaded = Boolean(preview) || liveLoaded;
   const pathname = usePathname();
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -36,30 +39,36 @@ export function MemberEntry() {
     };
   }, [pathname]);
   useEffect(() => {
-    const controller = new AbortController();
-    const refresh = () =>
-      fetch("/api/viewer", {
+    if (preview) return;
+    let controller: AbortController | undefined;
+    const refresh = () => {
+      controller?.abort();
+      const request = new AbortController();
+      controller = request;
+      return fetch("/api/viewer", {
         credentials: "same-origin",
         cache: "no-store",
-        signal: controller.signal,
+        signal: request.signal,
       })
         .then((response) => (response.ok ? response.json() : {}))
         .then((data) => {
+          if (request.signal.aborted) return;
           setViewer(data);
           setLoaded(true);
         })
         .catch(() => {
-          if (!controller.signal.aborted) setLoaded(true);
+          if (!request.signal.aborted) setLoaded(true);
         });
+    };
     void refresh();
     window.addEventListener("focus", refresh);
     window.addEventListener("alelm:profile-updated", refresh);
     return () => {
-      controller.abort();
+      controller?.abort();
       window.removeEventListener("focus", refresh);
       window.removeEventListener("alelm:profile-updated", refresh);
     };
-  }, [pathname]);
+  }, [pathname, preview]);
   if (!loaded)
     return (
       <span className="member-entry" aria-busy="true" aria-label="تحميل الحساب">
@@ -73,6 +82,8 @@ export function MemberEntry() {
       </Link>
     );
   const identity = viewer.member ?? viewer.editor!;
+  const needsVerification = viewer.member?.emailVerified === false;
+  const accountHref = preview ? "/prototype/account" : "/account";
   const close = () => {
     if (menu.current) menu.current.open = false;
   };
@@ -80,9 +91,12 @@ export function MemberEntry() {
     <details className="account-menu" ref={menu}>
       <summary
         className="member-entry is-member"
-        aria-label={`حسابي: ${identity.name}`}
+        aria-label={`حسابي: ${identity.name}${needsVerification ? "، تنبيه: بريدك الإلكتروني غير موثّق" : ""}`}
       >
-        <ProfileAvatar name={identity.name} image={identity.image} size={28} />
+        <span className="account-menu-avatar">
+          <ProfileAvatar name={identity.name} image={identity.image} size={28} />
+          {needsVerification && <span className="account-menu-alert-dot" aria-hidden="true" />}
+        </span>
         <span className="account-menu-name">{identity.name || "حسابي"}</span>
         <svg
           className="account-menu-caret"
@@ -102,8 +116,21 @@ export function MemberEntry() {
         </svg>
       </summary>
       <nav className="account-menu-panel" aria-label="روابط حسابي">
+        {needsVerification && (
+          <Link
+            className="account-menu-alert"
+            href={`${accountHref}?tab=settings${preview ? "&unverified=1" : ""}#ac-verify-title`}
+            onClick={close}
+          >
+            <span className="account-menu-alert-marker" aria-hidden="true" />
+            <span className="account-menu-identity">
+              <strong>بريدك غير موثّق</strong>
+              <small>اضغط لإكمال توثيق البريد</small>
+            </span>
+          </Link>
+        )}
         {viewer.member && (
-          <Link href="/account" onClick={close}>
+          <Link href={accountHref} onClick={close}>
             <ProfileAvatar name={viewer.member.name} image={viewer.member.image} size={36} />
             <span className="account-menu-identity">
               <strong>الملف الشخصي</strong>

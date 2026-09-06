@@ -9,7 +9,11 @@ export async function GET() {
     ]);
     return privateJson({
       member: membership.data?.user
-        ? { name: membership.data.user.name, image: membership.data.user.image }
+        ? {
+            name: membership.data.user.name,
+            image: membership.data.user.image,
+            emailVerified: membership.data.user.emailVerified === true,
+          }
         : null,
       editor: editor
         ? { name: editor.displayName, image: editor.avatarUrl }
