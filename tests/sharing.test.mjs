@@ -48,13 +48,15 @@ test("external article photos are preserved and missing or unsafe photos use the
 test("article images have a JPEG sharing endpoint, dimensions and a source-specific cache key", () => {
   const input = { storyId: "264648", title: "خبر", description: "وصف", path: "/health/264648/news", image: "/uploads/photo.webp" };
   const meta = sharingMetadata(input, env);
-  assert.match(meta.openGraph.images[0].url, /^https:\/\/alelm.net\/share-images\/264648.jpg\?v=/);
+  assert.match(meta.openGraph.images[0].url, /^https:\/\/alelm.net\/share-images\/264648\.v[a-z0-9-]+\.jpg$/);
   assert.equal(meta.openGraph.images[0].type, "image/jpeg");
   assert.equal(meta.openGraph.images[0].width, 1200);
   assert.equal(meta.openGraph.images[0].height, 630);
   assert.equal(meta.twitter.images[0].url, meta.openGraph.images[0].url);
   assert.notEqual(sharingMetadata({ ...input, image: "/uploads/updated.webp" }, env).openGraph.images[0].url, meta.openGraph.images[0].url);
-  assert.match(meta.openGraph.images[0].url, new RegExp(`v=${SHARING_VERSION}-cover-`));
+  assert.match(meta.openGraph.images[0].url, new RegExp(`\\.v${SHARING_VERSION}-cover-`));
+  assert.equal(new URL(meta.openGraph.images[0].url).search, "", "image identity must survive removal of query parameters");
+  assert.notEqual(new URL(sharingMetadata({ ...input, image: "/uploads/updated.webp" }, env).openGraph.images[0].url).pathname, new URL(meta.openGraph.images[0].url).pathname);
   assert.notEqual(sharingMetadata({ ...input, format: "infographics" }, env).openGraph.images[0].url, meta.openGraph.images[0].url);
   assert.equal(meta.openGraph.url, refreshedShareUrl(input.path, "https://alelm.net"));
   assert.equal(sharingMetadata({ ...input, image: undefined }, env).openGraph.images[0].url, "https://alelm.net/brand/share.jpg?v=20260905-light");

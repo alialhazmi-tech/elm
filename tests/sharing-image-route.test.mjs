@@ -33,6 +33,10 @@ test("sharing route fills photos, preserves infographics, retries failures, and 
     assert.equal(Number(photo.headers.get('Content-Length')), bytes.length);
     await request('published');
     assert.equal(globalThis.__shareReads, 1);
+    const versioned = await request('published.v20260906-3-cover-abc123');
+    assert.equal(versioned.status, 200);
+    assert.deepEqual(Buffer.from(await versioned.arrayBuffer()), bytes, 'versioned filenames and legacy URLs return the same photo');
+    assert.equal(globalThis.__shareReads, 1, 'URL versions reuse the source cache');
     const graphicBytes = Buffer.from(await (await request('infographic')).arrayBuffer());
     assert.notDeepEqual(graphicBytes, bytes, 'same source must have a separate cache entry per crop policy');
     const corner = async buffer => [...(await sharp(buffer).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer())];
@@ -54,7 +58,7 @@ test("sharing route fills photos, preserves infographics, retries failures, and 
     const fallbackBytes = Buffer.from(await fallback.arrayBuffer());
     assert.equal((await sharp(fallbackBytes).metadata()).format, 'jpeg');
     assert.notDeepEqual(fallbackBytes, bytes);
-    for (const id of ['missing', 'draft', '../secret']) assert.equal((await request(id)).status, 404);
+    for (const id of ['missing', 'draft', '../secret', 'draft.v20260906-3-cover-abc123', 'published.v', 'published.vbad_version', 'published.v' + 'a'.repeat(65)]) assert.equal((await request(id)).status, 404);
   } finally {
     delete globalThis.__shareFixture;
     delete globalThis.__shareReads;

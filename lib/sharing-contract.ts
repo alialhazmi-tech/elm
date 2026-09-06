@@ -1,5 +1,5 @@
 /** نغيّر الإصدار عند تغيير إخراج البطاقة لتجاوز معاينات ما قبل نقل الموقع. */
-export const SHARING_VERSION = "20260906-2";
+export const SHARING_VERSION = "20260906-3";
 
 export function sharingImageFit(story: { format?: string; section?: string }): "cover" | "contain" {
   return story.format === "infographics" || story.section === "infographics" || story.format === "jakalelm"

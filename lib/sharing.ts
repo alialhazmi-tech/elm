@@ -45,7 +45,7 @@ export function sharingMetadata(input: ShareInput, env: SharingEnvironment = pro
           // تغيير الصورة يغيّر رابط المعاينة أيضًا؛ لا تعيد المنصات استخدام الصورة السابقة.
           let version = 0;
           for (const char of url.href) version = (Math.imul(version, 31) + char.charCodeAt(0)) >>> 0;
-          image = { url: new URL(`/share-images/${encodeURIComponent(input.storyId)}.jpg?v=${SHARING_VERSION}-${sharingImageFit(input)}-${version.toString(36)}`, origin).href, width: 1200, height: 630, type: "image/jpeg", alt: input.title };
+          image = { url: new URL(`/share-images/${encodeURIComponent(input.storyId)}.v${SHARING_VERSION}-${sharingImageFit(input)}-${version.toString(36)}.jpg`, origin).href, width: 1200, height: 630, type: "image/jpeg", alt: input.title };
         } else image = { url: url.href, alt: input.title };
       }
     } catch { /* رابط صورة غير صالح: نعرض بطاقة العلم. */ }
