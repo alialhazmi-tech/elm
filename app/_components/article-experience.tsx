@@ -146,10 +146,12 @@ export function ArticleToolbar({
   storyId,
   joinHref,
   excerpt,
+  shareUrl,
 }: {
   storyId: string;
   joinHref: string;
   excerpt: string;
+  shareUrl: string;
 }) {
   const [state] = useArticleState(storyId);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -197,7 +199,7 @@ export function ArticleToolbar({
   };
 
   const share = async () => {
-    const url = typeof window !== "undefined" ? window.location.href : "";
+    const url = shareUrl;
     try {
       if (navigator.share) await navigator.share({ title: document.title, url });
       else await navigator.clipboard.writeText(url);
@@ -208,7 +210,7 @@ export function ArticleToolbar({
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {

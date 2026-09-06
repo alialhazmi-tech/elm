@@ -32,3 +32,19 @@ test("remote images reject HTML, errors and oversized streamed bodies", async ()
   await assert.rejects(readSharingResponse(new Response(new Uint8Array(MAX_SHARE_SOURCE_BYTES + 1), { headers: { "Content-Type": "image/webp" } })), /too large/);
   assert.deepEqual(await readSharingResponse(new Response(new Uint8Array([1, 2, 3]), { headers: { "Content-Type": "image/png" } })), Buffer.from([1, 2, 3]));
 });
+
+test("photo cards fill both side edges and keep aspect ratio for a 3:2 source", async () => {
+  // دائرة في الوسط تصبح بيضاوية لو مُدّدت الصورة لتعبئة الإطار بدل القص.
+  const source = Buffer.from('<svg width="1500" height="1000"><rect width="1500" height="1000" fill="red"/><circle cx="750" cy="500" r="200" fill="blue"/></svg>');
+  const bytes = await sharingJpeg(source, undefined, "cover");
+  const { data, info } = await sharp(bytes).raw().toBuffer({ resolveWithObject: true });
+  assert.equal(info.width, 1200); assert.equal(info.height, 630);
+  for (const x of [0, 1199]) {
+    const offset = (315 * info.width + x) * info.channels;
+    assert.ok(data[offset] > 240 && data[offset + 1] < 20, "photo must fill each side, without the light canvas");
+  }
+  const blue = (x, y) => data[(y * info.width + x) * info.channels + 2] > 200;
+  const horizontal = Array.from({ length: 1200 }, (_, x) => blue(x, 315)).filter(Boolean).length;
+  const vertical = Array.from({ length: 630 }, (_, y) => blue(600, y)).filter(Boolean).length;
+  assert.ok(Math.abs(horizontal - vertical) <= 2, "cropping must not distort the source");
+});
