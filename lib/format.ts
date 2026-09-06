@@ -47,34 +47,6 @@ export function formatArticleDek(excerpt: string): string {
   return excerpt.replace(/\s+/g, " ").replace(/[.\s…]+$/u, "").trim();
 }
 
-const BRIEF_SPLIT = /(?<=[.!?؟])\s+/;
-const BRIEF_WORDS = 25;
-const BRIEF_CHARS = 180;
-
-/** «قبل القراءة» على صفحة المادة: جملة خلاصة، لا لصق أول المتن. */
-export function formatReadingBrief(excerpt: string): string {
-  const clean = formatArticleDek(excerpt);
-  if (!clean) return "";
-
-  const sentences = clean.split(BRIEF_SPLIT).map((part) => part.trim()).filter(Boolean);
-  const wordsOf = (text: string) => text.split(/\s+/).filter(Boolean);
-
-  let brief = sentences[0] ?? clean;
-  if (wordsOf(brief).length < 8 && sentences[1]) {
-    brief = `${brief} ${sentences[1]}`.trim();
-  }
-
-  const words = wordsOf(brief);
-  if (words.length > BRIEF_WORDS) brief = words.slice(0, BRIEF_WORDS).join(" ");
-  if (brief.length > BRIEF_CHARS) {
-    const cut = brief.slice(0, BRIEF_CHARS);
-    const lastSpace = cut.lastIndexOf(" ");
-    brief = (lastSpace > 80 ? cut.slice(0, lastSpace) : cut).trim();
-  }
-
-  return brief.replace(/[.\s…]+$/u, "").trim();
-}
-
 /** عدد + معدود بقواعد العربية: مفرد، مثنى، 3–10 جمع، 11+ مفرد منصوب. */
 function arabicCount(
   n: number,

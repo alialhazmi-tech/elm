@@ -23,7 +23,7 @@ import { BodyHtml } from "@/components/content/body-html";
 import { VideoPlayer } from "@/components/content/video-player";
 import { ReadingProgress } from "@/app/_components/reading-progress";
 import { normalizeVideoUrl } from "@/lib/content/video";
-import { brandDate, formatArticleDek, formatReadingBrief, formatReadingMinutes, toLatinDigits } from "@/lib/format";
+import { brandDate, formatArticleDek, formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
@@ -174,18 +174,15 @@ export default async function ArticlePage({ params }: Params) {
     );
   }
   const published = story.publishedAt ? new Date(story.publishedAt) : null;
-  const readingBrief = formatReadingBrief(story.excerpt);
   const isInfographicStory =
     story.section === "infographics" ||
     story.format === "infographics" ||
     story.format === "infographic" ||
     story.title.includes("إنفوجرافيك");
-  // تحت العنوان: الجملة الأولى (الخلاصة). صندوق «قبل القراءة» يظهر فقط حين يضيف الموجز الكامل شيئًا يُذكر.
-  const dek = readingBrief;
+  // الملخص التحريري كاملًا تحت العنوان، كما هو متاح للموجز الصوتي، دون حد كلمات أو حروف.
   const fullExcerpt = formatArticleDek(story.excerpt);
   // مواد الفيديو: المشغّل يحل محل الصورة البارزة في الرأس (الصورة تبقى للبطاقات والمشاركة).
   const videoUrl = story.format === "videos" ? normalizeVideoUrl(story.videoUrl) : null;
-  const showBrief = Boolean(story.body?.trim()) && fullExcerpt.length > readingBrief.length + 80;
   // الجانب: التالي في السلسلة نفسها (حتى 3)، والذيل: مواد من سلاسل أخرى.
   const sameSeries = series ? related.filter((item) => item.series === series.slug).slice(0, 3) : [];
   const otherSeries = related.filter((item) => !sameSeries.includes(item));
@@ -268,7 +265,7 @@ export default async function ArticlePage({ params }: Params) {
                     ) : null}
                   </nav>
                   <h1>{story.title}</h1>
-                  {dek ? <p className="sa-dek">{dek}</p> : null}
+                  {fullExcerpt ? <p className="sa-dek">{fullExcerpt}</p> : null}
                 </div>
               </div>
               <div className="sa-head-bottom">
@@ -317,14 +314,6 @@ export default async function ArticlePage({ params }: Params) {
           {!podcastShow ? (
             <div className="sa-layout">
               <div className="sa-body">
-                {showBrief ? (
-                  <details className="article-brief">
-                    <summary id="article-brief-label" className="article-brief-label">موجز المادة</summary>
-                    <p className="article-brief-text">{fullExcerpt}</p>
-                    <p className="article-brief-foot">من موجز المادة المنشورة</p>
-                  </details>
-                ) : null}
-
                 {reading.headings.length >= 2 && (
                   <nav className="article-outline" aria-label="في هذه المادة">
                     <h2 className="article-section-heading"><List aria-hidden="true" />في هذه المادة</h2>
