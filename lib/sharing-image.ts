@@ -9,11 +9,11 @@ export function sharingImageSource(value: string): { filename: string } | { url:
   return publicImageSource(value, sharingOrigin());
 }
 
-export async function sharingJpeg(bytes: Uint8Array, background = "#f8f7f4") {
+export async function sharingJpeg(bytes: Uint8Array, background = "#f8f7f4", fit: "cover" | "contain" = "contain") {
   if (bytes.byteLength > MAX_SHARE_SOURCE_BYTES) throw new Error("Sharing image too large");
-  // contain يحافظ على الإنفوجرافيك كاملًا؛ إزالة البيانات الوصفية والترميز إلى sRGB/JPEG.
+  // الأخبار تملأ الإطار دون تشويه، والإنفوجرافيك والشعار يبقيان كاملين.
   return sharp(bytes, { limitInputPixels: 40_000_000, animated: false })
-    .rotate().resize(1200, 630, { fit: "contain", background })
+    .rotate().resize(1200, 630, { fit, position: "centre", background })
     .flatten({ background }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
 }
 

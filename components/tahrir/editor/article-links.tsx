@@ -3,6 +3,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { CopyIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { refreshedShareUrl } from "@/lib/sharing-contract";
 const subscribe = () => () => {};
 
 export function ArticleLinks({ identity, editorId, published, dirty }: {
@@ -11,7 +12,7 @@ export function ArticleLinks({ identity, editorId, published, dirty }: {
 }) {
   const origin = useSyncExternalStore(subscribe, () => window.location.origin, () => "");
   const [notice, setNotice] = useState<{ text: string; url: string } | null>(null);
-  const publicUrl = origin && identity ? `${origin}/${encodeURIComponent(identity.section)}/${encodeURIComponent(identity.id)}/${encodeURIComponent(identity.slug)}` : "";
+  const publicUrl = origin && identity ? refreshedShareUrl(`${origin}/${encodeURIComponent(identity.section)}/${encodeURIComponent(identity.id)}/${encodeURIComponent(identity.slug)}`) : "";
   const editorUrl = origin && editorId ? `${origin}/tahrir/editor/${encodeURIComponent(editorId)}` : "";
   async function copy(url: string) {
     try { await navigator.clipboard.writeText(url); setNotice({ text: "نُسخ الرابط.", url }); }

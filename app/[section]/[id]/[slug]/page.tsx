@@ -1,7 +1,8 @@
 import { ArticleLikeButton } from "@/app/_components/article-interactions";
 import { PublicReadingTracker } from "@/app/_components/public-reading-tracker";
 import type { Metadata } from "next";
-import { sharingMetadata } from "@/lib/sharing";
+import { sharingMetadata, sharingOrigin } from "@/lib/sharing";
+import { refreshedShareUrl } from "@/lib/sharing-contract";
 import Image from "next/image";
 import { readingOutline } from "@/lib/content/reading-outline";
 import Link from "next/link";
@@ -74,7 +75,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     // canonical واحد دائمًا من الرابط المحفوظ — لا يعكس معاملات طلب غير قانونية.
     alternates: { canonical: storyHref(story) },
     ...sharingMetadata({ type: "article", title: seoTitle, description: seoDescription,
-      path: storyHref(story), image: story.image, storyId: story.id, publishedTime: story.publishedAt }),
+      path: storyHref(story), image: story.image, storyId: story.id, format: story.format, section: story.section, publishedTime: story.publishedAt }),
   };
 }
 
@@ -143,7 +144,7 @@ export default async function ArticlePage({ params }: Params) {
                 title: story.title,
                 sectionName: sectionName(story.section),
                 readingMinutes: story.readingMinutes,
-                shareUrl: `https://alelm.net${storyHref(story)}`,
+                shareUrl: refreshedShareUrl(storyHref(story), sharingOrigin()),
                 next: nextStory ? { title: nextStory.title, href: storyHref(nextStory) } : null,
               }}
               slides={slides}
@@ -377,7 +378,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
 
               <aside className="sa-aside" aria-label="أدوات المادة">
-                <ArticleToolbar storyId={story.id} joinHref={joinHref} excerpt={story.excerpt} />
+                <ArticleToolbar storyId={story.id} joinHref={joinHref} excerpt={story.excerpt} shareUrl={refreshedShareUrl(storyHref(story), sharingOrigin())} />
 
                 <ArticleInsights key={story.id} storyId={story.id} readingMinutes={story.readingMinutes} />
 

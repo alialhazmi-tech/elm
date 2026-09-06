@@ -38,7 +38,7 @@ try {
   await write('next.config.mjs', `export default { experimental: {cpus:2}, images: {
     loader:'custom', loaderFile:'./lib/image-variant-loader.ts', deviceSizes:[360,640,1080,1600], imageSizes:[168]
   } };`);
-  for (const file of ['app/image-variants/route.ts', 'lib/image-source.ts', 'lib/image-variant-loader.ts', 'lib/image-variants.ts', 'lib/sharing-image.ts', 'lib/sharing.ts']) {
+  for (const file of ['app/image-variants/route.ts', 'lib/image-source.ts', 'lib/image-variant-loader.ts', 'lib/image-variants.ts', 'lib/sharing-image.ts', 'lib/sharing.ts', 'lib/sharing-contract.ts']) {
     await write(file, await readFile(file, 'utf8'));
   }
   const source = await sharp({create:{width:1200,height:900,channels:3,background:'#b56d3a'}}).png().toBuffer();

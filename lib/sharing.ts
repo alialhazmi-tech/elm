@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { refreshedShareUrl, sharingImageFit, SHARING_VERSION } from "./sharing-contract.ts";
 
 export const SITE_TITLE = "العلم | المعرفة وراء الخبر";
 export const SITE_DESCRIPTION = "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر عبر السلاسل والبيانات والفيديو والبودكاست.";
@@ -26,6 +27,8 @@ type ShareInput = {
   path: string;
   image?: string;
   storyId?: string;
+  format?: string;
+  section?: string;
   type?: "website" | "article";
   publishedTime?: string;
 };
@@ -42,7 +45,7 @@ export function sharingMetadata(input: ShareInput, env: SharingEnvironment = pro
           // تغيير الصورة يغيّر رابط المعاينة أيضًا؛ لا تعيد المنصات استخدام الصورة السابقة.
           let version = 0;
           for (const char of url.href) version = (Math.imul(version, 31) + char.charCodeAt(0)) >>> 0;
-          image = { url: new URL(`/share-images/${encodeURIComponent(input.storyId)}.jpg?v=${version.toString(36)}`, origin).href, width: 1200, height: 630, type: "image/jpeg", alt: input.title };
+          image = { url: new URL(`/share-images/${encodeURIComponent(input.storyId)}.jpg?v=${SHARING_VERSION}-${sharingImageFit(input)}-${version.toString(36)}`, origin).href, width: 1200, height: 630, type: "image/jpeg", alt: input.title };
         } else image = { url: url.href, alt: input.title };
       }
     } catch { /* رابط صورة غير صالح: نعرض بطاقة العلم. */ }
@@ -54,7 +57,7 @@ export function sharingMetadata(input: ShareInput, env: SharingEnvironment = pro
       siteName: "العلم",
       title: input.title,
       description: input.description,
-      url: new URL(input.path, origin).href,
+      url: input.storyId ? refreshedShareUrl(input.path, origin) : new URL(input.path, origin).href,
       images: [image],
       ...(input.type === "article" && input.publishedTime ? { publishedTime: input.publishedTime } : {}),
     },
