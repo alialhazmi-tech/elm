@@ -198,6 +198,22 @@
 .ac-text-button:hover {
   text-decoration: underline;
 }
+.ac-text-button.ac-signout-button {
+  color: #b42318;
+  font-weight: 600;
+}
+.ac-text-button.ac-signout-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+[data-theme="dark"] .ac-text-button.ac-signout-button {
+  color: #fda29b;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ac-text-button.ac-signout-button {
+    color: #fda29b;
+  }
+}
 .ac-shell :is(a, button, summary):focus-visible {
   outline: 2px solid #537fb9;
   outline-offset: 4px;

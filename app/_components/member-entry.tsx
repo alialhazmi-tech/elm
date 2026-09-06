@@ -1,16 +1,28 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { useActionState, useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { endMemberSession } from "@/app/account/actions";
 type Identity = { name: string; image?: string | null };
 export type MemberIdentity = Identity & { emailVerified: boolean };
 export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
+  const router = useRouter();
   const [liveViewer, setViewer] = useState<{
     member?: MemberIdentity;
     editor?: Identity;
   }>({});
   const [liveLoaded, setLoaded] = useState(false);
+  const [signOutState, signOut, signingOut] = useActionState(async () => {
+    const result = await endMemberSession();
+    if (result.success) {
+      setViewer((current) => ({ ...current, member: undefined }));
+      router.push("/");
+      router.refresh();
+    }
+    return result;
+  }, {});
   const viewer = preview ? { member: preview, editor: undefined } : liveViewer;
   const loaded = Boolean(preview) || liveLoaded;
   const pathname = usePathname();
@@ -154,6 +166,15 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
               <strong>لوحة التحكم</strong>
             </Link>
           </>
+        )}
+        {viewer.member && (
+          <form action={signOut} className="account-menu-signout">
+            <button type="submit" disabled={signingOut}>
+              <LogOut size={18} aria-hidden="true" />
+              {signingOut ? "جارٍ تسجيل الخروج…" : "تسجيل الخروج"}
+            </button>
+            {signOutState.error && <p role="alert">{signOutState.error}</p>}
+          </form>
         )}
       </nav>
     </details>
