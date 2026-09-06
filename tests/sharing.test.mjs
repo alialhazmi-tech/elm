@@ -62,14 +62,15 @@ test("article images have a JPEG sharing endpoint, dimensions and a source-speci
   assert.equal(sharingMetadata({ ...input, image: undefined }, env).openGraph.images[0].url, "https://alelm.net/brand/share.jpg?v=20260905-light");
 });
 
-test("refreshed links are stable, retain tracking and encoded paths, and replace a stale card version", () => {
+test("sharing paths bypass stale article redirects, retain tracking, and remain stable", () => {
   const url = refreshedShareUrl("/politics/id/عنوان?utm_source=x&xcard=old#section", "https://alelm.net");
   const parsed = new URL(url);
   assert.equal(parsed.searchParams.get("utm_source"), "x");
-  assert.equal(parsed.searchParams.get("xcard"), SHARING_VERSION);
+  assert.equal(parsed.searchParams.has("xcard"), false);
   assert.equal(parsed.hash, "");
-  assert.equal(decodeURIComponent(parsed.pathname), "/politics/id/عنوان");
+  assert.equal(parsed.pathname, `/share/id/${SHARING_VERSION}`);
   assert.equal(refreshedShareUrl(url), url);
+  assert.equal(refreshedShareUrl(`/share/id/20260906-1`, 'https://alelm.net'), `https://alelm.net/share/id/${SHARING_VERSION}`);
 });
 
 test("photo cards fill the canvas while infographic and slide cards preserve all content", () => {

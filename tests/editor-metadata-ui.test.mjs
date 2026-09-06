@@ -51,7 +51,7 @@ test('metadata requires approval, rejects stale results and copies saved links a
     Object.defineProperty(globalThis,'navigator',{configurable:true,value:{clipboard:{writeText:async text=>copied.push(text)}}});
     const links={editorId:'revision-id',identity:{id:'original-id',section:'sciences',slug:'عنوان-المادة'},published:false,dirty:false};component=()=>ArticleLinks(links);
     const inputs=()=>nodes(render()).filter(n=>n.type==='input');const copy=name=>nodes(render()).find(n=>n.type==='button'&&n.props['aria-label']===name);
-    const publicUrl=inputs()[0].props.value;assert.equal(publicUrl,'https://alelm.net/sciences/original-id/'+encodeURIComponent('عنوان-المادة')+'?xcard='+SHARING_VERSION);
+    const publicUrl=inputs()[0].props.value;assert.equal(publicUrl,'https://alelm.net/share/original-id/'+SHARING_VERSION);
     copy('نسخ رابط المادة').props.onClick();await new Promise(r=>setImmediate(r));assert.deepEqual(copied,[publicUrl]);assert.match(JSON.stringify(render()),/نُسخ الرابط/);
     assert.equal(inputs().length,2);assert.equal(inputs()[1].props.value,'https://alelm.net/tahrir/editor/revision-id');
     copy('نسخ رابط المحرر للزملاء').props.onClick();await new Promise(r=>setImmediate(r));assert.deepEqual(copied,[publicUrl,'https://alelm.net/tahrir/editor/revision-id']);
