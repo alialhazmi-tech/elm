@@ -9,7 +9,7 @@ const cache = new Map<string, { bytes: Buffer; expires: number }>();
 
 export async function GET(_request: Request, { params }: { params: Promise<{ filename: string }> }) {
   const { filename } = await params;
-  const match = /^([a-z0-9_-]{1,64})\.jpg$/i.exec(filename);
+  const match = /^([a-z0-9_-]{1,64})(?:\.v[a-z0-9-]{1,64})?\.jpg$/i.exec(filename);
   if (!match) return new Response(null, { status: 404 });
   // مزود القراءة العامة يستبعد المسودات والمواد المؤرشفة.
   const story = await seedContentProvider.getStory(match[1]);
