@@ -939,6 +939,9 @@ body .pp-close:hover { color: var(--ink); background: var(--surface-2); }
 .sa-tools-panel { padding: 16px 18px; border-radius: 18px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
 .sa-tools-panel-head { font-size: 13px; font-weight: 700; color: var(--navy); display: inline-flex; align-items: center; gap: 6px; }
 .sa-tools-panel ul { margin: 0; padding-inline-start: 18px; display: flex; flex-direction: column; gap: 4px; }
+.sa-tools-panel .sa-summary-points { margin: 4px 0; padding-inline-start: 1.6em; list-style: arabic-indic outside; display: flex; flex-direction: column; gap: 14px; }
+.sa-summary-points li { padding-inline-start: 4px; }
+.sa-summary-points li::marker { color: var(--navy); font-weight: 700; }
 .sa-tools-panel li, .sa-tools-panel p { font-size: 13.5px; line-height: 1.9; color: var(--ink-2); }
 .sa-tools-panel p { margin: 0; }
 .sa-tools-note { font-size: 11px; line-height: 1.7; color: var(--ink-3); }

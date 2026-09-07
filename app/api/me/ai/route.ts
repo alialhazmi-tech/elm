@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     const result = await runReaderTool(tool, storyId, question);
     if ("error" in result) return privateJson({ error: result.error }, result.status);
     await persistStatsAndSignal(memberId, storyId, EVENT[tool], new Date().toISOString());
-    return privateJson({ text: result.text });
+    return privateJson({ text: result.text, ...(result.points ? { points: result.points } : {}) });
   } catch {
     return privateJson({ error: "تعذر تشغيل الأداة الآن." }, 502);
   }

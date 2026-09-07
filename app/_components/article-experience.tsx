@@ -162,7 +162,7 @@ export function ArticleToolbar({
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  /** يفصل نص الأداة إلى نقاط — الخدمة تردّ أسطرًا، وقد تسبقها شرطة. */
+  /** إجابات الأسئلة تُعرض كفقرات؛ الملخص له ثلاث نقاط صريحة من الخدمة. */
   const asPoints = (text: string) =>
     text
       .split(/\n+/)
@@ -174,15 +174,19 @@ export function ArticleToolbar({
     setError(null);
     try {
       const response = await postJson("/api/me/ai", { tool, storyId, question: tool === "discuss" ? question : undefined });
-      const data = (await response.json()) as { text?: string; error?: string };
+      const data = (await response.json()) as { text?: string; points?: unknown; error?: string };
       if (!response.ok) {
         setError(data.error ?? "تعذر تشغيل الأداة.");
         return;
       }
-      const points = asPoints(data.text ?? "");
-      if (tool === "summary") setSummary(points);
-      else {
-        setAnswer(points);
+      if (tool === "summary") {
+        if (!Array.isArray(data.points) || data.points.length !== 3 || !data.points.every(point => typeof point === "string" && point.trim())) {
+          setError("تعذر إعداد الملخص في ثلاث نقاط واضحة. أعد المحاولة.");
+          return;
+        }
+        setSummary(data.points as string[]);
+      } else {
+        setAnswer(asPoints(data.text ?? ""));
         setQuestion("");
       }
     } catch {
@@ -259,9 +263,9 @@ export function ArticleToolbar({
           {busy === "summary" ? (
             <p className="sa-tools-wait">يلخّص المادة…</p>
           ) : summary?.length ? (
-            <ul>
+            <ol className="sa-summary-points">
               {summary.map((point, index) => <li key={index}>{point}</li>)}
-            </ul>
+            </ol>
           ) : null}
           <span className="sa-tools-note">مولّد آليًا من نص المادة — راجع النص الكامل قبل الاقتباس.</span>
         </div>

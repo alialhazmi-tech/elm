@@ -4,25 +4,27 @@ import { build } from 'esbuild';
 import { createRequire } from 'node:module';
 
 const settings={tone:'عربية صحفية',models:{editorial:'editorial',light:'light',fast:'fast'},governance:{editorialGuard:false},caps:{}};
-const state={requests:[],text:'',body:'',reservations:0};
-const message=params=>{state.requests.push(params);return {content:[{type:'text',text:params.messages[0].content.includes('أعد المتن المحرَّر فقط')?'المتن المحرر':state.text}],usage:{input_tokens:10,output_tokens:10},stop_reason:'end_turn'}};
+const state={requests:[],text:'',body:'',reservations:0,stopReason:'end_turn'};
+const message=params=>{state.requests.push(params);return {content:[{type:'text',text:params.messages[0].content.includes('أعد المتن المحرَّر فقط')?'المتن المحرر':state.text}],usage:{input_tokens:10,output_tokens:10},stop_reason:state.stopReason}};
 globalThis.__summaryTest={client:{messages:{create:async p=>message(p),stream:p=>({finalMessage:async()=>message(p)})}},settings,
   getStory:async()=>({title:'عنوان سياقي',excerpt:'وصف قديم غير معتمد',body:state.body}),
   budgetGate:async()=>{state.reservations++;return {ok:true,reservationId:'test'}}};
-const output=await build({stdin:{contents:"export {runEditorialTool} from './lib/ai/editorial'; export {runReaderTool} from './lib/ai/reader'; export {validateExcerpt} from './lib/ai/summary-editorial';",loader:'ts',resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',packages:'external',write:false,plugins:[{name:'summary-fixtures',setup(b){
+const output=await build({stdin:{contents:"export {runEditorialTool} from './lib/ai/editorial'; export {runReaderTool} from './lib/ai/reader'; export {validateExcerpt} from './lib/ai/summary-editorial'; export {POST as readerPost} from './app/api/me/ai/route';",loader:'ts',resolveDir:process.cwd()},bundle:true,platform:'node',format:'cjs',packages:'external',write:false,plugins:[{name:'summary-fixtures',setup(b){
   const sources={
     'text-client':'export const textClient=()=>globalThis.__summaryTest.client',
     '@/lib/ai/settings':'export const loadAiSettings=async()=>globalThis.__summaryTest.settings',
     '@/lib/content/provider':'export const seedContentProvider={getStory:globalThis.__summaryTest.getStory}',
     '@/lib/ai/usage':'export const budgetGate=globalThis.__summaryTest.budgetGate; export const costCents=()=>1; export const logUsage=async()=>{}',
     '@/lib/policy':'export const runPolicyGuard=()=>({findings:[]})',
+    '@/lib/personalization':'export const getSessionMemberId=async()=>"test-member"; export const persistStatsAndSignal=async()=>{}; export const privateJson=(body,status=200)=>Response.json(body,{status});',
+    '@/lib/tahrir/rate-limit':'export const consumeLimit=async()=>true;',
   };
   b.onResolve({filter:/text-client|^@\//},args=>{const key=args.path.includes('text-client')?'text-client':args.path;return sources[key]?{path:key,namespace:'mock'}:undefined});
   b.onLoad({filter:/.*/,namespace:'mock'},args=>({contents:sources[args.path],loader:'js'}));
 }}]});
 const compiled={exports:{}};
 new Function('require','module','exports',output.outputFiles[0].text)(createRequire(import.meta.url),compiled,compiled.exports);
-const {runEditorialTool,runReaderTool,validateExcerpt}=compiled.exports;
+const {runEditorialTool,runReaderTool,validateExcerpt,readerPost}=compiled.exports;
 const excerpt='أظهرت الدراسة انخفاض استهلاك الطاقة بنسبة 12% في المباني المشاركة، دون إثبات استمرار الأثر خارج فترة التجربة.';
 const input={title:'دراسة عن استهلاك الطاقة',body:'معلومات سياقية. '.repeat(900)+'النتيجة الأخيرة: انخفض الاستهلاك 12% خلال التجربة فقط.'};
 const pack={title:'المباني تخفض استهلاك الطاقة خلال تجربة',excerpt,seoTitle:'دراسة استهلاك الطاقة',seoDescription:'نتائج تجربة المباني',keywords:['الطاقة'],section:'sciences',format:'news',seriesSlug:null};
@@ -45,15 +47,42 @@ test('all editorial summary entry points preserve end-of-source facts and reject
   }
 });
 test('reader summary uses complete body beyond the old cutoff and never substitutes an old excerpt',async()=>{
-  state.requests=[];state.body='<p>'+input.body+'</p>';state.text='خلاصة النتيجة مع قيد التجربة.';
-  assert.deepEqual(await runReaderTool('summary','story'),{text:state.text});
+  const points=['انخفض استهلاك الطاقة بنسبة 12% في المباني المشاركة.','شملت الدراسة فترة التجربة فقط.','لم تثبت الدراسة استمرار الأثر خارج التجربة.'];
+  state.requests=[];state.body='<p>'+input.body+'</p>';state.text=JSON.stringify({points});
+  assert.deepEqual(await runReaderTool('summary','story'),{text:points.map(point=>'• '+point).join('\n'),points});
   const prompt=state.requests[0].messages[0].content;
   assert.ok(prompt.includes('النتيجة الأخيرة: انخفض الاستهلاك 12% خلال التجربة فقط.'));
   assert.ok(!prompt.includes('وصف قديم غير معتمد'));
+  assert.ok(prompt.includes('ثلاث نقاط مستقلة بالضبط'));
   for(const body of ['', 'ن'.repeat(40001)]){
     state.body=body;state.reservations=0;state.requests=[];
     assert.equal((await runReaderTool('summary','story')).status,422);
     assert.equal(state.reservations,0);assert.equal(state.requests.length,0);
   }
+});
+test('reader summary rejects paragraphs and malformed point counts without truncating or inventing points',async()=>{
+  state.body='<p>انخفض المؤشر 3.5% خلال التجربة. شملت التجربة 1500 حالة. لم يثبت استمرار الأثر.</p>';
+  const points=['انخفض المؤشر 3.5% خلال التجربة.','شملت التجربة 1500 حالة.','لم يثبت استمرار الأثر.'];
+  state.text='```json\n'+JSON.stringify({points})+'\n```';
+  assert.deepEqual((await runReaderTool('summary','story')).points,points);
+  for(const invalid of [points.join(' '),'{bad json}',JSON.stringify({points:points.slice(0,2)}),JSON.stringify({points:[...points,'تفصيل إضافي.']}),JSON.stringify({points:['أولًا',' ', 'ثالثًا']}),JSON.stringify({points:['نقطة','نقطة.', 'ثالثة']}),JSON.stringify({points:[1,2,3]})]){
+    state.text=invalid;
+    const result=await runReaderTool('summary','story');
+    assert.equal(result.status,502);assert.match(result.error,/ثلاث نقاط/);assert.equal(result.text,undefined);
+  }
+  state.text=JSON.stringify({points});state.stopReason='max_tokens';
+  assert.equal((await runReaderTool('summary','story')).status,502);
+  state.stopReason='end_turn';state.text='إجابة مستقلة عن سؤال القارئ.';
+  assert.deepEqual(await runReaderTool('discuss','story','ماذا حدث؟'),{text:state.text});
+});
+test('member AI endpoint returns the three validated points and preserves text for existing clients',async()=>{
+  state.body=input.body;state.stopReason='end_turn';
+  const points=['انخفض استهلاك الطاقة بنسبة 12%.','اقتصرت النتيجة على المباني المشاركة.','لم يثبت استمرار الأثر بعد التجربة.'];
+  const request=()=>new Request('https://alelm.net/api/me/ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tool:'summary',storyId:'story'})});
+  state.text=JSON.stringify({points});
+  const response=await readerPost(request());
+  assert.equal(response.status,200);assert.deepEqual(await response.json(),{points,text:points.map(point=>'• '+point).join('\n')});
+  state.text=points.join(' ');
+  const invalid=await readerPost(request());assert.equal(invalid.status,502);assert.match((await invalid.json()).error,/ثلاث نقاط/);
 });
 test.after(()=>{delete globalThis.__summaryTest});

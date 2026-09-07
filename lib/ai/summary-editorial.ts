@@ -12,7 +12,21 @@ export const excerptInstructions = `${summaryPrinciples}
 موجز «قبل القراءة» خلاصة خبرية مركزة، من جملة أو جملتين قصيرتين، حتى 180 حرفًا شاملًا المسافات. اختر أهم حقيقة ومعها القيد الضروري؛ لا تحشد كل التفاصيل ولا تبتر الجملة لتلائم الحد. لا تنسخ وصف SEO؛ الموجز يقدّم المعلومة نفسها.`;
 
 export const readerSummaryInstructions = `${summaryPrinciples}
-قدّم خلاصة مستقلة من 3 إلى 5 جمل مترابطة في حدود 80 إلى 120 كلمة عند كفاية النص، وأقصر من ذلك إذا كان المصدر قصيرًا. غطِّ النتيجة الأساسية ثم أهم تفسير أو دليل ثم القيد أو المآل المذكور. لا تكرر المعنى لملء الطول. أعد النص النهائي فقط، دون عنوان أو مقدمات أو Markdown.`;
+قدّم ملخصًا في ثلاث نقاط مستقلة بالضبط، في حدود 80 إلى 120 كلمة إجمالًا عند كفاية النص، وأقصر من ذلك إذا كان المصدر قصيرًا. خصّص الأولى للنتيجة الأساسية، والثانية لأهم تفسير أو دليل، والثالثة للقيد أو المآل أو تفصيل آخر مذكور في المتن. كل نقطة جملة أو جملتان مكتملتان؛ لا تكرر المعنى ولا تخترع معلومة لإكمال العدد.
+أعد كائن JSON فقط بهذه البنية: {"points":["النقطة الأولى","النقطة الثانية","النقطة الثالثة"]}. كل عنصر نص مستقل بلا ترقيم أو شرطات أو Markdown. لا تُعد فقرة واحدة ولا تضف عنوانًا أو مقدمات خارج JSON.`;
+
+/** نرفض المخرج غير المنظم بدل تقطيع الجمل والأرقام أو اقتطاع محتوى القارئ. */
+export function parseReaderSummary(raw: string): string[] | null {
+  try {
+    const value: unknown = JSON.parse(raw.trim().replace(/^```(?:json)?\s*\n?/u, "").replace(/\s*```$/u, ""));
+    if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length !== 1 || !("points" in value)) return null;
+    const points = value.points;
+    if (!Array.isArray(points) || points.length !== 3 || points.some(point => typeof point !== "string" || !/[\p{L}\p{N}]/u.test(point))) return null;
+    const cleaned = points.map((point: string) => point.replace(/\s+/gu, " ").trim());
+    if (new Set(cleaned.map(point => point.replace(/[\p{P}\p{Z}\p{M}]/gu, ""))).size !== 3) return null;
+    return cleaned;
+  } catch { return null; }
+}
 
 export function validateExcerpt(value: unknown, title: string): string {
   const text = typeof value === "string" ? value.replace(/\s+/gu, " ").trim() : "";

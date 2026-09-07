@@ -10,7 +10,7 @@ import { loadAiSettings } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
 import { seedContentProvider } from "@/lib/content/provider";
 import { stripHtmlToText } from "@/lib/content/html";
-import { readerSummaryInstructions } from "./summary-editorial";
+import { parseReaderSummary, readerSummaryInstructions } from "./summary-editorial";
 
 export type ReaderTool = "summary" | "simplify" | "discuss";
 
@@ -34,7 +34,7 @@ export async function runReaderTool(
   tool: ReaderTool,
   storyId: string,
   question?: string,
-): Promise<{ text: string } | { error: string; status: number }> {
+): Promise<{ text: string; points?: string[] } | { error: string; status: number }> {
   const anthropic = client();
   if (!anthropic) {
     return { error: "خدمة الذكاء غير مهيأة في هذه البيئة.", status: 503 };
@@ -59,7 +59,7 @@ export async function runReaderTool(
     messages: [{ role: "user", content: promptFor(tool, article, question) }],
   });
 
-  const text = (response.content.find((block) => block.type === "text")?.text ?? "").trim();
+  const raw = (response.content.find((block) => block.type === "text")?.text ?? "").trim();
   await logUsage({
       reservationId: gate.reservationId,
     tool: `reader_${tool}`,
@@ -71,7 +71,10 @@ export async function runReaderTool(
   });
 
   if (response.stop_reason === "max_tokens") return { error: "لم تكتمل الخلاصة. أعد المحاولة.", status: 502 };
-  if (!text) return { error: "تعذر توليد النص. حاول مرة أخرى.", status: 502 };
+  if (!raw) return { error: "تعذر توليد النص. حاول مرة أخرى.", status: 502 };
+  const points = tool === "summary" ? parseReaderSummary(raw) : undefined;
+  if (points === null) return { error: "تعذر إعداد الملخص في ثلاث نقاط واضحة. أعد المحاولة.", status: 502 };
+  const text = points ? points.map(point => `• ${point}`).join("\n") : raw;
   const guard = settings.governance.editorialGuard ? runPolicyGuard({ body: text }) : null;
   const blocked = guard?.findings.some(
     (finding) => finding.severity === "blocking" && finding.ruleId !== "BODY-WORD-RANGE",
@@ -79,5 +82,5 @@ export async function runReaderTool(
   if (blocked) {
     return { error: "تعذر عرض المخرج لأنه لم يجتز سياسة التحرير.", status: 422 };
   }
-  return { text };
+  return points ? { text, points } : { text };
 }
