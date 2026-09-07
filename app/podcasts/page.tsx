@@ -32,7 +32,7 @@ export default async function PodcastsPage() {
     stories.map(async (story) => {
       const show = podcastShowFor(story.id);
       const episodes = show ? await fetchEpisodes(show).catch(() => []) : [];
-      return { story, show, episodes };
+      return { story, show, episodes, cover: show?.cover ?? story.image };
     }),
   );
 
@@ -80,10 +80,10 @@ export default async function PodcastsPage() {
             </div>
           </div>
           <div className="pc-covers" aria-hidden="true">
-            {shows.slice(0, 4).map(({ story }) =>
-              story.image ? (
+            {shows.slice(0, 4).map(({ story, show, cover }) =>
+              cover ? (
                 <span key={story.id} className="pc-cover-mini">
-                  <Image src={story.image} alt="" fill sizes="140px" />
+                  <Image src={cover} alt="" fill sizes="140px" unoptimized={Boolean(show?.cover)} />
                 </span>
               ) : null,
             )}
@@ -92,7 +92,7 @@ export default async function PodcastsPage() {
 
         {shows.length > 0 ? (
           <section className="pc-shows" aria-label="البرامج">
-            {shows.map(({ story, show, episodes }) => {
+            {shows.map(({ story, show, episodes, cover }) => {
               const href = storyHref(story);
               const count = episodes.length;
               return (
@@ -103,7 +103,7 @@ export default async function PodcastsPage() {
                   style={{ "--pc": show?.accent ?? "#1a4282" } as React.CSSProperties}
                 >
                   <span className="pc-show-cover">
-                    {story.image ? <Image src={story.image} alt="" fill sizes="(max-width: 640px) 100vw, 280px" /> : null}
+                    {cover ? <Image src={cover} alt="" fill sizes="(max-width: 640px) 100vw, 280px" unoptimized={Boolean(show?.cover)} /> : null}
                   </span>
                   <span className="pc-show-body">
                     <b>{show?.name ?? story.title}</b>

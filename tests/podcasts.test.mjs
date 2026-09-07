@@ -43,13 +43,13 @@ test("محلل الخلاصة يخرج الحلقات بصوتها ويجرد HT
   assert.equal(ep.publishedAt, "2025-01-09T16:36:01.000Z");
 });
 
-test("برامج البودكاست الأربعة معرفاتها محفوظة والغبوق بلا خلاصة عمدًا كما في المصدر", () => {
+test("برامج البودكاست الأربعة معرفاتها محفوظة ومرتبطة بخلاصاتها الصوتية", () => {
   assert.equal(PODCAST_SHOWS.length, 4);
   for (const id of ["175839", "92137", "71148", "70190"]) {
     assert.ok(podcastShowFor(id), `البرنامج ${id} غائب`);
   }
-  assert.equal(podcastShowFor("175839")?.feedUrl, null);
-  for (const slug of ["malameh", "atmahpodcast", "alelmbodcast"]) {
+  assert.equal(podcastShowFor("175839")?.feedUrl, "https://media.rss.com/alghabouk/feed.xml");
+  for (const slug of ["alghabouk", "malameh", "atmahpodcast", "alelmbodcast"]) {
     assert.ok(PODCAST_SHOWS.some((show) => show.feedUrl?.includes(slug)), `خلاصة ${slug} غائبة`);
   }
 });

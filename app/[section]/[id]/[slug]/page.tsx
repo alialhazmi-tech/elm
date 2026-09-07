@@ -96,6 +96,7 @@ export default async function ArticlePage({ params }: Params) {
 
   // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية نفسها التي يقرأ منها الموقع القديم.
   const podcastShow = story.format === "podcasts" ? podcastShowFor(story.id) : undefined;
+  const podcastCover = podcastShow?.cover ?? story.image;
   const episodes = podcastShow ? await fetchEpisodes(podcastShow) : [];
   const latestEpisode =
     podcastShow && episodes[0]
@@ -219,7 +220,7 @@ export default async function ArticlePage({ params }: Params) {
           {podcastShow ? (
             <header className="pc-hero podcast-show" style={{ "--pc": podcastShow.accent } as React.CSSProperties}>
               <div className="pc-hero-cover">
-                {story.image ? <Image src={story.image} alt="" fill sizes="(max-width: 640px) 160px, 260px" priority /> : null}
+                {podcastCover ? <Image src={podcastCover} alt="" fill sizes="(max-width: 640px) 160px, 260px" unoptimized={Boolean(podcastShow.cover)} priority /> : null}
               </div>
               <div className="pc-hero-copy">
                 <span className="pc-kicker">
