@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { normalizeVideoUrl } from "@/lib/content/video";
+import { instagramPostUrlFrom, normalizeVideoUrl, xPostIdFrom } from "@/lib/content/video";
 import { VideoPlayer } from "@/components/content/video-player";
 import { cn } from "@/lib/utils";
 
@@ -168,7 +168,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
           <span className="grid gap-0.5">
             <b className="font-display text-[12.5px]">تفعيل فيديو للمادة</b>
             <span className="text-[10.5px] leading-relaxed text-muted-foreground">
-              يعرض الفيديو وحده أسفل عنوان المادة؛ المصدر يوتيوب أو فيديو تغريدة.
+              يعرض المشغّل أسفل عنوان المادة؛ المصدر يوتيوب أو فيديو تغريدة أو منشور إنستقرام عام.
             </span>
           </span>
         </label>
@@ -177,21 +177,28 @@ export function DetailsPanel(props: DetailsPanelProps) {
           <div id="story-video-fields" className="grid gap-2">
             <Input
               dir="ltr"
-              placeholder="رابط فيديو يوتيوب أو تغريدة X"
-              aria-label="رابط الفيديو أو التغريدة"
+              placeholder="رابط يوتيوب أو تغريدة X أو منشور إنستقرام"
+              aria-label="رابط الفيديو"
               value={props.videoUrl}
               onChange={(event) => props.onVideoUrl(event.target.value)}
               aria-invalid={props.videoUrl.trim() !== "" && !normalizeVideoUrl(props.videoUrl)}
             />
             {props.videoUrl.trim() && !normalizeVideoUrl(props.videoUrl) ? (
-              <div className="text-[11px] text-(--t-block)">أدخل رابط يوتيوب أو رابط تغريدة من x.com أو twitter.com.</div>
+              <div className="text-[11px] text-(--t-block)">أدخل رابط يوتيوب أو تغريدة من x.com أو twitter.com أو فيديو/ريلز إنستقرام صحيح.</div>
             ) : !props.videoUrl.trim() ? (
-              <div className="text-[11px] text-muted-foreground">ألصق رابط يوتيوب أو تغريدة عامة تحتوي على فيديو.</div>
+              <div className="text-[11px] text-muted-foreground">ألصق رابط يوتيوب أو تغريدة عامة تحتوي على فيديو، أو رابط منشور إنستقرام عام يسمح بالتضمين.</div>
             ) : null}
             {normalizeVideoUrl(props.videoUrl) ? (
               <VideoPlayer url={props.videoUrl} title="معاينة الفيديو" />
             ) : null}
-            <div className="text-[10px] text-muted-foreground">يُحفظ رابط الفيديو أو التغريدة دون معلمات التتبع. لإظهار التغريدة كاملة داخل الخبر، استخدم «إدراج تغريدة» في أدوات المتن.</div>
+            <div className="text-[10px] text-muted-foreground">
+              يُحفظ الرابط بصيغته القياسية دون معلمات التتبع.
+              {instagramPostUrlFrom(props.videoUrl)
+                ? " يجب أن يكون منشور إنستقرام عامًا ومسموحًا بتضمينه؛ قد يظهر معه إطار المنشور وعناصره."
+                : xPostIdFrom(props.videoUrl)
+                  ? " لإظهار التغريدة كاملة داخل الخبر، استخدم «إدراج تغريدة» في أدوات المتن."
+                  : null}
+            </div>
           </div>
         ) : null}
       </Section>

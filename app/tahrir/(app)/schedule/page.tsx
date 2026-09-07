@@ -60,8 +60,9 @@ export default async function SchedulePage() {
         state:
           entry.state === "later" && all.findIndex((other) => other.state === "later") === index ? "next" : entry.state,
         meta: `${entry.state === "done" ? "نُشرت" : (automatic ? "مجدولة · تُنشر تلقائيًا" : "مجدولة · تحقق من تشغيل المجدول")}${series ? ` · ${series.name}` : ""}`,
-      };
-    });
+      } satisfies TimelineItem;
+    })
+    .reverse();
 
   const upcoming = scheduled
     .filter((row) => !(row.scheduledAt ?? "").startsWith(todayIso))

@@ -3,7 +3,7 @@ import test from 'node:test';
 import { build } from 'esbuild';
 import { createRequire } from 'node:module';
 
-test('manual save and autosave pass normalized X and YouTube links through the real story API', async () => {
+test('manual save and autosave pass normalized X, YouTube, and Instagram links through the real story API', async () => {
   const saved = [];
   globalThis.__videoSave = input => { saved.push(input); return { id: input.id, version: 1 }; };
   try {
@@ -28,9 +28,22 @@ test('manual save and autosave pass normalized X and YouTube links through the r
     }
     assert.equal((await post('https://youtu.be/vEaijy5naDA?list=other')).status,200);
     assert.equal(saved.at(-1).videoUrl,'https://www.youtube.com/watch?v=vEaijy5naDA');
-    for (const url of ['', 'https://x.com/TwitterDev', 'https://x.com.evil.test/u/status/123']) {
-      const response=await post(url);assert.equal(response.status,400);assert.match((await response.json()).error,/تغريدة/);
+    for (const [url, expected] of [
+      ['http://m.instagram.com/reels/C0ffee_42?utm_source=share', 'https://www.instagram.com/reel/C0ffee_42/'],
+      ['https://instagram.com/p/AbC_123/', 'https://www.instagram.com/p/AbC_123/'],
+      ['https://www.instagram.com/tv/Tv_123/?utm_campaign=share', 'https://www.instagram.com/tv/Tv_123/'],
+    ]) {
+      for (const autosave of [false, true]) {
+        assert.equal((await post(url, autosave)).status, 200);
+        assert.equal(saved.at(-1).videoUrl, expected);
+        assert.equal(saved.at(-1).format, 'videos');
+      }
     }
-    assert.equal(saved.length,3,'invalid video links must not reach the persistence layer');
+    for (const url of ['', 'https://x.com/TwitterDev', 'https://x.com.evil.test/u/status/123', 'https://instagram.com/profile', 'https://instagram.com:443/reel/C0ffee_42/']) {
+      for (const autosave of [false, true]) {
+        const response=await post(url, autosave);assert.equal(response.status,400);assert.match((await response.json()).error,/إنستقرام/);
+      }
+    }
+    assert.equal(saved.length,9,'invalid video links must not reach the persistence layer');
   } finally { delete globalThis.__videoSave; }
 });

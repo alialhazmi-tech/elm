@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-import { findVideoUrlInText, normalizeVideoUrl, videoEmbedUrl, xPostIdFrom, youtubeIdFrom } from "../lib/content/video.ts";
+import { findVideoUrlInText, instagramPostUrlFrom, normalizeVideoUrl, videoEmbedUrl, xPostIdFrom, youtubeIdFrom } from "../lib/content/video.ts";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
@@ -47,6 +47,34 @@ test("روابط يوتيوب تُطبَّع إلى الفيديو وحده بل
   assert.doesNotMatch(videoEmbedUrl(withList), /list=/);
 });
 
+test("روابط Instagram تُطبَّع إلى منشور عام بصيغة canonical وتزيل معلمات التتبع", () => {
+  const shortcode = "C0ffee_42";
+  for (const url of [
+    `https://instagram.com/reel/${shortcode}/?igsh=tracking&utm_source=share`,
+    `http://www.instagram.com/reels/${shortcode}?utm_medium=social`,
+    `https://m.instagram.com/p/${shortcode}/?fbclid=tracking`,
+    `https://www.instagram.com/tv/${shortcode}/?foo=bar`,
+  ]) {
+    assert.equal(instagramPostUrlFrom(url), `https://www.instagram.com/${url.includes("/reels/") ? "reel" : url.match(/\/(p|tv|reel)\//)?.[1] ?? "reel"}/${shortcode}/`);
+    assert.equal(normalizeVideoUrl(url), instagramPostUrlFrom(url));
+    assert.equal(videoEmbedUrl(url), `https://www.instagram.com/${url.includes("/reels/") ? "reel" : url.match(/\/(p|tv|reel)\//)?.[1] ?? "reel"}/${shortcode}/embed/`);
+  }
+  for (const url of [
+    "https://instagram.com/author",
+    "https://instagram.com/stories/author/123",
+    `https://instagram.com/reel/${shortcode}/extra`,
+    `https://instagram.com.evil.test/reel/${shortcode}/`,
+    `https://evil.test/instagram.com/reel/${shortcode}/`,
+    `https://instagram.com@evil.test/reel/${shortcode}/`,
+    `https://user:pass@instagram.com/reel/${shortcode}/`,
+    `https://instagram.com:443/reel/${shortcode}/`,
+    `https://instagram.com/reel/${shortcode}!/`,
+    `ftp://instagram.com/reel/${shortcode}/`,
+  ]) assert.equal(instagramPostUrlFrom(url), null, url);
+  assert.equal(findVideoUrlInText(`<p>Instagram: https://instagram.com/reel/${shortcode}/</p>`), null,
+    "legacy body migration remains YouTube-only");
+});
+
 test("المحرر وصفحة المادة يستخدمان نفس المشغّل وسياسة المحتوى تسمح بمضيفي التضمين المحددين", async () => {
   const [page, styles, provider, config, route, migrate, schema, editor, details, player] = await Promise.all([
     read("app/[section]/[id]/[slug]/page.tsx"),
@@ -64,12 +92,16 @@ test("المحرر وصفحة المادة يستخدمان نفس المشغّ�
   assert.match(page, /videoUrl \? " has-video"/);
   assert.match(page, /<VideoPlayer url=\{videoUrl\}/);
   assert.match(player, /<iframe src=\{embed\}/);
+  assert.match(player, /instagram/i);
+  assert.match(player, /aspect-ratio|aspect-video/);
+  assert.match(player, /href=\{(?:url|canonical|instagramUrl)\}|direct source|فتح (?:الفيديو|المنشور)/);
   assert.doesNotMatch(player, /XPost|createTweet/);
   assert.match(styles, /\.sa-head\.has-video \{ grid-template-columns: minmax\(0, 1fr\); \}/);
   assert.match(styles, /\.sa-video iframe \{[^}]*width: 100%;[^}]*aspect-ratio: 16 \/ 9;/);
   assert.match(provider, /section === "videos"[\s\S]*or\(eq\(storiesTable\.section, section\), eq\(storiesTable\.format, "videos"\)\)/);
   assert.match(provider, /section === "videos" \? isVideo\(story\) : story\.section === section/);
-  assert.match(config, /"frame-src https:\/\/www\.youtube-nocookie\.com https:\/\/www\.googletagmanager\.com https:\/\/platform\.twitter\.com https:\/\/syndication\.twitter\.com https:\/\/twitter\.com\/i\/videos\/tweet\/ https:\/\/x\.com\/i\/videos\/tweet\/"/);
+  assert.match(config, /["`]frame-src [^"`]*https:\/\/www\.youtube-nocookie\.com/);
+  assert.match(config, /["`]frame-src [^"`]*https:\/\/www\.instagram\.com/);
   assert.doesNotMatch(config, /frame-src[^"]*youtube\.com[^-]/);
   // الحفظ يقبل يوتيوب وتغريدات X، والهجرة تسحب الرابط من واجهة الموقع القديم الخاصة.
   assert.match(route, /const videoUrl = normalizeVideoUrl\(input\.videoUrl\)/);

@@ -44,7 +44,7 @@ async function saveStory(request: Request) {
   if (input.title.length > 500 || (input.body?.length ?? 0) > 200_000) return NextResponse.json({ error: "تجاوز النص الحد المسموح." }, { status: 413 });
   const videoUrl = normalizeVideoUrl(input.videoUrl);
   if (input.format?.trim() === "videos" && !videoUrl) {
-    return NextResponse.json({ error: "رابط يوتيوب أو تغريدة من X صحيح مطلوب للمادة المرئية." }, { status: 400 });
+    return NextResponse.json({ error: "رابط يوتيوب أو تغريدة X أو فيديو/ريلز إنستقرام صحيح مطلوب للمادة المرئية." }, { status: 400 });
   }
 
   const id = input.id?.trim() || crypto.randomUUID();
@@ -87,7 +87,7 @@ async function saveStory(request: Request) {
       seoTitle: input.seoTitle?.trim().slice(0, 90) ?? "",
       seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",
       keywords,
-      // رابط الفيديو يقبل يوتيوب وتغريدات X ويُخزَّن بصيغته القياسية؛ أي قيمة أخرى تُمسح.
+      // رابط الفيديو يقبل يوتيوب وتغريدات X ومنشورات إنستقرام العامة ويُخزَّن بصيغته القياسية؛ أي قيمة أخرى تُمسح.
       ...(input.videoUrl !== undefined ? { videoUrl } : {}),
       ...(session.can("story.publish")
         ? { pinned: input.pinned, breakingUntil: input.breakingUntil }

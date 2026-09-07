@@ -141,7 +141,8 @@ export default async function OverviewPage() {
           ? "next"
           : entry.state,
       meta: entry.meta,
-    }));
+    } satisfies TimelineItem))
+    .reverse();
   const doneToday = timeline.filter((item) => item.state === "done").length;
   const remainingToday = timeline.length - doneToday;
   const nextToday = timeline.find((item) => item.state === "next");

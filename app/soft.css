@@ -168,6 +168,39 @@ body { background: var(--bg); color: var(--ink); }
 .sa-media .soft-img { aspect-ratio: 16 / 9; border-radius: 20px; }
 .sa-video { width: 100%; overflow: hidden; border-radius: 20px; background: #000; }
 .sa-video iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
+.sa-video:has(.video-player-instagram) { background: var(--surface); }
+.video-player-instagram {
+  width: 100%;
+  max-width: 540px;
+  margin-inline: auto;
+  overflow: hidden;
+  border-radius: 10px;
+  container-type: inline-size;
+  background: #fff;
+  color: #172033;
+}
+.video-player-instagram > iframe {
+  display: block;
+  width: 100%;
+  height: clamp(560px, 177.78cqw, 960px);
+  min-height: 560px;
+  max-height: none;
+  aspect-ratio: 9 / 16;
+  border: 0;
+  background: #fff;
+}
+.video-player-instagram > a {
+  display: block;
+  border-top: 1px solid #e2e8f0;
+  background: #fff;
+  color: #172033;
+  padding: 12px 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.video-player-instagram > a:hover { text-decoration: underline; }
 .article-body blockquote[data-x-post] { margin: 24px 0; padding: 0; border: 0; background: none; font-style: normal; }
 .article-html--enhanced blockquote[data-x-post] > a { display: none; }
 

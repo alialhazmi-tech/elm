@@ -18,8 +18,8 @@ const contentSecurityPolicy = [
   "font-src 'self' data:",
   "form-action 'self'",
   "frame-ancestors 'none'",
-  // مشغّل يوتيوب وتضمين X الرسمي وإطار GTM البديل عند تعطيل JavaScript.
-  "frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://twitter.com/i/videos/tweet/ https://x.com/i/videos/tweet/",
+  // مشغّلات يوتيوب وInstagram وتضمين X الرسمي وإطار GTM البديل عند تعطيل JavaScript.
+  "frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://twitter.com/i/videos/tweet/ https://x.com/i/videos/tweet/ https://www.instagram.com",
   "img-src 'self' data: blob: https://dash.alelm.net https://www.googletagmanager.com https://*.google-analytics.com",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
