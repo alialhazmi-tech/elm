@@ -456,7 +456,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
     if (saveLock.current || (automatic && workflowBusy)) return null;
     if (format === "videos" && !normalizeVideoUrl(videoUrl)) {
       setInspectorTab("details");
-      setMessage({ kind: "err", text: "أدخل رابط يوتيوب أو تغريدة من X صحيحًا لإكمال المادة المرئية." });
+      setMessage({ kind: "err", text: "أدخل رابط يوتيوب أو تغريدة X أو فيديو/ريلز إنستقرام صحيحًا لإكمال المادة المرئية." });
       return null;
     }
     const savedSnapshot = { ...recoverySnapshot, body: richRef.current?.getHtml() ?? body };
