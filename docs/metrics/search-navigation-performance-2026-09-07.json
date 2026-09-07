@@ -1,0 +1,108 @@
+{
+  "date": "2026-09-07",
+  "productionUnchanged": true,
+  "branchId": "br-square-water-b2x3bbjk",
+  "copiedStories": 29223,
+  "normalizedTextMismatches": 0,
+  "benchmark": [
+    {
+      "name": "ai",
+      "beforeMedianMs": 751.276,
+      "afterMedianMs": 4.197,
+      "before": [
+        741.527,
+        751.276,
+        777.324
+      ],
+      "after": [
+        3.979,
+        4.197,
+        4.294
+      ]
+    },
+    {
+      "name": "tungsten",
+      "beforeMedianMs": 714.031,
+      "afterMedianMs": 0.089,
+      "before": [
+        711.385,
+        714.031,
+        755.395
+      ],
+      "after": [
+        0.073,
+        0.089,
+        0.132
+      ]
+    },
+    {
+      "name": "saudi",
+      "beforeMedianMs": 721.531,
+      "afterMedianMs": 0.258,
+      "before": [
+        711.396,
+        721.531,
+        746.88
+      ],
+      "after": [
+        0.257,
+        0.258,
+        0.3
+      ]
+    }
+  ],
+  "browserProof": [
+    {
+      "event": "web-performance",
+      "name": "RESOURCE",
+      "route": "/search",
+      "navigationId": "6fe4bdae-ee90-4fa5-9eee-574f007e4a44",
+      "at": 1788766844890,
+      "value": 1819,
+      "ttfbMs": 16,
+      "resource": "page",
+      "sample": "slow",
+      "release": "local",
+      "receivedAt": 1788766848731
+    },
+    {
+      "event": "web-performance",
+      "name": "NAVIGATION",
+      "route": "/search",
+      "navigationId": "f3f89b2e-19ab-4678-84f1-76b65553fd62",
+      "value": 1832.5999999977648,
+      "at": 1788766844886,
+      "outcome": "complete",
+      "networkMs": 1819,
+      "ttfbMs": 16,
+      "sample": "slow",
+      "release": "local",
+      "receivedAt": 1788766848731
+    },
+    {
+      "event": "web-performance",
+      "name": "NAVIGATION",
+      "route": "/search",
+      "navigationId": "10d67915-9735-4f20-b004-80785dd63cff",
+      "value": 1808.1000000014901,
+      "at": 1788766879619,
+      "outcome": "complete",
+      "sample": "slow",
+      "release": "local",
+      "receivedAt": 1788766883432
+    },
+    {
+      "event": "web-performance",
+      "name": "RESOURCE",
+      "route": "/search",
+      "navigationId": "6fe4bdae-ee90-4fa5-9eee-574f007e4a44",
+      "at": 1788766879619,
+      "value": 1806,
+      "ttfbMs": 4,
+      "resource": "page",
+      "sample": "slow",
+      "release": "local",
+      "receivedAt": 1788766883432
+    }
+  ]
+}

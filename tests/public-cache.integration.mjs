@@ -25,6 +25,7 @@ try {
   await write('next.config.mjs', 'export default { experimental: { cpus: 2 } };');
   await write('lib/content/cache-policy.ts', await readFile('lib/content/cache-policy.ts', 'utf8'));
   await write('lib/content/cache.ts', await readFile('lib/content/cache.ts', 'utf8'));
+  await write('lib/performance/server.ts', await readFile('lib/performance/server.ts', 'utf8'));
   await write('lib/tahrir/revalidatePublic.ts', await readFile('lib/tahrir/revalidatePublic.ts', 'utf8'));
   await write('lib/content/provider.ts', 'export { invalidatePublicContent as invalidateCorpus } from "./cache";');
   await write('state.json', JSON.stringify({ title: 'initial', published: true }));

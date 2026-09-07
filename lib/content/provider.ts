@@ -502,15 +502,6 @@ export async function listByFormat(format: string, limit = 40): Promise<Story[]>
 
 /* ============ البحث في SQL بتطبيع عربي ============ */
 
-/** تطبيع داخل SQL يطابق normalizeArabic: توحيد الألفات والهمزات وحذف التشكيل والتطويل. */
-const SQL_NORM_FROM = "أإآٱىةؤئًٌٍَُِّْٰـ";
-const SQL_NORM_TO = "اايهوي";
-
-function normalizedHaystackSql() {
-  const raw = sql`concat_ws(' ', ${storiesTable.title}, ${storiesTable.excerpt}, ${storiesTable.eyebrow}, coalesce(${storiesTable.keywords}::text, ''))`;
-  return sql`translate(lower(${raw}), ${SQL_NORM_FROM}, ${SQL_NORM_TO})`;
-}
-
 /** يجزئ الاستعلام إلى كلمات مطبّعة وينزع «الـ» وأخواتها من البداية لرفع الاستدعاء. */
 export function searchTokens(query: string): string[] {
   return normalizeArabic(query)
@@ -525,7 +516,7 @@ export function searchTokens(query: string): string[] {
 const SEARCH_LIMIT = 200;
 
 async function searchFromDb(db: Db, tokens: string[]): Promise<Story[]> {
-  const haystack = normalizedHaystackSql();
+  const haystack = storiesTable.searchText;
   const conditions = tokens.map((token) => sql`${haystack} like ${`%${token}%`}`);
   const rows = await db
     .select(CARD_COLUMNS)

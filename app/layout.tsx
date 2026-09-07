@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Alexandria, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic } from "next/font/google";
 import "./globals.css";
 import "./editorial-v2.css";
 import "./soft.css";
 import "./header.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
+import { PerformanceMetrics } from "@/app/_components/performance-metrics";
 import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 
 // العناوين بـ Alexandria، والنصوص بـ IBM Plex Sans Arabic،
@@ -95,6 +97,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         </noscript>
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <PodcastDockProvider>{children}</PodcastDockProvider>
+        <Suspense fallback={null}><PerformanceMetrics /></Suspense>
       </body>
     </html>
   );

@@ -53,6 +53,8 @@ export const stories = pgTable("stories", {
   seoDescription: text("seo_description"),
   /** كلمات مفتاحية: مصفوفة نصوص jsonb — تتولد بالذكاء وتُحرر يدويًا. */
   keywords: jsonb("keywords"),
+  /** نفس تطبيع البحث العام؛ PostgreSQL يحدّثه تلقائيًا لكل حفظ واستيراد. */
+  searchText: text("search_text").generatedAlwaysAs(sql`translate(lower("title" || ' ' || "excerpt" || ' ' || "eyebrow" || ' ' || coalesce("keywords"::text, '')), 'أإآٱىةؤئًٌٍَُِّْٰـ', 'اايهوي')`),
   /** رابط يوتيوب لمواد شكل «فيديو» (رابط المشاهدة القياسي بلا قائمة تشغيل) — يُسحب من alelm-api ويُحرر من اللوحة. */
   videoUrl: text("video_url"),
 }, (table) => [
@@ -60,6 +62,7 @@ export const stories = pgTable("stories", {
   index("stories_published_at_idx").on(table.publishedAt),
   index("stories_section_idx").on(table.section),
   index("stories_title_trgm_idx").using("gin", table.title.op("gin_trgm_ops")),
+  index("stories_search_text_trgm_idx").using("gin", table.searchText.op("gin_trgm_ops")).where(sql`${table.status} = 'published'`),
   index("stories_active_recency_idx").on(sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
   index("stories_status_recency_idx").on(table.status, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()),
   index("stories_format_recency_idx").on(table.format, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),

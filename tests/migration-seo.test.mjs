@@ -68,7 +68,8 @@ test("المزود لا يحمّل الأرشيف كله: نافذة حديثة 
   assert.match(provider, /RECENT_LIMIT = \d+/u, "لا سقف للنافذة الحديثة");
   assert.match(provider, /pageBySection/u, "لا ترقيم SQL للأقسام");
   assert.match(provider, /pageBySeries/u, "لا ترقيم SQL للسلاسل");
-  assert.match(provider, /translate\(lower\(/u, "البحث بلا تطبيع SQL");
+  assert.match(provider, /storiesTable\.searchText/u, "البحث لا يستخدم النص المفهرس");
+  assert.match(await read("db/schema.ts"), /generatedAlwaysAs\(sql`translate\(lower\(/u, "النص المفهرس بلا تطبيع SQL تلقائي");
   assert.doesNotMatch(
     provider,
     /db\s*\n?\s*\.select\(\)\s*\n?\s*\.from\(storiesTable\)\s*\n?\s*\.where\(eq\(storiesTable\.status, "published"\)\)\s*\n?\s*\.orderBy\(desc\(storiesTable\.publishedAt\), asc\(storiesTable\.id\)\);/u,
