@@ -63,8 +63,9 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
   if (!original || original.revisionOf || original.version !== story.baseVersion || !["published", "scheduled"].includes(original.status)) {
     throw new StoryWriteError("تغيّرت النسخة الأصلية أو أُرشفت؛ راجع أحدث نسخة قبل الاعتماد.");
   }
-  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, ...content } = story;
-  void _id; void _revisionOf; void _baseVersion;
+  // Generated search text must be recomputed by PostgreSQL, never copied in UPDATE.
+  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, ...content } = story;
+  void _id; void _revisionOf; void _baseVersion; void _searchText;
   await db.batch([
     lockStory(original), lockStory(story), snapshotQuery(original.id, actor),
     db.update(stories).set({ ...content, authorId: original.authorId, authorName: original.authorName,
@@ -87,7 +88,9 @@ export async function restoreStoryVersion(story: WorkflowStory, versionId: strin
   const [version] = await db.select().from(storyVersions).where(eq(storyVersions.id, versionId)).limit(1);
   if (!version || version.storyId !== story.id) throw new StoryWriteError("النسخة غير متاحة.", 404);
   const snapshot = version.data as { story: Record<string, unknown>; slides: unknown[]; source: string | null };
-  const previous = Object.fromEntries(Object.entries(getTableColumns(stories)).map(([key, column]) => [key, snapshot.story[column.name]])) as WorkflowStory;
+  const previous = Object.fromEntries(Object.entries(getTableColumns(stories))
+    .filter(([, column]) => !column.generated)
+    .map(([key, column]) => [key, snapshot.story[column.name]])) as Omit<WorkflowStory, "searchText">;
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   await db.batch([

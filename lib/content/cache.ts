@@ -1,5 +1,6 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { PUBLIC_CONTENT_TAG } from "./cache-policy";
+import { measureContentQuery } from "@/lib/performance/server";
 
 // Next bundles readers and mutation handlers separately; share the race fence
 // across those bundles in the same server process.
@@ -14,7 +15,7 @@ export function cachedPublicQuery<T>(key: string, ttlMs: number, load: () => Pro
     let value: T;
     do {
       started = epoch();
-      value = await load();
+      value = await measureContentQuery(key, load);
     } while (started !== epoch());
     return value;
   }, [PUBLIC_CONTENT_TAG, key], {

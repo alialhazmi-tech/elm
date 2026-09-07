@@ -29,4 +29,10 @@ select 'public.users_username_normalized_uidx' where not exists (
     and indrelid=to_regclass('public.users')
     and indisunique and indisvalid and indpred is null
 )
+union all
+select 'public.stories_search_text_trgm_idx' where not exists (
+  select 1 from pg_index
+  where indexrelid=to_regclass('public.stories_search_text_trgm_idx')
+    and indrelid=to_regclass('public.stories') and indisvalid and indisready
+)
 order by missing`;
