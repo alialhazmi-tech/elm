@@ -1,7 +1,7 @@
 import { stripHtmlToText } from "@/lib/content/html";
 
 type SpokenItem = { title: string; excerpt?: string };
-const INTRO = "أهلًا بكم في موجز العلم. في هذه الجولة، نرافقكم عبر مختارات من موادنا، من الخبر إلى ما وراءه.";
+const INTRO = "أهلًا بكم في موجز العلم. في هذه الجولة، نرافقكم عبر مختارات من موادنا، من الخَبَر إلى ما وراءه.";
 const OUTRO = "كانت هذه جولتكم مع موجز العلم. للاطلاع على التفاصيل والسياق الكامل، اضغطوا على عناوين المواد في هذه القائمة. شكرًا لاستماعكم.";
 const clean = (text: string) => stripHtmlToText(`<p>${text}</p>`).replace(/\s+/gu, " ").trim();
 const sentence = (text: string) => /[.!؟?]$/u.test(text) ? text : `${text}.`;
