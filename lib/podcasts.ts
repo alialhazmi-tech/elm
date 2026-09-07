@@ -10,18 +10,20 @@ export interface PodcastShow {
   /** معرّف مادة البرنامج في stories — الرابط المقدس نفسه. */
   storyId: string;
   name: string;
+  /** غلاف معتمد للبرنامج؛ عند غيابه تُستخدم صورة المادة. */
+  cover?: string;
   /** طابع البرنامج اللوني — من غلافه، للمشغل والبطاقات. */
   accent: string;
-  /** خلاصة RSS.com — null لبرنامج بلا خلاصة (الغبوق: يوتيوب فقط كما في القديم). */
+  /** خلاصة RSS.com — null لبرنامج لا تتوفر له خلاصة صوتية. */
   feedUrl: string | null;
   youtube: string;
 }
 
 export const ALELM_YOUTUBE = "https://www.youtube.com/c/alelmmedia";
 
-/** جرد 2026-08-28 من صفحات الموقع القديم — القيم من بيانات واجهته المضمنة. */
+/** برامج الموقع القديم؛ رُبط الغبوق بخلاصته الصوتية المتحققة في 2026-09-07. */
 export const PODCAST_SHOWS: PodcastShow[] = [
-  { storyId: "175839", name: "الغبوق", accent: "#b35c1e", feedUrl: null, youtube: ALELM_YOUTUBE },
+  { storyId: "175839", name: "الغبوق", cover: "/podcasts/alghabouq.jpg", accent: "#b35c1e", feedUrl: "https://media.rss.com/alghabouk/feed.xml", youtube: ALELM_YOUTUBE },
   { storyId: "92137", name: "ملامح", accent: "#2B5C9E", feedUrl: "https://media.rss.com/malameh/feed.xml", youtube: ALELM_YOUTUBE },
   { storyId: "71148", name: "عتمة", accent: "#c9932e", feedUrl: "https://media.rss.com/atmahpodcast/feed.xml", youtube: ALELM_YOUTUBE },
   { storyId: "70190", name: "تقرير", accent: "#1f8f8a", feedUrl: "https://media.rss.com/alelmbodcast/feed.xml", youtube: ALELM_YOUTUBE },
