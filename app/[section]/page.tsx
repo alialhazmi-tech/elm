@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { cache } from "react";
+import { pageHref } from "@/lib/content/pagination";
 import { sharingMetadata } from "@/lib/sharing";
 import { notFound, permanentRedirect } from "next/navigation";
 
@@ -10,6 +12,8 @@ import { getSection, getSectionDescription, getSectionName } from "@/lib/content
 import { toLatinDigits } from "@/lib/format";
 
 export const revalidate = 180;
+
+const loadPage = cache(pageBySection);
 
 type Props = {
   params: Promise<{ section: string }>;
@@ -26,7 +30,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!KNOWN_SECTIONS.includes(section)) return { title: "القسم غير موجود" };
 
   const name = getSectionName(section);
-  const page = Number.parseInt(p ?? "1", 10);
+  const { page } = await loadPage(section, p);
   const title =
     Number.isFinite(page) && page > 1
       ? `${name} — صفحة ${page} | العلم`
@@ -59,8 +63,12 @@ export default async function SectionPage({ params, searchParams }: Props) {
 
   const secDef = getSection(section);
   // ترقيم في SQL — القسم قد يحوي آلاف مواد الأرشيف ولا يُحمَّل كله.
-  const { items, page, pageCount, total, from, to } = await pageBySection(section, p);
+  const { items, page, pageCount, total, from, to } = await loadPage(section, p);
   const basePath = `/${section}`;
+  // Do not publish infinite self-canonical aliases of the final archive page.
+  if (p !== undefined && p !== (page > 1 ? String(page) : undefined)) {
+    permanentRedirect(pageHref(basePath, page));
+  }
 
   return (
     <>

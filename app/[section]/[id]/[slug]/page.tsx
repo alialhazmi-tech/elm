@@ -170,7 +170,6 @@ export default async function ArticlePage({ params }: Params) {
             }).replace(/</g, "\\u003c"),
           }}
         />
-        <link rel="canonical" href={`https://alelm.net${storyHref(story)}`} />
       </>
     );
   }
@@ -448,7 +447,6 @@ export default async function ArticlePage({ params }: Params) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema).replace(/</g, "\\u003c") }}
       />
-      <link rel="canonical" href={`https://alelm.net${storyHref(story)}`} />
     </>
   );
 }
