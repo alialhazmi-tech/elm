@@ -74,7 +74,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     keywords: story.keywords?.length ? story.keywords : undefined,
     // canonical واحد دائمًا من الرابط المحفوظ — لا يعكس معاملات طلب غير قانونية.
     alternates: { canonical: storyHref(story) },
-    ...sharingMetadata({ type: "article", title: seoTitle, description: seoDescription,
+    ...sharingMetadata({ type: "article", title: story.title, description: seoDescription,
       path: storyHref(story), image: story.image, storyId: story.id, format: story.format, section: story.section, publishedTime: story.publishedAt }),
   };
 }
@@ -368,7 +368,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
 
               <aside className="sa-aside" aria-label="أدوات المادة">
-                <ArticleToolbar storyId={story.id} joinHref={joinHref} excerpt={story.excerpt} shareUrl={refreshedShareUrl(storyHref(story), sharingOrigin())} />
+                <ArticleToolbar storyId={story.id} title={story.title} joinHref={joinHref} excerpt={story.excerpt} shareUrl={refreshedShareUrl(storyHref(story), sharingOrigin())} />
 
                 <ArticleInsights key={story.id} storyId={story.id} readingMinutes={story.readingMinutes} />
 

@@ -144,11 +144,13 @@ export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; join
  */
 export function ArticleToolbar({
   storyId,
+  title,
   joinHref,
   excerpt,
   shareUrl,
 }: {
   storyId: string;
+  title: string;
   joinHref: string;
   excerpt: string;
   shareUrl: string;
@@ -205,7 +207,7 @@ export function ArticleToolbar({
   const share = async () => {
     const url = shareUrl;
     try {
-      if (navigator.share) await navigator.share({ title: document.title, url });
+      if (navigator.share) await navigator.share({ title, text: title, url });
       else await navigator.clipboard.writeText(url);
     } catch {
       /* ألغى المشاركة */
