@@ -1,6 +1,6 @@
 /**
- * برامج بودكاست العلم — الحلقات من خلاصات RSS.com (المصدر القياسي نفسه الذي
- * تقرأ منه واجهة الموقع القديم)، بلا اعتماديات: جلب بكاش Next ومحلل XML مصغر.
+ * برامج بودكاست العلم — خلاصات RSS.com مع حلقات صوتية أصلية زوّدنا بها مالك البرنامج.
+ * جلب بكاش Next ومحلل XML مصغر؛ الملفات الكبيرة محفوظة في مخزن الوسائط.
  *
  * استيرادات نسبية عمدًا — الوحدة تدخل اختبارات node:test التي لا تعرف alias @/.
  * الحارس لا يفحص الحلقات: محتواها منشور مسبقًا على منصات البث ولا يمر بالنشر هنا.
@@ -43,6 +43,57 @@ export interface PodcastEpisode {
   description: string;
   episode: string | null;
   season: string | null;
+}
+
+/** ملفات أصلية من مجلد المالك؛ الاسم يتضمن بصمة المحتوى للكاش الدائم. */
+export const HOSTED_PODCAST_AUDIO = [
+  {
+    showId: "175839",
+    filename: "_UGwxxWb4iw-40add49a9b5e.m4a",
+    byteLength: 68374801,
+    sha256: "40add49a9b5e5b511173a79f7659638b53a6071e59ee21252f05554331ab09de",
+    sourceUrl: "https://www.youtube.com/watch?v=_UGwxxWb4iw",
+    title: "لماذا أصبحت تربية الأطفال مهمة شاقة؟",
+    guest: "همام الحارثي",
+    publishedAt: "2026-08-18T18:29:50.000Z",
+    duration: "4228",
+  },
+  {
+    showId: "175839",
+    filename: "KP5TyvDbRBY-46d745aa20f7.m4a",
+    byteLength: 107746799,
+    sha256: "46d745aa20f7da08ef9a8117f6beb9c3ef03401f3db0c39909014ad6bda8a6e2",
+    sourceUrl: "https://www.youtube.com/watch?v=KP5TyvDbRBY",
+    title: "العقل الذي لا نعرفه.. كيف يصنع أفكارنا وسلوكنا؟",
+    guest: "طالب خفاجي",
+    publishedAt: "2026-07-16T18:10:50.000Z",
+    duration: "6662",
+  },
+] as const;
+
+function normalizedEpisodeTitle(title: string): string {
+  return title.normalize("NFKD").replace(/[\u064b-\u065f\u0670\u0640]/g, "")
+    .replace(/[^\p{L}\p{N}]/gu, "");
+}
+
+/** تفضيل RSS إذا نُشرت الحلقة فيه لاحقًا، مع استمرار الملفات الأصلية عند تعطله. */
+export function mergePodcastEpisodes(showId: string, rss: PodcastEpisode[]): PodcastEpisode[] {
+  const hosted = HOSTED_PODCAST_AUDIO.filter((audio) => audio.showId === showId)
+    .filter((audio) => !rss.some((episode) =>
+      normalizedEpisodeTitle(episode.title).includes(normalizedEpisodeTitle(audio.title))))
+    .map((audio): PodcastEpisode => ({
+      title: `${audio.title} مع ${audio.guest}`,
+      audioUrl: `/podcast-audio/${audio.filename}`,
+      mime: "audio/mp4",
+      publishedAt: audio.publishedAt,
+      duration: audio.duration,
+      description: "",
+      episode: null,
+      season: null,
+    }));
+  return [...rss, ...hosted]
+    .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
+    .slice(0, EPISODES_LIMIT);
 }
 
 const NAMED = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " } as const;
@@ -140,17 +191,17 @@ export function parseRssEpisodes(xml: string): PodcastEpisode[] {
 
 const EPISODES_LIMIT = 30;
 
-/** حلقات برنامج — كاش fetch عشر دقائق؛ أي فشل يعيد قائمة فارغة فيسقط العرض بأناقة. */
+/** حلقات برنامج — كاش RSS عشر دقائق مع الحلقات المحفوظة في مخزن الموقع. */
 export async function fetchEpisodes(show: PodcastShow): Promise<PodcastEpisode[]> {
-  if (!show.feedUrl) return [];
+  if (!show.feedUrl) return mergePodcastEpisodes(show.storyId, []);
   try {
     const response = await fetch(show.feedUrl, {
       headers: { "User-Agent": "alelm-platform/1.0 (+https://alelm.net)" },
       next: { revalidate: 600 },
     } as RequestInit);
-    if (!response.ok) return [];
-    return parseRssEpisodes(await response.text()).slice(0, EPISODES_LIMIT);
+    if (!response.ok) return mergePodcastEpisodes(show.storyId, []);
+    return mergePodcastEpisodes(show.storyId, parseRssEpisodes(await response.text()));
   } catch {
-    return [];
+    return mergePodcastEpisodes(show.storyId, []);
   }
 }
