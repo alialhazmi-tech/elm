@@ -250,7 +250,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
           </Button>
           <span className="text-[10.5px] text-muted-foreground">حتى 8 ميغابايت · <span dir="ltr">PNG / JPEG / WebP</span></span>
         </div>
-        {props.imageUploadMessage ? <div className="text-[11px] text-muted-foreground">{props.imageUploadMessage}</div> : null}
+        {props.imageUploadMessage ? <div role="status" className="text-[11px] text-muted-foreground">{props.imageUploadMessage}</div> : null}
         <Input dir="ltr" placeholder="/uploads/… أو رابط خارجي" value={props.image} onChange={(event) => props.onImage(event.target.value)} />
         {props.image ? (
           <div className="grid gap-1.5">

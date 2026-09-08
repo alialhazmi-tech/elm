@@ -8,8 +8,7 @@ test("المحرر يرفع صورة المادة عبر مكتبة الوسائ
     readFile(new URL("../components/tahrir/editor/details-panel.tsx", import.meta.url), "utf8"),
   ]);
 
-  assert.match(editor, /form\.append\("file", file\)/);
-  assert.match(editor, /fetch\("\/api\/tahrir\/media", \{ method: "POST", body: form \}\)/);
+  assert.match(editor, /await uploadStoryImageFile\(file,/);
   assert.match(editor, /accept="image\/png,image\/jpeg,image\/webp"/);
   assert.match(editor, /setImage\(data\.url\)/);
   assert.match(editor, /scheduleGuard\(title, bodyText\(\), data\.url, format\)/);
