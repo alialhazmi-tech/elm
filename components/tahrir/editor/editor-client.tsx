@@ -17,6 +17,7 @@ import { normalizeVideoUrl } from "@/lib/content/video";
 import type { Finding, GuardReport } from "@/lib/policy/types";
 import type { GuardControls } from "@/lib/policy";
 import { cn } from "@/lib/utils";
+import { uploadStoryImageFile } from "@/lib/story-image-upload";
 
 import { useDraftRecovery } from "@/components/tahrir/use-draft-recovery";
 import { useDraftAutosave } from "@/components/tahrir/use-draft-autosave";
@@ -290,24 +291,25 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
     setImageUploadBusy(true);
     setImageUploadMessage("جارٍ رفع الصورة…");
 
-    const form = new FormData();
-    form.append("file", file);
-    const response = await fetch("/api/tahrir/media", { method: "POST", body: form }).catch(() => null);
-    const data = await response?.json().catch(() => null);
-    setImageUploadBusy(false);
-    if (!response?.ok || !data?.url) {
-      setImageUploadMessage(data?.error ?? "تعذر رفع الصورة.");
-      return;
+    try {
+      const data = await uploadStoryImageFile(file, (percent) => {
+        setImageUploadMessage(percent === null ? "اكتمل إرسال الصورة — جارٍ تأكيد حفظها…" : `جارٍ رفع الصورة… ${percent}%`);
+      });
+      markDraftChanged();
+      setImage(data.url);
+      scheduleGuard(title, bodyText(), data.url, format);
+      setImageUploadMessage(
+        guardControls.requireImageRights
+          ? "رُفعت واختيرت للمادة — يلزم توثيق الحقوق قبل الاعتماد."
+          : "رُفعت واختيرت للمادة — اشتراط توثيق الحقوق معطّل حاليًا.",
+      );
+    } catch (error) {
+      setImageUploadMessage(error instanceof Error ? error.message : "تعذر رفع الصورة. حاول مرة أخرى.");
+    } finally {
+      setImageUploadBusy(false);
+      // Reset after failure too: selecting the same file must fire change again.
+      if (imageFileRef.current) imageFileRef.current.value = "";
     }
-
-    setImage(data.url);
-    scheduleGuard(title, bodyText(), data.url, format);
-    setImageUploadMessage(
-      guardControls.requireImageRights
-        ? "رُفعت واختيرت للمادة — يلزم توثيق الحقوق قبل الاعتماد."
-        : "رُفعت واختيرت للمادة — اشتراط توثيق الحقوق معطّل حاليًا.",
-    );
-    if (imageFileRef.current) imageFileRef.current.value = "";
   }
 
   async function generateSeo() {
