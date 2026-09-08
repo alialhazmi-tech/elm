@@ -74,6 +74,7 @@ async function dbOrSeed<T>(
   ttl: number,
   viaDb: (db: Db) => Promise<T>,
   viaSeed: () => T,
+  fallbackOnError = true,
 ): Promise<T> {
   const db = getDb();
   if (!db) return viaSeed();
@@ -82,6 +83,7 @@ async function dbOrSeed<T>(
     dbHealthy = true;
     return value;
   } catch (error) {
+    if (!fallbackOnError) throw error;
     dbHealthy = false;
     if (!dbWarned) {
       dbWarned = true;
@@ -585,6 +587,7 @@ export async function listSitemapEntries(): Promise<SitemapStoryEntry[]> {
           publishedAt: story.publishedAt ?? null,
           updatedAt: null,
         })),
+      false, // A failed archive query must not publish a truncated seed sitemap.
     );
     entries.push(...page);
     if (page.length < pageSize) return entries;
@@ -904,3 +907,24 @@ export const seedContentProvider: ContentProvider = {
     );
   },
 };
+
+/** Published video cards only, in bounded cache entries; no article bodies. */
+export async function listVideoSitemapEntries(): Promise<Story[]> {
+  const entries: Story[] = [];
+  const pageSize = 500;
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await dbOrSeed(
+      `sitemap:videos:${offset}`, SITEMAP_TTL_MS,
+      async (db) => {
+        const rows = await db.select(CARD_COLUMNS).from(storiesTable)
+          .where(and(PUBLISHED, eq(storiesTable.format, "videos"), isNotNull(storiesTable.videoUrl)))
+          .orderBy(...RECENT_ORDER).limit(pageSize).offset(offset);
+        return rows.map(mapRow);
+      },
+      () => seedAll.filter((story) => story.format === "videos" && story.videoUrl).slice(offset, offset + pageSize),
+      false,
+    );
+    entries.push(...page);
+    if (page.length < pageSize) return entries;
+  }
+}

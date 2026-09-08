@@ -25,6 +25,9 @@ const redirect = (source: string, destination: string): LegacyRedirect => ({
  */
 export const LEGACY_STORY_REWRITES = [
   { source: "/:id(\\d+)", destination: "/legacy/:id" },
+  // WordPress also published /ID/slug and AMP aliases; resolve by ID, never by slug.
+  { source: "/:id(\\d+)/:slug", destination: "/legacy/:id" },
+  { source: "/:id(\\d+)/:slug/amp", destination: "/legacy/:id" },
 ];
 
 /** وسم السلسلة القديم (بصيغتي الشرطة والشرطة السفلية) → صفحة السلسلة. */
@@ -49,6 +52,7 @@ export const TAG_TO_SERIES: Record<string, string> = {
 };
 
 export const LEGACY_REDIRECTS: LegacyRedirect[] = [
+  redirect("/sitemap_index.xml", "/sitemap.xml"),
   // أرشيفات الوسوم القديمة → صفحات السلاسل.
   ...Object.entries(TAG_TO_SERIES).map(([tag, slug]) =>
     redirect(`/tag/${tag}`, `/series/${slug}`),
@@ -58,4 +62,9 @@ export const LEGACY_REDIRECTS: LegacyRedirect[] = [
   redirect("/uncategorized", "/varieties"),
   // روابط المواد الثنائية والثلاثية تحسمها مسارات المقال بالمعرّف مباشرة،
   // دون تحويل وسيط إلى منوعات قد لا يكون القسم الفعلي للمادة.
+];
+
+/** Root query permalinks must run before the static homepage. */
+export const LEGACY_QUERY_REWRITES = [
+  { source: "/", has: [{ type: "query" as const, key: "p", value: "(?<legacyId>\\d+)" }], destination: "/legacy/:legacyId" },
 ];

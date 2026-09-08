@@ -36,8 +36,8 @@ try {
   await write('package.json', JSON.stringify({ private: true, type: 'module' }));
   await write('tsconfig.json', JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@/*': ['./*'] } } }));
   await write('lib/content/redirects.ts', await readFile('lib/content/redirects.ts', 'utf8'));
-  await write('next.config.ts', `import {LEGACY_REDIRECTS,LEGACY_STORY_REWRITES} from './lib/content/redirects';
-    export default { experimental: { cpus: 2 }, async redirects() {return LEGACY_REDIRECTS}, async rewrites() {return LEGACY_STORY_REWRITES} };`);
+  await write('next.config.ts', `import {LEGACY_REDIRECTS,LEGACY_STORY_REWRITES,LEGACY_QUERY_REWRITES} from './lib/content/redirects';
+    export default { experimental: { cpus: 2 }, async redirects() {return LEGACY_REDIRECTS}, async rewrites() {return {beforeFiles:LEGACY_QUERY_REWRITES,afterFiles:LEGACY_STORY_REWRITES,fallback:[]}} };`);
   // Exercise the actual short-link handler and URL builder on a production server.
   // The provider boundary exposes a published story, or null for missing/draft IDs.
   await write('app/[section]/[id]/route.ts', await readFile('app/[section]/[id]/route.ts', 'utf8'));
@@ -135,6 +135,22 @@ try {
       assert.equal(missing.headers['cache-control'], 'no-store');
     }
   }
+  for (const method of ['GET', 'HEAD']) {
+    for (const alias of ['/264631/old-title', '/264631/'+encodeURIComponent('عنوان-عربي'), '/264631/old-title/amp']) {
+      const result = await response(port, alias + query, method);
+      assert.equal(result.statusCode, 301, method + ' ' + alias);
+      assert.equal(result.headers.location, canonical + query);
+      assert.equal((await response(port, result.headers.location, method)).statusCode, 200);
+    }
+    for (const alias of ['/999999999/old-title', '/999999999/old-title/amp']) {
+      assert.equal((await response(port, alias, method)).statusCode, 404);
+    }
+    const wpQuery = await response(port, '/?p=264631&utm_source=old', method);
+    assert.equal(wpQuery.statusCode, 301);
+    assert.equal(wpQuery.headers.location, canonical + '?p=264631&utm_source=old');
+    assert.equal((await response(port, '/?p=999999999', method)).statusCode, 404);
+  }
+  console.log('Legacy WordPress ID/slug, AMP and query permalinks resolve directly, including missing IDs.');
   const numericSlash = await response(port, '/74689/?utm_source=google');
   assert.equal(numericSlash.statusCode, 308);
   assert.equal(numericSlash.headers.location, '/74689?utm_source=google');

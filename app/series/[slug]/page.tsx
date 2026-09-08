@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { cache } from "react";
+import { pageHref } from "@/lib/content/pagination";
 import { sharingMetadata } from "@/lib/sharing";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 
 import { Pagination } from "@/app/_components/pagination";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
@@ -13,6 +15,8 @@ import { storyHref } from "@/lib/content/types";
 import { formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
 
 export const revalidate = 300;
+
+const loadPage = cache(pageBySeries);
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -30,7 +34,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const series = await seedContentProvider.getSeries(slug);
   if (!series) return { title: "السلسلة غير موجودة" };
 
-  const page = Number.parseInt(p ?? "1", 10);
+  const { page } = await loadPage(series.slug, p);
   const title =
     Number.isFinite(page) && page > 1
       ? `سلسلة ${series.name} — صفحة ${page}`
@@ -53,8 +57,12 @@ export default async function SeriesPage({ params, searchParams }: Props) {
   if (!series) notFound();
 
   // ترقيم في SQL — سلاسل الأرشيف تحمل آلاف المواد.
-  const { items, page, pageCount, total, from, to } = await pageBySeries(series.slug, p);
+  const { items, page, pageCount, total, from, to } = await loadPage(series.slug, p);
   const basePath = `/series/${series.slug}`;
+  // Do not publish infinite self-canonical aliases of the final archive page.
+  if (p !== undefined && p !== (page > 1 ? String(page) : undefined)) {
+    permanentRedirect(pageHref(basePath, page));
+  }
   const seriesStyle = { "--sc": series.color } as React.CSSProperties;
 
   // الصفحة الأولى: أحدث مادة تتصدر لوحة السلسلة، والبقية شبكة.

@@ -16,7 +16,7 @@ export function revalidatePublicContent() {
   invalidateCorpus();
   // شريط الأخبار والمواد المرتبطة موجودان أيضًا خارج صفحة المادة وقسمها.
   // الأنماط تشمل الصفحات المرقّمة والمواد التي تغيّرت كلماتها أو سلسلتها.
-  for (const path of ["/", "/series", "/search", "/jak", "/podcasts", "/sitemap.xml", "/sitemap-news.xml"]) {
+  for (const path of ["/", "/series", "/search", "/jak", "/podcasts", "/sitemap.xml", "/sitemap-news.xml", "/sitemap-videos.xml"]) {
     revalidatePath(path);
   }
   revalidatePath("/[section]", "page");

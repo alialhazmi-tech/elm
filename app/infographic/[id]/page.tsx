@@ -4,6 +4,8 @@ import { InteractiveInfographic } from "@/app/_components/interactive-infographi
 import { getBlueEconomyPreset } from "@/lib/ai/infographic";
 
 export const metadata = {
+  // Prototype currently renders the same preset for every ID.
+  robots: { index: false, follow: true },
   title: "اقتصاد المدّ الأزرق | إنفوجرافيك تفاعلي - العلم",
   description: "تقرير بصري متحرك وتفاعلي يوضح آفاق ومستهدفات الاستزراع المائي والثروة السمكية في المملكة العربية السعودية ضمن رؤية 2030.",
 };
