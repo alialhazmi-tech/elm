@@ -215,7 +215,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
               {instagramPostUrlFrom(props.videoUrl)
                 ? " يجب أن يكون منشور إنستقرام عامًا ومسموحًا بتضمينه؛ قد يظهر معه إطار المنشور وعناصره."
                 : xPostIdFrom(props.videoUrl)
-                  ? " لإظهار التغريدة كاملة داخل الخبر، استخدم «إدراج تغريدة» في أدوات المتن."
+                  ? " لإظهار التغريدة كاملة داخل المادة، استخدم «إدراج تغريدة» في أدوات المتن."
                   : null}
             </div>
           </div>
