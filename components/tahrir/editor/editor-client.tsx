@@ -390,10 +390,10 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
         guardControls={guardControls}
         publicHref={publicHref}
         getPreview={() => ({ title, excerpt, body: bodyHtml(), image, section: sections.find(([key]) => key === section)?.[1] ?? section })}
-        onSave={() => void workflow.saveManually()}
-        onSubmit={() => void workflow.submitForReview()}
-        onPublish={() => void workflow.publish()}
-        onReturnToDraft={() => void workflow.returnToDraft()}
+        onSave={workflow.saveManually}
+        onSubmit={workflow.submitForReview}
+        onPublish={workflow.publish}
+        onReturnToDraft={workflow.returnToDraft}
         onRetryGuard={() => void guard.retryGuard({ body: bodyHtml() })}
       />
 
@@ -547,7 +547,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
                   }}
                   scheduleAt={scheduleAt}
                   onScheduleAt={setScheduleAt}
-                  onSchedule={() => void workflow.schedule()}
+                  onSchedule={workflow.schedule}
                   beforeArchive={() => {
                     if (autosave.dirty || busy || workflowBusy) {
                       toast.error("احفظ التعديلات أو انتظر اكتمال الحفظ قبل الأرشفة.");
