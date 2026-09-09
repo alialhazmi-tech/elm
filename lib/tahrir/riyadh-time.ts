@@ -3,6 +3,8 @@
  * المملكة بلا توقيت صيفي، فالإزاحة ثابتة +03:00 ويُبنى ISO من وقت الحائط مباشرة.
  */
 
+import { riyadhDayBounds } from "./time.ts";
+
 const RIYADH_OFFSET = "+03:00";
 const WALL_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
@@ -14,10 +16,9 @@ export function riyadhWallTimeToIso(value: string): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
-/** بداية اليوم الحالي بتوقيت الرياض كـ ISO (UTC) — لعدّ «اليوم» كما يراه المحرر لا كما يراه الخادم. */
+/** بداية اليوم الحالي بتوقيت الرياض كـ ISO (UTC) — تفويض إلى حدود اليوم الموحدة في time.ts. */
 export function riyadhDayStartIso(now: number | Date = Date.now()): string {
-  const day = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(now));
-  return new Date(`${day}T00:00:00${RIYADH_OFFSET}`).toISOString();
+  return riyadhDayBounds(new Date(now)).startIso;
 }
 
 const timeFormatter = () =>
