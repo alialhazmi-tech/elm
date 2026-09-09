@@ -25,9 +25,14 @@ import { mfaConfigured } from "./totp";
 
 /**
  * صلاحيات الإدارة التي تستوجب التحقق بخطوتين: من يملك إحداها بلا سرّ MFA يُحوَّل إلى «أمان الحساب»
- * وتُرفض طلباته إلى API حتى يفعّله. الإلزام يسري فقط حين يكون مفتاح التشفير مضبوطًا على الخادم —
- * وإلا لا يستطيع أحد التفعيل أصلًا فيُقفل كل مسؤول خارج اللوحة.
+ * وتُرفض طلباته إلى API حتى يفعّله. الإلزام معطّل افتراضيًا ولا يسري إلا بـ TAHRIR_MFA_ENFORCE=1 مع مفتاح
+ * التشفير مضبوطًا — بلا المفتاح لا يستطيع أحد التفعيل أصلًا فيُقفل كل مسؤول خارج اللوحة.
  */
+/** الإلزام اختياري بقرار المالك (2026-09-09): لا يسري إلا بـ TAHRIR_MFA_ENFORCE=1 صراحةً مع مفتاح MFA مضبوط. */
+export function mfaEnforcementEnabled(): boolean {
+  return process.env.TAHRIR_MFA_ENFORCE === "1" && mfaConfigured();
+}
+
 export const MFA_REQUIRED_PERMISSIONS = [WILDCARD, "users.manage", "roles.manage"] as const;
 export const MFA_REQUIRED_MESSAGE = "فعّل التحقق بخطوتين من «أمان الحساب» أولًا — إلزامي لحسابات الإدارة.";
 
@@ -116,7 +121,7 @@ export const loadActor = cache(async (): Promise<Actor | null> => {
   );
 
   const mfaEnabled = Boolean(user.mfaSecret);
-  const mfaRequired = !mfaEnabled && mfaConfigured() && MFA_REQUIRED_PERMISSIONS.some((key) => permissions.has(key));
+  const mfaRequired = !mfaEnabled && mfaEnforcementEnabled() && MFA_REQUIRED_PERMISSIONS.some((key) => permissions.has(key));
 
   return {
     userId: user.id,

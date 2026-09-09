@@ -84,6 +84,7 @@ try {
   const { totp } = await import("../lib/tahrir/totp.ts");
   process.env.AUTH_SECRET = "isolated-matrix-session-secret";
   process.env.TAHRIR_MFA_KEY = "cd".repeat(32); // الإلزام يسري فقط حين يكون المفتاح مضبوطًا.
+  process.env.TAHRIR_MFA_ENFORCE = "1"; // والإلزام نفسه اختياري — معطّل افتراضيًا بقرار المالك.
 
   await withDb(() => subject.ensureSystemRoles());
   subject.invalidateRoleCache();
@@ -170,6 +171,11 @@ try {
   assert.equal((await withDb(() => subject.loadActor())).mfaRequired, false);
   delete process.env.TAHRIR_MFA_KEY;
   assert.equal((await call("admin-u", () => subject.loadActor())).mfaRequired, false, "without an MFA key nobody can enrol, so nobody is locked out");
+  process.env.TAHRIR_MFA_KEY = "cd".repeat(32);
+  delete process.env.TAHRIR_MFA_ENFORCE;
+  assert.equal((await call("admin-u", () => subject.loadActor())).mfaRequired, false, "enforcement is opt-in: without TAHRIR_MFA_ENFORCE=1 nobody is forced");
+  delete process.env.TAHRIR_MFA_KEY;
+  process.env.TAHRIR_MFA_ENFORCE = "1";
   await admin.query("update users set mfa_secret=null where id='admin2-u'");
   assert.equal((await call("admin2-u", () => subject.membersGet())).status, 200);
   await admin.query("update users set mfa_secret='enforced' where id='admin2-u'");
