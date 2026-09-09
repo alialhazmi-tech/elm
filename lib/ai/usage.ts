@@ -42,23 +42,25 @@ export async function usageTotals(): Promise<UsageTotals> {
   const db = getDb();
   if (!db) return { todayCents: 0, monthCents: 0, todayCalls: 0 };
 
+  // نفس حدود UTC المستخدمة في دالة الحجز alelm_reserve_ai.
   const now = new Date();
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())).toISOString();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 
-  const [today] = await db
-    .select({ cents: sql<number>`coalesce(sum(${aiUsage.costCents}), 0)`, calls: sql<number>`count(*)` })
+  // مسح واحد لصفوف الشهر (بفهرس at)، واليوم مرشّح تجميعي داخله.
+  const [row] = await db
+    .select({
+      todayCents: sql<number>`coalesce(sum(${aiUsage.costCents}) filter (where ${aiUsage.at} >= ${dayStart}), 0)`,
+      todayCalls: sql<number>`count(*) filter (where ${aiUsage.at} >= ${dayStart})`,
+      monthCents: sql<number>`coalesce(sum(${aiUsage.costCents}), 0)`,
+    })
     .from(aiUsage)
-    .where(gte(aiUsage.at, dayStart.toISOString()));
-  const [month] = await db
-    .select({ cents: sql<number>`coalesce(sum(${aiUsage.costCents}), 0)` })
-    .from(aiUsage)
-    .where(gte(aiUsage.at, monthStart.toISOString()));
+    .where(gte(aiUsage.at, monthStart));
 
   return {
-    todayCents: Number(today?.cents ?? 0),
-    monthCents: Number(month?.cents ?? 0),
-    todayCalls: Number(today?.calls ?? 0),
+    todayCents: Number(row?.todayCents ?? 0),
+    monthCents: Number(row?.monthCents ?? 0),
+    todayCalls: Number(row?.todayCalls ?? 0),
   };
 }
 

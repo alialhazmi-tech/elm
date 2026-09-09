@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { loadAiSettings, saveAiSettings } from "@/lib/ai/settings";
+import { loadAiSettings, patchAiSettings, type AiSettingsData } from "@/lib/ai/settings";
 import { requireActor, requirePermission } from "@/lib/tahrir/access";
 import { audit } from "@/lib/tahrir/service";
 
@@ -11,7 +11,10 @@ export async function GET() {
   return NextResponse.json({ governance: settings.governance });
 }
 
-/** إعدادات نظام حساسة — تُحفظ في صف الإعدادات نفسه وتُطبّق في مسارات النشر على الخادم. */
+/**
+ * إعدادات نظام حساسة — تُدمج جزئيًا داخل صف الإعدادات نفسه (jsonb ||) بلا قراءة ثم كتابة،
+ * وتُطبّق في مسارات النشر على الخادم.
+ */
 export async function PATCH(request: Request) {
   const gate = await requirePermission("ai.settings", "إعدادات النظام من صلاحية رئيس التحرير.");
   if (!gate.ok) return gate.response;
@@ -21,22 +24,21 @@ export async function PATCH(request: Request) {
   } | null;
   if (!incoming?.governance) return NextResponse.json({ error: "طلب غير صالح." }, { status: 400 });
 
-  const current = await loadAiSettings();
-  const governance = { ...current.governance };
+  const patch: Partial<AiSettingsData["governance"]> = {};
   if (incoming.governance.editorialGuard !== undefined) {
     if (typeof incoming.governance.editorialGuard !== "boolean") {
       return NextResponse.json({ error: "قيمة حارس السياسة غير صالحة." }, { status: 400 });
     }
-    governance.editorialGuard = incoming.governance.editorialGuard;
+    patch.editorialGuard = incoming.governance.editorialGuard;
   }
   if (incoming.governance.requireImageRights !== undefined) {
     if (typeof incoming.governance.requireImageRights !== "boolean") {
       return NextResponse.json({ error: "قيمة حقوق الصورة غير صالحة." }, { status: 400 });
     }
-    governance.requireImageRights = incoming.governance.requireImageRights;
+    patch.requireImageRights = incoming.governance.requireImageRights;
   }
 
-  await saveAiSettings({ ...current, governance });
+  const { governance } = await patchAiSettings({ governance: patch });
   await audit(
     gate.actor.username,
     "system:settings",
