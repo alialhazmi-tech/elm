@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         role: input.role,
         password: input.password,
       },
-      gate.actor.username,
+      gate.actor,
     );
     return NextResponse.json({ ok: true, id });
   } catch (error) {

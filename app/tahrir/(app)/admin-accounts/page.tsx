@@ -1,6 +1,5 @@
-import { Forbidden } from "@/components/tahrir/forbidden";
 import { MembersClient } from "@/components/tahrir/members/members-client";
-import { loadActor } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { listMembers, listRoles } from "@/lib/tahrir/admin";
 import { PERMISSION_GROUPS } from "@/lib/tahrir/permissions";
 
@@ -8,9 +7,9 @@ export const metadata = { title: "الحسابات الإدارية" };
 export const dynamic = "force-dynamic";
 
 export default async function MembersPage() {
-  const actor = await loadActor();
-  if (!actor?.can("users.view"))
-    return <Forbidden title="الحسابات الإدارية" permission="users.view" />;
+  const gate = await requireScreen("users.view", "الحسابات الإدارية");
+  if (!gate.ok) return gate.element;
+  const actor = gate.actor;
 
   const [members, roles] = await Promise.all([listMembers(), listRoles()]);
   const active = members.filter((member) => member.status === "active").length;

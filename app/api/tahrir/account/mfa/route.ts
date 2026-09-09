@@ -10,7 +10,7 @@ import { verifyMfa } from "@/lib/tahrir/mfa";
 import { base32, matchingCounter, openMfa, recoveryHash, sealMfa } from "@/lib/tahrir/totp";
 const json = (body: unknown, status = 200) => NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function POST(request: Request) {
-  const gate = await requireActor(); if (!gate.ok) return gate.response;
+  const gate = await requireActor({ allowMissingMfa: true }); if (!gate.ok) return gate.response;
   const input = await request.json().catch(() => null);
   if (typeof input?.password !== "string" || input.password.length > 512 || !["begin", "enable", "disable"].includes(input.action)) return json({ error: "طلب غير صالح." }, 400);
   try {

@@ -6,6 +6,7 @@ import { stripHtmlToText } from "@/lib/content/html";
 import { SERIES } from "@/lib/content/series";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { runConfiguredPolicyGuard } from "@/lib/policy";
+import { requireScreen } from "@/lib/tahrir/screen";
 import {
   bodiesFor,
   formatDistribution,
@@ -39,6 +40,8 @@ function daysAgoIso(days: number): string {
 }
 
 export default async function StatsPage() {
+  const gate = await requireScreen("stats.view", "الإحصاءات");
+  if (!gate.ok) return gate.element;
   const [settings, counts, audit, recentPublished, distribution, perDay, formats, authors, readingTime] = await Promise.all([
     loadAiSettings(),
     statusCounts().catch(() => ({}) as Record<string, number>),

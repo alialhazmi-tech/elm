@@ -18,8 +18,23 @@ import {
   hasPermission,
   LEGACY_ROLE_MAP,
   resolvePermissions,
+  WILDCARD,
   type OverrideEffect,
 } from "./permissions";
+import { mfaConfigured } from "./totp";
+
+/**
+ * صلاحيات الإدارة التي تستوجب التحقق بخطوتين: من يملك إحداها بلا سرّ MFA يُحوَّل إلى «أمان الحساب»
+ * وتُرفض طلباته إلى API حتى يفعّله. الإلزام معطّل افتراضيًا ولا يسري إلا بـ TAHRIR_MFA_ENFORCE=1 مع مفتاح
+ * التشفير مضبوطًا — بلا المفتاح لا يستطيع أحد التفعيل أصلًا فيُقفل كل مسؤول خارج اللوحة.
+ */
+/** الإلزام اختياري بقرار المالك (2026-09-09): لا يسري إلا بـ TAHRIR_MFA_ENFORCE=1 صراحةً مع مفتاح MFA مضبوط. */
+export function mfaEnforcementEnabled(): boolean {
+  return process.env.TAHRIR_MFA_ENFORCE === "1" && mfaConfigured();
+}
+
+export const MFA_REQUIRED_PERMISSIONS = [WILDCARD, "users.manage", "roles.manage"] as const;
+export const MFA_REQUIRED_MESSAGE = "فعّل التحقق بخطوتين من «أمان الحساب» أولًا — إلزامي لحسابات الإدارة.";
 
 export interface RoleInfo {
   id: string;
@@ -71,6 +86,10 @@ export interface Actor {
   role: string;
   roleLabel: string;
   mustChangePassword: boolean;
+  /** التحقق بخطوتين مفعّل على الحساب. */
+  mfaEnabled: boolean;
+  /** حساب إداري بلا تحقق بخطوتين والمفتاح مضبوط — يُحجب عن كل شيء عدا تفعيله. */
+  mfaRequired: boolean;
   permissions: Set<string>;
   can(key: string): boolean;
 }
@@ -101,6 +120,9 @@ export const loadActor = cache(async (): Promise<Actor | null> => {
     overrideRows.map((row) => ({ permissionKey: row.permissionKey, effect: row.effect as OverrideEffect })),
   );
 
+  const mfaEnabled = Boolean(user.mfaSecret);
+  const mfaRequired = !mfaEnabled && mfaEnforcementEnabled() && MFA_REQUIRED_PERMISSIONS.some((key) => permissions.has(key));
+
   return {
     userId: user.id,
     username: user.username,
@@ -109,10 +131,15 @@ export const loadActor = cache(async (): Promise<Actor | null> => {
     role: roleId,
     roleLabel: role?.label ?? roleId,
     mustChangePassword: user.mustChangePassword === 1,
+    mfaEnabled,
+    mfaRequired,
     permissions,
     can: (key) => hasPermission(permissions, key),
   };
 });
+
+const mfaRequiredResponse = () =>
+  NextResponse.json({ error: MFA_REQUIRED_MESSAGE, mfaRequired: true }, { status: 403 });
 
 export type Gate = { ok: true; actor: Actor } | { ok: false; response: NextResponse };
 
@@ -132,6 +159,7 @@ export async function requirePermission(key: string, forbiddenMessage?: string):
       response: NextResponse.json({ error: "غيّر كلمة المرور المؤقتة أولًا." }, { status: 403 }),
     };
   }
+  if (actor.mfaRequired) return { ok: false, response: mfaRequiredResponse() };
   if (!actor.can(key)) {
     return {
       ok: false,
@@ -144,8 +172,11 @@ export async function requirePermission(key: string, forbiddenMessage?: string):
   return { ok: true, actor };
 }
 
-/** بوابة الجلسة فقط (بلا صلاحية بعينها) — للمسارات المفتوحة لكل عضو فعّال. */
-export async function requireActor(options: { allowTemporaryPassword?: boolean } = {}): Promise<Gate> {
+/**
+ * بوابة الجلسة فقط (بلا صلاحية بعينها) — للمسارات المفتوحة لكل عضو فعّال.
+ * allowMissingMfa لمسارات الحساب التي يحتاجها المسؤول ليفعّل التحقق بخطوتين أصلًا (mfa، password).
+ */
+export async function requireActor(options: { allowTemporaryPassword?: boolean; allowMissingMfa?: boolean } = {}): Promise<Gate> {
   const actor = await loadActor();
   if (!actor) {
     return { ok: false, response: NextResponse.json({ error: "الجلسة منتهية." }, { status: 401 }) };
@@ -153,9 +184,14 @@ export async function requireActor(options: { allowTemporaryPassword?: boolean }
   if (actor.mustChangePassword && !options.allowTemporaryPassword) {
     return { ok: false, response: NextResponse.json({ error: "غيّر كلمة المرور المؤقتة أولًا." }, { status: 403 }) };
   }
+  if (actor.mfaRequired && !options.allowMissingMfa) return { ok: false, response: mfaRequiredResponse() };
   return { ok: true, actor };
 }
 
+/**
+ * بوابة الشاشات — requireScreen — تعيش في ./screen.ts: تحتاج next/navigation ومكوّن «بلا صلاحية»،
+ * وهذا الملف يُحزَم في مسارات API وحزم الاختبار المعزولة فلا يحمل واجهة.
+ */
 /**
  * تحرير مادة: صاحبها بـ story.edit.own، وغيره بـ story.edit.any.
  * الملكية بمعرف المستخدم الثابت؛ الاسم المعروض ليس إثبات ملكية.

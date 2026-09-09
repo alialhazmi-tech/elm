@@ -96,7 +96,9 @@ test("الجلسة تحمل الهوية فقط والفاعل يُحلّ من �
 test("حارس آخر مسؤول نظام ومنع تعليق النفس وحماية الأدوار النظامية", async () => {
   const admin = await read("lib/tahrir/admin.ts");
   assert.match(admin, /لا يمكن تعليق آخر مسؤول نظام فعّال/);
+  // تعليق النفس صار ضمن حارس «لا تعديل للحساب نفسه من شاشة الأعضاء» — السلوك مُختبر في permission-matrix.integration.
   assert.match(admin, /لا يمكنك تعليق عضويتك أنت/);
+  assert.match(admin, /لا يمكنك تعديل حسابك من شاشة الأعضاء/);
   assert.match(admin, /الأدوار النظامية لا تُحذف/);
   assert.match(admin, /مسؤول النظام يملك كل الصلاحيات بحكم التعريف/);
   assert.match(admin, /invalidateRoleCache\(\)/);

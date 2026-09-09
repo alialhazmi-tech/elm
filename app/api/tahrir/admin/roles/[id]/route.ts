@@ -13,7 +13,7 @@ export async function PATCH(request: Request, context: IdContext) {
   if (!input) return NextResponse.json({ error: "طلب غير صالح." }, { status: 400 });
 
   try {
-    await updateRole(id, input, gate.actor.username);
+    await updateRole(id, input, gate.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);
@@ -27,7 +27,7 @@ export async function DELETE(_request: Request, context: IdContext) {
   const { id } = await context.params;
 
   try {
-    await deleteRole(id, gate.actor.username);
+    await deleteRole(id, gate.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);

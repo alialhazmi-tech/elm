@@ -1,5 +1,5 @@
 import { MediaClient } from "@/components/tahrir/media/media-client";
-import { loadActor } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { countMedia, listMediaPage, type MediaFilter } from "@/lib/tahrir/service";
 
 export const metadata = { title: "الوسائط" };
@@ -13,8 +13,9 @@ export default async function MediaPage({
 }: {
   searchParams: Promise<{ f?: string; p?: string; q?: string }>;
 }) {
+  const gate = await requireScreen("media.upload", "الوسائط");
+  if (!gate.ok) return gate.element;
   const params = await searchParams;
-  const actor = await loadActor();
   const filter = (FILTERS.has(params.f ?? "") ? params.f : "all") as MediaFilter;
   const page = Math.max(1, Number(params.p) || 1);
   const q = (params.q ?? "").trim().slice(0, 80);
@@ -33,7 +34,7 @@ export default async function MediaPage({
         <span className="text-xs text-muted-foreground tabular-nums">{q ? `${counts.all} صورة تطابق «${q}»` : `${counts.all} صورة في المكتبة`}</span>
       </div>
       <MediaClient
-        canClear={actor?.can("media.rights") ?? false}
+        canClear={gate.actor.can("media.rights")}
         filter={filter}
         q={q}
         counts={counts}

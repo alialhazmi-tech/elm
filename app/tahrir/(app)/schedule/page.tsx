@@ -5,6 +5,7 @@ import { SeriesTag, StatusPill } from "@/components/tahrir/badges";
 import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
 import { TodayTimeline, type TimelineItem } from "@/components/tahrir/overview/today-timeline";
 import { SERIES } from "@/lib/content/series";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { editorHref } from "@/lib/tahrir/routes";
 import { listLatestByStatus } from "@/lib/tahrir/service";
 
@@ -33,6 +34,8 @@ const dayOf = (iso: string) =>
   }).format(new Date(iso));
 
 export default async function SchedulePage() {
+  const gate = await requireScreen("story.schedule", "جدولة النشر");
+  if (!gate.ok) return gate.element;
   const automatic = process.env.ALELM_SCHEDULER_INTERVAL_MS === "5000";
   // المراقب الداخلي أو الخارجي ينشر عبر POST موثق؛ هذه الشاشة للقراءة فقط.
   const [latestPublished, scheduled] = await Promise.all([

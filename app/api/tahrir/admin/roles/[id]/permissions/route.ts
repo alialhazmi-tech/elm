@@ -19,7 +19,7 @@ export async function PATCH(request: Request, context: IdContext) {
   }
 
   try {
-    await setRolePermission(id, permissionKey, granted, gate.actor.username);
+    await setRolePermission(id, permissionKey, granted, gate.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);

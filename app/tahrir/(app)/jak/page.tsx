@@ -3,7 +3,7 @@ import Link from "next/link";
 import { StatusPill } from "@/components/tahrir/badges";
 import { Panel, PanelEmpty } from "@/components/tahrir/overview/panel";
 import { SECTION_NAMES } from "@/lib/content/seed";
-import { loadActor } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { listLatestByFormat, listRecentMedia, STATUS_LABELS, type StoryStatus } from "@/lib/tahrir/service";
 import { JakEditor } from "@/components/tahrir/jak/jak-editor";
 
@@ -12,7 +12,9 @@ export const dynamic = "force-dynamic";
 
 /** إنشاء جاك علم جديد — حقلان وزر واحد، والتعقيد كله بعد التحليل. */
 export default async function JakNewPage() {
-  const actor = await loadActor();
+  const gate = await requireScreen("jak.manage", "جاك العلم");
+  if (!gate.ok) return gate.element;
+  const actor = gate.actor;
   const [mediaRows, jakStories] = await Promise.all([
     listRecentMedia({ rightsCleared: true, limit: 8 }).catch(() => []),
     listLatestByFormat("jakalelm", 30).catch(() => []),
@@ -49,8 +51,8 @@ export default async function JakNewPage() {
         )}
       </Panel>
       <JakEditor
-        actorId={actor!.userId}
-        canApprove={actor?.can("story.publish") ?? false}
+        actorId={actor.userId}
+        canApprove={actor.can("story.publish")}
         sections={sections}
         recentMedia={recentMedia}
         initial={null}

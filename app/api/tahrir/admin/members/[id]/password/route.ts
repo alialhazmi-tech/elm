@@ -14,7 +14,7 @@ export async function POST(request: Request, context: IdContext) {
   if (!password) return NextResponse.json({ error: "كلمة المرور مطلوبة." }, { status: 400 });
 
   try {
-    await resetMemberPassword(id, password, gate.actor.username);
+    await resetMemberPassword(id, password, gate.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);

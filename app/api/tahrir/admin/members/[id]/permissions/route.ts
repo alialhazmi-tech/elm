@@ -22,7 +22,7 @@ export async function PUT(request: Request, context: IdContext) {
       overrides
         .filter((o): o is { permissionKey: string; effect: OverrideEffect } => typeof o?.permissionKey === "string" && !!o.effect)
         .slice(0, 100),
-      gate.actor.username,
+      gate.actor,
     );
     return NextResponse.json({ ok: true });
   } catch (error) {

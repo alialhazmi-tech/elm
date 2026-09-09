@@ -8,6 +8,7 @@
 | R-04 | BLOCKED | قواعد Policy Guard بلا مصدر تحريري كامل | مؤكد | حرج | لا اختراع؛ deterministic rules بعد استلام الوثيقة | ملف السياسة الرسمي |
 | R-05 | OPEN | إنذارات AI كاذبة أو provider lock-in | متوسط | متوسط | severity، human override audited، provider abstraction، monthly eval | AI/provider decision |
 | R-06 | OPEN | اختراق لوحة التحرير | منخفض/متوسط | حرج | RBAC، TOTP، secure sessions، audit، panel isolation | identity architecture |
+| R-11 | MITIGATED | تخمين كلمات مرور اللوحة: حظر تكرار محاولات الدخول أُزيل في #111 (5 سبتمبر 2026) «مؤقتًا بطلب الإدارة» وبقي الدخول بلا سقف | مرتفع | حرج | أُعيد الحظر: 10 محاولات للحساب و40 للشبكة كل 15 دقيقة، رمز MFA الخاطئ يُحتسب، الدخول الناجح يصفّر نافذة الحساب فقط، الرفض 429 مع Retry-After، تعطل الحاجز يغلق الدخول (503)، وكل فشل يُدوَّن في سجل التدقيق بلا كلمات مرور. الاختبار: `tests/workflow.integration.mjs` | لا يُزال ثانية إلا بقرار موثّق هنا وبديل مكافئ |
 | R-07 | OPEN | تضخم JavaScript من التفاعل | متوسط | مرتفع | RSC أولًا وCI budget 200KB compressed | budget gate |
 | R-08 | BLOCKED | عدم تطابق author identities والـSchema | مرتفع | مرتفع | author inventory وربط legacy usernames بملفات حقيقية | editorial directory |
 | R-09 | OPEN | OpenNext/Cloudflare adapter regression | منخفض/متوسط | مرتفع | native Next build أولًا، adapter build gate، version pinning، rollback | staging worker |
