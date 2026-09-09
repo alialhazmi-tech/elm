@@ -17,16 +17,18 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
     useCallback(fn) { return fn; },
     useEffect(fn) { const i = cursor++; if (!(i in slots)) { slots[i] = true; effects.push(fn); } },
     router: { replace: path => routes.push(path), refresh() {} },
-    recovery: { ready: true, recovery: null, markSaved: value => confirmed.push(value), dismiss() {} },
+    recovery: { ready: true, recovery: null, recoveryMeta: null, markSaved: value => confirmed.push(value), dismiss() {}, clear() {} },
     autosave: options => { autosaveOptions = options; return { dirty: false, markSaved() {}, markFailed() {} }; },
   };
-  globalThis.window = { history: { replaceState() {} } };
+  // الخطافات المستخرجة تستعمل مؤقتات window (الحارس الحي وعدّاد التحرير الشامل).
+  globalThis.window = { history: { replaceState() {} }, setTimeout, clearTimeout, setInterval, clearInterval };
   const mocks = {
     react: 'export const {useState,useRef,useCallback,useEffect}=globalThis.__editorWorkflow',
     'next/navigation': 'export const useRouter=()=>globalThis.__editorWorkflow.router',
     'next/link': 'export default "a"',
-    'lucide-react': 'export const ExternalLinkIcon="svg",FilePenLineIcon="svg",SaveIcon="svg",SendIcon="svg",ShieldCheckIcon="svg"',
-    '@/components/tahrir/use-draft-recovery': 'export const useDraftRecovery=()=>globalThis.__editorWorkflow.recovery',
+    'lucide-react': 'export const ExternalLinkIcon="svg",FilePenLineIcon="svg",RefreshCwIcon="svg",SaveIcon="svg",SendIcon="svg",ShieldCheckIcon="svg"',
+    sonner: 'export const toast={error(){},success(){}}',
+    '@/components/tahrir/use-draft-recovery': 'export const useDraftRecovery=()=>globalThis.__editorWorkflow.recovery; export const useDraftTabToken=()=>"tab-token"',
     '@/components/tahrir/use-draft-autosave': 'export const useDraftAutosave=options=>globalThis.__editorWorkflow.autosave(options)',
   };
   const elements = {
@@ -49,7 +51,8 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
     const { EditorClient } = await import(`${dir}/subject.mjs`);
     const initial = { id: 'original', version: 4, revisionOf: null, status: 'published', title: 'عنوان المادة', excerpt: 'الموجز', body: 'المتن', section: 'news', slug: 'article', seriesSlug: null, image: null, format: 'news', pinned: false, breakingUntil: null, seoTitle: '', seoDescription: '', keywords: [], videoUrl: null };
     let props;
-    const nodes = node => !node || typeof node !== 'object' ? [] : [node, ...[node.props?.children].flat(Infinity).flatMap(nodes)];
+    // شريط الإجراءات مكوّن بلا خطافات؛ نوسّعه لتبقى الأزرار قابلة للعثور عليها بنصها كما قبل التقسيم.
+    const nodes = node => !node || typeof node !== 'object' ? [] : typeof node.type === 'function' ? nodes(node.type(node.props)) : [node, ...[node.props?.children].flat(Infinity).flatMap(nodes)];
     const render = () => { cursor = 0; const tree = EditorClient(props); while (effects.length) cleanups.push(effects.shift()()); return tree; };
     const button = label => nodes(render()).find(node => node.type === 'Button' && [node.props.children].flat(Infinity).includes(label));
     let saveFailure = false; let publishFailure = false; let finishSave;

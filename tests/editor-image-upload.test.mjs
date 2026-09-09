@@ -11,7 +11,8 @@ test("المحرر يرفع صورة المادة عبر مكتبة الوسائ
   assert.match(editor, /await uploadStoryImageFile\(file,/);
   assert.match(editor, /accept="image\/png,image\/jpeg,image\/webp"/);
   assert.match(editor, /setImage\(data\.url\)/);
-  assert.match(editor, /scheduleGuard\(title, bodyText\(\), data\.url, format\)/);
+  // الصورة المرفوعة تدخل الحارس الحي فور تعيينها (واجهة الترقيع الجديدة تحمل بقية القيم من الحالة).
+  assert.match(editor, /guard\.scheduleGuard\(\{ image: data\.url, body: bodyHtml\(\) \}\)/);
   assert.match(editor, /يلزم توثيق الحقوق قبل الاعتماد/);
   assert.match(details, /إزالة الصورة/);
 });

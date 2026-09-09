@@ -1,6 +1,6 @@
 "use client";
 
-import { LocateIcon, WandSparklesIcon } from "lucide-react";
+import { LocateIcon, RefreshCwIcon, WandSparklesIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import type { Finding, GuardReport } from "@/lib/policy/types";
@@ -29,19 +29,24 @@ export interface ArchiveEventView {
 export function GuardPanel({
   report,
   guardBusy,
+  guardError = false,
   gateOpen,
   controls,
   onFix,
   onLocate,
+  onRetry,
   status,
   archiveEvent,
 }: {
   report: GuardReport | null;
   guardBusy: boolean;
+  /** فشل طلب الفحص (شبكة/خادم) — ليس «صفر مخالفة». */
+  guardError?: boolean;
   gateOpen: boolean;
   controls: GuardControls;
   onFix: (finding: Finding) => void;
   onLocate: (finding: Finding) => void;
+  onRetry?: () => void;
   status: string;
   archiveEvent: ArchiveEventView | null;
 }) {
@@ -73,14 +78,22 @@ export function GuardPanel({
           aria-hidden
           className={cn(
             "size-2 rounded-full",
-            guardBusy ? "animate-pulse bg-muted-foreground" : report && report.counts.blocking === 0 ? "bg-(--t-ok)" : "bg-(--t-block)",
+            guardBusy ? "animate-pulse bg-muted-foreground" : guardError ? "bg-(--t-warn)" : report && report.counts.blocking === 0 ? "bg-(--t-ok)" : "bg-(--t-block)",
           )}
         />
         {guardBusy
           ? controls.editorialGuard ? "يفحص الحارس…" : controls.requireImageRights ? "يفحص حقوق الصورة…" : "يحدّث حالة البوابات…"
-          : report
-            ? `${report.rulesEvaluated} قاعدة · ${report.findings.length} ملاحظات`
-            : "اكتب ليفحص"}
+          : guardError
+            ? "تعذر فحص الحارس"
+            : report
+              ? `${report.rulesEvaluated} قاعدة · ${report.findings.length} ملاحظات`
+              : "اكتب ليفحص"}
+        {guardError && !guardBusy && onRetry ? (
+          <Button size="xs" variant="outline" className="ms-auto" onClick={onRetry}>
+            <RefreshCwIcon data-icon="inline-start" />
+            أعد الفحص
+          </Button>
+        ) : null}
       </div>
 
       {report?.findings.slice(0, 12).map((finding, index) => (
@@ -112,12 +125,16 @@ export function GuardPanel({
       <div
         className={cn(
           "m-3 rounded-md px-3 py-2 text-xs leading-relaxed",
-          guardBusy || !report ? "bg-muted text-muted-foreground" : gateOpen ? "bg-(--t-ok-bg) text-(--t-ok)" : "bg-(--t-block-bg) text-(--t-block)",
+          guardError && !guardBusy ? "bg-(--t-warn-bg) text-(--t-warn)" : guardBusy || !report ? "bg-muted text-muted-foreground" : gateOpen ? "bg-(--t-ok-bg) text-(--t-ok)" : "bg-(--t-block-bg) text-(--t-block)",
         )}
       >
         {!controls.editorialGuard && !controls.requireImageRights ? (
           <>
             <b>بوابات النشر معطّلة</b> — يبقى الاعتماد النهائي بشريًا.
+          </>
+        ) : guardError && !guardBusy ? (
+          <>
+            <b>تعذر فحص الحارس</b> — لم يصل رد من الخادم؛ البوابة تبقى مغلقة حتى فحص ناجح. أعد الفحص أو تحقق من الاتصال.
           </>
         ) : guardBusy || !report ? (
           <>

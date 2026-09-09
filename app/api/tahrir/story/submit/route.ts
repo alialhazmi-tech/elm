@@ -1,11 +1,11 @@
 import { assertCanWrite, assertExpectedVersion, writeError } from "@/lib/tahrir/write-policy";
 import { NextResponse } from "next/server";
 
-import { stripHtmlToText } from "@/lib/content/html";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { runConfiguredPolicyGuard } from "@/lib/policy";
 import { blockingFindings } from "@/lib/policy/report";
 import { requirePermission } from "@/lib/tahrir/access";
+import { buildGuardDraft, loadGuardContext } from "@/lib/tahrir/guard-draft";
 import { getStory, guardMediaFor, setStatus } from "@/lib/tahrir/service";
 
 /**
@@ -26,14 +26,13 @@ async function transition(request: Request) {
   assertExpectedVersion(story.version, expectedVersion);
 
   assertCanWrite(session, story);
-  const [settings, media] = await Promise.all([loadAiSettings(), guardMediaFor(story.image)]);
-  const report = runConfiguredPolicyGuard({
-    id: story.id,
-    title: story.title,
-    body: stripHtmlToText(story.body),
-    surface: story.format === "jakalelm" ? ("design" as const) : undefined,
-    media,
-  }, settings.governance);
+  const settingsPromise = loadAiSettings();
+  const [settings, media, context] = await Promise.all([settingsPromise, guardMediaFor(story.image), loadGuardContext(settingsPromise, session.userId)]);
+  const report = runConfiguredPolicyGuard(
+    buildGuardDraft({ id: story.id, title: story.title, body: story.body, format: story.format, image: story.image, breakingUntil: story.breakingUntil, media }),
+    settings.governance,
+    context,
+  );
   if (!report.canRequestApproval) {
     return NextResponse.json(
       {

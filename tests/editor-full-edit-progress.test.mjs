@@ -5,10 +5,11 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("التحرير الشامل يبث مراحله الفعلية ويحمي تعديلات المسودة", async () => {
-  const [editorial, route, editor, fullEdit, css] = await Promise.all([
+  const [editorial, route, editor, stream, fullEdit, css] = await Promise.all([
     read("lib/ai/editorial.ts"),
     read("app/api/tahrir/ai/assist/route.ts"),
     read("components/tahrir/editor/editor-client.tsx"),
+    read("components/tahrir/editor/use-full-edit-stream.ts"),
     read("components/tahrir/editor/full-edit.tsx"),
     read("app/tahrir/shadcn.css"),
   ]);
@@ -24,8 +25,10 @@ test("التحرير الشامل يبث مراحله الفعلية ويحمي 
   assert.match(route, /padding: " "\.repeat\(1100\)/);
   assert.match(route, /signal: request\.signal/);
 
-  assert.match(editor, /response\.body\.getReader\(\)/);
-  assert.match(editor, /fullEditStale/);
+  // منطق البث انتقل إلى use-full-edit-stream؛ المحرر يستهلكه ويقفل التطبيق حين تتغير المسودة.
+  assert.match(stream, /response\.body\.getReader\(\)/);
+  assert.match(stream, /fullEditStale/);
+  assert.match(editor, /full\.fullEditStale/);
   assert.match(fullEdit, /التطبيق متوقف لحماية تعديلاتك/);
   // المفتّش تبويبات shadcn (Tabs/TabsList تعطي role="tablist" وقت التشغيل).
   assert.match(editor, /<TabsList/);
