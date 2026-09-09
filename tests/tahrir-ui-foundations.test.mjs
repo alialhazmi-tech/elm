@@ -110,10 +110,16 @@ test("apiCall ينهي الطلب بعد المهلة برسالة عربية و
         init.signal.addEventListener("abort", () => reject(init.signal.reason));
       }),
     async () => {
-      const started = Date.now();
-      const result = await apiCall("/api/tahrir/slow", {}, { timeoutMs: 40 });
-      assert.deepEqual(result, { ok: false, status: 408, error: API_MESSAGES.timeout });
-      assert.ok(Date.now() - started < 2_000);
+      // مؤقت AbortSignal.timeout غير مثبِّت للحلقة (unref) في Node؛ نُبقي الحلقة حية حتى يطلق.
+      const keepAlive = setTimeout(() => {}, 5_000);
+      try {
+        const started = Date.now();
+        const result = await apiCall("/api/tahrir/slow", {}, { timeoutMs: 40 });
+        assert.deepEqual(result, { ok: false, status: 408, error: API_MESSAGES.timeout });
+        assert.ok(Date.now() - started < 2_000);
+      } finally {
+        clearTimeout(keepAlive);
+      }
     },
   );
 });
