@@ -5,11 +5,18 @@ import { promoteDueScheduled } from "@/lib/tahrir/service";
 
 let nextCleanupAt = 0;
 
+/** مقارنة بزمن ثابت: طول مختلف يُرفض بعد المرور على المتوقَّع كاملًا، لا عند أول محرف مختلف. */
+function safeEqual(actual: string, expected: string): boolean {
+  let diff = actual.length ^ expected.length;
+  for (let i = 0; i < expected.length; i += 1) diff |= (actual.charCodeAt(i) || 0) ^ expected.charCodeAt(i);
+  return diff === 0;
+}
+
 /** عامل داخلي أو خارجي يستدعي POST بمفتاح خاص؛ فتح اللوحة لا ينشر محتوى. */
 export async function POST(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return Response.json({ error: "Scheduler not configured" }, { status: 503 });
-  if (request.headers.get("authorization") !== `Bearer ${secret}`) return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if (!safeEqual(request.headers.get("authorization") ?? "", `Bearer ${secret}`)) return Response.json({ error: "Unauthorized" }, { status: 401 });
   try {
     const promoted = await promoteDueScheduled();
     promoted.forEach(revalidatePublicStory);
