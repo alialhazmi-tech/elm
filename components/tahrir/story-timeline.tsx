@@ -10,10 +10,10 @@ type TimelineEvent = { id: string; at: string; actorName: string; action: string
 type TimelinePage = { title: string; events: TimelineEvent[]; nextCursor: string | null };
 const date = (value: string) => new Date(value).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
 
-export function StoryTimeline({ id }: { id: string | null }) {
+export function StoryTimeline({ id, compact = false, storyTitle }: { id: string | null; compact?: boolean; storyTitle?: string }) {
   const [open, setOpen] = useState(false);
   return <Sheet open={open} onOpenChange={setOpen}>
-    <SheetTrigger asChild><Button size="sm" variant="outline" disabled={!id} title={id ? "كل الأحداث المسجلة لهذه المادة" : "احفظ المسودة لبدء سجلها"}><HistoryIcon />السجل الزمني</Button></SheetTrigger>
+    <SheetTrigger asChild><Button size={compact ? "icon-xs" : "sm"} variant={compact ? "ghost" : "outline"} className={compact ? "text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" : undefined} disabled={!id} title={id ? "السجل الزمني" : "احفظ المسودة لبدء سجلها"} aria-label={storyTitle ? `السجل الزمني: ${storyTitle}` : "السجل الزمني"}><HistoryIcon className={compact ? "size-3.5" : undefined} />{!compact && "السجل الزمني"}</Button></SheetTrigger>
     <SheetContent side="left" dir="rtl" className="data-[side=left]:w-full data-[side=left]:sm:max-w-xl">
       <SheetHeader className="border-b pe-12"><SheetTitle>السجل الزمني للمادة</SheetTitle><SheetDescription>كل حدث محفوظ باسمه وتاريخه ومنفّذه. الأوقات بتوقيت الرياض.</SheetDescription></SheetHeader>
       {open && id && <TimelineContent key={id} id={id} />}

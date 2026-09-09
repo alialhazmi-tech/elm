@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { GuardChip, SeriesTag, StatusPill } from "@/components/tahrir/badges";
+import { StoryTimeline } from "@/components/tahrir/story-timeline";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -156,6 +157,7 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                           <PenLineIcon className="size-3.5" />
                         </Link>
                       </Button>
+                      <StoryTimeline id={row.id} storyTitle={row.title} compact />
                       {row.publicHref ? (
                         <Button
                           asChild
