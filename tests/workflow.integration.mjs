@@ -111,13 +111,32 @@ try {
   await admin.query("insert into roles(id,label,created_at,updated_at) values('login-test-role','Login fixture role',now(),now()) on conflict do nothing");
   await admin.query("insert into users(id,username,display_name,password_hash,created_at) values($1,$2,$3,$4,$5)", ['login-fixture','Login-Fixture','Local fixture',await hashPassword('fixture-password-123'),new Date().toISOString()]);
   const loginRequest = (password, username = 'login-fixture') => new Request('https://test.invalid/api/tahrir/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});
-  // Existing account/network lockouts must no longer prevent password or MFA checks.
-  await withDb(async () => {
-    for (let attempt = 0; attempt < 41; attempt++) {
-      await subject.consumeLimit('login-account', 'login-fixture', 10, 900);
-      await subject.consumeLimit('login-network', 'unknown', 40, 900);
-    }
-  });
+  // Brute-force lockout (removed in #111, restored): 10 attempts per account and 40 per network every 15 minutes.
+  await admin.query("insert into users(id,username,display_name,password_hash,created_at) values($1,$2,$3,$4,$5)", ['lockout-fixture','lockout-fixture','Lockout fixture',await hashPassword('fixture-password-123'),new Date().toISOString()]);
+  const lockoutRequest = (password, ip = '203.0.113.7', username = 'lockout-fixture') => new Request('https://test.invalid/api/tahrir/login', {method:'POST',headers:{'Content-Type':'application/json','x-forwarded-for':`${ip}, 10.0.0.1`},body:JSON.stringify({username,password})});
+  const lockoutAttempt = (...args) => withDb(() => subject.loginApi(lockoutRequest(...args)));
+  for (let attempt = 0; attempt < 10; attempt++) assert.equal((await lockoutAttempt('wrong-password')).status, 401, `attempt ${attempt + 1} is still evaluated`);
+  const locked = await lockoutAttempt('wrong-password');
+  assert.equal(locked.status, 429, 'the 11th attempt is refused');
+  assert.equal(locked.headers.get('Retry-After'), '900');
+  assert.equal((await lockoutAttempt('fixture-password-123')).status, 429, 'the correct password is refused while the window is open');
+  assert.equal((await lockoutAttempt('fixture-password-123', '203.0.113.7', ' LOCKOUT-Fixture ')).status, 429, 'the account window ignores case and whitespace');
+  assert.equal((await admin.query("select count(*)::int n from audit_log where action='login:failed' and actor='lockout-fixture' and detail='كلمة مرور غير صحيحة'")).rows[0].n, 10, 'every evaluated failure is audited, refused attempts are not');
+  assert.equal((await admin.query("select count(*)::int n from audit_log where detail like '%wrong-password%' or detail like '%fixture-password%'")).rows[0].n, 0, 'passwords never reach the audit log');
+  await admin.query("update request_limits set expires_at=$1", [new Date(Date.now() - 1000).toISOString()]);
+  assert.equal((await lockoutAttempt('fixture-password-123')).status, 200, 'an expired window starts afresh');
+  // A successful login clears the account window, so the next ten failures are evaluated again before the lockout.
+  for (let attempt = 0; attempt < 10; attempt++) assert.equal((await lockoutAttempt('wrong-password')).status, 401);
+  assert.equal((await lockoutAttempt('wrong-password')).status, 429);
+  // The network window covers unknown usernames too, so distributed guessing from one address is throttled.
+  for (let attempt = 0; attempt < 40; attempt++) assert.equal((await lockoutAttempt('wrong-password', '198.51.100.9', `ghost-${attempt}`)).status, 401);
+  assert.equal((await lockoutAttempt('fixture-password-123', '198.51.100.9', 'login-fixture')).status, 429, 'the network limit applies to a valid account from the same address');
+  assert.equal((await admin.query("select count(*)::int n from audit_log where action='login:failed' and actor='anonymous' and detail='حساب غير معروف'")).rows[0].n, 40, 'unknown accounts are audited under a generic actor');
+  const unknownAccount = await lockoutAttempt('wrong-password', '203.0.113.8', 'nobody-here');
+  assert.equal(unknownAccount.status, 401);
+  assert.deepEqual(await unknownAccount.json(), { error: 'بيانات الدخول غير صحيحة.' }, 'unknown and wrong-password answers are identical');
+  assert.equal((await context.run(null, () => subject.loginApi(lockoutRequest('fixture-password-123')))).status, 503, 'an unavailable limiter fails closed');
+  checks++;
   assert.equal((await withDb(() => subject.loginApi(loginRequest('wrong-password')))).status,401);
   for (const password of ['FIXTURE-PASSWORD-123', ' fixture-password-123 ']) {
     assert.equal((await withDb(() => subject.loginApi(loginRequest(password)))).status, 401, 'passwords must remain case- and whitespace-sensitive');
