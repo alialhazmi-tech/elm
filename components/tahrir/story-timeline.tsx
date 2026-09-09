@@ -4,17 +4,18 @@ import { HistoryIcon, RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { stripHtmlToText } from "@/lib/content/html";
+import { formatRiyadhDateTime } from "@/lib/format";
 import type { FieldChange } from "@/lib/tahrir/story-audit";
 
 type TimelineEvent = { id: string; at: string; actorName: string; action: string; label: string; tone: string; storyId: string; isRevision: boolean; detail: string; recordedDetails: boolean; fields: string[]; changes?: FieldChange[]; references?: Record<string, string> };
 type TimelinePage = { title: string; events: TimelineEvent[]; nextCursor: string | null };
-const date = (value: string) => new Date(value).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+const date = (value: string) => formatRiyadhDateTime(value, { seconds: true }) || "وقت غير معروف";
 
 export function StoryTimeline({ id, compact = false, storyTitle }: { id: string | null; compact?: boolean; storyTitle?: string }) {
   const [open, setOpen] = useState(false);
   return <Sheet open={open} onOpenChange={setOpen}>
-    <SheetTrigger asChild><Button size={compact ? "icon-xs" : "sm"} variant={compact ? "ghost" : "outline"} className={compact ? "text-muted-foreground transition-colors hover:bg-muted hover:text-foreground" : undefined} disabled={!id} title={id ? "السجل الزمني" : "احفظ المسودة لبدء سجلها"} aria-label={storyTitle ? `السجل الزمني: ${storyTitle}` : "السجل الزمني"}><HistoryIcon className={compact ? "size-3.5" : undefined} />{!compact && "السجل الزمني"}</Button></SheetTrigger>
-    <SheetContent side="left" dir="rtl" className="data-[side=left]:w-full data-[side=left]:sm:max-w-xl">
+    <SheetTrigger asChild><Button size={compact ? "icon-xs" : "sm"} variant={compact ? "ghost" : "outline"} className={compact ? "size-9 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:size-6" : undefined} disabled={!id} title={id ? "السجل الزمني" : "احفظ المسودة لبدء سجلها"} aria-label={storyTitle ? `السجل الزمني: ${storyTitle}` : "السجل الزمني"}><HistoryIcon className={compact ? "size-3.5" : undefined} />{!compact && "السجل الزمني"}</Button></SheetTrigger>
+    <SheetContent side="left" className="data-[side=left]:w-full data-[side=left]:sm:max-w-xl">
       <SheetHeader className="border-b pe-12"><SheetTitle>السجل الزمني للمادة</SheetTitle><SheetDescription>كل حدث محفوظ باسمه وتاريخه ومنفّذه. الأوقات بتوقيت الرياض.</SheetDescription></SheetHeader>
       {open && id && <TimelineContent key={id} id={id} />}
     </SheetContent>
@@ -40,7 +41,7 @@ function TimelineContent({ id }: { id: string }) {
     {error && <div role="alert" className="mb-4 space-y-2 text-sm text-destructive"><p>{error}</p><Button variant="outline" size="sm" onClick={() => load(request.cursor)}>إعادة المحاولة</Button></div>}
     <ol aria-label="أحداث المادة من الأحدث إلى الأقدم" className="ms-2 border-s border-border">
       {page?.events.map(event => <li key={event.id} className="relative pb-6 ps-6 last:pb-0">
-        <span aria-hidden="true" className={`absolute -start-[5px] top-2 size-2.5 rounded-full ring-4 ring-background ${event.tone === "danger" ? "bg-destructive" : event.tone === "success" ? "bg-emerald-600" : event.tone === "warning" ? "bg-amber-500" : "bg-primary"}`} />
+        <span aria-hidden="true" className={`absolute -start-[5px] top-2 size-2.5 rounded-full ring-4 ring-background ${event.tone === "danger" ? "bg-(--t-block)" : event.tone === "success" ? "bg-(--t-ok)" : event.tone === "warning" ? "bg-(--t-warn)" : "bg-primary"}`} />
         <div className="flex flex-wrap items-center gap-2"><h3 className="text-sm font-bold">{event.label}</h3>{event.isRevision && <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">مسودة تعديل</span>}</div>
         <p className="mt-1 text-sm">{event.actorName}</p><time dateTime={event.at} className="mt-1 block text-xs text-muted-foreground">{date(event.at)}</time>
         {event.detail && <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-7">{event.detail}</p>}
@@ -70,7 +71,7 @@ function EventChanges({ storyId, event }: { storyId: string; event: TimelineEven
   return <div className="mt-2"><Button size="sm" variant="ghost" className="px-0" aria-expanded={open} onClick={() => { setError(""); setOpen(!open); }}>{open ? "إخفاء التغييرات" : "عرض التغييرات قبل وبعد"}</Button>
     {open && <div className="mt-2 space-y-3">{error ? <p role="alert" className="text-xs text-destructive">{error}</p> : !result ? <p role="status" className="text-xs">جارٍ تحميل التفاصيل…</p> : result.changes?.map(change => <div key={change.field} className="rounded-lg border p-3 text-sm"><h4 className="mb-2 font-semibold">{change.label}</h4>
       <div className="space-y-2"><div className="rounded bg-muted/60 p-2"><p className="mb-1 text-xs font-semibold text-muted-foreground">{change.text ? "النص المستبدل" : "قبل"}</p><p className="max-h-60 overflow-y-auto whitespace-pre-wrap break-words leading-7">{changeValue(change.text ? change.text.removed : change.before, change.field, result.references)}</p></div>
-      <div className="rounded border border-emerald-600/20 bg-emerald-500/5 p-2"><p className="mb-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">{change.text ? "النص الجديد" : "بعد"}</p><p className="max-h-60 overflow-y-auto whitespace-pre-wrap break-words leading-7">{changeValue(change.text ? change.text.added : change.after, change.field, result.references)}</p></div></div>
+      <div className="rounded border border-(--t-ok)/20 bg-(--t-ok-bg) p-2"><p className="mb-1 text-xs font-semibold text-(--t-ok)">{change.text ? "النص الجديد" : "بعد"}</p><p className="max-h-60 overflow-y-auto whitespace-pre-wrap break-words leading-7">{changeValue(change.text ? change.text.added : change.after, change.field, result.references)}</p></div></div>
     </div>)}</div>}
   </div>;
 }

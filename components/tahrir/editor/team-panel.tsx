@@ -58,10 +58,10 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
     {open && <div className="space-y-4 border-t p-4">
       {!id ? <p className="text-sm text-muted-foreground">احفظ المسودة أولًا لتتمكن من إسنادها ومشاركة الملاحظات.</p> : <>
         {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-        {notice && <p role="status" className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300"><CircleCheckIcon className="size-4 shrink-0" aria-hidden="true" />{notice}</p>}
+        {notice && <p role="status" className="flex items-center gap-2 text-sm text-(--t-ok)"><CircleCheckIcon className="size-4 shrink-0" aria-hidden="true" />{notice}</p>}
         {!data && !error && <p role="status">جارٍ تحميل المراجعة…</p>}
         {data && <>
-          {data.returnedAt && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">أُعيدت هذه المادة للتعديل. راجع السبب أدناه ثم أرسلها للاعتماد بعد المعالجة.</p>}
+          {data.returnedAt && <p className="rounded-lg bg-(--t-warn-bg) p-3 text-sm text-(--t-warn)">أُعيدت هذه المادة للتعديل. راجع السبب أدناه ثم أرسلها للاعتماد بعد المعالجة.</p>}
           {data.canAssign && editingAssignment ? <div className="space-y-3">
             <div className="grid items-end gap-3 sm:grid-cols-2">
             <label className="grid gap-2 text-sm">المحرر المسؤول<select className="h-9 rounded-md border bg-background px-2" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} disabled={pending || locked}><option value="">دون إسناد</option>{data.editors.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}</select></label>

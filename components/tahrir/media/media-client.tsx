@@ -1,15 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeftIcon, ChevronRightIcon, CopyIcon, SearchIcon, ShieldCheckIcon, ShieldOffIcon, UploadCloudIcon, XIcon } from "lucide-react";
+import { CopyIcon, SearchIcon, ShieldCheckIcon, ShieldOffIcon, UploadCloudIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { GuardChip } from "@/components/tahrir/badges";
+import { Pagination } from "@/components/tahrir/pagination";
+import { SegmentedFilter } from "@/components/tahrir/segmented-filter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { apiCall } from "@/lib/tahrir/client-api";
+import { pageRange } from "@/lib/tahrir/pagination";
 import type { MediaFilter } from "@/lib/tahrir/service";
 import { cn } from "@/lib/utils";
 
@@ -72,59 +75,38 @@ export function MediaClient({ items, canClear, filter, q, counts, page, perPage,
     setBusy(true);
     const form = new FormData();
     form.append("file", file);
-    const response = await fetch("/api/tahrir/media", { method: "POST", body: form }).catch(() => null);
-    const data = await response?.json().catch(() => null);
+    // الرفع قد يطول على شبكة الجوال: مهلة أطول من الافتراضية.
+    const result = await apiCall("/api/tahrir/media", { method: "POST", body: form }, { timeoutMs: 90_000, fallback: "تعذر الرفع." });
     setBusy(false);
-    if (response?.ok) {
+    if (result.ok) {
       toast.success("رُفعت — وثّق حقوقها قبل الاستخدام.");
       router.refresh();
     } else {
-      toast.error(data?.error ?? "تعذر الرفع.");
+      toast.error(result.error);
     }
   }
 
   async function setRights(item: MediaItem, cleared: boolean) {
-    const response = await fetch("/api/tahrir/media/rights", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: item.id, rightsCleared: cleared }),
-    }).catch(() => null);
-    if (response?.ok) toast.success(cleared ? `وُثّقت حقوق ${item.filename}.` : `سُحب توثيق ${item.filename}.`);
+    const result = await apiCall("/api/tahrir/media/rights", { method: "POST", body: { id: item.id, rightsCleared: cleared } }, { fallback: "تعذر تحديث الحقوق." });
+    if (result.ok) toast.success(cleared ? `وُثّقت حقوق ${item.filename}.` : `سُحب توثيق ${item.filename}.`);
     else toast.error("تعذر تحديث الحقوق.");
     router.refresh();
   }
 
-  const chips: Array<[MediaFilter, string, number]> = [
-    ["all", "الكل", counts.all],
-    ["ok", "موثقة الحقوق", counts.ok],
-    ["pending", "بانتظار التوثيق", counts.pending],
+  const chips: ReadonlyArray<{ value: MediaFilter; label: string; count: number }> = [
+    { value: "all", label: "الكل", count: counts.all },
+    { value: "ok", label: "موثقة الحقوق", count: counts.ok },
+    { value: "pending", label: "بانتظار التوثيق", count: counts.pending },
   ];
   const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const from = total === 0 ? 0 : (page - 1) * perPage + 1;
-  const to = Math.min(total, page * perPage);
-  const pageWindow = Array.from({ length: totalPages }, (_, index) => index + 1).filter(
-    (number) => number === 1 || number === totalPages || Math.abs(number - page) <= 1,
-  );
+  const { from, to } = pageRange(page, perPage, total);
 
   return (
     <div className="grid gap-3">
+      {/* صف المرشّحات يلتف على الجوال: الشريط المقسّم في سطر والبحث بعرض كامل تحته. */}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0">
-          {chips.map(([key, label, count]) => (
-            <Link
-              key={key}
-              href={href({ f: key === "all" ? null : key, p: null })}
-              className={cn(
-                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1 font-display text-xs font-semibold whitespace-nowrap transition-colors",
-                filter === key ? "border-foreground bg-foreground text-background" : "border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground",
-              )}
-            >
-              {label}
-              <b className={cn("tabular-nums", filter === key ? "text-primary" : "text-muted-foreground/80")}>{count}</b>
-            </Link>
-          ))}
-        </div>
-        <div className="relative ms-auto">
+        <SegmentedFilter options={chips} value={filter} hrefFor={(value) => href({ f: value === "all" ? null : value, p: null })} ariaLabel="تصفية الوسائط بحالة الحقوق" />
+        <div className="relative w-full sm:ms-auto sm:w-auto">
           <SearchIcon className="pointer-events-none absolute top-1/2 start-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
@@ -132,7 +114,7 @@ export function MediaClient({ items, canClear, filter, q, counts, page, perPage,
             onChange={(event) => setQuery(event.target.value)}
             placeholder="ابحث باسم الملف…"
             aria-label="بحث في الوسائط"
-            className="w-56 bg-card ps-8 pe-7"
+            className="w-full bg-card ps-8 pe-7 sm:w-56"
           />
           {query ? (
             <Button type="button" size="icon-xs" variant="ghost" aria-label="مسح البحث" className="absolute top-1/2 end-1 -translate-y-1/2" onClick={() => setQuery("")}>
@@ -225,38 +207,12 @@ export function MediaClient({ items, canClear, filter, q, counts, page, perPage,
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="tabular-nums">
-          {from}–{to} من {total}
-          {q ? " (مرشّحة)" : ""}
-        </span>
-        {totalPages > 1 ? (
-          <nav aria-label="ترقيم الصفحات" className="ms-auto flex items-center gap-1">
-            <Button asChild size="sm" variant="outline" className={cn(page <= 1 && "pointer-events-none opacity-50")}>
-              <Link href={href({ p: page - 1 > 1 ? String(page - 1) : null })} aria-label="الصفحة السابقة">
-                <ChevronRightIcon data-icon="inline-start" />
-                الأحدث
-              </Link>
-            </Button>
-            {pageWindow.map((number, index) => (
-              <span key={number} className="contents">
-                {index > 0 && pageWindow[index - 1] !== number - 1 ? <span className="px-1">…</span> : null}
-                <Button asChild size="sm" variant={number === page ? "default" : "outline"} className="min-w-8 tabular-nums">
-                  <Link href={href({ p: number > 1 ? String(number) : null })} aria-current={number === page ? "page" : undefined}>
-                    {number}
-                  </Link>
-                </Button>
-              </span>
-            ))}
-            <Button asChild size="sm" variant="outline" className={cn(page >= totalPages && "pointer-events-none opacity-50")}>
-              <Link href={href({ p: String(page + 1) })} aria-label="الصفحة التالية">
-                الأقدم
-                <ChevronLeftIcon data-icon="inline-end" />
-              </Link>
-            </Button>
-          </nav>
-        ) : null}
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        hrefFor={(number) => href({ p: number > 1 ? String(number) : null })}
+        summary={`${from}–${to} من ${total}${q ? " (مرشّحة)" : ""}`}
+      />
     </div>
   );
 }

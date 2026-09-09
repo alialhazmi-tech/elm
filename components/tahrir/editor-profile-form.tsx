@@ -54,7 +54,7 @@ export function EditorProfileForm({ name }: { name: string }) {
         <p
           role={error ? "alert" : "status"}
           className={
-            error ? "text-sm text-destructive" : "text-sm text-emerald-700"
+            error ? "text-sm text-destructive" : "text-sm text-(--t-ok)"
           }
         >
           {message}

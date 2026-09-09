@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { apiCall } from "@/lib/tahrir/client-api";
 import { TAXONOMY_SECTIONS, TAXONOMY_SERIES, taxonomyHidden, taxonomyKey, type TaxonomyKind, type TaxonomyVisibility } from "@/lib/content/taxonomy";
 
 export function TaxonomyClient({ initial }: { initial: TaxonomyVisibility }) {
@@ -13,15 +14,12 @@ export function TaxonomyClient({ initial }: { initial: TaxonomyVisibility }) {
   async function toggle(kind: TaxonomyKind, slug: string, hidden: boolean) {
     if (pending) return;
     setPending(taxonomyKey(kind, slug));
-    try {
-      const response = await fetch("/api/tahrir/taxonomy", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, slug, hidden }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "تعذر حفظ الظهور.");
-      setVisibility(current => ({ ...current, [taxonomyKey(kind, slug)]: hidden }));
-      toast.success(hidden ? "أُخفي التصنيف من القوائم والتوليد." : "أُظهر التصنيف في القوائم والتوليد.");
-      router.refresh();
-    } catch (error) { toast.error(error instanceof Error ? error.message : "تعذر الحفظ."); }
-    finally { setPending(null); }
+    const result = await apiCall("/api/tahrir/taxonomy", { method: "PATCH", body: { kind, slug, hidden } }, { fallback: "تعذر حفظ الظهور." });
+    setPending(null);
+    if (!result.ok) { toast.error(result.error); return; }
+    setVisibility(current => ({ ...current, [taxonomyKey(kind, slug)]: hidden }));
+    toast.success(hidden ? "أُخفي التصنيف من القوائم والتوليد." : "أُظهر التصنيف في القوائم والتوليد.");
+    router.refresh();
   }
   return <div className="grid gap-4 lg:grid-cols-2">
     {([{ kind: "section", title: "الأقسام", items: TAXONOMY_SECTIONS }, { kind: "series", title: "السلاسل والتصنيفات", items: TAXONOMY_SERIES }] as const).map(group => (

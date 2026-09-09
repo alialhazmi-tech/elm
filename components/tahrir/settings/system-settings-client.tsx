@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Panel } from "@/components/tahrir/overview/panel";
 import { Switch } from "@/components/ui/switch";
 import type { GuardControls } from "@/lib/policy";
+import { apiCall } from "@/lib/tahrir/client-api";
 
 function SettingRow({
   title,
@@ -50,21 +51,16 @@ export function SystemSettingsClient({ initial, canEdit }: { initial: GuardContr
     setControls(next);
     setBusy(true);
 
-    const response = await fetch("/api/tahrir/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ governance: next }),
-    }).catch(() => null);
-    const data = await response?.json().catch(() => null);
+    const result = await apiCall<{ governance?: GuardControls }>("/api/tahrir/settings", { method: "PATCH", body: { governance: next } }, { fallback: "تعذر حفظ إعدادات النظام." });
     setBusy(false);
 
-    if (!response?.ok || !data?.governance) {
+    if (!result.ok || !result.data?.governance) {
       setControls(previous);
-      toast.error(data?.error ?? "تعذر حفظ إعدادات النظام.");
+      toast.error(result.ok ? "تعذر حفظ إعدادات النظام." : result.error);
       return;
     }
 
-    setControls(data.governance);
+    setControls(result.data.governance);
     toast.success("حُفظ إعداد النظام وبدأ تطبيقه.");
     router.refresh();
   }
@@ -72,7 +68,7 @@ export function SystemSettingsClient({ initial, canEdit }: { initial: GuardContr
   const disabledCount = Number(!controls.editorialGuard) + Number(!controls.requireImageRights);
 
   return (
-    <div className="grid gap-3" dir="rtl">
+    <div className="grid gap-3">
       <Panel title="بوابات النشر">
         <SettingRow
           title="حارس السياسة التحريرية"

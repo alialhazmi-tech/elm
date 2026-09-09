@@ -21,20 +21,22 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { RoleSummary } from "@/lib/tahrir/admin";
+import { apiCall } from "@/lib/tahrir/client-api";
 import { ADMIN_ROLE, WILDCARD, type PermissionGroup } from "@/lib/tahrir/permissions";
 import { cn } from "@/lib/utils";
 
 type RoleDialog = { kind: "create" } | { kind: "rename"; role: RoleSummary } | { kind: "delete"; role: RoleSummary };
 
-async function call(url: string, method: string, body?: unknown) {
-  const response = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  }).catch(() => null);
-  const data = await response?.json().catch(() => null);
-  return { ok: response?.ok === true, error: data?.error as string | undefined };
+/** غلاف رقيق فوق النقل الموحّد: fallback هو نص الشاشة عند فشل بلا رسالة من الخادم. */
+async function call(url: string, method: string, body: unknown, fallback: string) {
+  const result = await apiCall(url, { method, body }, { fallback });
+  return result.ok ? { ok: true as const, error: undefined } : { ok: false as const, error: result.error };
 }
+
+/** العمود الأول لاصق عند التمرير الأفقي على الجوال؛ خلفية صريحة حتى لا تمرّ الخلايا تحته. */
+const STICKY_FIRST = "sticky start-0 z-[1] bg-card md:static md:bg-transparent";
+/** أزرار رأس الدور: 36px على الجوال (هدف لمس) و20px على المكتبي. */
+const HEADER_ICON_BUTTON = "size-9 text-muted-foreground hover:text-foreground md:size-5";
 
 /** مصفوفة الأدوار × الصلاحيات — صفوف الصلاحيات بمجموعاتها، وعمود لكل دور، ومسؤول النظام مقفل على الشاملة. */
 export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: PermissionGroup[] }) {
@@ -60,7 +62,7 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
       copy.set(roleId, set);
       return copy;
     });
-    const result = await call(`/api/tahrir/admin/roles/${roleId}/permissions`, "PATCH", { permissionKey: key, granted: next });
+    const result = await call(`/api/tahrir/admin/roles/${roleId}/permissions`, "PATCH", { permissionKey: key, granted: next }, "تعذر حفظ التغيير.");
     setPending(null);
     if (!result.ok) {
       setGranted((prev) => {
@@ -71,7 +73,7 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
         copy.set(roleId, set);
         return copy;
       });
-      toast.error(result.error ?? "تعذر حفظ التغيير.");
+      toast.error(result.error);
     }
   }
 
@@ -81,20 +83,18 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
     const form = new FormData(event.currentTarget);
     setBusy(true);
     let result: { ok: boolean; error?: string };
+    const fallback = "تعذر تنفيذ الإجراء.";
     if (dialog.kind === "create") {
-      result = await call("/api/tahrir/admin/roles", "POST", {
-        id: form.get("id"),
-        label: form.get("label"),
-        description: form.get("description"),
-        copyFrom: form.get("copyFrom") || undefined,
-      });
+      result = await call(
+        "/api/tahrir/admin/roles",
+        "POST",
+        { id: form.get("id"), label: form.get("label"), description: form.get("description"), copyFrom: form.get("copyFrom") || undefined },
+        fallback,
+      );
     } else if (dialog.kind === "rename") {
-      result = await call(`/api/tahrir/admin/roles/${dialog.role.id}`, "PATCH", {
-        label: form.get("label"),
-        description: form.get("description"),
-      });
+      result = await call(`/api/tahrir/admin/roles/${dialog.role.id}`, "PATCH", { label: form.get("label"), description: form.get("description") }, fallback);
     } else {
-      result = await call(`/api/tahrir/admin/roles/${dialog.role.id}`, "DELETE");
+      result = await call(`/api/tahrir/admin/roles/${dialog.role.id}`, "DELETE", undefined, fallback);
     }
     setBusy(false);
     if (result.ok) {
@@ -102,7 +102,7 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
       setDialog(null);
       router.refresh();
     } else {
-      toast.error(result.error ?? "تعذر تنفيذ الإجراء.");
+      toast.error(result.error);
     }
   }
 
@@ -121,16 +121,17 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
       </div>
 
       <Card className="gap-0 overflow-hidden py-0">
-        <div className="overflow-x-auto">
+        {/* تمرير أفقي بتلاشٍ عند الحافة المقصوصة؛ حافة البداية بلا تلاشٍ لأن العمود الأول لاصق هناك. */}
+        <div className="scroll-fade-x overflow-x-auto [--scroll-fade-s-size:0px]">
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 z-10 bg-card">
               <tr className="border-b border-border/80 bg-muted/20">
-                <th className="w-80 min-w-[240px] px-4 py-3 text-start font-display text-xs font-semibold text-foreground">الصلاحية</th>
+                <th className={cn("min-w-[150px] px-3 py-3 text-start font-display text-xs font-semibold text-foreground md:w-80 md:min-w-[240px] md:px-4", STICKY_FIRST)}>الصلاحية</th>
                 {roles.map((role) => (
                   <th key={role.id} className="w-32 min-w-[110px] border-s border-border/50 px-2 py-3 text-center align-top">
                     <div className="grid justify-items-center gap-1">
                       <span className="inline-flex items-center gap-1 font-display text-xs font-bold text-foreground">
-                        {role.id === ADMIN_ROLE ? <LockIcon className="size-3 text-amber-500" /> : null}
+                        {role.id === ADMIN_ROLE ? <LockIcon className="size-3 text-(--t-warn)" /> : null}
                         {role.label}
                       </span>
                       <span className="inline-block rounded-full bg-muted/70 px-2 py-0.2 text-[10px] font-medium text-muted-foreground tabular-nums">
@@ -141,7 +142,7 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
                           <Button
                             size="icon-xs"
                             variant="ghost"
-                            className="size-5 text-muted-foreground hover:text-foreground"
+                            className={HEADER_ICON_BUTTON}
                             title="تعديل الاسم والوصف"
                             aria-label={`تعديل ${role.label}`}
                             onClick={() => setDialog({ kind: "rename", role })}
@@ -152,7 +153,7 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
                             <Button
                               size="icon-xs"
                               variant="ghost"
-                              className="size-5 text-muted-foreground hover:text-destructive disabled:opacity-30"
+                              className={cn(HEADER_ICON_BUTTON, "hover:text-destructive disabled:opacity-30")}
                               disabled={role.members > 0}
                               title={role.members > 0 ? "لا يمكن حذف دور به أعضاء" : "حذف الدور"}
                               aria-label={`حذف ${role.label}`}
@@ -163,7 +164,7 @@ export function RolesMatrix({ roles, groups }: { roles: RoleSummary[]; groups: P
                           ) : null}
                         </div>
                       ) : (
-                        <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">شاملة</span>
+                        <span className="text-[10px] font-semibold text-(--t-warn)">شاملة</span>
                       )}
                     </div>
                   </th>
@@ -285,7 +286,7 @@ function GroupRows({
       </tr>
       {group.permissions.map((permission) => (
         <tr key={permission.key} className="border-b border-border/50 last:border-0 transition-colors hover:bg-muted/30">
-          <th scope="row" className="w-80 min-w-[240px] px-4 py-2.5 text-start font-normal">
+          <th scope="row" className={cn("min-w-[150px] px-3 py-2.5 text-start font-normal md:w-80 md:min-w-[240px] md:px-4", STICKY_FIRST)}>
             <div className="text-[13px] font-semibold text-foreground">{permission.label}</div>
             <div className="text-[11px] leading-tight text-muted-foreground" title={permission.description}>
               {permission.description ? <span className="block">{permission.description}</span> : null}
@@ -303,7 +304,7 @@ function GroupRows({
                 key={role.id}
                 className={cn(
                   "w-32 min-w-[110px] border-s border-border/50 px-2 py-2 text-center align-middle",
-                  locked && "bg-amber-500/[0.04]",
+                  locked && "bg-(--t-warn)/5",
                 )}
               >
                 {locked ? (
