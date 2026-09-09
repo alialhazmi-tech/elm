@@ -38,6 +38,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { Toggle } from "@/components/ui/toggle";
 import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText, textToHtml } from "@/lib/content/html";
+import { findTextRange, type TextRun } from "@/lib/tahrir/editor/preserve-formatting";
 import { cn } from "@/lib/utils";
 import { xPostIdFrom } from "@/lib/content/video";
 import { XPostNode } from "./x-post-node";
@@ -47,11 +48,17 @@ export interface RichBodyHandle {
   getHtml(): string;
   getText(): string;
   getSelectionText(): string;
+  /** يستبدل المحدد بنص خالص (فقرات عند وجود أسطر فارغة) — لا يُفسَّر كـHTML. */
   replaceSelection(text: string): void;
   setPlainText(text: string): void;
   setHtml(html: string): void;
   /** يحدد أول ظهور للنص داخل المتن ويمرّر إليه — لملاحظات الحارس. */
   locate(text: string): boolean;
+  /**
+   * يستبدل أول ظهور للعبارة على مستوى عقد النص (عبر العلامات) فتبقى الروابط والغامق والبنية.
+   * false حين لا تُعثر العبارة متصلة داخل كتلة واحدة.
+   */
+  replaceText(from: string, to: string): boolean;
 }
 
 interface Props {
@@ -62,6 +69,28 @@ interface Props {
 const toHtml = (body: string) => (looksLikeHtml(body) ? sanitizeBodyHtml(body) : textToHtml(body));
 
 const countWords = (html: string) => stripHtmlToText(html).split(/\s+/u).filter(Boolean).length;
+
+/** نص خالص → عقد Tiptap: فقرة لكل سطر فارغ، وكسر سطر لكل سطر مفرد. لا يمر على محلل HTML. */
+function textToNodes(text: string) {
+  const paragraphs = text.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean);
+  return paragraphs.map((paragraph) => ({
+    type: "paragraph",
+    content: paragraph.split("\n").flatMap((line, index) => {
+      const nodes: Array<{ type: string; text?: string }> = index > 0 ? [{ type: "hardBreak" }] : [];
+      if (line) nodes.push({ type: "text", text: line });
+      return nodes;
+    }),
+  }));
+}
+
+function textRuns(editor: Editor): TextRun[] {
+  const runs: TextRun[] = [];
+  editor.state.doc.descendants((node, pos) => {
+    if (node.isText && node.text) runs.push({ pos, text: node.text });
+    return true;
+  });
+  return runs;
+}
 
 export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ initial, onChange }, ref) {
   const [words, setWords] = useState(() => countWords(toHtml(initial)));
@@ -115,7 +144,14 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
       },
       replaceSelection: (text: string) => {
         if (!editor || editor.state.selection.empty) return;
-        editor.chain().focus().insertContent(text).run();
+        const { from, to } = editor.state.selection;
+        if (!text.includes("\n")) {
+          // insertText يحافظ على علامات الموضع (رابط، غامق) بدل تفسير النص كـHTML.
+          editor.view.dispatch(editor.state.tr.insertText(text, from, to));
+          editor.commands.focus();
+          return;
+        }
+        editor.chain().focus().insertContentAt({ from, to }, textToNodes(text)).run();
       },
       setPlainText: (text: string) => {
         if (!editor) return;
@@ -141,6 +177,14 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
         });
         if (from < 0) return false;
         editor.chain().focus().setTextSelection({ from, to: from + needle.length }).scrollIntoView().run();
+        return true;
+      },
+      replaceText: (from: string, to: string) => {
+        if (!editor || !from) return false;
+        const range = findTextRange(textRuns(editor), from);
+        if (!range) return false;
+        editor.view.dispatch(editor.state.tr.insertText(to, range.from, range.to));
+        emit(editor);
         return true;
       },
     }),

@@ -4,7 +4,10 @@ import { SparklesIcon, SquareIcon } from "lucide-react";
 
 import { GuardChip } from "@/components/tahrir/badges";
 import { Button } from "@/components/ui/button";
+import type { FormattingLoss } from "@/lib/tahrir/editor/preserve-formatting";
 import { cn } from "@/lib/utils";
+
+import { FormattingLossNote } from "./formatting-loss-note";
 
 export type ProgressState = "waiting" | "active" | "done";
 
@@ -108,12 +111,15 @@ export function FullEditProgressView({
 export function FullEditProposal({
   fullEdit,
   stale,
+  bodyLoss,
   onApply,
   onRerun,
   onDismiss,
 }: {
   fullEdit: FullEditData;
   stale: boolean;
+  /** ما سيُفقد من تنسيق المتن الحالي عند التطبيق (روابط، عناوين، قوائم، تغريدات). */
+  bodyLoss: FormattingLoss | null;
   onApply: () => void;
   onRerun: () => void;
   onDismiss: () => void;
@@ -144,6 +150,7 @@ export function FullEditProposal({
       {row("SEO", `${fullEdit.seo.seoTitle} · ${fullEdit.seo.seoDescription}`)}
       {row("الكلمات", fullEdit.seo.keywords.join("، "))}
       {row("التصنيف", `${fullEdit.classify.seriesSlug ?? "بلا سلسلة"} · ${fullEdit.classify.section} · ${fullEdit.classify.format}`)}
+      <FormattingLossNote loss={bodyLoss} />
       <div className="flex flex-wrap gap-1.5">
         <Button size="sm" onClick={onApply} disabled={stale}>
           {stale ? "التطبيق متوقف لحماية تعديلاتك" : "طبّق الكل — القرار لك"}

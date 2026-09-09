@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { instagramPostUrlFrom, normalizeVideoUrl, xPostIdFrom } from "@/lib/content/video";
+import { formatRiyadhDateTime, formatRiyadhTime, riyadhWallTimeToIso } from "@/lib/tahrir/riyadh-time";
 import { VideoPlayer } from "@/components/content/video-player";
 import { cn } from "@/lib/utils";
 
@@ -48,9 +49,12 @@ export interface DetailsPanelProps {
   onPinned: (value: boolean) => void;
   breakingUntil: string | null;
   onBreaking: (iso: string | null) => void;
+  /** قيمة datetime-local تُفسَّر بتوقيت الرياض. */
   scheduleAt: string;
   onScheduleAt: (value: string) => void;
   onSchedule: () => void;
+  /** يُستدعى قبل فتح حوار الأرشفة؛ false يمنعه (تعديلات غير محفوظة مثلًا). */
+  beforeArchive?: () => boolean;
   onArchived: () => void;
   onRestored: () => void;
 }
@@ -72,6 +76,7 @@ function Section({ title, children, className }: { title: string; children: Reac
 export function DetailsPanel(props: DetailsPanelProps) {
   const [action, setAction] = useState<StoryAction | null>(null);
   const editable = props.status !== "published" && props.status !== "archived";
+  const scheduleIso = props.scheduleAt ? riyadhWallTimeToIso(props.scheduleAt) : null;
 
   return (
     <div className="grid text-right" dir="rtl">
@@ -86,7 +91,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
               </label>
               {props.breakingUntil ? (
                 <div className="flex flex-wrap items-center gap-2">
-                  <GuardChip tone="block" label={`عاجل حتى ${props.breakingUntil.slice(11, 16)} UTC`} />
+                  <GuardChip tone="block" label={`عاجل حتى ${formatRiyadhTime(props.breakingUntil) || props.breakingUntil} (الرياض)`} />
                   <Button size="xs" variant="outline" onClick={() => props.onBreaking(null)}>
                     <ZapOffIcon data-icon="inline-start" />
                     أنهِ العاجل
@@ -107,18 +112,26 @@ export function DetailsPanel(props: DetailsPanelProps) {
           ) : null}
           <Section title="النشر والجدولة">
             {editable ? (
-              <div className="flex gap-1.5">
-                <Input
-                  type="datetime-local"
-                  dir="ltr"
-                  value={props.scheduleAt}
-                  onChange={(event) => props.onScheduleAt(event.target.value)}
-                  aria-label="موعد الجدولة"
-                  className="min-w-0 flex-1"
-                />
-                <Button size="sm" variant="outline" onClick={props.onSchedule} disabled={!props.gateOpen || props.busy}>
-                  {props.status === "scheduled" ? "تعديل الموعد" : "جدولة"}
-                </Button>
+              <div className="grid gap-1.5">
+                <label htmlFor="story-schedule-at" className="text-[10.5px] text-muted-foreground">موعد النشر — بتوقيت الرياض</label>
+                <div className="flex gap-1.5">
+                  <Input
+                    id="story-schedule-at"
+                    type="datetime-local"
+                    dir="ltr"
+                    value={props.scheduleAt}
+                    onChange={(event) => props.onScheduleAt(event.target.value)}
+                    aria-label="موعد الجدولة بتوقيت الرياض"
+                    aria-describedby="story-schedule-resolved"
+                    className="min-w-0 flex-1"
+                  />
+                  <Button size="sm" variant="outline" onClick={props.onSchedule} disabled={!props.gateOpen || props.busy}>
+                    {props.status === "scheduled" ? "تعديل الموعد" : "جدولة"}
+                  </Button>
+                </div>
+                <div id="story-schedule-resolved" className="text-[10.5px] text-muted-foreground" aria-live="polite">
+                  {scheduleIso ? `يُنشر ${formatRiyadhDateTime(scheduleIso)} بتوقيت الرياض` : props.scheduleAt ? "الموعد غير صالح." : "الوقت الذي تدخله يُحفظ كما هو بتوقيت الرياض مهما كان توقيت جهازك."}
+                </div>
               </div>
             ) : null}
             {props.id && props.status !== "draft" && props.status !== "archived" ? (
@@ -126,7 +139,10 @@ export function DetailsPanel(props: DetailsPanelProps) {
                 size="xs"
                 variant="outline"
                 className="justify-self-start"
-                onClick={() => setAction({ kind: "archive", rows: [{ id: props.id, title: props.title || "هذه المادة" }] })}
+                onClick={() => {
+                  if (props.beforeArchive && !props.beforeArchive()) return;
+                  setAction({ kind: "archive", rows: [{ id: props.id, title: props.title || "هذه المادة" }] });
+                }}
               >
                 <ArchiveIcon data-icon="inline-start" />
                 أرشفة المادة

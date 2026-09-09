@@ -5,7 +5,10 @@ import { SparklesIcon } from "lucide-react";
 
 import { GuardChip } from "@/components/tahrir/badges";
 import { Button } from "@/components/ui/button";
+import type { FormattingLoss } from "@/lib/tahrir/editor/preserve-formatting";
 import { cn } from "@/lib/utils";
+
+import { FormattingLossNote } from "./formatting-loss-note";
 
 interface Suggestion {
   text: string;
@@ -26,6 +29,8 @@ interface Props {
   onInsertTitle: (text: string) => void;
   onInsertExcerpt: (text: string) => void;
   onReplaceBody: (text: string, selectionOnly: boolean) => void;
+  /** ما سيُفقد من تنسيق المتن لو استُبدل كاملًا بهذا النص — يُعرض قبل الاعتماد. */
+  describeBodyLoss: (text: string) => FormattingLoss;
   onClassify: (c: { seriesSlug: string | null; section: string; format: string }) => void;
 }
 
@@ -45,7 +50,7 @@ const TOOL_HINTS: Record<string, string> = {
 };
 
 /** مساعد «محرر العلم»: يقترح فقط، والإدراج بنقرة بشرية — لا ينشر شيئًا. */
-export function AiPanel({ guardEnabled, getDraft, onInsertTitle, onInsertExcerpt, onReplaceBody, onClassify }: Props) {
+export function AiPanel({ guardEnabled, getDraft, onInsertTitle, onInsertExcerpt, onReplaceBody, describeBodyLoss, onClassify }: Props) {
   const [active, setActive] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<AssistResult | null>(null);
@@ -120,9 +125,11 @@ export function AiPanel({ guardEnabled, getDraft, onInsertTitle, onInsertExcerpt
           <div className="text-[11px] font-semibold text-muted-foreground">{TOOL_HINTS[active]}</div>
           {result.suggestions.map((suggestion, index) => {
             const blocking = suggestion.guard.findings.find((finding) => finding.severity === "blocking");
+            const replacesBody = active === "proofread" || (active === "improve" && !usedSelection);
             return (
               <div key={index} className="grid gap-2 rounded-lg border bg-muted/30 p-3">
                 <div className="text-[13px] leading-relaxed whitespace-pre-wrap">{suggestion.text}</div>
+                {replacesBody && suggestion.guard.ok ? <FormattingLossNote loss={describeBodyLoss(suggestion.text)} /> : null}
                 <div className="flex flex-wrap items-center gap-2">
                   {suggestion.guard.ok ? (
                     <GuardChip

@@ -51,6 +51,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useDraftRecovery } from "@/components/tahrir/use-draft-recovery";
+import { newSaveId, postDashboardJson, saveStory, scheduleStory, transitionStory } from "@/lib/tahrir/client/story-transport";
 import { cn } from "@/lib/utils";
 
 interface SlideGuard {
@@ -141,6 +142,8 @@ const MessageAlert = ({ message }: { message: { kind: "ok" | "err"; text: string
 export function JakEditor({ actorId, canApprove, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const versionRef = useRef(initial?.version ?? 0);
+  // معرّف ثابت لأول محاولة حفظ؛ إعادة الطلب بعد مهلة أو انقطاع لا تنشئ مادة مكررة.
+  const saveId = useRef(initial?.id ?? "");
   const [id, setId] = useState(initial?.id ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
@@ -361,51 +364,43 @@ export function JakEditor({ actorId, canApprove, sections, recentMedia, initial 
     setBusy(true);
     setMessage(null);
 
-    const storyResponse = await fetch("/api/tahrir/story", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: id || undefined,
-        expectedVersion: versionRef.current,
-        title,
-        excerpt,
-        body: "",
-        section,
-        slug: initial?.slug || "",
-        seriesSlug: null,
-        image: slides.find((slide) => slide.image)?.image ?? null,
-        format: "jakalelm",
-      }),
-    }).catch(() => null);
-    const storyData = await storyResponse?.json().catch(() => null);
-    if (!storyResponse?.ok) {
+    saveId.current ||= newSaveId();
+    const storyResult = await saveStory({
+      id: saveId.current,
+      expectedVersion: versionRef.current,
+      title,
+      excerpt,
+      body: "",
+      section,
+      slug: initial?.slug || "",
+      seriesSlug: null,
+      image: slides.find((slide) => slide.image)?.image ?? null,
+      format: "jakalelm",
+    }, { fallback: "تعذر حفظ المادة." });
+    if (!storyResult.ok) {
       setBusy(false);
-      err(storyData?.error ?? "تعذر حفظ المادة.");
+      err(storyResult.timedOut ? "تعذر تأكيد حفظ المادة في الوقت المحدد. أعد المحاولة؛ لن تُنشأ مادة مكررة." : storyResult.error);
       return null;
     }
+    const storyData = storyResult.data;
 
     // ثبّت هوية المادة فور نجاح الصف الأم. إذا تعثر حفظ الشرائح لاحقًا،
     // تعيد المحاولة على السجل نفسه بدل إنشاء مسودة مكررة بمعرّف جديد.
-    const savedStoryId = storyData.id as string;
+    const savedStoryId = storyData.id;
     versionRef.current = storyData.version;
+    saveId.current = savedStoryId;
     setStatus(storyData.status);
     setId(savedStoryId);
 
-
-    const slidesResponse = await fetch("/api/tahrir/jak/slides", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ storyId: savedStoryId, expectedVersion: storyData.version, source, slides }),
-    }).catch(() => null);
-    const slidesData = await slidesResponse?.json().catch(() => null);
+    const slidesResult = await postDashboardJson<{ version: number }>("/api/tahrir/jak/slides", { storyId: savedStoryId, expectedVersion: storyData.version, source, slides }, "حُفظت المادة وتعذر حفظ الشرائح.");
     setBusy(false);
-    if (!slidesResponse?.ok) {
-      err(slidesData?.error ?? "حُفظت المادة وتعذر حفظ الشرائح.");
+    if (!slidesResult.ok) {
+      err(slidesResult.error);
       return null;
     }
 
     recovery.markSaved(savedSnapshot);
-    versionRef.current = slidesData.version;
+    versionRef.current = slidesResult.data.version;
     window.history.replaceState(null, "", `/tahrir/jak/${savedStoryId}`);
     setStatus("draft");
     ok("حُفظ جاك العلم بشرائحه.");
@@ -416,21 +411,18 @@ export function JakEditor({ actorId, canApprove, sections, recentMedia, initial 
     const savedId = await save();
     if (!savedId) return;
     setBusy(true);
-    const response = await fetch(`/api/tahrir/story/${route}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current }),
-    }).catch(() => null);
-    const data = await response?.json().catch(() => null);
+    const result = await transitionStory(route, { id: savedId, expectedVersion: versionRef.current }, { fallback: `تعذر ${label}.` });
     setBusy(false);
-    if (!response?.ok) {
+    if (!result.ok) {
       // الحارس يعيد نص كل مخالفة ومقتطفها — تُعرض للمحرر ليعرف ما يصلح
-      setBlockers(Array.isArray(data?.findings) ? data.findings : []);
-      err(data?.error ?? `تعذر ${label}.`);
+      const findings = result.body?.findings;
+      setBlockers(Array.isArray(findings) ? findings : []);
+      err(result.error);
       return;
     }
+    const data = result.data;
     versionRef.current = data.version;
-    if (data.id) setId(data.id);
+    if (data.id) { setId(data.id); saveId.current = data.id; }
     setBlockers([]);
     setStatus(route === "publish" ? "published" : "review");
     ok(route === "publish" ? "نُشر جاك العلم على الموقع." : "أُرسل للاعتماد — القرار بشري.");
@@ -446,20 +438,16 @@ export function JakEditor({ actorId, canApprove, sections, recentMedia, initial 
     const savedId = await save();
     if (!savedId) return;
     setBusy(true);
-    const response = await fetch("/api/tahrir/story/schedule", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current, scheduledAt: new Date(scheduleAt).toISOString() }),
-    }).catch(() => null);
-    const data = await response?.json().catch(() => null);
+    const result = await scheduleStory({ id: savedId, expectedVersion: versionRef.current, scheduledAt: new Date(scheduleAt).toISOString() });
     setBusy(false);
-    if (!response?.ok) {
-      setBlockers(Array.isArray(data?.findings) ? data.findings : []);
-      err(data?.error ?? "تعذرت الجدولة.");
+    if (!result.ok) {
+      const findings = result.body?.findings;
+      setBlockers(Array.isArray(findings) ? findings : []);
+      err(result.error);
       return;
     }
     setBlockers([]);
-    versionRef.current = data.version;
+    versionRef.current = result.data.version;
     setStatus("scheduled");
     ok("جُدول — الحارس يفحصه ثانية لحظة الموعد.");
   }
