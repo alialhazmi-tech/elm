@@ -41,6 +41,7 @@ test('all editorial summary entry points preserve end-of-source facts and reject
     assert.equal(resultText,excerpt);
     const request=state.requests.find(p=>!p.messages[0].content.includes('أعد المتن المحرَّر فقط'));
     assert.ok(request.messages[0].content.endsWith(input.body));
+    assert.equal(request.model, settings.models.editorial, "كل موجز يستخدم نموذج التحرير الأقوى");
     if(tool==='full_edit') assert.ok(state.requests.every(p=>p.messages[0].content.endsWith(input.body)));
     state.text=JSON.stringify(tool==='excerpt'?{suggestions:['ك'.repeat(281)]}:{...pack,excerpt:'ك'.repeat(281)});
     await assert.rejects(runEditorialTool(tool,input,settings),{name:'EditorialOutputError'});

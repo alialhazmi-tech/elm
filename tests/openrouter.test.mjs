@@ -114,7 +114,7 @@ test("full editorial generation retains independent fields, usage and real progr
   globalThis.fetch = async (url, init) => {
     assert.equal(String(url), "https://openrouter.ai/api/v1/messages");
     const request = JSON.parse(init.body);
-    const text = request.model.includes("haiku") ? JSON.stringify({ title: "عنوان مقترح", excerpt: "موجز مقترح", seoTitle: "عنوان بحث", seoDescription: "وصف البحث", keywords: ["تقنية"], section: "technology", format: "news", seriesSlug: null }) : "متن محرر يحافظ على المعلومات.";
+    const text = request.model.includes("opus") ? JSON.stringify({ title: "عنوان مقترح", excerpt: "موجز مقترح", seoTitle: "عنوان بحث", seoDescription: "وصف البحث", keywords: ["تقنية"], section: "technology", format: "news", seriesSlug: null }) : "متن محرر يحافظ على المعلومات.";
     assert.equal(request.stream, true);
     return messageResponse(request, text);
   };
@@ -135,7 +135,7 @@ test("metadata generation uses one request and returns only complete validated s
   const compiled={exports:{}};new Function('require','module','exports',output.outputFiles[0].text)(createRequire(import.meta.url),compiled,compiled.exports);
   const pack={title:'ignored title',body:'ignored body',excerpt:'موجز المادة',seoTitle:'عنوان بحث',seoDescription:'وصف نتائج البحث',keywords:['#تقنية','علوم','تقنية'],section:'sciences',format:'reports',seriesSlug:'limatha'};
   let calls=0,malformed=false;
-  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);const repair=request.messages[0].content.startsWith('المحاولة السابقة');assert.equal(request.model,repair?'anthropic/claude-opus-5':'anthropic/claude-haiku-4.5');if(!repair)assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:malformed?'invalid JSON':JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
+  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);const repair=request.messages[0].content.startsWith('المحاولة السابقة');assert.equal(request.model,'anthropic/claude-opus-5');if(!repair)assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:malformed?'invalid JSON':JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
   const settings={models:effectiveModels(models),tone:'اختبار',governance:{editorialGuard:false,requireImageRights:true}};
   const input={title:'العنوان الأصلي',body:'المتن الأصلي'};
   const result=await compiled.exports.runEditorialTool('metadata',input,settings);
@@ -156,7 +156,7 @@ test("full edit waits for both calls and preserves completed usage when the othe
   const usages = []; const uncertain = [];
   globalThis.fetch = async (_url, init) => {
     const request = JSON.parse(init.body);
-    if (request.model.includes("haiku")) return Response.json({ error: { message: "rejected" } }, { status: 429 });
+    if (request.model.includes("opus")) return Response.json({ error: { message: "rejected" } }, { status: 429 });
     await new Promise(resolve => setTimeout(resolve, 25));
     return messageResponse(request, "المتن المكتمل.");
   };
@@ -170,7 +170,7 @@ test("invalid or truncated output retains actual usage and never exposes incompl
   let truncated = false; let count = 0;
   globalThis.fetch = async (_url, init) => {
     const request = JSON.parse(init.body);
-    return messageResponse(request, request.model.includes("haiku") ? "invalid-json" : "المتن", { stop: truncated ? "max_tokens" : "end_turn" });
+    return messageResponse(request, request.model.includes("opus") ? "invalid-json" : "المتن", { stop: truncated ? "max_tokens" : "end_turn" });
   };
   await assert.rejects(subject.runEditorialTool("full_edit", { title: "اختبار", body: "نص" }, settings, { onUsage: () => count++ }), /قراءة ملحقات/);
   assert.equal(count, 2);

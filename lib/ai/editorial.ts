@@ -195,7 +195,7 @@ export function editorialReservationCents(tool: AiTool, input: { title: string; 
   if (tool === "full_edit") {
     const clipped = { ...input, body: input.body.slice(0, FULL_EDIT_BODY_LIMIT) };
     return requestEstimate({ ...common, model: settings.models.fast, user: TOOL_PROMPTS.full_edit(clipped), maxTokens: 8192 })
-      + requestEstimate({ ...common, model: settings.models.light, user: FULL_EDIT_PACK_PROMPT(input), maxTokens: 2048 }) + repair;
+      + requestEstimate({ ...common, model: settings.models.editorial, user: FULL_EDIT_PACK_PROMPT(input), maxTokens: 2048 }) + repair;
   }
   return repair + requestEstimate({ ...common, model: modelFor(tool, settings), user: TOOL_PROMPTS[tool](input), maxTokens: tool === "proofread" ? 8192 : 2048 });
 }
@@ -240,7 +240,7 @@ async function complete(
 }
 
 function modelFor(tool: AiTool, settings: AiSettingsData): string {
-  if (tool === "classify" || tool === "metadata") return settings.models.light;
+  if (tool === "classify") return settings.models.light;
   if (tool === "full_edit") return settings.models.fast;
   return settings.models.editorial;
 }
@@ -289,7 +289,7 @@ async function runFullEdit(
     body: input.body.slice(0, FULL_EDIT_BODY_LIMIT),
   };
   const bodyModel = modelFor("full_edit", settings);
-  const packModel = settings.models.light;
+  const packModel = settings.models.editorial;
 
   options.onFullEditProgress?.("accepted");
   options.onFullEditProgress?.("body_started");
