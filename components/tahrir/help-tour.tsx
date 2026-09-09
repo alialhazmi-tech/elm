@@ -37,7 +37,11 @@ export function HelpTour({ actorId, permissions }: { actorId: string; permission
         <DialogHeader><p className="mb-2 text-xs text-muted-foreground" aria-live="polite">{(step ?? 0) + 1} من {steps.length} · جولة تحرير العلم</p><DialogTitle>{current?.title}</DialogTitle><DialogDescription className="pt-2 leading-8">{current?.body}</DialogDescription></DialogHeader>
         <div className="rounded-xl border bg-muted/50 p-5 text-center text-sm leading-7">{current?.example}</div>
         <div className="flex gap-1" aria-hidden="true">{steps.map((_, i) => <span key={i} className={`h-1 flex-1 rounded-full ${i <= (step ?? 0) ? "bg-primary" : "bg-muted"}`} />)}</div>
-        <div className="flex items-center gap-2"><Button onClick={() => { if (step === 5) close(); else setStep((step ?? 0) + 1); }}>{step === 5 ? "إنهاء الجولة" : "التالي"}</Button><Button variant="outline" disabled={step === 0} onClick={() => setStep((step ?? 1) - 1)}>السابق</Button><Button variant="ghost" className="ms-auto" onClick={close}>تخطي</Button></div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" disabled={step === 0} onClick={() => setStep((step ?? 1) - 1)}>السابق</Button>
+          <Button onClick={() => { if (step === 5) close(); else setStep((step ?? 0) + 1); }}>{step === 5 ? "إنهاء الجولة" : "التالي"}</Button>
+          <Button variant="ghost" className="ms-auto" onClick={close}>تخطي</Button>
+        </div>
         <p className="text-xs leading-6 text-muted-foreground">الجولة تشرح الأدوات ولا تعدّل موادك. الخطوات مرتبطة بصلاحيات حسابك. <Link href="/tahrir/help" onClick={close} className="underline">دليل الاستخدام الكامل</Link></p>
       </DialogContent>
     </Dialog>

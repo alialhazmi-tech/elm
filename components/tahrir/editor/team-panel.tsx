@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CircleCheckIcon } from "lucide-react";
+import { toast } from "sonner";
 
 type Team = { notes: Array<{ id: string; authorName: string; body: string; kind: string; createdAt: string }>; editors: Array<{ id: string; name: string }>; assignedTo: string | null; assigneeName: string | null; dueAt: string | null; returnedAt: string | null; canAssign: boolean; canReturn: boolean };
 const localDate = (iso: string | null) => iso ? new Date(Date.parse(iso) - new Date(iso).getTimezoneOffset() * 60_000).toISOString().slice(0, 16) : "";
@@ -17,6 +19,7 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [editingAssignment, setEditingAssignment] = useState(false);
   const actionLock = useRef(false);
   const endpoint = `/api/tahrir/story/${id}/team`;
   useEffect(() => {
@@ -24,7 +27,7 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
     const controller = new AbortController();
     void fetch(endpoint, { signal: AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]), cache: "no-store" }).then(async res => {
       const result = await res.json(); if (!res.ok) throw new Error(result.error ?? "تعذر تحميل المراجعة.");
-      setData(result); setAssignedTo(result.assignedTo ?? ""); setDueAt(localDate(result.dueAt)); setError("");
+      setData(result); setAssignedTo(result.assignedTo ?? ""); setDueAt(localDate(result.dueAt)); setEditingAssignment(!result.assignedTo); setError("");
     }).catch(error => { if (!controller.signal.aborted) setError(error.name === "TimeoutError" ? "تأخر تحميل المراجعة. أغلق القسم وافتحه للمحاولة." : error.message); });
     return () => controller.abort();
   }, [open, id, endpoint, status, refresh]);
@@ -36,8 +39,15 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
       const result = await res.json(); if (!res.ok) throw new Error(result.error ?? "تعذر تنفيذ الإجراء.");
       if (action !== "comment") onVersion(result.version);
       if (action === "return") { onReturn(); return; }
-      if (action === "comment") setBody("");
-      setNotice(action === "assign" ? "حُفظ الإسناد وموعد التسليم." : "أُضيفت الملاحظة.");
+      if (action === "assign") {
+        setData(current => current ? { ...current, ...result.assignment } : current);
+        setAssignedTo(result.assignment.assignedTo ?? ""); setDueAt(localDate(result.assignment.dueAt));
+        setEditingAssignment(false);
+        const message = result.assignment.assignedTo ? `تم إسناد المادة إلى ${result.assignment.assigneeName} بنجاح.` : "تم إلغاء إسناد المادة.";
+        setNotice(message); toast.success(message);
+        return;
+      }
+      setBody(""); setNotice("أُضيفت الملاحظة.");
       const refreshed = await fetch(endpoint, { cache: "no-store", signal: AbortSignal.timeout(15_000) });
       if (refreshed.ok) setData(await refreshed.json());
     } catch (error) { setError(error instanceof Error && error.name !== "TimeoutError" ? error.message : "انتهت مهلة الاتصال. أغلق القسم وافتحه للتحقق من النتيجة قبل إعادة الإجراء."); }
@@ -48,15 +58,20 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
     {open && <div className="space-y-4 border-t p-4">
       {!id ? <p className="text-sm text-muted-foreground">احفظ المسودة أولًا لتتمكن من إسنادها ومشاركة الملاحظات.</p> : <>
         {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-        {notice && <p role="status" className="text-sm">{notice}</p>}
+        {notice && <p role="status" className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300"><CircleCheckIcon className="size-4 shrink-0" aria-hidden="true" />{notice}</p>}
         {!data && !error && <p role="status">جارٍ تحميل المراجعة…</p>}
         {data && <>
           {data.returnedAt && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-950">أُعيدت هذه المادة للتعديل. راجع السبب أدناه ثم أرسلها للاعتماد بعد المعالجة.</p>}
-          {data.canAssign ? <div className="grid items-end gap-3 sm:grid-cols-[1fr_1fr_auto]">
+          {data.canAssign && editingAssignment ? <div className="space-y-3">
+            <div className="grid items-end gap-3 sm:grid-cols-2">
             <label className="grid gap-2 text-sm">المحرر المسؤول<select className="h-9 rounded-md border bg-background px-2" value={assignedTo} onChange={e => setAssignedTo(e.target.value)} disabled={pending || locked}><option value="">دون إسناد</option>{data.editors.map(user => <option key={user.id} value={user.id}>{user.name}</option>)}</select></label>
             <label htmlFor="assignment-due" className="grid gap-2 text-sm">موعد التسليم (بتوقيت جهازك)<Input id="assignment-due" type="datetime-local" dir="ltr" value={dueAt} onChange={e => setDueAt(e.target.value)} disabled={pending || locked} /></label>
-            <Button variant="outline" onClick={() => void act("assign")} disabled={pending || locked}>حفظ الإسناد</Button>
-          </div> : <p className="text-sm">المسؤول: {data.assigneeName ?? "غير محدد"}{data.dueAt ? ` · التسليم: ${new Date(data.dueAt).toLocaleString("ar-SA-u-ca-gregory-nu-latn")}` : ""}</p>}
+            </div>
+            <div className="flex gap-2"><Button onClick={() => void act("assign")} disabled={pending || locked}>{pending ? "جارٍ حفظ الإسناد…" : "حفظ الإسناد"}</Button><Button variant="ghost" disabled={pending} onClick={() => { setAssignedTo(data.assignedTo ?? ""); setDueAt(localDate(data.dueAt)); setEditingAssignment(false); }}>إلغاء</Button></div>
+          </div> : <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 p-3">
+            <div className="min-w-0 space-y-1 text-sm"><p className="font-semibold">{data.assignedTo ? `مسندة إلى ${data.assigneeName ?? "محرر غير متاح"}` : "المادة غير مسندة"}</p><p className="text-muted-foreground">{data.dueAt ? `التسليم: ${new Date(data.dueAt).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "medium", timeStyle: "short" })} (الرياض)` : "لم يُحدّد موعد تسليم"}</p></div>
+            {data.canAssign && <Button size="sm" variant="outline" disabled={pending || locked} onClick={() => { setNotice(""); setEditingAssignment(true); }}>{data.assignedTo ? "تعديل الإسناد" : "إسناد المادة"}</Button>}
+          </div>}
           <Button size="sm" variant="ghost" disabled={pending} onClick={() => setRefresh(value => value + 1)}>تحديث الملاحظات</Button>
           <div className="max-h-72 space-y-3 overflow-y-auto" aria-label="آخر ملاحظات المراجعة">
             {!data.notes.length && <p className="text-sm text-muted-foreground">لا توجد ملاحظات بعد. يمكنك إضافة المصادر وروابط التحقق هنا أيضًا.</p>}
