@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { loadActor } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { loadTaxonomyVisibility } from "@/lib/content/taxonomy-settings";
 import { TaxonomyClient } from "@/components/tahrir/taxonomy-client";
 
@@ -7,8 +6,8 @@ export const metadata = { title: "التصنيفات والأقسام" };
 export const dynamic = "force-dynamic";
 
 export default async function TaxonomyPage() {
-  const actor = await loadActor();
-  if (!actor?.can("ai.settings")) redirect("/tahrir");
+  const gate = await requireScreen("ai.settings", "التصنيفات والأقسام");
+  if (!gate.ok) return gate.element;
   const visibility = await loadTaxonomyVisibility();
   return <main className="grid gap-4">
     <div><h1 className="font-display text-xl font-bold">التصنيفات والأقسام</h1>

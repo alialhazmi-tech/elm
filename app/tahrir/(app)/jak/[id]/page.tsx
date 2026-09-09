@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { SECTION_NAMES } from "@/lib/content/seed";
-import { canEditStory, loadActor } from "@/lib/tahrir/access";
+import { canEditStory } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { getJakSource, listSlides } from "@/lib/tahrir/jak";
 import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { JakEditor } from "@/components/tahrir/jak/jak-editor";
@@ -12,9 +13,11 @@ export const dynamic = "force-dynamic";
 
 export default async function JakEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const actor = await loadActor();
+  const gate = await requireScreen("jak.manage", "جاك العلم");
+  if (!gate.ok) return gate.element;
+  const actor = gate.actor;
   const story = await getStory(id).catch(() => null);
-  if (!actor || !canEditStory(actor, story)) notFound();
+  if (!canEditStory(actor, story)) notFound();
   if (!story || story.format !== "jakalelm") notFound();
 
   const [slides, source, mediaRows] = await Promise.all([
@@ -33,7 +36,7 @@ export default async function JakEditPage({ params }: { params: Promise<{ id: st
       <Link className="inline-block text-sm underline" href={`/tahrir/history/${story.revisionOf ?? story.id}`}>سجل النسخ واستعادتها</Link>
       <JakEditor
         actorId={actor.userId}
-        canApprove={actor?.can("story.publish") ?? false}
+        canApprove={actor.can("story.publish")}
         sections={sections}
         recentMedia={recentMedia}
         initial={{

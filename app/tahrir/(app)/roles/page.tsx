@@ -1,6 +1,5 @@
-import { Forbidden } from "@/components/tahrir/forbidden";
 import { RolesMatrix } from "@/components/tahrir/roles/roles-matrix";
-import { loadActor } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { listRoles } from "@/lib/tahrir/admin";
 import { PERMISSION_GROUPS, PERMISSION_KEYS } from "@/lib/tahrir/permissions";
 
@@ -8,8 +7,8 @@ export const metadata = { title: "الأدوار والصلاحيات" };
 export const dynamic = "force-dynamic";
 
 export default async function RolesPage() {
-  const actor = await loadActor();
-  if (!actor?.can("roles.manage")) return <Forbidden title="الأدوار والصلاحيات" permission="roles.manage" />;
+  const gate = await requireScreen("roles.manage", "الأدوار والصلاحيات");
+  if (!gate.ok) return gate.element;
 
   const roles = await listRoles();
 

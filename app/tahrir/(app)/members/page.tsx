@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Forbidden } from "@/components/tahrir/forbidden";
 import { AudienceTable } from "@/components/tahrir/audience-table";
-import { loadActor } from "@/lib/tahrir/access";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { listAudience, type AudienceFilters } from "@/lib/membership/admin";
 export const metadata = { title: "الأعضاء" };
 export const dynamic = "force-dynamic";
@@ -10,9 +9,8 @@ export default async function MembersPage({
 }: {
   searchParams: Promise<AudienceFilters>;
 }) {
-  const actor = await loadActor();
-  if (!actor?.can("users.view"))
-    return <Forbidden title="الأعضاء" permission="users.view" />;
+  const gate = await requireScreen("users.view", "الأعضاء");
+  if (!gate.ok) return gate.element;
   const result = await listAudience(await searchParams).catch(() => null);
   if (!result)
     return (
@@ -99,7 +97,7 @@ export default async function MembersPage({
       </p>
       <AudienceTable
         members={members}
-        canSuspend={actor.can("users.suspend")}
+        canSuspend={gate.actor.can("users.suspend")}
       />
       {pages > 1 && (
         <nav

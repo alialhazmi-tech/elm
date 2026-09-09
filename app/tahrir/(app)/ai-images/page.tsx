@@ -1,12 +1,15 @@
 import { AiImagesClient } from "@/components/tahrir/ai/ai-images-client";
 import { Panel } from "@/components/tahrir/overview/panel";
 import { keyStatus, loadAiSettings } from "@/lib/ai/settings";
+import { requireScreen } from "@/lib/tahrir/screen";
 import { listRecentMedia } from "@/lib/tahrir/service";
 
 export const metadata = { title: "توليد الصور" };
 export const dynamic = "force-dynamic";
 
 export default async function AiImagesPage() {
+  const gate = await requireScreen("ai.image", "توليد الصور");
+  if (!gate.ok) return gate.element;
   const [settings, recent] = await Promise.all([
     loadAiSettings(),
     listRecentMedia({ aiGenerated: true, limit: 6 }).catch(() => []),
