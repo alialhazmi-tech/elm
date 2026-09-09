@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { apiCall } from "@/lib/tahrir/client-api";
 import { cn } from "@/lib/utils";
 
 import { countLabel } from "./types";
@@ -43,15 +44,10 @@ const REASON_CHIPS = [
 
 const NOUN = { one: "مادة واحدة", two: "مادتين", few: "مواد", many: "مادة" };
 
+/** يعيد رسالة الخطأ أو null عند النجاح — النقل الموحّد يتكفّل بالمهلة ورسائل الشبكة. */
 async function call(url: string, method: string, body: Record<string, string>): Promise<string | null> {
-  const response = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }).catch(() => null);
-  if (response?.ok) return null;
-  const data = await response?.json().catch(() => null);
-  return data?.error ?? "تعذر تنفيذ الإجراء.";
+  const result = await apiCall(url, { method, body }, { fallback: "تعذر تنفيذ الإجراء." });
+  return result.ok ? null : result.error;
 }
 
 /** ينفّذ الإجراء على كل صف بالتتابع (المسارات فردية) ويلخّص النتيجة في تنبيه واحد. */

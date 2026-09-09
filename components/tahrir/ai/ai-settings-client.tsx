@@ -8,6 +8,7 @@ import { Panel } from "@/components/tahrir/overview/panel";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { apiCall } from "@/lib/tahrir/client-api";
 
 interface SettingsShape {
   tools: Record<string, boolean>;
@@ -57,18 +58,13 @@ export function AiSettingsClient({ initial, isChief }: { initial: SettingsShape;
       toast.error("التعديل قرار رئيس التحرير.");
       return;
     }
-    const response = await fetch("/api/tahrir/ai/settings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(partial),
-    }).catch(() => null);
-    const data = await response?.json().catch(() => null);
-    if (response?.ok) {
-      setSettings(data.settings);
+    const result = await apiCall<{ settings: SettingsShape }>("/api/tahrir/ai/settings", { method: "PATCH", body: partial }, { fallback: "تعذر الحفظ." });
+    if (result.ok) {
+      setSettings(result.data.settings);
       toast.success("حُفظت.");
       router.refresh();
     } else {
-      toast.error(data?.error ?? "تعذر الحفظ.");
+      toast.error(result.error);
     }
   }
 

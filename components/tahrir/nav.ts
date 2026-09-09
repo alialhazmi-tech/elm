@@ -54,7 +54,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "نظرة اليوم", href: "/tahrir", icon: LayoutDashboardIcon, exact: true },
       { title: "مهامي", href: "/tahrir/tasks", icon: ClipboardListIcon },
-      { title: "دليل الاستخدام", href: "/tahrir/help", icon: BookOpenIcon },
       { title: "المواد", href: "/tahrir/stories", icon: ListIcon, badge: "total" },
       { title: "المحرر", href: "/tahrir/editor/new", icon: PenLineIcon, match: "/tahrir/editor" },
       { title: "الجدولة", href: "/tahrir/schedule", icon: CalendarClockIcon, badge: "scheduled", permission: "story.schedule" },
@@ -68,12 +67,13 @@ export const NAV_GROUPS: NavGroup[] = [
         match: "/tahrir/stories",
         status: "review",
       },
+      { title: "دليل الاستخدام", href: "/tahrir/help", icon: BookOpenIcon },
     ],
   },
   {
     title: "المحتوى",
     items: [
-      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage", comingSoon: true },
+      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage" },
       { title: "السلاسل", href: "/tahrir/series", icon: LayersIcon },
       { title: "التصنيفات والأقسام", href: "/tahrir/taxonomy", icon: LayersIcon, permission: "ai.settings" },
       { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon, permission: "media.upload" },
@@ -137,5 +137,7 @@ export function pageTitleFor(pathname: string, status: string | null): string {
   }
   if (pathname === "/tahrir/profile") return "ملفي الشخصي";
   if (pathname === "/tahrir/profile/saved") return "المواد المحفوظة";
+  if (pathname === "/tahrir/security") return "أمان الحساب";
+  if (pathname === "/tahrir/history" || pathname.startsWith("/tahrir/history/")) return "سجل النسخ";
   return "تحرير العلم";
 }

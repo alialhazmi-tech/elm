@@ -353,7 +353,7 @@ export function InfographicStudio({ openRouter = false }: { openRouter?: boolean
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-2 rounded-lg border bg-muted/30 p-3">
                 <h4 className="text-xs font-bold">كود تضمين الإنفوجرافيك (Embed)</h4>
-                <p className="text-[11px] text-muted-foreground">تضمين الإنفوجرافيك التفاعلي في أي موقع أو مقال خارجي عبر iframe:</p>
+                <p className="text-[11px] text-muted-foreground">تضمين الإنفوجرافيك التفاعلي في أي موقع أو مادة خارجية عبر iframe:</p>
                 <Textarea
                   readOnly
                   dir="ltr"

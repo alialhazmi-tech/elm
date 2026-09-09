@@ -37,6 +37,7 @@ export function SiteHeader({ today, user, actorId, permissions }: { today: strin
           onClick={toggleSidebar}
           size="icon-sm"
           variant="ghost"
+          className="size-9 md:size-7"
           aria-label={open ? "طيّ الشريط الجانبي" : "فتح الشريط الجانبي"}
         >
           {open ? <PanelRightCloseIcon /> : <PanelRightOpenIcon />}

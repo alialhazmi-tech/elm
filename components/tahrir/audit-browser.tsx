@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatRiyadhDate, formatRiyadhTime } from "@/lib/format";
 import type { AuditEntry } from "@/lib/tahrir/audit-data";
 import {
   AUDIT_GROUPS,
@@ -36,33 +37,15 @@ import {
   auditSummary,
   type AuditTone,
 } from "@/lib/tahrir/audit-presentation";
+/** ألوان الإجراء من رموز .th الدلالية فتعمل في اللوحات الثماني والوضع الداكن. */
 const tones: Record<AuditTone, string> = {
-  normal: "bg-slate-500/10 text-slate-700 dark:text-slate-300",
-  success: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  warning: "bg-amber-500/10 text-amber-800 dark:text-amber-300",
-  danger: "bg-red-500/10 text-red-700 dark:text-red-300",
+  normal: "bg-muted text-muted-foreground",
+  success: "bg-(--t-ok-bg) text-(--t-ok)",
+  warning: "bg-(--t-warn-bg) text-(--t-warn)",
+  danger: "bg-(--t-block-bg) text-(--t-block)",
 };
-const date = (iso: string, timeOnly = false) => {
-  const value = new Date(iso);
-  if (!Number.isFinite(value.getTime())) return "وقت غير معروف";
-  return new Intl.DateTimeFormat(
-    "ar-SA-u-ca-gregory-nu-latn",
-    timeOnly
-      ? {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-          timeZone: "Asia/Riyadh",
-        }
-      : {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          timeZone: "Asia/Riyadh",
-        },
-  ).format(value);
-};
+const date = (iso: string, timeOnly = false) =>
+  (timeOnly ? formatRiyadhTime(iso, { seconds: true }) : formatRiyadhDate(iso)) || "وقت غير معروف";
 export function AuditBrowser({
   rows,
   loadedAt,
@@ -232,20 +215,15 @@ export function AuditBrowser({
         </span>
       </div>
       <div className="overflow-hidden rounded-xl border bg-card">
-        <Table className="min-w-[780px] table-fixed">
+        {/* على الجوال يبقى الوقت والإجراء والتفاصيل؛ المنفّذ والملخص ينزلان تحت الإجراء. */}
+        <Table containerClassName="scroll-fade-x" className="md:min-w-[780px] md:table-fixed">
           <TableHeader className="bg-muted/30">
             <TableRow>
-              {["الوقت", "المنفّذ", "الإجراء", "الملخص", "التفاصيل"].map(
-                (label, i) => (
-                  <TableHead
-                    key={label}
-                    style={{ width: ["16%", "18%", "24%", "32%", "10%"][i] }}
-                    className="font-display text-xs font-semibold"
-                  >
-                    {label}
-                  </TableHead>
-                ),
-              )}
+              <TableHead className="w-24 font-display text-xs font-semibold md:w-[16%]">الوقت</TableHead>
+              <TableHead className="hidden font-display text-xs font-semibold md:table-cell md:w-[18%]">المنفّذ</TableHead>
+              <TableHead className="font-display text-xs font-semibold md:w-[24%]">الإجراء</TableHead>
+              <TableHead className="hidden font-display text-xs font-semibold lg:table-cell lg:w-[32%]">الملخص</TableHead>
+              <TableHead className="w-12 font-display text-xs font-semibold md:w-[10%]">التفاصيل</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -275,7 +253,7 @@ export function AuditBrowser({
                       </span>
                     </time>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-2.5">
                       <ProfileAvatar name={row.actorName || row.actor} image={row.actorAvatarUrl} size={32} />
                       <div className="grid min-w-0 gap-1">
@@ -296,14 +274,21 @@ export function AuditBrowser({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="whitespace-normal">
                     <span
                       className={`inline-flex max-w-full rounded-md px-2 py-1 text-xs font-semibold whitespace-normal ${tones[meta.tone]}`}
                     >
                       {meta.label}
                     </span>
+                    <span className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground md:hidden">
+                      <ProfileAvatar name={row.actorName || row.actor} image={row.actorAvatarUrl} size={18} />
+                      <span className="truncate">{row.actorName || row.actor}</span>
+                    </span>
+                    <span className="mt-1 line-clamp-2 text-xs leading-5 whitespace-normal break-words lg:hidden">
+                      {auditSummary(row)}
+                    </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden lg:table-cell">
                     <span className="line-clamp-2 text-sm leading-6 whitespace-normal break-words">
                       {auditSummary(row)}
                     </span>
@@ -312,6 +297,7 @@ export function AuditBrowser({
                     <Button
                       variant="ghost"
                       size="icon-sm"
+                      className="size-9 md:size-7"
                       aria-label={`تفاصيل ${meta.label} في ${date(row.at, true)}`}
                       title="عرض تفاصيل الحدث"
                       onClick={() => setSelected(row)}
@@ -338,9 +324,10 @@ export function AuditBrowser({
               size="sm"
               variant="outline"
               disabled={current === 1}
+              aria-label="الصفحة السابقة"
               onClick={() => setPage(current - 1)}
             >
-              <ChevronRight />
+              <ChevronLeft className="rtl:rotate-180" />
               السابق
             </Button>
             <span className="px-1 tabular-nums">
@@ -350,10 +337,11 @@ export function AuditBrowser({
               size="sm"
               variant="outline"
               disabled={current === pages}
+              aria-label="الصفحة التالية"
               onClick={() => setPage(current + 1)}
             >
               التالي
-              <ChevronLeft />
+              <ChevronRight className="rtl:rotate-180" />
             </Button>
           </nav>
         </div>

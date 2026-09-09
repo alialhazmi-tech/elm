@@ -48,7 +48,7 @@ export function PasswordForm({ forced }: { forced: boolean }) {
       <div className="grid gap-1.5">
         <Label htmlFor="pw-next">كلمة المرور الجديدة</Label>
         <p id="pw-requirements" className="text-sm font-medium leading-6 text-foreground">
-          يجب ألا تقل كلمة المرور الجديدة عن <strong>١٠ خانات</strong>.
+          يجب ألا تقل كلمة المرور الجديدة عن <strong>10 خانات</strong>.
         </p>
         <Input id="pw-next" name="next" type="password" autoComplete="new-password" aria-describedby="pw-requirements" minLength={10} required className="h-10" />
       </div>

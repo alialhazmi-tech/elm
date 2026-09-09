@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { apiCall } from "@/lib/tahrir/client-api";
 
 const FIELDS: Array<[string, string, string, "input" | "textarea"]> = [
   ["name", "اسم السلسلة", "مثال: خلف الكواليس", "input"],
@@ -27,19 +28,18 @@ export function ProposalForm() {
     setBusy(true);
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
-    const response = await fetch("/api/tahrir/series/proposals", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(FIELDS.map(([key]) => [key, form.get(key)]))),
-    }).catch(() => null);
-    const data = await response?.json().catch(() => null);
+    const result = await apiCall(
+      "/api/tahrir/series/proposals",
+      { method: "POST", body: Object.fromEntries(FIELDS.map(([key]) => [key, form.get(key)])) },
+      { fallback: "تعذر رفع المقترح." },
+    );
     setBusy(false);
-    if (response?.ok) {
+    if (result.ok) {
       toast.success("رُفع المقترح لاعتماد رئيس التحرير.");
       formElement.reset();
       router.refresh();
     } else {
-      toast.error(data?.error ?? "تعذر رفع المقترح.");
+      toast.error(result.error);
     }
   }
 
@@ -71,13 +71,9 @@ export function ProposalDecision({ id }: { id: string }) {
 
   async function decide(decision: "accepted" | "rejected") {
     setBusy(true);
-    const response = await fetch("/api/tahrir/series/proposals", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, decision }),
-    }).catch(() => null);
+    const result = await apiCall("/api/tahrir/series/proposals", { method: "PATCH", body: { id, decision } }, { fallback: "تعذر تسجيل القرار." });
     setBusy(false);
-    if (response?.ok) toast.success(decision === "accepted" ? "قُبل المقترح." : "رُفض المقترح.");
+    if (result.ok) toast.success(decision === "accepted" ? "قُبل المقترح." : "رُفض المقترح.");
     else toast.error("تعذر تسجيل القرار.");
     router.refresh();
   }
@@ -106,13 +102,9 @@ export function ArchiveToggle({ slug, hidden }: { slug: string; hidden: boolean 
         aria-label={hidden ? "أظهر في الفهرس" : "أخفِ من الفهرس"}
         onCheckedChange={async (visible) => {
           setBusy(true);
-          const response = await fetch("/api/tahrir/series/visibility", {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ slug, hidden: !visible }),
-          }).catch(() => null);
+          const result = await apiCall("/api/tahrir/series/visibility", { method: "PATCH", body: { slug, hidden: !visible } }, { fallback: "تعذر تغيير الظهور." });
           setBusy(false);
-          if (!response?.ok) toast.error("تعذر تغيير الظهور.");
+          if (!result.ok) toast.error("تعذر تغيير الظهور.");
           router.refresh();
         }}
       />

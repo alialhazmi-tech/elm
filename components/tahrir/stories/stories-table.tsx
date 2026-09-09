@@ -21,6 +21,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useStoryActions } from "./story-actions";
 import { countLabel, type StoryTableRow } from "./types";
 
+const UNTITLED = "مسودة بلا عنوان";
+/** أزرار الصف: 36px على الجوال (هدف لمس) و24px على المكتبي. */
+const ROW_ICON_BUTTON = "size-9 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:size-6";
+
 const SELECTED_NOUN = { one: "مادة واحدة محددة", two: "مادتان محددتان", few: "مواد محددة", many: "مادة محددة" };
 
 /** جدول المواد: تحديد جماعي، وإجراءات صفية ظاهرة بالترتيب نفسه لجدول الأعضاء؛ الترقيم والتصفية من الخادم. */
@@ -72,8 +76,8 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
         </div>
       ) : null}
 
-      <div className="overflow-x-auto">
-        <Table>
+      {/* على الجوال تخطيط ثابت: العنوان يُقصّ بنقاط وعمود الإجراءات يبقى ظاهرًا (شبكة 2×2 من أزرار 36px). */}
+      <Table containerClassName="scroll-fade-x" className="table-fixed md:table-auto">
           <TableHeader>
             <TableRow className="border-b border-border/80 bg-muted/20 hover:bg-muted/20">
               <TableHead className="w-10 ps-3">
@@ -90,7 +94,7 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
               <TableHead className="hidden w-28 font-display text-xs font-semibold md:table-cell">الحارس</TableHead>
               <TableHead className="hidden w-28 font-display text-xs font-semibold md:table-cell">الحالة</TableHead>
               <TableHead className="hidden w-28 font-display text-xs font-semibold lg:table-cell">حُدّثت</TableHead>
-              <TableHead className="w-32 pe-4 font-display text-xs font-semibold text-start">الإجراءات</TableHead>
+              <TableHead className="w-24 pe-3 font-display text-xs font-semibold text-start md:w-32 md:pe-4">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -103,11 +107,12 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
             ) : null}
             {rows.map((row) => {
               const isSelected = selected.has(row.id);
+              const title = row.title.trim() || UNTITLED;
               return (
                 <TableRow key={row.id} data-state={isSelected ? "selected" : undefined} className="transition-colors hover:bg-muted/30">
                   <TableCell className="ps-3 py-2.5">
                     <Checkbox
-                      aria-label={`تحديد ${row.title}`}
+                      aria-label={`تحديد ${title}`}
                       checked={isSelected}
                       onCheckedChange={(checked) => toggle(row.id, checked === true)}
                     />
@@ -118,8 +123,8 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                       className="absolute inset-y-2.5 start-1 w-[3px] rounded-full"
                       style={{ background: row.series?.color ?? "var(--input)" }}
                     />
-                    <Link href={row.href} className="block truncate text-[13px] font-semibold hover:underline">
-                      {row.title}
+                    <Link href={row.href} className={`block truncate text-[13px] font-semibold hover:underline${row.title.trim() ? "" : " text-muted-foreground"}`}>
+                      {title}
                     </Link>
                     <span className="block truncate text-[11px] text-muted-foreground">
                       {row.isJak ? "▦ جاك العلم · " : ""}
@@ -144,29 +149,29 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                   <TableCell className="hidden w-28 py-2.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap lg:table-cell">
                     {row.updated}
                   </TableCell>
-                  <TableCell className="w-32 pe-4 py-2.5">
-                    <div className="flex items-center gap-1">
+                  <TableCell className="w-24 pe-3 py-2.5 md:w-32 md:pe-4">
+                    <div className="flex flex-wrap items-center gap-1 md:flex-nowrap">
                       <Button
                         asChild
                         size="icon-xs"
                         variant="ghost"
-                        className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                        className={ROW_ICON_BUTTON}
                         title="فتح في المحرر"
                       >
-                        <Link href={row.href} aria-label={`فتح ${row.title} في المحرر`}>
+                        <Link href={row.href} aria-label={`فتح ${title} في المحرر`}>
                           <PenLineIcon className="size-3.5" />
                         </Link>
                       </Button>
-                      <StoryTimeline id={row.id} storyTitle={row.title} compact />
+                      <StoryTimeline id={row.id} storyTitle={title} compact />
                       {row.publicHref ? (
                         <Button
                           asChild
                           size="icon-xs"
                           variant="ghost"
-                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className={ROW_ICON_BUTTON}
                           title="عرض على الموقع"
                         >
-                          <a href={row.publicHref} target="_blank" rel="noreferrer" aria-label={`عرض ${row.title} على الموقع`}>
+                          <a href={row.publicHref} target="_blank" rel="noreferrer" aria-label={`عرض ${title} على الموقع`}>
                             <ExternalLinkIcon className="size-3.5" />
                           </a>
                         </Button>
@@ -175,9 +180,9 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                         <Button
                           size="icon-xs"
                           variant="ghost"
-                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className={ROW_ICON_BUTTON}
                           title="أرشفة"
-                          aria-label={`أرشفة ${row.title}`}
+                          aria-label={`أرشفة ${title}`}
                           onClick={() => setAction({ kind: "archive", rows: [row] })}
                         >
                           <ArchiveIcon className="size-3.5" />
@@ -187,9 +192,9 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                         <Button
                           size="icon-xs"
                           variant="ghost"
-                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className={ROW_ICON_BUTTON}
                           title="استعادة كمسودة"
-                          aria-label={`استعادة ${row.title} كمسودة`}
+                          aria-label={`استعادة ${title} كمسودة`}
                           onClick={() => setAction({ kind: "restore", rows: [row] })}
                         >
                           <ArchiveRestoreIcon className="size-3.5" />
@@ -199,9 +204,9 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
                         <Button
                           size="icon-xs"
                           variant="ghost"
-                          className="text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          className="size-9 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:size-6"
                           title="حذف المسودة"
-                          aria-label={`حذف مسودة ${row.title}`}
+                          aria-label={`حذف مسودة ${title}`}
                           onClick={() => setAction({ kind: "delete", rows: [row] })}
                         >
                           <Trash2Icon className="size-3.5" />
@@ -213,8 +218,7 @@ export function StoriesTable({ rows, canArchive }: { rows: StoryTableRow[]; canA
               );
             })}
           </TableBody>
-        </Table>
-      </div>
+      </Table>
       {dialogs}
     </Card>
   );

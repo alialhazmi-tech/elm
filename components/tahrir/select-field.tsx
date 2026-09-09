@@ -3,7 +3,7 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
-/** قائمة اختيار مختصرة فوق shadcn Select — للشاشات الكثيرة الحقول (جاك العلم، الإنفوجرافيك). */
+/** قائمة اختيار مختصرة فوق shadcn Select — للشاشات الكثيرة الحقول (جاك العلم، الإنفوجرافيك). الاتجاه من DirectionProvider في غلاف اللوحة. */
 export function SelectField({
   value,
   onValueChange,
@@ -22,11 +22,11 @@ export function SelectField({
   disabled?: boolean;
 }) {
   return (
-    <Select dir="rtl" disabled={disabled} value={value} onValueChange={onValueChange}>
+    <Select disabled={disabled} value={value} onValueChange={onValueChange}>
       <SelectTrigger aria-label={ariaLabel} className={cn("w-full bg-card", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent align="end">
         {options.map((option) => (
           <SelectItem key={option.value} value={option.value}>
             {option.label}

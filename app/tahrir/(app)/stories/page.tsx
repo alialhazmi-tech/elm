@@ -1,16 +1,16 @@
 import Link from "next/link";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
+import { Pagination } from "@/components/tahrir/pagination";
 import { StoriesTable } from "@/components/tahrir/stories/stories-table";
 import { StoriesToolbar } from "@/components/tahrir/stories/toolbar";
 import type { StoryTableRow } from "@/components/tahrir/stories/types";
-import { Button } from "@/components/ui/button";
 import { stripHtmlToText } from "@/lib/content/html";
 import { SECTION_NAMES } from "@/lib/content/seed";
 import { ALL_SERIES } from "@/lib/content/series";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { runConfiguredPolicyGuard, type GuardControls } from "@/lib/policy";
 import { loadActor } from "@/lib/tahrir/access";
+import { pageRange } from "@/lib/tahrir/pagination";
 import { editorHref } from "@/lib/tahrir/routes";
 import { inRiyadhDay, riyadhDayBounds } from "@/lib/tahrir/time";
 import {
@@ -124,11 +124,7 @@ export default async function StoriesPage({
     ...ACTIVE_STATUSES.map((key) => ({ key, label: STATUS_LABELS[key], count: counts[key] ?? 0 })),
     { key: "archived", label: "مؤرشفة", count: archivedCount },
   ];
-  const from = total === 0 ? 0 : (page - 1) * PER_PAGE + 1;
-  const to = Math.min(total, page * PER_PAGE);
-  const pageWindow = Array.from({ length: totalPages }, (_, index) => index + 1).filter(
-    (number) => number === 1 || number === totalPages || Math.abs(number - page) <= 1,
-  );
+  const { from, to } = pageRange(page, PER_PAGE, total);
 
   return (
     <main className="flex flex-col gap-3">
@@ -165,38 +161,12 @@ export default async function StoriesPage({
 
       <StoriesTable rows={tableRows} canArchive={canArchive} />
 
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="tabular-nums">
-          {from}–{to} من {total}
-          {hasFilters ? " (مرشّحة)" : ""}
-        </span>
-        {totalPages > 1 ? (
-          <nav aria-label="ترقيم الصفحات" className="ms-auto flex items-center gap-1">
-            <Button asChild size="sm" variant="outline" disabled={page <= 1} className={cn(page <= 1 && "pointer-events-none opacity-50")}>
-              <Link href={href(status, page - 1)} aria-label="الصفحة السابقة">
-                <ChevronRightIcon data-icon="inline-start" />
-                الأحدث
-              </Link>
-            </Button>
-            {pageWindow.map((number, index) => (
-              <span key={number} className="contents">
-                {index > 0 && pageWindow[index - 1] !== number - 1 ? <span className="px-1">…</span> : null}
-                <Button asChild size="sm" variant={number === page ? "default" : "outline"} className="min-w-8 tabular-nums">
-                  <Link href={href(status, number)} aria-current={number === page ? "page" : undefined}>
-                    {number}
-                  </Link>
-                </Button>
-              </span>
-            ))}
-            <Button asChild size="sm" variant="outline" className={cn(page >= totalPages && "pointer-events-none opacity-50")}>
-              <Link href={href(status, page + 1)} aria-label="الصفحة التالية">
-                الأقدم
-                <ChevronLeftIcon data-icon="inline-end" />
-              </Link>
-            </Button>
-          </nav>
-        ) : null}
-      </div>
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        hrefFor={(number) => href(status, number)}
+        summary={`${from}–${to} من ${total}${hasFilters ? " (مرشّحة)" : ""}`}
+      />
     </main>
   );
 }

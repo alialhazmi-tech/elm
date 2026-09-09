@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+import { SegmentedFilter } from "@/components/tahrir/segmented-filter";
 import { Switch } from "@/components/ui/switch";
 import {
   AlertDialog,
@@ -32,7 +33,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { formatRiyadhDateTime } from "@/lib/format";
 import type { MemberSummary } from "@/lib/tahrir/admin";
+import { apiCall } from "@/lib/tahrir/client-api";
 import { ADMIN_ROLE, type OverrideEffect, type PermissionGroup } from "@/lib/tahrir/permissions";
 import { cn } from "@/lib/utils";
 
@@ -54,17 +57,10 @@ interface Props {
   can: { manage: boolean; suspend: boolean; overrides: boolean };
 }
 
-const when = (iso: string | null) =>
-  iso
-    ? new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
-        day: "numeric",
-        month: "short",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Riyadh",
-      }).format(new Date(iso))
-    : "—";
+const when = (iso: string | null) => formatRiyadhDateTime(iso, { style: "short" }) || "—";
+
+/** أزرار الصف: 36px على الجوال (هدف لمس) و24px على المكتبي. */
+const ROW_ICON_BUTTON = "size-9 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:size-6";
 
 /** كلمة مؤقتة قابلة للقراءة بلا محارف ملتبسة — تُولَّد في المتصفح وتُرسل مرة واحدة. */
 function temporaryPassword(): string {
@@ -73,17 +69,19 @@ function temporaryPassword(): string {
   return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
 
-async function call(url: string, method: string, body?: unknown) {
-  const response = await fetch(url, {
-    method,
-    headers: { "Content-Type": "application/json" },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  }).catch(() => null);
-  const data = await response?.json().catch(() => null);
-  return { ok: response?.ok === true, error: data?.error as string | undefined };
+/** غلاف رقيق فوق النقل الموحّد: fallback هو نص الشاشة عند فشل بلا رسالة من الخادم. */
+async function call(url: string, method: string, body: unknown, fallback: string) {
+  const result = await apiCall(url, { method, body }, { fallback });
+  return result.ok ? { ok: true as const, error: undefined } : { ok: false as const, error: result.error };
 }
 
 type Filter = "all" | "active" | "suspended";
+
+const STATUS_FILTERS: ReadonlyArray<{ value: Filter; label: string }> = [
+  { value: "all", label: "الكل" },
+  { value: "active", label: "فعّال" },
+  { value: "suspended", label: "معلّق" },
+];
 
 /** جدول الحسابات الإدارية: الاسم والدور والحالة وآخر دخول، وإجراءات لكل صف؛ الإنشاء والتعديل في لوح جانبي. */
 export function MembersClient({ members, roles, groups, me, can }: Props) {
@@ -122,13 +120,15 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
     if (!action || (action.kind !== "suspend" && action.kind !== "reactivate")) return;
     const reason = (document.getElementById("suspend-reason") as HTMLTextAreaElement | null)?.value ?? "";
     setBusy(true);
-    const result = await call(`/api/tahrir/admin/members/${action.member.id}/status`, "POST", {
-      status: action.kind === "suspend" ? "suspended" : "active",
-      reason,
-    });
+    const result = await call(
+      `/api/tahrir/admin/members/${action.member.id}/status`,
+      "POST",
+      { status: action.kind === "suspend" ? "suspended" : "active", reason },
+      "تعذر تغيير الحالة.",
+    );
     setBusy(false);
     if (result.ok) done(action.kind === "suspend" ? "عُلّق الحساب — تسري فورًا." : "أُعيد تفعيل الحساب.");
-    else toast.error(result.error ?? "تعذر تغيير الحالة.");
+    else toast.error(result.error);
   }
 
   return (
@@ -158,29 +158,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
               ))}
             </SelectContent>
           </Select>
-          <div className="inline-flex rounded-lg border border-border/80 bg-muted/30 p-0.5">
-            {(
-              [
-                ["all", "الكل"],
-                ["active", "فعّال"],
-                ["suspended", "معلّق"],
-              ] as Array<[Filter, string]>
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                className={cn(
-                  "rounded-md px-2.5 py-1 font-display text-xs font-semibold transition-colors",
-                  filter === key
-                    ? "bg-card text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={() => setFilter(key)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <SegmentedFilter options={STATUS_FILTERS} value={filter} onValueChange={setFilter} ariaLabel="تصفية بالحالة" />
         </div>
 
         {can.manage ? (
@@ -192,15 +170,16 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
       </div>
 
       <Card className="gap-0 overflow-hidden py-0">
-        <Table>
+        {/* على الجوال تخطيط ثابت: عمود الحالة يختفي وينزل مفتاح التعليق مع الدور وآخر دخول تحت الاسم. */}
+        <Table containerClassName="scroll-fade-x" className="table-fixed md:table-auto">
           <TableHeader>
             <TableRow className="border-b border-border/80 bg-muted/20 hover:bg-muted/20">
               <TableHead className="ps-4 font-display text-xs font-semibold">الحساب</TableHead>
               <TableHead className="w-40 hidden font-display text-xs font-semibold md:table-cell">الدور</TableHead>
-              <TableHead className="w-48 font-display text-xs font-semibold">الحالة</TableHead>
+              <TableHead className="hidden w-48 font-display text-xs font-semibold md:table-cell">الحالة</TableHead>
               <TableHead className="w-36 hidden font-display text-xs font-semibold lg:table-cell">آخر دخول</TableHead>
               <TableHead className="w-28 hidden font-display text-xs font-semibold xl:table-cell">أُضيف</TableHead>
-              <TableHead className="w-36 pe-4 font-display text-xs font-semibold text-start">الإجراءات</TableHead>
+              <TableHead className="w-24 pe-3 font-display text-xs font-semibold text-start md:w-36 md:pe-4">الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -226,6 +205,17 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                         <span className="truncate text-[11px] text-muted-foreground" dir="ltr">
                           {member.email || member.username}
                         </span>
+                        {/* على الجوال ينزل الدور وآخر دخول تحت الاسم بدل أعمدة خارج الشاشة. */}
+                        <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10.5px] text-muted-foreground md:hidden">
+                          <span className={cn("rounded bg-muted/70 px-1.5 py-0.5 font-display font-semibold", member.role === ADMIN_ROLE && "text-(--t-warn)")}>
+                            {member.roleLabel}
+                            {member.overrides.length > 0 ? <span className="ms-1 tabular-nums">+{member.overrides.length}</span> : null}
+                          </span>
+                          <span className="tabular-nums">آخر دخول {when(member.lastLoginAt)}</span>
+                        </span>
+                        <span className="mt-1.5 flex items-center gap-2 md:hidden">
+                          <StatusControl member={member} isMe={isMe} busy={busy} canSuspend={can.suspend} onChange={setAction} />
+                        </span>
                       </div>
                     </div>
                   </TableCell>
@@ -237,63 +227,19 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                       </span>
                     ) : null}
                   </TableCell>
-                  <TableCell className="w-48 py-2.5">
-                    <div className="flex items-center gap-2.5">
-                      {can.suspend ? (
-                        <Switch
-                          checked={member.status === "active"}
-                          disabled={isMe || busy}
-                          aria-label={member.status === "active" ? `تعليق حساب ${member.displayName}` : `تفعيل حساب ${member.displayName}`}
-                          title={
-                            isMe
-                              ? "لا يمكنك تعليق حسابك الحالي"
-                              : member.status === "active"
-                                ? "انقر لتعليق الحسابية"
-                                : "انقر لتفعيل الحساب"
-                          }
-                          onCheckedChange={(checked) => {
-                            if (!checked) {
-                              setAction({ kind: "suspend", member });
-                            } else {
-                              setAction({ kind: "reactivate", member });
-                            }
-                          }}
-                        />
-                      ) : null}
-                      <div className="grid leading-tight">
-                        <div className="flex items-center gap-1.5">
-                          <span
-                            className={cn(
-                              "text-xs font-semibold",
-                              member.status === "active" ? "text-(--t-ok)" : "text-muted-foreground",
-                            )}
-                          >
-                            {member.status === "active" ? "فعّال" : "معلّق"}
-                          </span>
-                          {member.mustChangePassword ? (
-                            <span className="rounded-full bg-amber-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-                              مؤقتة
-                            </span>
-                          ) : null}
-                        </div>
-                        {member.status === "suspended" && member.suspendReason ? (
-                          <span className="max-w-36 truncate text-[10px] text-muted-foreground" title={member.suspendReason}>
-                            {member.suspendReason}
-                          </span>
-                        ) : null}
-                      </div>
-                    </div>
+                  <TableCell className="hidden w-48 py-2.5 md:table-cell">
+                    <StatusControl member={member} isMe={isMe} busy={busy} canSuspend={can.suspend} onChange={setAction} />
                   </TableCell>
                   <TableCell className="w-36 hidden py-2.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap lg:table-cell">{when(member.lastLoginAt)}</TableCell>
                   <TableCell className="w-28 hidden py-2.5 text-xs text-muted-foreground tabular-nums whitespace-nowrap xl:table-cell">{member.createdAt.slice(0, 10)}</TableCell>
-                  <TableCell className="w-36 pe-4 py-2.5">
-                    <div className="flex items-center gap-1">
+                  <TableCell className="w-24 pe-3 py-2.5 md:w-36 md:pe-4">
+                    <div className="flex flex-wrap items-center gap-1 md:flex-nowrap">
                       {can.manage ? (
                         <>
                           <Button
                             size="icon-xs"
                             variant="ghost"
-                            className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className={ROW_ICON_BUTTON}
                             title="تعديل الاسم والبريد والدور"
                             aria-label={`تعديل ${member.displayName}`}
                             onClick={() => setAction({ kind: "edit", member })}
@@ -303,7 +249,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                           <Button
                             size="icon-xs"
                             variant="ghost"
-                            className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                            className={ROW_ICON_BUTTON}
                             title="توليد كلمة مرور مؤقتة"
                             aria-label={`كلمة مرور مؤقتة لـ ${member.displayName}`}
                             onClick={() => setAction({ kind: "password", member })}
@@ -316,7 +262,7 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                         <Button
                           size="icon-xs"
                           variant="ghost"
-                          className="text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                          className={ROW_ICON_BUTTON}
                           title="استثناءات الصلاحيات الفردية"
                           aria-label={`استثناءات ${member.displayName}`}
                           onClick={() => setAction({ kind: "overrides", member })}
@@ -333,9 +279,9 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
         </Table>
       </Card>
 
-      {/* الإنشاء والتعديل وكلمة المرور والاستثناءات — لوح جانبي واحد يتبدّل محتواه */}
+      {/* الإنشاء والتعديل وكلمة المرور والاستثناءات — لوح جانبي واحد يتبدّل محتواه؛ يفتح يسارًا كبقية الألواح لأن الشريط يمين */}
       <Sheet open={action !== null && action.kind !== "suspend" && action.kind !== "reactivate"} onOpenChange={(open) => (!open ? setAction(null) : null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent side="left" className="overflow-y-auto data-[side=left]:w-full data-[side=left]:sm:max-w-md">
           {action?.kind === "create" || action?.kind === "edit" ? (
             <MemberForm key={action.kind === "edit" ? action.member.id : "new"} action={action} roles={roles} busy={busy} setBusy={setBusy} onDone={done} />
           ) : null}
@@ -389,6 +335,58 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
   );
 }
 
+/** مفتاح التعليق + نص الحالة وسبب التعليق — يُعرض في عمود الحالة على المكتبي وتحت الاسم على الجوال. */
+function StatusControl({
+  member,
+  isMe,
+  busy,
+  canSuspend,
+  onChange,
+}: {
+  member: MemberSummary;
+  isMe: boolean;
+  busy: boolean;
+  canSuspend: boolean;
+  onChange: (action: Action) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {canSuspend ? (
+        <Switch
+          checked={member.status === "active"}
+          disabled={isMe || busy}
+          aria-label={member.status === "active" ? `تعليق حساب ${member.displayName}` : `تفعيل حساب ${member.displayName}`}
+          title={
+            isMe
+              ? "لا يمكنك تعليق حسابك الحالي"
+              : member.status === "active"
+                ? "انقر لتعليق الحساب"
+                : "انقر لتفعيل الحساب"
+          }
+          onCheckedChange={(checked) => onChange({ kind: checked ? "reactivate" : "suspend", member })}
+        />
+      ) : null}
+      <div className="grid leading-tight">
+        <div className="flex items-center gap-1.5">
+          <span className={cn("text-xs font-semibold", member.status === "active" ? "text-(--t-ok)" : "text-muted-foreground")}>
+            {member.status === "active" ? "فعّال" : "معلّق"}
+          </span>
+          {member.mustChangePassword ? (
+            <span className="rounded-full bg-(--t-warn-bg) px-1.5 py-0.2 text-[10px] font-semibold text-(--t-warn)">
+              مؤقتة
+            </span>
+          ) : null}
+        </div>
+        {member.status === "suspended" && member.suspendReason ? (
+          <span className="max-w-36 truncate text-[10px] text-muted-foreground" title={member.suspendReason}>
+            {member.suspendReason}
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function MemberForm({
   action,
   roles,
@@ -411,21 +409,21 @@ function MemberForm({
     const form = new FormData(event.currentTarget);
     setBusy(true);
     const result = editing
-      ? await call(`/api/tahrir/admin/members/${editing.id}`, "PATCH", {
-          displayName: form.get("displayName"),
-          email: form.get("email"),
-          role,
-        })
-      : await call("/api/tahrir/admin/members", "POST", {
-          username: form.get("username"),
-          displayName: form.get("displayName"),
-          email: form.get("email"),
-          role,
-          password,
-        });
+      ? await call(
+          `/api/tahrir/admin/members/${editing.id}`,
+          "PATCH",
+          { displayName: form.get("displayName"), email: form.get("email"), role },
+          "تعذر الحفظ.",
+        )
+      : await call(
+          "/api/tahrir/admin/members",
+          "POST",
+          { username: form.get("username"), displayName: form.get("displayName"), email: form.get("email"), role, password },
+          "تعذر الحفظ.",
+        );
     setBusy(false);
     if (result.ok) onDone(editing ? "حُفظت بيانات الحساب." : "أُضيف الحساب بكلمة مرور مؤقتة.");
-    else toast.error(result.error ?? "تعذر الحفظ.");
+    else toast.error(result.error);
   }
 
   return (
@@ -503,10 +501,10 @@ function PasswordForm({
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
-    const result = await call(`/api/tahrir/admin/members/${member.id}/password`, "POST", { password });
+    const result = await call(`/api/tahrir/admin/members/${member.id}/password`, "POST", { password }, "تعذر إعادة التعيين.");
     setBusy(false);
     if (result.ok) onDone("وُضعت كلمة مؤقتة — يُجبر صاحب الحساب على تغييرها عند الدخول.");
-    else toast.error(result.error ?? "تعذر إعادة التعيين.");
+    else toast.error(result.error);
   }
 
   return (
@@ -564,12 +562,15 @@ function OverridesForm({
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
-    const result = await call(`/api/tahrir/admin/members/${member.id}/permissions`, "PUT", {
-      overrides: [...overrides].map(([permissionKey, effect]) => ({ permissionKey, effect })),
-    });
+    const result = await call(
+      `/api/tahrir/admin/members/${member.id}/permissions`,
+      "PUT",
+      { overrides: [...overrides].map(([permissionKey, effect]) => ({ permissionKey, effect })) },
+      "تعذر الحفظ.",
+    );
     setBusy(false);
     if (result.ok) onDone("حُفظت الاستثناءات — تسري على الطلب التالي.");
-    else toast.error(result.error ?? "تعذر الحفظ.");
+    else toast.error(result.error);
   }
 
   return (

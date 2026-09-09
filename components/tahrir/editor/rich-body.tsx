@@ -291,7 +291,7 @@ function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
           }}>
             <label htmlFor="body-post-url" className="text-sm">رابط التغريدة</label>
             <Input id="body-post-url" dir="ltr" value={postUrl} onChange={e => { setPostUrl(e.target.value); setPostError(""); }} placeholder="https://x.com/…/status/…" />
-            <p className="text-xs text-muted-foreground">تظهر التغريدة كاملة في موضع المؤشر داخل الخبر.</p>
+            <p className="text-xs text-muted-foreground">تظهر التغريدة كاملة في موضع المؤشر داخل المادة.</p>
             {postError && <p role="alert" className="text-xs text-destructive">{postError}</p>}
             <Button type="submit" size="sm">إدراج في المتن</Button>
           </form>
