@@ -13,5 +13,6 @@
 | R-08 | BLOCKED | عدم تطابق author identities والـSchema | مرتفع | مرتفع | author inventory وربط legacy usernames بملفات حقيقية | editorial directory |
 | R-09 | OPEN | OpenNext/Cloudflare adapter regression | منخفض/متوسط | مرتفع | native Next build أولًا، adapter build gate، version pinning، rollback | staging worker |
 | R-10 | BLOCKED | لا يمكن اختبار backup/restore أو cutover | مؤكد حاليًا | حرج | rehearsal في staging قبل production | databases/buckets/environments |
+| R-11 | OPEN | إزالة قفل الدخول بعد المحاولات الفاشلة (#111 «temporarily remove login lockout») تركت `/api/tahrir/login` بلا كبح للتخمين | مرتفع | حرج | يُغلق في حزمة الأمان (المرحلة 1): إعادة الحد بنافذة زمنية عبر `lib/tahrir/rate-limit.ts` مع تسجيل في التدقيق، واختبار تكامل يثبت الرفض بعد العتبة | دمج PR الأمان + مراجعة قيم العتبة مع المالك |
 
 لا توجد أسرار في المستودع. لا يوجد نشر Production أو تغيير DNS ضمن العمل الحالي.
