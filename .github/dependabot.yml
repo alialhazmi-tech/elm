@@ -1,0 +1,27 @@
+# تحديثات التبعيات أسبوعيًا. next مثبّت على 16.3.0 لأن postinstall
+# (scripts/patch-next-redirect-headers.mjs) يرقّع هذه النسخة تحديدًا — لا ترقية تلقائية له.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: sunday
+      time: "06:00"
+      timezone: Asia/Riyadh
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+    ignore:
+      - dependency-name: next
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "@next/eslint-plugin-next"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

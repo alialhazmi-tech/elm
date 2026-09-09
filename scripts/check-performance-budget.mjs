@@ -1,43 +1,71 @@
 import { readFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
 
+/**
+ * ميزانية JavaScript المضغوط (gzip) لمسارين:
+ * - الرئيسية العامة `/`: من وسوم <script> في HTML المُرسَل مسبقًا (كما كان).
+ * - محرر اللوحة `/tahrir/editor/[id]`: ديناميكي بلا HTML، فتُقرأ قطع العميل من
+ *   page_client-reference-manifest.js + rootMainFiles/polyfills من build-manifest الخاص بالمسار.
+ *   القياس الأول (2026-09-09): 460.9 KiB؛ السقف 10% فوقه ولا يُرفع.
+ */
 const DIST = process.env.NEXT_DIST_DIR ?? ".next";
-const HTML_PATH = `${DIST}/server/app/index.html`;
-const MAX_COMPRESSED_JS_BYTES = 200 * 1024;
-const html = await readFile(HTML_PATH, "utf8");
-const scriptPaths = [
-  ...new Set(
-    [...html.matchAll(/<script[^>]+src="\/_next\/([^"]+\.js)"[^>]*>/g)].map(
-      (match) => match[1],
-    ),
-  ),
+const KiB = 1024;
+
+const ROUTES = [
+  { route: "/", budgetBytes: 200 * KiB, collect: () => homeScripts() },
+  { route: "/tahrir/editor/[id]", budgetBytes: 507 * KiB, collect: () => appRouteScripts("/tahrir/(app)/editor/[id]") },
 ];
 
-if (scriptPaths.length === 0) {
-  throw new Error(`No JavaScript assets found in ${HTML_PATH}`);
+async function homeScripts() {
+  const htmlPath = `${DIST}/server/app/index.html`;
+  const html = await readFile(htmlPath, "utf8");
+  const paths = [...new Set([...html.matchAll(/<script[^>]+src="\/_next\/([^"]+\.js)"[^>]*>/g)].map((match) => match[1]))];
+  if (paths.length === 0) throw new Error(`No JavaScript assets found in ${htmlPath}`);
+  return paths;
 }
 
-const assets = await Promise.all(
-  scriptPaths.map(async (relativePath) => {
-    const source = await readFile(`${DIST}/${relativePath}`);
-    return { path: relativePath, rawBytes: source.length, gzipBytes: gzipSync(source).length };
-  }),
-);
+async function appRouteScripts(appPath) {
+  const base = `${DIST}/server/app${appPath}`;
+  const manifest = await readFile(`${base}/page_client-reference-manifest.js`, "utf8");
+  const paths = new Set();
+  for (const group of manifest.matchAll(/"chunks":\[([^\]]*)\]/g)) {
+    for (const chunk of group[1].matchAll(/"\/_next\/([^"]+\.js)"/g)) paths.add(chunk[1]);
+  }
+  const buildManifest = JSON.parse(await readFile(`${base}/page/build-manifest.json`, "utf8"));
+  for (const file of [...(buildManifest.rootMainFiles ?? []), ...(buildManifest.polyfillFiles ?? [])]) paths.add(file);
+  if (paths.size === 0) throw new Error(`No client chunks found for ${appPath} in ${base}`);
+  return [...paths];
+}
 
-const gzipBytes = assets.reduce((total, asset) => total + asset.gzipBytes, 0);
-const result = {
-  route: "/",
-  budgetBytes: MAX_COMPRESSED_JS_BYTES,
-  gzipBytes,
-  gzipKiB: Number((gzipBytes / 1024).toFixed(1)),
-  pass: gzipBytes <= MAX_COMPRESSED_JS_BYTES,
-  assets,
-};
+async function measure(paths) {
+  const assets = await Promise.all(
+    paths.map(async (relativePath) => {
+      const source = await readFile(`${DIST}/${relativePath}`);
+      return { path: relativePath, rawBytes: source.length, gzipBytes: gzipSync(source).length };
+    }),
+  );
+  return { assets, gzipBytes: assets.reduce((total, asset) => total + asset.gzipBytes, 0) };
+}
 
-console.log(JSON.stringify(result, null, 2));
+const results = [];
+for (const entry of ROUTES) {
+  const { assets, gzipBytes } = await measure(await entry.collect());
+  results.push({
+    route: entry.route,
+    budgetBytes: entry.budgetBytes,
+    budgetKiB: entry.budgetBytes / KiB,
+    gzipBytes,
+    gzipKiB: Number((gzipBytes / KiB).toFixed(1)),
+    pass: gzipBytes <= entry.budgetBytes,
+    assets,
+  });
+}
 
-if (!result.pass) {
+console.log(JSON.stringify(results, null, 2));
+
+const failed = results.filter((result) => !result.pass);
+if (failed.length > 0) {
   throw new Error(
-    `Homepage JavaScript is ${result.gzipKiB}KiB gzip; budget is ${MAX_COMPRESSED_JS_BYTES / 1024}KiB.`,
+    failed.map((result) => `${result.route} JavaScript is ${result.gzipKiB}KiB gzip; budget is ${result.budgetKiB}KiB.`).join("\n"),
   );
 }
