@@ -11,10 +11,10 @@ export class StoryWriteError extends Error {
   constructor(message: string, status = 409) { super(message); this.status = status; }
 }
 
-export function assertCanWrite(actor: WriteActor, story: { authorId: string | null } | null) {
+export function assertCanWrite(actor: WriteActor, story: { authorId: string | null; assignedTo?: string | null } | null) {
   if (actor.mustChangePassword) throw new StoryWriteError("غيّر كلمة المرور المؤقتة أولًا.", 403);
   const allowed = story
-    ? actor.can("story.edit.any") || (actor.can("story.edit.own") && story.authorId === actor.userId)
+    ? actor.can("story.edit.any") || (actor.can("story.edit.own") && (story.authorId === actor.userId || story.assignedTo === actor.userId))
     : actor.can("story.create");
   if (!allowed) throw new StoryWriteError("لا تملك صلاحية تحرير هذه المادة.", 403);
 }

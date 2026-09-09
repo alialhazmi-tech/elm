@@ -34,6 +34,9 @@ export const stories = pgTable("stories", {
   body: text("body").notNull().default(""),
   authorName: text("author_name").notNull().default(""),
   authorId: text("author_id"),
+  assignedTo: text("assigned_to"),
+  dueAt: text("due_at"),
+  returnedAt: text("returned_at"),
   version: integer("version").notNull().default(1),
   /** مسودة تعديل مستقلة؛ لا تُعرض للجمهور ولا تغيّر هوية الأصل. */
   revisionOf: text("revision_of"),
@@ -58,6 +61,8 @@ export const stories = pgTable("stories", {
   /** رابط يوتيوب لمواد شكل «فيديو» (رابط المشاهدة القياسي بلا قائمة تشغيل) — يُسحب من alelm-api ويُحرر من اللوحة. */
   videoUrl: text("video_url"),
 }, (table) => [
+  index("stories_assigned_to_idx").on(table.assignedTo, table.status),
+  index("stories_author_status_idx").on(table.authorId, table.status),
   index("stories_status_idx").on(table.status),
   index("stories_published_at_idx").on(table.publishedAt),
   index("stories_section_idx").on(table.section),
@@ -210,6 +215,33 @@ export const users = pgTable("users", {
   createdAt: text("created_at").notNull(),
   updatedAt: text("updated_at"),
 }, (table) => [uniqueIndex("users_username_normalized_uidx").on(sql`lower(btrim(${table.username}))`)]);
+
+/** Internal editorial collaboration; never included in public content. */
+export const editorialNotes = pgTable("editorial_notes", {
+  id: text("id").primaryKey(),
+  storyId: text("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+  authorId: text("author_id").notNull(),
+  authorName: text("author_name").notNull(),
+  kind: text("kind").notNull().default("comment"),
+  body: text("body").notNull(),
+  createdAt: text("created_at").notNull(),
+}, table => [index("editorial_notes_story_idx").on(table.storyId, table.createdAt)]);
+
+export const editorialNotifications = pgTable("editorial_notifications", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  storyId: text("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+  message: text("message").notNull(),
+  createdAt: text("created_at").notNull(),
+  readAt: text("read_at"),
+}, table => [index("editorial_notifications_user_idx").on(table.userId, table.createdAt)]);
+
+export const editorialPresence = pgTable("editorial_presence", {
+  storyId: text("story_id").notNull().references(() => stories.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  sessionId: text("session_id").notNull(),
+  seenAt: text("seen_at").notNull(),
+}, table => [primaryKey({ columns: [table.storyId, table.userId, table.sessionId] }), index("editorial_presence_seen_idx").on(table.seenAt)]);
 
 /** لقطات منشورة قابلة للاستعادة كمسودة فقط. */
 export const storyVersions = pgTable("story_versions", {

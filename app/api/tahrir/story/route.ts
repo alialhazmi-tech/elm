@@ -5,6 +5,7 @@ import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText } from "@/lib/content/
 import { normalizeVideoUrl } from "@/lib/content/video";
 import { canEditStory, requireActor } from "@/lib/tahrir/access";
 import { deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
+import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 
 export async function POST(request: Request) {
   try { return await saveStory(request); } catch (error) { return writeError(error); }
@@ -18,6 +19,7 @@ async function saveStory(request: Request) {
     id?: string;
     expectedVersion?: number;
     autosave?: boolean;
+    returnToDraft?: boolean;
     title?: string;
     excerpt?: string;
     body?: string;
@@ -35,6 +37,13 @@ async function saveStory(request: Request) {
   } | null;
 
   const automatic = input?.autosave === true;
+  const returnToDraft = input?.returnToDraft === true;
+  if (returnToDraft && !session.can("story.publish")) {
+    return NextResponse.json({ error: "التحويل إلى مسودة من صلاحية المعتمدين فقط." }, { status: 403 });
+  }
+  if (returnToDraft && automatic) {
+    return NextResponse.json({ error: "التحويل إلى مسودة يتطلب إجراءً يدويًا." }, { status: 400 });
+  }
   if (!input || typeof input.title !== "string" || (!input.title.trim() && !automatic)) {
     return NextResponse.json({ error: "العنوان مطلوب." }, { status: 400 });
   }
@@ -76,6 +85,7 @@ async function saveStory(request: Request) {
     {
       id,
       expectedVersion: input.expectedVersion,
+      returnToDraft,
       title: input.title.trim(),
       excerpt: input.excerpt?.trim() ?? "",
       body,
@@ -95,6 +105,7 @@ async function saveStory(request: Request) {
     },
     session,
   );
+  if (returnToDraft) revalidatePublicStory(saved);
   return NextResponse.json({ ok: true, ...saved });
 }
 

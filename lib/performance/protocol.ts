@@ -31,7 +31,7 @@ const allowed = new Set(['name', 'value', 'route', 'at', 'sample', 'navigationId
 const bounded = (value: unknown, max = 120_000): value is number => typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= max;
 
 /** Strict allowlist on the server as well as the client; logs are untrusted observations. */
-export function performanceInput(input: unknown, now = Date.now()): PerformanceEvent[] | null {
+export function performanceInput(input: unknown, now = Date.now(), routeFor: (path: string) => string | null = publicPerformanceRoute): PerformanceEvent[] | null {
   if (!Array.isArray(input) || input.length < 1 || input.length > 8) return null;
   const result: PerformanceEvent[] = [];
   for (const item of input) {
@@ -41,7 +41,7 @@ export function performanceInput(input: unknown, now = Date.now()): PerformanceE
     if (typeof v.name !== 'string' || !Object.hasOwn(SLOW_VALUES, v.name)) return null;
     const name = v.name as MetricName;
     if (!bounded(v.value, name === 'CLS' ? 100 : 120_000)) return null;
-    if (typeof v.route !== 'string' || v.route !== publicPerformanceRoute(v.route)) return null;
+    if (typeof v.route !== 'string' || v.route !== routeFor(v.route)) return null;
     if (typeof v.at !== 'number' || !Number.isInteger(v.at) || Math.abs(now - v.at) > 86_400_000) return null;
     if (v.sample !== 'random' && !(v.sample === 'slow' && v.value >= SLOW_VALUES[name])) return null;
     if (typeof v.navigationId !== 'string' || !/^[a-f0-9-]{36}$/.test(v.navigationId)) return null;
@@ -54,4 +54,12 @@ export function performanceInput(input: unknown, now = Date.now()): PerformanceE
     result.push(v as PerformanceEvent);
   }
   return result;
+}
+
+/** Dashboard telemetry carries page classes only, never IDs, search terms or account paths. */
+export function dashboardPerformanceRoute(pathname: string): string | null {
+  const path = pathname.split(/[?#]/, 1)[0].replace(/\/$/, "");
+  if (["/tahrir", "/tahrir/tasks", "/tahrir/help", "/tahrir/stories", "/tahrir/media", "/tahrir/series", "/tahrir/schedule", "/tahrir/stats", "/tahrir/infographics", "/tahrir/ai-images", "/tahrir/ai-settings", "/tahrir/settings", "/tahrir/audit", "/tahrir/members", "/tahrir/admin-accounts", "/tahrir/roles"].includes(path)) return path;
+  if (/^\/tahrir\/(editor|history|jak)\/[^/]+$/.test(path)) return `/tahrir/${path.split("/")[2]}/[id]`;
+  return null;
 }

@@ -137,12 +137,15 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
                           <SidebarMenuButton
                             asChild
                             isActive={active}
-                            tooltip={item.title}
+                            tooltip={item.experimental ? `${item.title} — تجريبية` : item.title}
                             className="data-active:shadow-[inset_-2px_0_0_0_var(--sidebar-primary)]"
                           >
-                            <Link href={item.href} onClick={closeMobile}>
+                            <Link data-tour-link={item.href} href={item.href} onClick={closeMobile}>
                               <item.icon />
-                              <span>{item.title}</span>
+                              <span>
+                                {item.title}
+                                {item.experimental ? <small className="ms-1 text-[10px] font-normal text-sidebar-foreground/70">تجريبية</small> : null}
+                              </span>
                             </Link>
                           </SidebarMenuButton>
                         )}

@@ -136,3 +136,6 @@
 .th-ai-orb { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent); animation: th-ai-orb 1.4s ease-out infinite; }
 @keyframes th-ai-orb { to { box-shadow: 0 0 0 10px transparent; } }
 @media (prefers-reduced-motion: reduce) { .th-ai-shimmer, .th-ai-orb { animation: none; } }
+
+/* Context hint while the optional introduction is open. */
+.tahrir-tour-highlight { outline: 3px solid var(--primary); outline-offset: 3px; }
