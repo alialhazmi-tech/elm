@@ -277,6 +277,7 @@ export async function latestArchiveEvents(ids: string[]): Promise<Map<string, Ar
 import { media, seriesProposals } from "@/db/schema";
 import { loadAiSettings } from "@/lib/ai/settings";
 import { runConfiguredPolicyGuard } from "@/lib/policy";
+import { buildGuardDraft, loadGuardContext } from "./guard-draft";
 
 export type MediaRow = typeof media.$inferSelect;
 export type ProposalRow = typeof seriesProposals.$inferSelect;
@@ -414,15 +415,17 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
     .where(and(eq(stories.status, "scheduled"), sql`${stories.scheduledAt} <= ${now}`)).orderBy(asc(stories.scheduledAt), asc(stories.id)).limit(100);
   if (!due.length) return [];
   const settings = await loadAiSettings();
+  // مسودة الحارس نفسها التي تُفحص عند الاعتماد اليدوي؛ عدّاد العاجل يتقدم محليًا داخل الدفعة.
+  const context = await loadGuardContext(settings);
   const promoted: PromotedStory[] = [];
   try {
   for (const story of due) {
-    const report = runConfiguredPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body),
-      surface: story.format === "jakalelm" ? "design" as const : undefined, media: await guardMediaFor(story.image),
-    }, settings.governance);
+    const draft = buildGuardDraft({ id: story.id, title: story.title, body: story.body, format: story.format, image: story.image, breakingUntil: story.breakingUntil, media: await guardMediaFor(story.image) });
+    const report = runConfiguredPolicyGuard(draft, settings.governance, context);
     try {
       if (report.canRequestApproval) {
         promoted.push(await publishCheckedStory(story, "النظام", "نشر النسخة المعتمدة في موعدها"));
+        if (draft.breaking) context.breakingCountToday = (context.breakingCountToday ?? 0) + 1;
       } else {
         await db.batch([
           lockStory(story),

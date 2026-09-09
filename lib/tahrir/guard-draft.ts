@@ -60,6 +60,8 @@ export function buildGuardDraft(input: GuardDraftInput): Draft {
 }
 
 interface GovernanceLike {
+  [key: string]: unknown;
+  /** سقف العاجل اليومي إن ضبطه رئيس التحرير؛ يغيب فيعمل الافتراضي في القاموس (5). */
   breakingDailyLimit?: unknown;
 }
 
@@ -77,10 +79,10 @@ export async function countBreakingPublishedToday(now = Date.now()): Promise<num
 
 /** سياق الحارس: عدّاد العاجل اليومي وسقفه من حوكمة الذكاء إن ضُبط، ومعرّف الفاعل للتدقيق. */
 export async function loadGuardContext(
-  settings: { governance: GovernanceLike },
+  settings: { governance: GovernanceLike } | PromiseLike<{ governance: GovernanceLike }>,
   actorId?: string,
 ): Promise<GuardContext> {
-  const configured = settings.governance.breakingDailyLimit;
+  const configured = (await settings).governance.breakingDailyLimit;
   const breakingDailyLimit = typeof configured === "number" && Number.isInteger(configured) && configured > 0 ? configured : undefined;
   const breakingCountToday = await countBreakingPublishedToday().catch(() => 0);
   return { breakingCountToday, ...(breakingDailyLimit ? { breakingDailyLimit } : {}), ...(actorId ? { actorId } : {}) };
