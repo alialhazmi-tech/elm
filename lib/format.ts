@@ -28,6 +28,23 @@ const GREGORIAN = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
   timeZone: "Asia/Riyadh",
 });
 
+const ARTICLE_TIMESTAMP = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: true,
+  timeZone: "Asia/Riyadh",
+});
+
+/** تاريخ ووقت المادة بالميلادي والأرقام اللاتينية، بتوقيت الرياض. */
+export function formatArticleTimestamp(iso?: string): string | null {
+  if (!iso) return null;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : ARTICLE_TIMESTAMP.format(date);
+}
+
 /** تاريخ اليوم بتوقيت الرياض بصيغة YYYY-MM-DD — لسمات dateTime الآلية. */
 export function riyadhDateISO(date = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(date);
