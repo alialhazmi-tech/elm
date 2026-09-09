@@ -23,6 +23,7 @@ import { useDraftRecovery } from "@/components/tahrir/use-draft-recovery";
 import { useDraftAutosave } from "@/components/tahrir/use-draft-autosave";
 
 import { TeamPanel, EditorPresence } from "./team-panel";
+import { StoryTimeline } from "@/components/tahrir/story-timeline";
 import { ArticlePreview } from "./article-preview";
 import { AiPanel } from "./ai-panel";
 import { FieldGenerator } from "./field-generator";
@@ -324,7 +325,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
     const response = await fetch("/api/tahrir/ai/assist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tool: "seo", title, body: bodyText() }),
+      body: JSON.stringify({ tool: "seo", storyId: id || undefined, title, body: bodyText() }),
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     setSeoBusy(false);
@@ -362,7 +363,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
           Accept: "application/x-ndjson",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ tool: "full_edit", title, body: draftBody }),
+        body: JSON.stringify({ tool: "full_edit", storyId: id || undefined, title, body: draftBody }),
         signal: controller.signal,
       });
 
@@ -658,6 +659,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
                   : `${blocking} مخالفة قاطعة`}
           </span>
           <div className="ms-auto flex flex-wrap items-center gap-1.5">
+            <StoryTimeline id={id || null} />
             <ArticlePreview getDraft={() => ({ title, excerpt, body: richRef.current?.getHtml() ?? body, image, section: sections.find(([key]) => key === section)?.[1] ?? section })} />
             {publicHref ? (
               <Button asChild size="sm" variant="ghost">
@@ -727,7 +729,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
               ref={autoGrowOnMount}
               className="min-h-20 resize-none overflow-hidden rounded-lg border-input bg-muted/20 px-3.5 py-3 font-display text-[22px] leading-relaxed font-bold text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/55 focus-visible:bg-background focus-visible:ring-2 md:text-[22px] dark:bg-muted/20"
             />
-            <FieldGenerator tool="headlines" getDraft={() => ({ title, body: bodyText(), revision: draftRevision.current })} onApply={onTitle} disabled={fullBusy || busy} />
+            <FieldGenerator tool="headlines" getDraft={() => ({ storyId: id || undefined, title, body: bodyText(), revision: draftRevision.current })} onApply={onTitle} disabled={fullBusy || busy} />
           </div>
           <div className="grid gap-2 border-t px-5 py-4">
             <div className="flex items-center justify-between">
@@ -746,11 +748,11 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
               }}
               className="min-h-22 resize-none rounded-lg border-input bg-muted/20 px-3.5 py-3 text-[14px] leading-relaxed text-foreground shadow-none placeholder:text-muted-foreground/55 focus-visible:bg-background focus-visible:ring-2 dark:bg-muted/20"
             />
-            <FieldGenerator tool="excerpt" getDraft={() => ({ title, body: bodyText(), revision: draftRevision.current })} onApply={(text) => { markDraftChanged(); setExcerpt(text); }} disabled={fullBusy || busy} />
+            <FieldGenerator tool="excerpt" getDraft={() => ({ storyId: id || undefined, title, body: bodyText(), revision: draftRevision.current })} onApply={(text) => { markDraftChanged(); setExcerpt(text); }} disabled={fullBusy || busy} />
           </div>
 
           {!fullBusy && !fullEdit ? <FullEditBar onStart={runFullEdit} disabled={metadataBusy || busy || workflowBusy}>
-            <MetadataGenerator disabled={fullBusy || busy || workflowBusy} lockedSection={initial?.publishedAt || revisionOf || status !== "draft" ? section : null} getDraft={() => ({ title, body: bodyText(), revision: draftRevision.current })} onApply={applyMetadata} onBusyChange={setMetadataBusy} sections={sections} series={series} formats={FORMATS} />
+            <MetadataGenerator disabled={fullBusy || busy || workflowBusy} lockedSection={initial?.publishedAt || revisionOf || status !== "draft" ? section : null} getDraft={() => ({ storyId: id || undefined, title, body: bodyText(), revision: draftRevision.current })} onApply={applyMetadata} onBusyChange={setMetadataBusy} sections={sections} series={series} formats={FORMATS} />
           </FullEditBar> : null}
           {fullBusy ? <FullEditProgressView progress={fullProgress} elapsed={fullElapsed} onStop={stopFullEdit} /> : null}
           {fullEdit ? (
@@ -890,6 +892,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
                 <AiPanel
                   guardEnabled={guardControls.editorialGuard}
                   getDraft={() => ({
+                    storyId: id || undefined,
                     title,
                     body: bodyText(),
                     selection: richRef.current?.getSelectionText() || undefined,

@@ -41,6 +41,7 @@ export async function findUser(username: string): Promise<UserRow | null> {
 }
 
 export async function audit(actor: string, action: string, storyId?: string, detail = "") {
+  if (storyId) { await auditQuery(actor, action, storyId, detail); return; }
   const db = requireDb();
   await db.insert(auditLog).values({
     id: crypto.randomUUID(),
@@ -71,6 +72,7 @@ export interface DraftInput {
   id: string;
   expectedVersion?: number;
   returnToDraft?: boolean;
+  autosave?: boolean;
   title: string;
   excerpt: string;
   body: string;
@@ -133,9 +135,9 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
       revisionOf: existing?.revisionOf ?? existing?.id ?? null, baseVersion: existing?.baseVersion ?? existing?.version ?? null,
     });
     if (existing) {
-      await db.batch([lockStory(existing), insert, copySlides(existing.id, id), copySource(existing.id, id), auditQuery(actor.username, "revision:create", id, existing.id)]);
+      await db.batch([lockStory(existing), insert, copySlides(existing.id, id), copySource(existing.id, id), auditQuery(actor.username, "revision:create", id, existing.id, { before: existing, after: { ...content, status: "draft", scheduledAt: null, authorId: actor.userId, authorName: actor.displayName, revisionOf: existing.revisionOf ?? existing.id }, saveMode: input.autosave ? "automatic" : "manual" })]);
     } else {
-      await db.batch([insert, auditQuery(actor.username, "draft:create", id)]);
+      await db.batch([insert, auditQuery(actor.username, "draft:create", id, "", { after: { ...content, status: "draft", authorId: actor.userId, authorName: actor.displayName }, saveMode: input.autosave ? "automatic" : "manual" })]);
     }
     return { id, ...identity, version: 1, status: "draft", revisionOf: existing?.revisionOf ?? existing?.id ?? null };
   }
@@ -143,7 +145,7 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
     lockStory(existing),
     ...(input.returnToDraft ? [snapshotQuery(id, actor.username)] : []),
     db.update(stories).set({ ...content, status: "draft", scheduledAt: null, version: existing.version + 1 }).where(eq(stories.id, id)),
-    auditQuery(actor.username, input.returnToDraft ? "story:unpublish" : "draft:save", id),
+    auditQuery(actor.username, input.returnToDraft ? "story:unpublish" : "draft:save", id, "", { before: existing, after: { ...content, status: "draft", scheduledAt: null }, saveMode: input.autosave ? "automatic" : "manual" }),
   ]);
   return { id, ...identity, version: existing.version + 1, status: "draft", revisionOf: existing.revisionOf };
 }
@@ -160,7 +162,7 @@ export async function setStatus(
   await db.batch([
     lockStory(checked),
     db.update(stories).set({ status, returnedAt: null, updatedAt: new Date().toISOString(), version: checked.version + 1 }).where(eq(stories.id, checked.id)),
-    auditQuery(actor, `status:${status}`, checked.id, detail),
+    auditQuery(actor, `status:${status}`, checked.id, detail, { before: checked, after: { status, returnedAt: null } }),
   ]);
   return { id: checked.id, slug: checked.slug, section: checked.section, version: checked.version + 1 };
 }
@@ -180,14 +182,16 @@ export async function deleteDraft(id: string, actor: string): Promise<DeleteDraf
     with deleted_story as (
       delete from stories
       where id = ${id} and status = 'draft'
-      returning id, title
+      returning id, title, revision_of
     ), deleted_slides as (
       delete from story_slides where story_id in (select id from deleted_story)
     ), deleted_source as (
       delete from jak_sources where story_id in (select id from deleted_story)
     )
-    insert into audit_log (id, at, actor, action, story_id, detail)
-    select ${crypto.randomUUID()}, ${new Date().toISOString()}, ${actor}, 'draft:delete', id, title
+    insert into audit_log (id, at, actor, action, story_id, detail, context)
+    select ${crypto.randomUUID()}, ${new Date().toISOString()}, ${actor}, 'draft:delete', id, title,
+      jsonb_build_object('v',1,'rootStoryId',coalesce(revision_of,id),'actorId',(select u.id from users u where u.username=${actor} limit 1),
+        'actorName',coalesce((select display_name from users where username=${actor} limit 1),${actor}),'changes','[]'::jsonb)
     from deleted_story
     returning story_id as "storyId"
   `);
@@ -231,7 +235,7 @@ export async function archiveStory(
       pinned: 0,
       breakingUntil: null,
     })
-    .where(eq(stories.id, id)), auditQuery(actor, ARCHIVE_ACTION, id, trimmed)]);
+    .where(eq(stories.id, id)), auditQuery(actor, ARCHIVE_ACTION, id, trimmed, { before: story, after: { status: "archived", scheduledAt: null, pinned: 0, breakingUntil: null } })]);
   return "archived";
 }
 
@@ -246,7 +250,7 @@ export async function restoreArchived(id: string, actor: string): Promise<Restor
   await db.batch([lockStory(story), db
     .update(stories)
     .set({ status: "draft", scheduledAt: null, version: story.version + 1, updatedAt: now })
-    .where(eq(stories.id, id)), auditQuery(actor, RESTORE_ACTION, id, "استعادة من الأرشيف إلى مسودة")]);
+    .where(eq(stories.id, id)), auditQuery(actor, RESTORE_ACTION, id, "استعادة من الأرشيف إلى مسودة", { before: story, after: { status: "draft", scheduledAt: null } })]);
   return "restored";
 }
 
@@ -390,7 +394,7 @@ export async function scheduleStory(story: StoryRow, scheduledAt: string, actor:
   await db.batch([
     lockStory(story),
     db.update(stories).set({ status: "scheduled", scheduledAt, updatedAt: new Date().toISOString(), version: story.version + 1 }).where(eq(stories.id, story.id)),
-    auditQuery(actor, "status:scheduled", story.id, `الموعد ${scheduledAt}`),
+    auditQuery(actor, "status:scheduled", story.id, `الموعد ${scheduledAt}`, { before: story, after: { status: "scheduled", scheduledAt } }),
   ]);
   return { version: story.version + 1 };
 }
@@ -415,7 +419,7 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
         await db.batch([
           lockStory(story),
           db.update(stories).set({ status: "review", scheduledAt: null, updatedAt: now, version: story.version + 1 }).where(eq(stories.id, story.id)),
-          auditQuery("النظام", "schedule:blocked", story.id, report.audit.blockingRuleIds.join("، ")),
+          auditQuery("النظام", "schedule:blocked", story.id, report.audit.blockingRuleIds.join("، "), { before: story, after: { status: "review", scheduledAt: null } }),
         ]);
       }
     } catch (error) {
@@ -430,7 +434,7 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
       if (error instanceof StoryWriteError) {
         // تعارض الأصل دائم لهذه النسخة؛ أخرجها من الطابور لئلا تحجب المواد التالية.
         try {
-          await db.batch([lockStory(story), db.update(stories).set({ status: "review", scheduledAt: null, version: story.version + 1, updatedAt: now }).where(eq(stories.id, story.id)), auditQuery("النظام", "schedule:conflict", story.id, error.message)]);
+          await db.batch([lockStory(story), db.update(stories).set({ status: "review", scheduledAt: null, version: story.version + 1, updatedAt: now }).where(eq(stories.id, story.id)), auditQuery("النظام", "schedule:conflict", story.id, error.message, { before: story, after: { status: "review", scheduledAt: null } })]);
         } catch (transitionError) {
           let cause: unknown = transitionError;
           for (let depth = 0; depth < 5 && cause && typeof cause === "object"; depth++) {
@@ -447,7 +451,7 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
 
 export async function listAudit(limit = 100) {
   const db = requireDb();
-  return db.select().from(auditLog).orderBy(desc(auditLog.at)).limit(limit);
+  return db.select({ id: auditLog.id, at: auditLog.at, actor: auditLog.actor, action: auditLog.action, storyId: auditLog.storyId, detail: auditLog.detail }).from(auditLog).orderBy(desc(auditLog.at)).limit(limit);
 }
 
 /** يبني حقل media لمسودة الحارس من صورة المادة إن كانت من المكتبة. */

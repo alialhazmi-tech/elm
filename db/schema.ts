@@ -274,7 +274,8 @@ export const auditLog = pgTable("audit_log", {
   action: text("action").notNull(),
   storyId: text("story_id"),
   detail: text("detail").notNull().default(""),
-});
+  context: jsonb("context"),
+}, table => [index("audit_log_story_time_idx").on(table.storyId, table.at.desc(), table.id.desc()), index("audit_log_root_story_idx").on(sql`(${table.context}->>'rootStoryId')`, table.at.desc(), table.id.desc())]);
 
 /** ملف عضو الموقع العام — المعرّف يأتي من Neon Auth ولا يختلط بمستخدمي التحرير. */
 export const memberProfiles = pgTable("member_profiles", {

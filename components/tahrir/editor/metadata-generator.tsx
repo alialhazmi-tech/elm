@@ -10,7 +10,7 @@ import { readAssistResponse } from "@/lib/ai/read-assist-response";
 export function MetadataGenerator({ disabled, lockedSection, getDraft, onApply, onBusyChange, sections, series, formats }: {
   disabled: boolean;
   lockedSection: string | null;
-  getDraft: () => { title: string; body: string; revision: number };
+  getDraft: () => { storyId?: string; title: string; body: string; revision: number };
   onApply: (data: MetadataResult) => void;
   onBusyChange: (busy: boolean) => void;
   sections: Array<[string, string]>; series: Array<{ slug: string; name: string }>; formats: Array<[string, string]>;
@@ -28,7 +28,7 @@ export function MetadataGenerator({ disabled, lockedSection, getDraft, onApply, 
     if (!draft.body.trim()) { setError("أضف متن المادة أولًا لتوليد ملحقاتها."); return; }
     lock.current = true; setBusy(true); onBusyChange(true);
     try {
-      const response = await fetch("/api/tahrir/ai/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tool: "metadata", title: draft.title, body: draft.body }) });
+      const response = await fetch("/api/tahrir/ai/assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tool: "metadata", storyId: draft.storyId, title: draft.title, body: draft.body }) });
       const data = await readAssistResponse(response);
       if (!data.metadata) throw new Error("لم يعد المساعد بملحقات صالحة. أعد التوليد.");
       setProposal({ data: data.metadata, revision: draft.revision });

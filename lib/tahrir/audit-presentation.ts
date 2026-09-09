@@ -34,6 +34,7 @@ const actions: Record<string, [string, AuditGroup, AuditTone?]> = {
   "story:restore": ["استعادة من الأرشيف", "content"],
   "revision:create": ["إنشاء نسخة تعديل", "content"],
   "revision:published": ["نشر تحديث للمادة", "content", "success"],
+  "revision:merged": ["دمج مسودة التعديل", "content", "success"],
   "revision:restore": ["استعادة إصدار سابق", "content"],
   "schedule:blocked": ["منع النشر بواسطة الحارس", "content", "danger"],
   "schedule:conflict": ["تعارض في النشر المجدول", "content", "warning"],
@@ -68,6 +69,15 @@ const actions: Record<string, [string, AuditGroup, AuditTone?]> = {
   "ai:jak-plan": ["تخطيط جاك العلم", "ai"],
   "ai:full_edit": ["تحرير شامل بالذكاء", "ai"],
   "ai:metadata": ["توليد ملحقات المادة", "ai"],
+  "ai:started": ["بدء طلب للمساعد الذكي", "ai"],
+  "ai:failed": ["تعذّر إكمال طلب الذكاء", "ai", "warning"],
+  "ai:blocked": ["توقف طلب الذكاء عند حد الاستخدام", "ai", "warning"],
+  "ai:headlines": ["توليد عناوين مقترحة", "ai"],
+  "ai:excerpt": ["توليد موجز", "ai"],
+  "ai:seo": ["توليد بيانات SEO", "ai"],
+  "ai:proofread": ["تدقيق لغوي", "ai"],
+  "ai:improve": ["تحسين الصياغة", "ai"],
+  "ai:classify": ["اقتراح تصنيف المادة", "ai"],
 };
 export function auditMeta(action: string): Meta {
   const known = actions[action];

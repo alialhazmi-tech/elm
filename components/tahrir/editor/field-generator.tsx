@@ -8,7 +8,7 @@ import { readAssistResponse } from "@/lib/ai/read-assist-response";
 
 interface Props {
   tool: "headlines" | "excerpt";
-  getDraft: () => { title: string; body: string; revision: number };
+  getDraft: () => { storyId?: string; title: string; body: string; revision: number };
   onApply: (text: string) => void;
   disabled: boolean;
 }
@@ -29,7 +29,7 @@ export function FieldGenerator({ tool, getDraft, onApply, disabled }: Props) {
     try {
       const response = await fetch("/api/tahrir/ai/assist", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tool, title: draft.title, body: draft.body }),
+        body: JSON.stringify({ tool, storyId: draft.storyId, title: draft.title, body: draft.body }),
       });
       const data = await readAssistResponse(response);
       const suggestions: AiSuggestion[] = Array.isArray(data.suggestions) ? data.suggestions.filter((s: AiSuggestion) => typeof s?.text === "string" && s.text.trim() && s.guard && Array.isArray(s.guard.findings)) : [];

@@ -30,6 +30,7 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
     '@/components/tahrir/use-draft-autosave': 'export const useDraftAutosave=options=>globalThis.__editorWorkflow.autosave(options)',
   };
   const elements = {
+    '@/components/tahrir/story-timeline': ['StoryTimeline'],
     '@/components/tahrir/badges': ['StatusPill'], '@/components/ui/alert': ['Alert', 'AlertDescription'],
     '@/components/ui/button': ['Button'], '@/components/ui/card': ['Card'],
     '@/components/ui/tabs': ['Tabs', 'TabsContent', 'TabsList', 'TabsTrigger'], '@/components/ui/textarea': ['Textarea'],
@@ -70,6 +71,7 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
       render(); await new Promise(resolve => setTimeout(resolve, 10)); render();
     }
     await reset();
+    assert.equal(nodes(render()).find(node=>node.type==='StoryTimeline').props.id,'original');
     assert.equal(button('تحديث المادة').props.disabled, false);
     await button('تحديث المادة').props.onClick();
     assert.deepEqual(requests.map(r => r.url), ['/api/tahrir/story', '/api/tahrir/story/publish']);
