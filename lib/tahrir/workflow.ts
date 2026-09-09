@@ -2,6 +2,7 @@ import { eq, sql, getTableColumns } from "drizzle-orm";
 import { stories, storyVersions } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { assertCanWrite, assertExpectedVersion, StoryWriteError, type WriteActor } from "./write-policy";
+import { invalidateStatusCounts } from "./status-counts";
 import { fieldChanges, type StoryAuditOptions } from "./story-audit";
 
 export type WorkflowStory = typeof stories.$inferSelect;
@@ -66,6 +67,7 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
       db.update(stories).set({ status: "published", returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null, updatedAt: now, version: story.version + 1 }).where(eq(stories.id, story.id)),
       auditQuery(actor, "status:published", story.id, detail, { before: story, after: { status: "published", returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null } }),
     ]);
+    invalidateStatusCounts();
     return { id: story.id, slug: story.slug, section: story.section, version: story.version + 1 };
   }
   const [original] = await db.select().from(stories).where(eq(stories.id, story.revisionOf)).limit(1);
@@ -86,6 +88,7 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
     auditQuery(actor, "revision:published", original.id, `${detail} · ${story.id}`, { before: original, after: { ...content, authorId: original.authorId, authorName: original.authorName, slug: original.slug, section: original.section, status: "published", returnedAt: null, publishedAt: original.publishedAt ?? now, scheduledAt: null } }),
     auditQuery(actor, "revision:merged", story.id, "اعتماد مسودة التعديل ودمجها في المادة الأصلية", { before: story, after: { status: "archived", scheduledAt: null } }),
   ]);
+  invalidateStatusCounts();
   return { id: original.id, slug: original.slug, section: original.section, version: original.version + 1 };
 }
 
@@ -112,5 +115,6 @@ export async function restoreStoryVersion(story: WorkflowStory, versionId: strin
     db.execute(sql`insert into jak_sources(story_id,source,updated_at) values(${id},${snapshot.source ?? ""},${now})`),
     auditQuery(actor.username, "revision:restore", id, `استعادة النسخة ${version.version}`, { rootStoryId: story.id, before: story, after: { ...previous, assignedTo: story.assignedTo, dueAt: story.dueAt, returnedAt: null, status: "draft", authorId: actor.userId, authorName: actor.displayName, revisionOf: story.id, scheduledAt: null } }),
   ]);
+  invalidateStatusCounts();
   return { id, version: 1, format: previous.format };
 }

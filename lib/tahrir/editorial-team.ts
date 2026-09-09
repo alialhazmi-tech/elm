@@ -3,6 +3,7 @@ import { editorialNotes, editorialNotifications, editorialPresence, stories, use
 import { loadRoleMap } from "./access";
 import { hasPermission, LEGACY_ROLE_MAP, resolvePermissions, type OverrideEffect } from "./permissions";
 import { assertCanWrite, assertExpectedVersion, StoryWriteError, type WriteActor } from "./write-policy";
+import { invalidateStatusCounts } from "./status-counts";
 import { auditQuery, lockStory, workflowDb } from "./workflow";
 
 export async function teamStory(id: string, actor: WriteActor) {
@@ -77,10 +78,14 @@ export async function changeTeam(id: string, actor: WriteActor, input: Record<st
     auditQuery(actor.username, returning ? "story:return" : "story:comment", id, body, { before: story, after: returning ? { status: "draft", returnedAt: now } : {} }),
     notify(actor, id, [story.assignedTo, story.authorId], `${returning ? "أعاد" : "علّق"} ${actor.displayName} ${returning ? "مادة للتعديل" : "على مادة"}: ${story.title}`),
   ]);
+  if (returning) invalidateStatusCounts();
   return { version: story.version + (returning ? 1 : 0), ...(returning ? { status: "draft" } : {}) };
 }
 
-/** A tab lease expires after 75 seconds. No background heartbeat while hidden. */
+/**
+ * A tab lease expires after 75 seconds. No background heartbeat while hidden.
+ * رحلتان فقط: قراءة المادة لفحص الصلاحية قبل أي كتابة، ثم دفعة واحدة (تنظيف + تجديد + قراءة الحاضرين).
+ */
 export async function updatePresence(id: string, actor: WriteActor, sessionId: string) {
   if (!/^[\da-f-]{36}$/i.test(sessionId)) throw new StoryWriteError("جلسة التحرير غير صحيحة.", 400);
   const story = await teamStory(id, actor);
@@ -88,14 +93,21 @@ export async function updatePresence(id: string, actor: WriteActor, sessionId: s
   const db = workflowDb();
   const now = new Date().toISOString();
   const cutoff = new Date(Date.now() - 75_000).toISOString();
-  await db.batch([
+  const [, , rows] = await db.batch([
     db.delete(editorialPresence).where(lt(editorialPresence.seenAt, cutoff)),
     db.insert(editorialPresence).values({ storyId, userId: actor.userId, sessionId, seenAt: now }).onConflictDoUpdate({ target: [editorialPresence.storyId, editorialPresence.userId, editorialPresence.sessionId], set: { seenAt: now } }),
+    db.select({ userId: users.id, name: users.displayName, sessionId: editorialPresence.sessionId }).from(editorialPresence)
+      .innerJoin(users, eq(users.id, editorialPresence.userId))
+      .where(and(eq(editorialPresence.storyId, storyId), gt(editorialPresence.seenAt, cutoff), eq(users.status, "active"))),
   ]);
-  const rows = await db.select({ userId: users.id, name: users.displayName, sessionId: editorialPresence.sessionId }).from(editorialPresence)
-    .innerJoin(users, eq(users.id, editorialPresence.userId))
-    .where(and(eq(editorialPresence.storyId, storyId), gt(editorialPresence.seenAt, cutoff), eq(users.status, "active")));
   return rows.filter(row => row.userId !== actor.userId || row.sessionId !== sessionId).map(row => ({ userId: row.userId, name: row.userId === actor.userId ? "أنت في تبويب آخر" : row.name }));
+}
+
+/** بصمة قائمة التنبيهات (المعرفات وحالة القراءة) — ETag للاستطلاع الشرطي بلا حمولة عند عدم التغيير. */
+export async function notificationsEtag(notifications: Array<{ id: string; readAt: string | null }>): Promise<string> {
+  const payload = notifications.map(item => `${item.id}:${item.readAt ? 1 : 0}`).join("\n");
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(payload));
+  return `"${Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("")}"`;
 }
 
 export async function myNotifications(actor: WriteActor) {

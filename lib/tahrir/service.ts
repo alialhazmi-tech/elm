@@ -7,8 +7,12 @@ import { auditLog, stories, users } from "@/db/schema";
 import { stripHtmlToText } from "@/lib/content/html";
 import { getDb } from "@/lib/db";
 import { assertCanWrite, assertExpectedVersion, stableIdentity, StoryWriteError, type WriteActor } from "./write-policy";
+import { cachedStatusCounts, invalidateStatusCounts } from "./status-counts";
+import { riyadhDayBounds, riyadhDayKeys } from "./time";
 import { auditQuery, copySlides, copySource, lockStory, publishCheckedStory, snapshotQuery } from "./workflow";
 import { usernameEquals } from "./username";
+
+export { invalidateStatusCounts };
 
 export type StoryRow = typeof stories.$inferSelect;
 export type UserRow = typeof users.$inferSelect;
@@ -51,15 +55,6 @@ export async function audit(actor: string, action: string, storyId?: string, det
     storyId,
     detail,
   });
-}
-
-/** كل المواد لكل الحالات — للوحة فقط، الموقع العام يمر عبر المزود المفلتر. */
-export async function listForDashboard(): Promise<StoryRow[]> {
-  const db = requireDb();
-  return db
-    .select()
-    .from(stories)
-    .orderBy(desc(sql`coalesce(${stories.updatedAt}, ${stories.publishedAt})`));
 }
 
 export async function getStory(id: string): Promise<StoryRow | null> {
@@ -139,6 +134,7 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
     } else {
       await db.batch([insert, auditQuery(actor.username, "draft:create", id, "", { after: { ...content, status: "draft", authorId: actor.userId, authorName: actor.displayName }, saveMode: input.autosave ? "automatic" : "manual" })]);
     }
+    invalidateStatusCounts();
     return { id, ...identity, version: 1, status: "draft", revisionOf: existing?.revisionOf ?? existing?.id ?? null };
   }
   await db.batch([
@@ -147,6 +143,7 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
     db.update(stories).set({ ...content, status: "draft", scheduledAt: null, version: existing.version + 1 }).where(eq(stories.id, id)),
     auditQuery(actor.username, input.returnToDraft ? "story:unpublish" : "draft:save", id, "", { before: existing, after: { ...content, status: "draft", scheduledAt: null }, saveMode: input.autosave ? "automatic" : "manual" }),
   ]);
+  if (existing.status !== "draft") invalidateStatusCounts();
   return { id, ...identity, version: existing.version + 1, status: "draft", revisionOf: existing.revisionOf };
 }
 
@@ -164,6 +161,7 @@ export async function setStatus(
     db.update(stories).set({ status, returnedAt: null, updatedAt: new Date().toISOString(), version: checked.version + 1 }).where(eq(stories.id, checked.id)),
     auditQuery(actor, `status:${status}`, checked.id, detail, { before: checked, after: { status, returnedAt: null } }),
   ]);
+  invalidateStatusCounts();
   return { id: checked.id, slug: checked.slug, section: checked.section, version: checked.version + 1 };
 }
 
@@ -195,6 +193,7 @@ export async function deleteDraft(id: string, actor: string): Promise<DeleteDraf
     from deleted_story
     returning story_id as "storyId"
   `);
+  if (result.rows.length > 0) invalidateStatusCounts();
   return result.rows.length > 0 ? "deleted" : "not-draft";
 }
 
@@ -236,6 +235,7 @@ export async function archiveStory(
       breakingUntil: null,
     })
     .where(eq(stories.id, id)), auditQuery(actor, ARCHIVE_ACTION, id, trimmed, { before: story, after: { status: "archived", scheduledAt: null, pinned: 0, breakingUntil: null } })]);
+  invalidateStatusCounts();
   return "archived";
 }
 
@@ -251,6 +251,7 @@ export async function restoreArchived(id: string, actor: string): Promise<Restor
     .update(stories)
     .set({ status: "draft", scheduledAt: null, version: story.version + 1, updatedAt: now })
     .where(eq(stories.id, id)), auditQuery(actor, RESTORE_ACTION, id, "استعادة من الأرشيف إلى مسودة", { before: story, after: { status: "draft", scheduledAt: null } })]);
+  invalidateStatusCounts();
   return "restored";
 }
 
@@ -279,11 +280,6 @@ import { runConfiguredPolicyGuard } from "@/lib/policy";
 
 export type MediaRow = typeof media.$inferSelect;
 export type ProposalRow = typeof seriesProposals.$inferSelect;
-
-export async function listMedia(): Promise<MediaRow[]> {
-  const db = requireDb();
-  return db.select().from(media).orderBy(desc(media.createdAt));
-}
 
 export type MediaFilter = "all" | "ok" | "pending";
 
@@ -396,7 +392,18 @@ export async function scheduleStory(story: StoryRow, scheduledAt: string, actor:
     db.update(stories).set({ status: "scheduled", scheduledAt, updatedAt: new Date().toISOString(), version: story.version + 1 }).where(eq(stories.id, story.id)),
     auditQuery(actor, "status:scheduled", story.id, `الموعد ${scheduledAt}`, { before: story, after: { status: "scheduled", scheduledAt } }),
   ]);
+  invalidateStatusCounts();
   return { version: story.version + 1 };
+}
+
+/** أقرب موعد جدولة قائم (ولو مضى ولم يُرقَّ بعد) — لتقرير وتيرة تحديث صفحة الجدولة. */
+export async function nextScheduledAt(): Promise<string | null> {
+  const db = requireDb();
+  const [row] = await db
+    .select({ at: sql<string | null>`min(${stories.scheduledAt})` })
+    .from(stories)
+    .where(and(eq(stories.status, "scheduled"), sql`${stories.scheduledAt} is not null`));
+  return row?.at ?? null;
 }
 
 export interface PromotedStory { id: string; section: string; slug: string }
@@ -408,6 +415,7 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
   if (!due.length) return [];
   const settings = await loadAiSettings();
   const promoted: PromotedStory[] = [];
+  try {
   for (const story of due) {
     const report = runConfiguredPolicyGuard({ id: story.id, title: story.title, body: stripHtmlToText(story.body),
       surface: story.format === "jakalelm" ? "design" as const : undefined, media: await guardMediaFor(story.image),
@@ -446,12 +454,16 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
       }
     }
   }
+  } finally {
+    // أي انتقال هنا (نشر أو إعادة للاعتماد) يغيّر العدّادات — بعد الالتزام لا قبله.
+    invalidateStatusCounts();
+  }
   return promoted;
 }
 
 export async function listAudit(limit = 100) {
   const db = requireDb();
-  return db.select({ id: auditLog.id, at: auditLog.at, actor: auditLog.actor, action: auditLog.action, storyId: auditLog.storyId, detail: auditLog.detail }).from(auditLog).orderBy(desc(auditLog.at)).limit(limit);
+  return db.select({ id: auditLog.id, at: auditLog.at, actor: auditLog.actor, action: auditLog.action, storyId: auditLog.storyId, detail: auditLog.detail }).from(auditLog).orderBy(desc(auditLog.at), desc(auditLog.id)).limit(limit);
 }
 
 /** يبني حقل media لمسودة الحارس من صورة المادة إن كانت من المكتبة. */
@@ -507,15 +519,18 @@ export type StoryLite = {
 
 const recencyOrder = desc(sql`coalesce(${stories.updatedAt}, ${stories.publishedAt})`);
 
-/** عدّادات حية؛ layout والصفحة يتشاركان الاستعلام داخل الطلب فقط دون تخزين بين المستخدمين. */
-export const statusCounts = cache(async (): Promise<Record<string, number>> => {
+/**
+ * عدّادات الحالات: layout والصفحة يتشاركان النتيجة داخل الطلب عبر cache()،
+ * وبين الطلبات تُحفظ 20 ثانية داخل العملية (لا بيانات مستخدم فيها) وتُبطل عند أي تغيير حالة.
+ */
+export const statusCounts = cache((): Promise<Record<string, number>> => cachedStatusCounts(async () => {
   const db = requireDb();
   const rows = await db
     .select({ status: stories.status, count: sql<number>`count(*)` })
     .from(stories)
     .groupBy(stories.status);
   return Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
-});
+}));
 
 /** مرشّحات قائمة المواد فوق الحالة: بحث في العنوان وسلسلة بعينها. */
 export interface StoryFilters {
@@ -579,23 +594,30 @@ export async function countPage(
   return Number(row?.count ?? 0);
 }
 
-/** المنشور يوميًا لآخر N يومًا (بتوقيت UTC للتاريخ المخزّن) — للمنحنى الصغير في نظرة اليوم؛ الأيام الخالية صفر. */
-export async function publishedPerDay(days = 14): Promise<Array<{ day: string; count: number }>> {
+/** يوم الرياض لطابع منشور: القاعدة تحوّل النص إلى لحظة ثم إلى توقيت الرياض فيصح المفتاح مهما كانت صيغة الإزاحة. */
+const riyadhPublishedDay = sql<string>`substr((${stories.publishedAt}::timestamptz at time zone 'Asia/Riyadh')::text, 1, 10)`;
+
+/**
+ * مرشّح زمني على published_at النصي: مقارنة نصية واسعة (بيوم) تُبقي الفهرس مستخدمًا،
+ * ثم مقارنة اللحظات تُطبّق الحد الدقيق — تصمد أمام الصفوف القليلة المخزّنة بإزاحة +03:00 بدل Z.
+ */
+function publishedSince(startIso: string) {
+  const coarse = new Date(Date.parse(startIso) - 86_400_000).toISOString();
+  return sql`${stories.publishedAt} >= ${coarse} and ${stories.publishedAt}::timestamptz >= ${startIso}::timestamptz`;
+}
+
+/** المنشور يوميًا لآخر N يومًا بتوقيت الرياض — للمنحنى الصغير في نظرة اليوم؛ الأيام الخالية صفر. */
+export async function publishedPerDay(days = 14, now: Date = new Date()): Promise<Array<{ day: string; count: number }>> {
   const db = requireDb();
-  const start = new Date(Date.now() - (days - 1) * 86_400_000).toISOString().slice(0, 10);
+  const keys = riyadhDayKeys(days, now);
+  const start = riyadhDayBounds(new Date(now.getTime() - (days - 1) * 86_400_000)).startIso;
   const rows = await db
-    .select({
-      day: sql<string>`substr(${stories.publishedAt}, 1, 10)`,
-      count: sql<number>`count(*)`,
-    })
+    .select({ day: riyadhPublishedDay, count: sql<number>`count(*)` })
     .from(stories)
-    .where(and(eq(stories.status, "published"), gteText(stories.publishedAt, start)))
-    .groupBy(sql`substr(${stories.publishedAt}, 1, 10)`);
-  const bySlug = new Map(rows.map((row) => [row.day, Number(row.count)]));
-  return Array.from({ length: days }, (_, index) => {
-    const day = new Date(Date.now() - (days - 1 - index) * 86_400_000).toISOString().slice(0, 10);
-    return { day, count: bySlug.get(day) ?? 0 };
-  });
+    .where(and(eq(stories.status, "published"), publishedSince(start)))
+    .groupBy(riyadhPublishedDay);
+  const byDay = new Map(rows.map((row) => [row.day, Number(row.count)]));
+  return keys.map((day) => ({ day, count: byDay.get(day) ?? 0 }));
 }
 
 /** أحدث مواد حالة معينة — للنظرة والجدولة، خفيفة. */
@@ -631,18 +653,18 @@ export async function bodiesFor(ids: string[]): Promise<Map<string, { title: str
   return new Map(rows.map((row) => [row.id, { title: row.title, body: row.body }]));
 }
 
-/** عدد المنشور اليوم — تجميعي. */
-export async function publishedTodayCount(): Promise<number> {
+/** عدد المنشور اليوم بتوقيت الرياض — تجميعي. */
+export async function publishedTodayCount(now: Date = new Date()): Promise<number> {
   const db = requireDb();
-  const today = new Date().toISOString().slice(0, 10);
+  const { startIso, endIso } = riyadhDayBounds(now);
   const [row] = await db
     .select({ count: sql<number>`count(*)` })
     .from(stories)
-    .where(and(eq(stories.status, "published"), gteText(stories.publishedAt, today)));
+    .where(and(eq(stories.status, "published"), publishedSince(startIso), sql`${stories.publishedAt}::timestamptz < ${endIso}::timestamptz`));
   return Number(row?.count ?? 0);
 }
 
-/** توزيع السلاسل تجميعيًا: [seriesSlug, total, أسبوعي]. */
+/** توزيع السلاسل للمواد المنشورة فقط: [seriesSlug, total, أسبوعي]. */
 export async function seriesDistribution(): Promise<
   Array<{ seriesSlug: string; total: number; week: number }>
 > {
@@ -652,17 +674,14 @@ export async function seriesDistribution(): Promise<
     .select({
       seriesSlug: stories.seriesSlug,
       total: sql<number>`count(*)`,
-      week: sql<number>`count(*) filter (where ${stories.publishedAt} >= ${weekAgo})`,
+      week: sql<number>`count(*) filter (where ${stories.publishedAt}::timestamptz >= ${weekAgo}::timestamptz)`,
     })
     .from(stories)
+    .where(and(eq(stories.status, "published"), sql`${stories.seriesSlug} is not null`))
     .groupBy(stories.seriesSlug);
   return rows
     .filter((row) => row.seriesSlug)
     .map((row) => ({ seriesSlug: row.seriesSlug!, total: Number(row.total), week: Number(row.week) }));
-}
-
-function gteText(column: typeof stories.publishedAt, value: string) {
-  return sql`${column} >= ${value}`;
 }
 
 /** توزيع أشكال المحتوى للمواد المنشورة: [format, count]. */

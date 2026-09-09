@@ -27,6 +27,7 @@ import { loadAiSettings } from "@/lib/ai/settings";
 import { runConfiguredPolicyGuard, type GuardControls } from "@/lib/policy";
 import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
+import { inRiyadhDay, riyadhDayBounds } from "@/lib/tahrir/time";
 import {
   listPageForReview,
   countMedia,
@@ -87,7 +88,8 @@ function guardChip(title: string, body: string, controls: GuardControls): { tone
 export default async function OverviewPage() {
   const actor = await loadActor();
   const can = (key: string) => actor?.can(key) ?? false;
-  const todayIso = new Date().toISOString().slice(0, 10);
+  // «اليوم» بتوقيت الرياض: يبدأ 21:00Z من الليلة السابقة لا منتصف ليل UTC.
+  const today = riyadhDayBounds();
   const [settings, counts, todayCount, perDay, review, latestPublished, latestDraft, scheduled, distribution, media] =
     await Promise.all([
       loadAiSettings(),
@@ -124,10 +126,10 @@ export default async function OverviewPage() {
   // جدول اليوم: ما نُشر اليوم + ما سيُنشر اليوم، مرتّبًا بالوقت، وأول القادم هو «التالي».
   const timeline: TimelineItem[] = [
     ...latestPublished
-      .filter((row) => (row.publishedAt ?? "").startsWith(todayIso))
+      .filter((row) => inRiyadhDay(row.publishedAt, today))
       .map((row) => ({ row, at: row.publishedAt!, state: "done" as const, meta: "نُشرت" })),
     ...scheduled
-      .filter((row) => (row.scheduledAt ?? "").startsWith(todayIso))
+      .filter((row) => inRiyadhDay(row.scheduledAt, today))
       .map((row) => ({ row, at: row.scheduledAt!, state: "later" as const, meta: "مجدولة · تُنشر تلقائيًا" })),
   ]
     .sort((a, b) => a.at.localeCompare(b.at))
@@ -148,10 +150,10 @@ export default async function OverviewPage() {
   const nextToday = timeline.find((item) => item.state === "next");
 
   // ما نُشر قبل اليوم — مكمّل لجدول اليوم لا مكرّر له.
-  const publishedEarlier = latestPublished.filter((row) => !(row.publishedAt ?? "").startsWith(todayIso)).slice(0, 5);
+  const publishedEarlier = latestPublished.filter((row) => !inRiyadhDay(row.publishedAt, today)).slice(0, 5);
 
   const upcomingScheduled = scheduled
-    .filter((row) => (row.scheduledAt ?? "") > todayIso && !(row.scheduledAt ?? "").startsWith(todayIso))
+    .filter((row) => Date.parse(row.scheduledAt ?? "") >= today.endMs)
     .sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""))
     .slice(0, 5);
 
