@@ -97,3 +97,64 @@ export function relativeTimeAr(iso?: string): string | null {
   const days = Math.round(hours / 24);
   return `منذ ${arabicCount(days, { one: "يوم", two: "يومين", few: "أيام", many: "يومًا" })}`;
 }
+
+/* ——— توقيت الرياض للوحة التحرير: صيغة واحدة بدل ثماني نسخ من Intl.DateTimeFormat في المكوّنات ——— */
+
+export type RiyadhDateStyle = "short" | "medium" | "long";
+
+const RIYADH_DATE_PARTS: Record<RiyadhDateStyle, Intl.DateTimeFormatOptions> = {
+  short: { day: "numeric", month: "short" },
+  medium: { day: "numeric", month: "short", year: "numeric" },
+  long: { day: "numeric", month: "long", year: "numeric" },
+};
+
+const riyadhFormatters = new Map<string, Intl.DateTimeFormat>();
+
+function riyadhFormatter(options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = JSON.stringify(options);
+  let formatter = riyadhFormatters.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("ar-SA-u-ca-gregory-nu-latn", { ...options, timeZone: "Asia/Riyadh" });
+    riyadhFormatters.set(key, formatter);
+  }
+  return formatter;
+}
+
+function parseIso(iso: string | number | Date | null | undefined): Date | null {
+  if (iso === null || iso === undefined || iso === "") return null;
+  const date = iso instanceof Date ? iso : new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** تاريخ بتوقيت الرياض: «9 سبتمبر 2026» (medium افتراضيًا)؛ قيمة غائبة أو تالفة تعيد "". */
+export function formatRiyadhDate(iso: string | number | Date | null | undefined, style: RiyadhDateStyle = "medium"): string {
+  const date = parseIso(iso);
+  return date ? toLatinDigits(riyadhFormatter(RIYADH_DATE_PARTS[style]).format(date)) : "";
+}
+
+/** وقت بتوقيت الرياض على 24 ساعة: «14:05» أو «14:05:09» مع الثواني. */
+export function formatRiyadhTime(iso: string | number | Date | null | undefined, { seconds = false } = {}): string {
+  const date = parseIso(iso);
+  if (!date) return "";
+  return toLatinDigits(
+    riyadhFormatter({ hour: "2-digit", minute: "2-digit", ...(seconds ? { second: "2-digit" } : {}), hour12: false }).format(date),
+  );
+}
+
+/** تاريخ ووقت معًا بتوقيت الرياض: «9 سبتمبر 2026، 14:05». */
+export function formatRiyadhDateTime(
+  iso: string | number | Date | null | undefined,
+  { style = "medium", seconds = false }: { style?: RiyadhDateStyle; seconds?: boolean } = {},
+): string {
+  const date = parseIso(iso);
+  if (!date) return "";
+  return toLatinDigits(
+    riyadhFormatter({
+      ...RIYADH_DATE_PARTS[style],
+      hour: "2-digit",
+      minute: "2-digit",
+      ...(seconds ? { second: "2-digit" } : {}),
+      hour12: false,
+    }).format(date),
+  );
+}
