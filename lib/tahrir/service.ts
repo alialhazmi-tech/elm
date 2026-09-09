@@ -451,7 +451,7 @@ export async function promoteDueScheduled(): Promise<PromotedStory[]> {
 
 export async function listAudit(limit = 100) {
   const db = requireDb();
-  return db.select().from(auditLog).orderBy(desc(auditLog.at)).limit(limit);
+  return db.select({ id: auditLog.id, at: auditLog.at, actor: auditLog.actor, action: auditLog.action, storyId: auditLog.storyId, detail: auditLog.detail }).from(auditLog).orderBy(desc(auditLog.at)).limit(limit);
 }
 
 /** يبني حقل media لمسودة الحارس من صورة المادة إن كانت من المكتبة. */
