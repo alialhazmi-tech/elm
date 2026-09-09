@@ -137,5 +137,22 @@
 @keyframes th-ai-orb { to { box-shadow: 0 0 0 10px transparent; } }
 @media (prefers-reduced-motion: reduce) { .th-ai-shimmer, .th-ai-orb { animation: none; } }
 
+/* تقليل الحركة: يُبطل مدد tw-animate-css وanimate-spin والانتقالات داخل اللوحة وفي بوابات Radix
+   (الحوارات والألواح والقوائم تُرسم خارج #tahrir-root) دون تغيير الحالة النهائية للعناصر. */
+@media (prefers-reduced-motion: reduce) {
+  .th,
+  .th *,
+  .th *::before,
+  .th *::after,
+  body:has(#tahrir-root) :is([data-slot$="-content"], [data-slot$="-overlay"], [data-radix-popper-content-wrapper] *) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Context hint while the optional introduction is open. */
 .tahrir-tour-highlight { outline: 3px solid var(--primary); outline-offset: 3px; }

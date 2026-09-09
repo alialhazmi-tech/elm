@@ -102,7 +102,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
               >
                 <SearchIcon />
                 <span>ابحث في المواد والأوامر</span>
-                <Kbd className="ms-auto bg-transparent text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
+                <Kbd dir="ltr" className="ms-auto bg-transparent text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">
                   ⌘K
                 </Kbd>
               </SidebarMenuButton>
