@@ -7,7 +7,7 @@ import { findUser } from "@/lib/tahrir/service";
 
 /** العضو يغيّر كلمة مروره — إلزامي بعد كلمة مؤقتة، ومتاح دائمًا من حسابه. */
 export async function POST(request: Request) {
-  const gate = await requireActor({ allowTemporaryPassword: true });
+  const gate = await requireActor({ allowTemporaryPassword: true, allowMissingMfa: true });
   if (!gate.ok) return gate.response;
   const actor = gate.actor;
 

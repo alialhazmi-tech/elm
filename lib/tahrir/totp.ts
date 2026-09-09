@@ -48,3 +48,7 @@ export async function recoveryHash(userId: string, code: string) {
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${userId}:${code.trim().toUpperCase()}`));
   return Buffer.from(digest).toString("hex");
 }
+/** مفتاح AES-GCM مضبوط بصيغته الصحيحة — بدونه لا تفعيل ولا إلزام. */
+export function mfaConfigured(): boolean {
+  return /^[a-f\d]{64}$/i.test(process.env.TAHRIR_MFA_KEY ?? "");
+}
