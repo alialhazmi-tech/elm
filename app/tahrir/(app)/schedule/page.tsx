@@ -7,7 +7,8 @@ import { TodayTimeline, type TimelineItem } from "@/components/tahrir/overview/t
 import { SERIES } from "@/lib/content/series";
 import { requireScreen } from "@/lib/tahrir/screen";
 import { editorHref } from "@/lib/tahrir/routes";
-import { listLatestByStatus } from "@/lib/tahrir/service";
+import { listLatestByStatus, nextScheduledAt } from "@/lib/tahrir/service";
+import { inRiyadhDay, riyadhDayBounds } from "@/lib/tahrir/time";
 
 export const metadata = { title: "جدولة النشر" };
 export const dynamic = "force-dynamic";
@@ -36,20 +37,24 @@ const dayOf = (iso: string) =>
 export default async function SchedulePage() {
   const gate = await requireScreen("story.schedule", "جدولة النشر");
   if (!gate.ok) return gate.element;
-  const automatic = process.env.ALELM_SCHEDULER_INTERVAL_MS === "5000";
+  // المشغّل الداخلي (scripts/start-server.mjs) يضبط وتيرته بالمللي ثانية؛ أي قيمة موجبة تعني أنه يعمل.
+  const schedulerIntervalMs = Number(process.env.ALELM_SCHEDULER_INTERVAL_MS);
+  const automatic = Number.isFinite(schedulerIntervalMs) && schedulerIntervalMs > 0;
+  const schedulerSeconds = Math.max(1, Math.round(schedulerIntervalMs / 1000));
   // المراقب الداخلي أو الخارجي ينشر عبر POST موثق؛ هذه الشاشة للقراءة فقط.
-  const [latestPublished, scheduled] = await Promise.all([
+  const [latestPublished, scheduled, nextAt] = await Promise.all([
     listLatestByStatus("published", 60).catch(() => []),
     listLatestByStatus("scheduled", 100).catch(() => []),
+    nextScheduledAt().catch(() => null),
   ]);
 
-  const todayIso = new Date().toISOString().slice(0, 10);
+  const today = riyadhDayBounds();
   const todayItems: TimelineItem[] = [
     ...latestPublished
-      .filter((row) => (row.publishedAt ?? "").startsWith(todayIso))
+      .filter((row) => inRiyadhDay(row.publishedAt, today))
       .map((row) => ({ row, at: row.publishedAt!, state: "done" as const })),
     ...scheduled
-      .filter((row) => (row.scheduledAt ?? "").startsWith(todayIso))
+      .filter((row) => inRiyadhDay(row.scheduledAt, today))
       .map((row) => ({ row, at: row.scheduledAt!, state: "later" as const })),
   ]
     .sort((a, b) => a.at.localeCompare(b.at))
@@ -68,12 +73,12 @@ export default async function SchedulePage() {
     .reverse();
 
   const upcoming = scheduled
-    .filter((row) => !(row.scheduledAt ?? "").startsWith(todayIso))
+    .filter((row) => !inRiyadhDay(row.scheduledAt, today))
     .sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""));
 
   return (
     <main className="flex flex-col gap-3">
-      <ScheduleRefresh active={scheduled.length > 0} />
+      <ScheduleRefresh active={scheduled.length > 0} nextScheduledAt={nextAt} />
       <div className="flex flex-wrap items-baseline gap-3">
         <h1 className="font-display text-xl font-extrabold">جدولة النشر</h1>
         <span className="text-xs text-muted-foreground tabular-nums">
@@ -113,7 +118,7 @@ export default async function SchedulePage() {
               الجدولة من المحرر ومن صلاحية <b className="text-foreground">المعتمدين</b> — الحارس يفحص المادة عند الجدولة، ثم
               يفحصها <b className="text-foreground">ثانية لحظة الموعد</b>: السليمة تُنشر آليًا، وأي مخالفة قاطعة توقف النشر
               وتعيدها للاعتماد مع تدوين السبب في السجل.
-              {automatic ? " يعمل المجدول مع الخادم ويفحص المواعيد كل 5 ثوانٍ، حتى عند إغلاق اللوحة. تتحدث هذه الصفحة تلقائيًا لمتابعة النشر. قد يتأخر التنفيذ قليلًا بحسب استجابة الخادم." : " مشغّل الجدولة الداخلي غير مفعّل في هذه البيئة؛ يجب التحقق من إعداد تشغيل الجدولة قبل الاعتماد على النشر التلقائي."}
+              {automatic ? ` يعمل المجدول مع الخادم ويفحص المواعيد كل ${schedulerSeconds} ثوانٍ، حتى عند إغلاق اللوحة. تتحدث هذه الصفحة تلقائيًا قرب كل موعد لمتابعة النشر. قد يتأخر التنفيذ قليلًا بحسب استجابة الخادم.` : " مشغّل الجدولة الداخلي غير مفعّل في هذه البيئة؛ يجب التحقق من إعداد تشغيل الجدولة قبل الاعتماد على النشر التلقائي."}
             </p>
           </Panel>
         </div>

@@ -1,4 +1,5 @@
 import { assertCanWrite, assertExpectedVersion, StoryWriteError, type WriteActor } from "./write-policy.ts";
+import { invalidateStatusCounts } from "./status-counts.ts";
 /**
  * «جاك العلم» — طبقة بيانات الشرائح.
  *
@@ -280,6 +281,7 @@ export async function replaceSlides(
   } else {
     await db.batch([lockStory(story), timeline(), deleteSlides(), updateStory()]);
   }
+  if (story.status !== "draft") invalidateStatusCounts();
 
   return { version: story.version + 1 };
 }

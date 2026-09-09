@@ -71,6 +71,10 @@ export const stories = pgTable("stories", {
   index("stories_active_recency_idx").on(sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
   index("stories_status_recency_idx").on(table.status, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()),
   index("stories_format_recency_idx").on(table.format, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
+  index("stories_revision_of_idx").on(table.revisionOf).where(sql`${table.revisionOf} IS NOT NULL`),
+  index("stories_series_published_idx").on(table.seriesSlug, table.publishedAt.desc().nullsFirst()).where(sql`${table.status} = 'published'`),
+  index("stories_breaking_until_idx").on(table.breakingUntil).where(sql`${table.breakingUntil} IS NOT NULL`),
+  index("stories_pinned_idx").on(table.pinned).where(sql`${table.pinned} = 1`),
 ]);
 
 /**
@@ -147,7 +151,7 @@ export const aiUsage = pgTable("ai_usage", {
   /** بالسنت تجنبًا لكسور الفاصلة العائمة. */
   costCents: integer("cost_cents").notNull().default(0),
   actor: text("actor").notNull(),
-});
+}, (table) => [index("ai_usage_at_idx").on(table.at)]);
 
 /** مقترحات سلاسل جديدة — بشروط الدستور، والاعتماد لرئيس التحرير. */
 export const seriesProposals = pgTable("series_proposals", {
@@ -275,7 +279,7 @@ export const auditLog = pgTable("audit_log", {
   storyId: text("story_id"),
   detail: text("detail").notNull().default(""),
   context: jsonb("context"),
-}, table => [index("audit_log_story_time_idx").on(table.storyId, table.at.desc(), table.id.desc()), index("audit_log_root_story_idx").on(sql`(${table.context}->>'rootStoryId')`, table.at.desc(), table.id.desc())]);
+}, table => [index("audit_log_story_time_idx").on(table.storyId, table.at.desc(), table.id.desc()), index("audit_log_root_story_idx").on(sql`(${table.context}->>'rootStoryId')`, table.at.desc(), table.id.desc()), index("audit_log_at_idx").on(table.at.desc().nullsFirst(), table.id.desc().nullsFirst())]);
 
 /** ملف عضو الموقع العام — المعرّف يأتي من Neon Auth ولا يختلط بمستخدمي التحرير. */
 export const memberProfiles = pgTable("member_profiles", {

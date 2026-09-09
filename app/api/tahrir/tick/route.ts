@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
+import { runRetentionCleanup } from "@/lib/tahrir/retention";
 import { promoteDueScheduled } from "@/lib/tahrir/service";
 
 let nextCleanupAt = 0;
@@ -23,8 +24,15 @@ export async function POST(request: Request) {
     // التنظيف مرة في الساعة، وليس مع كل نبضة نشر.
     if (Date.now() >= nextCleanupAt) {
       nextCleanupAt = Date.now() + 3600_000;
-      await getDb()?.execute(sql`delete from request_limits where expires_at < ${new Date(Date.now() - 86400_000).toISOString()}`)
+      const db = getDb();
+      await db?.execute(sql`delete from request_limits where expires_at < ${new Date(Date.now() - 86400_000).toISOString()}`)
         .catch(() => console.error("[scheduler] cleanup failed"));
+      // الاحتفاظ بالبيانات: دفعات صغيرة قابلة لإعادة التشغيل؛ فشلها لا يوقف النشر.
+      if (db) {
+        await runRetentionCleanup(db)
+          .then((report) => console.log(JSON.stringify({ event: "scheduler:retention", ...report })))
+          .catch(() => console.error("[scheduler] retention failed"));
+      }
     }
     return Response.json({ ok: true, promoted: promoted.length }, { headers: { "Cache-Control": "no-store" } });
   } catch {

@@ -13,6 +13,7 @@ export function EditorialNotifications() {
   const [error, setError] = useState("");
   const [marking, setMarking] = useState(false);
   const seen = useRef<Set<string> | null>(null);
+  const etag = useRef<string | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   useEffect(() => {
@@ -22,8 +23,11 @@ export function EditorialNotifications() {
       if (document.visibilityState !== "visible" || pending) return;
       pending = true;
       try {
-        const res = await fetch("/api/tahrir/notifications", { cache: "no-store", signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]) });
+        // استطلاع شرطي: الخادم يعيد 304 بلا حمولة ما لم تتغير القائمة أو حالة القراءة.
+        const res = await fetch("/api/tahrir/notifications", { cache: "no-store", headers: etag.current ? { "If-None-Match": etag.current } : {}, signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]) });
+        if (res.status === 304) { if (!stopped) setError(""); return; }
         if (!res.ok) throw new Error();
+        etag.current = res.headers.get("etag");
         const result = await res.json();
         if (!stopped) {
           const notices: Notice[] = result.notifications;
@@ -39,7 +43,7 @@ export function EditorialNotifications() {
       } catch { if (!stopped) setError("تعذر تحديث التنبيهات. أعد فتحها للمحاولة."); }
       finally { pending = false; }
     }
-    void refresh(); const timer = setInterval(() => void refresh(), 15_000);
+    void refresh(); const timer = setInterval(() => void refresh(), 30_000);
     document.addEventListener("visibilitychange", refresh);
     window.addEventListener("focus", refresh);
     return () => { stopped = true; controller.abort(); clearInterval(timer); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("focus", refresh); };

@@ -17,10 +17,12 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
     rightsCleared: settings.governance.requireImageRights ? true : undefined,
     limit: 6,
   })).catch(() => []);
-  const [actor, settings, story] = await Promise.all([
+  // التصنيف في رحلة الجلب نفسها مع المادة والصلاحيات بدل رحلة رابعة بعدها.
+  const [actor, settings, story, taxonomy] = await Promise.all([
     loadActor(),
     settingsPromise,
     id === "new" ? Promise.resolve(null) : getStory(id).catch(() => null),
+    loadEditorialTaxonomy(),
   ]);
   if (!actor || !canEditStory(actor, story)) redirect("/tahrir/stories");
   if (story?.format === "jakalelm") redirect(`/tahrir/jak/${story.id}`);
@@ -30,7 +32,6 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const mediaRows = await mediaPromise;
   const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
-  const taxonomy = await loadEditorialTaxonomy();
   const sections: Array<[string, string]> = taxonomy.sections.map(item => [item.slug, item.shortName || item.name]);
 
   return (

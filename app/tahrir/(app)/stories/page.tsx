@@ -12,6 +12,7 @@ import { loadAiSettings } from "@/lib/ai/settings";
 import { runConfiguredPolicyGuard, type GuardControls } from "@/lib/policy";
 import { loadActor } from "@/lib/tahrir/access";
 import { editorHref } from "@/lib/tahrir/routes";
+import { inRiyadhDay, riyadhDayBounds } from "@/lib/tahrir/time";
 import {
   ACTIVE_STATUSES,
   countPage,
@@ -38,10 +39,9 @@ const when = (iso: string, withTime = false) =>
     timeZone: "Asia/Riyadh",
   }).format(new Date(iso));
 
-function updatedLabel(iso: string | null | undefined): string {
+function updatedLabel(iso: string | null | undefined, today = riyadhDayBounds()): string {
   if (!iso) return "—";
-  const today = new Date().toISOString().slice(0, 10);
-  return iso.startsWith(today) ? `اليوم ${when(iso, true).split(" ").pop()}` : when(iso);
+  return inRiyadhDay(iso, today) ? `اليوم ${when(iso, true).split(" ").pop()}` : when(iso);
 }
 
 function guardFor(title: string, body: string, surface: "design" | undefined, controls: GuardControls) {
@@ -62,16 +62,17 @@ export default async function StoriesPage({
   const canArchive = actor?.can("story.archive") ?? false;
   const status = VALID_STATUSES.has(params.status ?? "") ? (params.status as StoryStatus) : undefined;
   const requestedPage = Number(params.p);
-  const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+  const requested = Number.isSafeInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const q = (params.q ?? "").trim().slice(0, 80);
   const seriesSlug = params.series && seriesBySlug.has(params.series) ? params.series : "";
   const filters = { q: q || undefined, seriesSlug: seriesSlug || undefined };
   const hasFilters = Boolean(filters.q || filters.seriesSlug);
+  const today = riyadhDayBounds();
 
-  const [settings, counts, rows, filteredCount] = await Promise.all([
+  const [settings, counts, requestedRows, filteredCount] = await Promise.all([
     settingsPromise,
     statusCounts(),
-    listPageForReview(status, page, PER_PAGE, filters),
+    listPageForReview(status, requested, PER_PAGE, filters),
     hasFilters ? countPage(status, filters) : Promise.resolve(null),
   ]);
   const archivedCount = counts.archived ?? 0;
@@ -81,6 +82,9 @@ export default async function StoriesPage({
   );
   const total = filteredCount ?? (status ? (counts[status] ?? 0) : activeTotal);
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
+  // رقم صفحة خارج المدى (رابط قديم أو مواد أُرشفت) يُقصّ إلى آخر صفحة بدل جدول فارغ؛ إعادة الجلب نادرة.
+  const page = Math.min(requested, totalPages);
+  const rows = page === requested ? requestedRows : await listPageForReview(status, page, PER_PAGE, filters);
   const archiveEvents = status === "archived" ? await latestArchiveEvents(rows.map((row) => row.id)) : new Map();
 
   const href = (targetStatus?: string, targetPage = 1) => {
@@ -108,7 +112,7 @@ export default async function StoriesPage({
       guard: guardFor(story.title, story.body, story.format === "jakalelm" ? "design" : undefined, settings.governance),
       status: story.status,
       statusLabel: STATUS_LABELS[story.status as StoryStatus] ?? story.status,
-      updated: updatedLabel(story.updatedAt ?? story.publishedAt),
+      updated: updatedLabel(story.updatedAt ?? story.publishedAt, today),
       href: editorHref(story),
       publicHref: story.status === "published" ? `/${story.section}/${story.id}/${story.slug}` : null,
       isJak: story.format === "jakalelm",
