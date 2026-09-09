@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   if (!input?.id || !input.label) return NextResponse.json({ error: "المعرّف والاسم مطلوبان." }, { status: 400 });
 
   try {
-    await createRole({ id: input.id, label: input.label, description: input.description, copyFrom: input.copyFrom }, gate.actor.username);
+    await createRole({ id: input.id, label: input.label, description: input.description, copyFrom: input.copyFrom }, gate.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);

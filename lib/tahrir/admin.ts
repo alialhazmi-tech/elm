@@ -34,6 +34,35 @@ function requireDb() {
 
 const now = () => new Date().toISOString();
 
+/** الفاعل كما تحتاجه الإدارة: هويته وصلاحياته المحلولة — Actor من access.ts يفي به بنيويًا. */
+export interface AdminActor {
+  userId: string;
+  username: string;
+  permissions: Set<string>;
+}
+
+const isSuper = (actor: AdminActor) => actor.permissions.has(WILDCARD);
+
+/** صلاحيات لا يمنحها إلا حامل الشاملة — منحها بغيرها تصعيد امتياز. */
+const SENSITIVE_PERMISSIONS = new Set<string>(["users.manage", "users.suspend", "roles.manage", WILDCARD]);
+
+export const SELF_EDIT_MESSAGE = "لا يمكنك تعديل حسابك من شاشة الأعضاء.";
+export const ADMIN_ONLY_MESSAGE = "التصرف في حسابات مسؤولي النظام لمسؤول النظام وحده.";
+export const SENSITIVE_GRANT_MESSAGE = "منح صلاحيات الإدارة لمسؤول النظام وحده.";
+
+/** الدور المميّز: مسؤول النظام أو أي دور يحمل الصلاحية الشاملة. */
+async function isPrivilegedRole(roleId: string): Promise<boolean> {
+  const id = LEGACY_ROLE_MAP[roleId] ?? roleId;
+  if (id === ADMIN_ROLE) return true;
+  return (await loadRoleMap()).get(id)?.permissions.has(WILDCARD) ?? false;
+}
+
+/** كل رفض يُدوَّن قبل رميه — سجل التدقيق يرى المحاولة لا النتيجة فقط. */
+async function deny(actor: AdminActor, action: "users:denied" | "roles:denied", reason: string, message: string): Promise<never> {
+  await audit(actor.username, action, undefined, reason);
+  throw new AdminError(message, 403);
+}
+
 export type MemberStatus = "active" | "suspended";
 
 export interface MemberSummary {
@@ -135,7 +164,7 @@ export async function createMember(
     status?: MemberStatus;
     mustChangePassword?: boolean;
   },
-  actor: string,
+  actor: AdminActor,
 ) {
   const db = requireDb();
   const username = input.username.trim();
@@ -144,6 +173,9 @@ export async function createMember(
   validateIdentity({ username, email, displayName });
   validatePassword(input.password);
   await requireRole(input.role);
+  if (!isSuper(actor) && (await isPrivilegedRole(input.role))) {
+    await deny(actor, "users:denied", `إنشاء عضو بدور ${input.role} بلا الصلاحية الشاملة (${username})`, ADMIN_ONLY_MESSAGE);
+  }
 
   const existing = await db.select({ id: users.id }).from(users).where(usernameEquals(username)).limit(1);
   if (existing.length > 0) throw new AdminError("اسم المستخدم مستعمل.", 409);
@@ -163,14 +195,14 @@ export async function createMember(
     updatedAt: at,
   }).onConflictDoNothing().returning({ id: users.id });
   if (inserted.length === 0) throw new AdminError("اسم المستخدم مستعمل.", 409);
-  await audit(actor, "users:create", undefined, `${displayName} (${username}) — ${input.role}`);
+  await audit(actor.username, "users:create", undefined, `${displayName} (${username}) — ${input.role}`);
   return id;
 }
 
 export async function updateMember(
   id: string,
   input: { displayName?: string; email?: string; role?: string },
-  actor: string,
+  actor: AdminActor,
 ) {
   const db = requireDb();
   const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -192,6 +224,10 @@ export async function updateMember(
   }
   if (input.role !== undefined && input.role !== user.role) {
     await requireRole(input.role);
+    if (user.id === actor.userId) await deny(actor, "users:denied", "تغيير دور الحساب نفسه من شاشة الأعضاء", SELF_EDIT_MESSAGE);
+    if (!isSuper(actor) && ((await isPrivilegedRole(user.role)) || (await isPrivilegedRole(input.role)))) {
+      await deny(actor, "users:denied", `تغيير دور ${user.username}: ${user.role} ← ${input.role} بلا الصلاحية الشاملة`, ADMIN_ONLY_MESSAGE);
+    }
     if (user.role === ADMIN_ROLE && user.status === "active" && (await otherActiveAdmins(id)) === 0) {
       throw new AdminError("لا يمكن تغيير دور آخر مسؤول نظام فعّال — عيّن مسؤولًا آخر أولًا.", 409);
     }
@@ -200,22 +236,26 @@ export async function updateMember(
   }
   if (changes.length === 0) return;
   await db.update(users).set(patch).where(eq(users.id, id));
-  await audit(actor, "users:update", undefined, `${user.displayName} — ${changes.join(" · ")}`);
+  await audit(actor.username, "users:update", undefined, `${user.displayName} — ${changes.join(" · ")}`);
 }
 
 export async function setMemberStatus(
   id: string,
   status: MemberStatus,
   reason: string,
-  actor: { userId: string; username: string },
+  actor: AdminActor,
 ) {
   const db = requireDb();
   const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
   if (!user) throw new AdminError("العضو غير موجود.", 404);
   if (user.status === status) return;
+  // لا يمكنك تعليق عضويتك أنت ولا استئنافها — حالتك يغيّرها مسؤول آخر.
+  if (user.id === actor.userId) await deny(actor, "users:denied", `تغيير حالة الحساب نفسه إلى ${status}`, SELF_EDIT_MESSAGE);
+  if (!isSuper(actor) && (await isPrivilegedRole(user.role))) {
+    await deny(actor, "users:denied", `تغيير حالة مسؤول النظام ${user.username} إلى ${status} بلا الصلاحية الشاملة`, ADMIN_ONLY_MESSAGE);
+  }
 
   if (status === "suspended") {
-    if (user.id === actor.userId) throw new AdminError("لا يمكنك تعليق عضويتك أنت.", 409);
     if (user.role === ADMIN_ROLE && (await otherActiveAdmins(id)) === 0) {
       throw new AdminError("لا يمكن تعليق آخر مسؤول نظام فعّال.", 409);
     }
@@ -242,16 +282,21 @@ export async function setMemberStatus(
 }
 
 /** كلمة مرور مؤقتة يضعها المسؤول — العضو يُجبر على تغييرها عند الدخول التالي. */
-export async function resetMemberPassword(id: string, password: string, actor: string) {
+export async function resetMemberPassword(id: string, password: string, actor: AdminActor) {
   const db = requireDb();
   validatePassword(password);
   const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
   if (!user) throw new AdminError("العضو غير موجود.", 404);
+  // كلمة مرورك تُغيَّر من «أمان الحساب» بكلمتك الحالية، لا من شاشة الأعضاء.
+  if (user.id === actor.userId) await deny(actor, "users:denied", "إعادة تعيين كلمة مرور الحساب نفسه من شاشة الأعضاء", SELF_EDIT_MESSAGE);
+  if (!isSuper(actor) && (await isPrivilegedRole(user.role))) {
+    await deny(actor, "users:denied", `إعادة تعيين كلمة مرور مسؤول النظام ${user.username} بلا الصلاحية الشاملة`, ADMIN_ONLY_MESSAGE);
+  }
   await db
     .update(users)
     .set({ passwordHash: await hashPassword(password), sessionVersion: sql`${users.sessionVersion} + 1`, mustChangePassword: 1, updatedAt: now() })
     .where(eq(users.id, id));
-  await audit(actor, "users:reset-password", undefined, user.displayName);
+  await audit(actor.username, "users:reset-password", undefined, user.displayName);
 }
 
 /** العضو يغيّر كلمة مروره بنفسه — يرفع علم الإجبار. */
@@ -270,7 +315,7 @@ export async function changeOwnPassword(id: string, password: string, actor: str
 export async function setMemberOverrides(
   id: string,
   overrides: Array<{ permissionKey: string; effect: OverrideEffect }>,
-  actor: string,
+  actor: AdminActor,
 ) {
   const db = requireDb();
   const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
@@ -279,12 +324,25 @@ export async function setMemberOverrides(
     if (!isPermissionKey(override.permissionKey)) throw new AdminError(`صلاحية غير معروفة: ${override.permissionKey}`);
     if (override.effect !== "allow" && override.effect !== "deny") throw new AdminError("أثر الاستثناء allow أو deny.");
   }
-  await db.delete(userPermissions).where(eq(userPermissions.userId, id));
+  if (user.id === actor.userId) await deny(actor, "users:denied", "تعديل استثناءات الحساب نفسه من شاشة الأعضاء", SELF_EDIT_MESSAGE);
+  if (!isSuper(actor)) {
+    if (await isPrivilegedRole(user.role)) {
+      await deny(actor, "users:denied", `تعديل استثناءات مسؤول النظام ${user.username} بلا الصلاحية الشاملة`, ADMIN_ONLY_MESSAGE);
+    }
+    const escalation = overrides.find((o) => o.effect === "allow" && SENSITIVE_PERMISSIONS.has(o.permissionKey));
+    if (escalation) {
+      await deny(actor, "users:denied", `منح ${escalation.permissionKey} استثناءً لـ${user.username} بلا الصلاحية الشاملة`, SENSITIVE_GRANT_MESSAGE);
+    }
+  }
+  // حذف القديم وإدراج الجديد في معاملة واحدة — لا لحظة يكون فيها العضو بلا استثناءاته.
+  const clear = db.delete(userPermissions).where(eq(userPermissions.userId, id));
   if (overrides.length > 0) {
-    await db.insert(userPermissions).values(overrides.map((o) => ({ userId: id, permissionKey: o.permissionKey, effect: o.effect })));
+    await db.batch([clear, db.insert(userPermissions).values(overrides.map((o) => ({ userId: id, permissionKey: o.permissionKey, effect: o.effect })))]);
+  } else {
+    await db.batch([clear]);
   }
   await audit(
-    actor,
+    actor.username,
     "users:overrides",
     undefined,
     `${user.displayName} — ${overrides.length === 0 ? "بلا استثناءات" : overrides.map((o) => `${o.effect === "allow" ? "+" : "−"}${o.permissionKey}`).join(" ")}`,
@@ -325,7 +383,7 @@ const ROLE_ID_RE = /^[a-z][a-z0-9_]{1,40}$/;
 
 export async function createRole(
   input: { id: string; label: string; description?: string; copyFrom?: string },
-  actor: string,
+  actor: AdminActor,
 ) {
   const db = requireDb();
   const id = input.id.trim().toLowerCase();
@@ -340,18 +398,24 @@ export async function createRole(
     const source = roleMap.get(input.copyFrom);
     if (!source) throw new AdminError("الدور المنسوخ منه غير موجود.", 404);
     permissions = [...source.permissions].filter((key) => key !== WILDCARD);
+    const escalation = permissions.find((key) => SENSITIVE_PERMISSIONS.has(key));
+    if (escalation && !isSuper(actor)) {
+      await deny(actor, "roles:denied", `نسخ ${escalation} إلى دور جديد (${id}) من ${input.copyFrom} بلا الصلاحية الشاملة`, SENSITIVE_GRANT_MESSAGE);
+    }
   }
   const at = now();
   const position = Math.max(0, ...[...roleMap.values()].map((role) => role.position)) + 1;
-  await db.insert(roles).values({ id, label, description: input.description?.trim() ?? "", isSystem: 0, position, createdAt: at, updatedAt: at });
+  const insertRole = db.insert(roles).values({ id, label, description: input.description?.trim() ?? "", isSystem: 0, position, createdAt: at, updatedAt: at });
   if (permissions.length > 0) {
-    await db.insert(rolePermissions).values(permissions.map((permissionKey) => ({ roleId: id, permissionKey })));
+    await db.batch([insertRole, db.insert(rolePermissions).values(permissions.map((permissionKey) => ({ roleId: id, permissionKey })))]);
+  } else {
+    await db.batch([insertRole]);
   }
   invalidateRoleCache();
-  await audit(actor, "roles:create", undefined, `${label} (${id})${input.copyFrom ? ` نسخة من ${input.copyFrom}` : ""}`);
+  await audit(actor.username, "roles:create", undefined, `${label} (${id})${input.copyFrom ? ` نسخة من ${input.copyFrom}` : ""}`);
 }
 
-export async function updateRole(id: string, input: { label?: string; description?: string }, actor: string) {
+export async function updateRole(id: string, input: { label?: string; description?: string }, actor: AdminActor) {
   const db = requireDb();
   const role = await requireRole(id);
   const patch: Partial<typeof roles.$inferInsert> = { updatedAt: now() };
@@ -363,26 +427,31 @@ export async function updateRole(id: string, input: { label?: string; descriptio
   if (input.description !== undefined) patch.description = input.description.trim();
   await db.update(roles).set(patch).where(eq(roles.id, id));
   invalidateRoleCache();
-  await audit(actor, "roles:update", undefined, `${role.label} → ${patch.label ?? role.label}`);
+  await audit(actor.username, "roles:update", undefined, `${role.label} → ${patch.label ?? role.label}`);
 }
 
-export async function deleteRole(id: string, actor: string) {
+export async function deleteRole(id: string, actor: AdminActor) {
   const db = requireDb();
   const role = await requireRole(id);
   if (role.isSystem) throw new AdminError("الأدوار النظامية لا تُحذف.", 409);
   const [row] = await db.select({ n: count() }).from(users).where(eq(users.role, id));
   if ((row?.n ?? 0) > 0) throw new AdminError("انقل أعضاء هذا الدور إلى دور آخر أولًا.", 409);
-  await db.delete(rolePermissions).where(eq(rolePermissions.roleId, id));
-  await db.delete(roles).where(eq(roles.id, id));
+  await db.batch([
+    db.delete(rolePermissions).where(eq(rolePermissions.roleId, id)),
+    db.delete(roles).where(eq(roles.id, id)),
+  ]);
   invalidateRoleCache();
-  await audit(actor, "roles:delete", undefined, role.label);
+  await audit(actor.username, "roles:delete", undefined, role.label);
 }
 
-export async function setRolePermission(roleId: string, permissionKey: string, granted: boolean, actor: string) {
+export async function setRolePermission(roleId: string, permissionKey: string, granted: boolean, actor: AdminActor) {
   const db = requireDb();
   const role = await requireRole(roleId);
   if (!isPermissionKey(permissionKey)) throw new AdminError("صلاحية غير معروفة.");
   if (roleId === ADMIN_ROLE) throw new AdminError("مسؤول النظام يملك كل الصلاحيات بحكم التعريف.", 409);
+  if (granted && SENSITIVE_PERMISSIONS.has(permissionKey) && !isSuper(actor)) {
+    await deny(actor, "roles:denied", `منح ${permissionKey} للدور ${roleId} بلا الصلاحية الشاملة`, SENSITIVE_GRANT_MESSAGE);
+  }
 
   if (granted) {
     await db
@@ -396,7 +465,7 @@ export async function setRolePermission(roleId: string, permissionKey: string, g
   }
   await db.update(roles).set({ updatedAt: now() }).where(eq(roles.id, roleId));
   invalidateRoleCache();
-  await audit(actor, "roles:permission", undefined, `${role.label}: ${granted ? "+" : "−"}${permissionKey}`);
+  await audit(actor.username, "roles:permission", undefined, `${role.label}: ${granted ? "+" : "−"}${permissionKey}`);
 }
 
 /**

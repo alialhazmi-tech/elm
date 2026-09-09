@@ -154,8 +154,9 @@ try {
   // Enforce one normalized identity in both the service and the database, including races.
   const newMember = username => ({ username, displayName: 'Test member', email: '', role: 'login-test-role', password: 'fixture-password-123' });
   const duplicate = error => error.status === 409 && error.message === 'اسم المستخدم مستعمل.';
-  await assert.rejects(withDb(() => subject.createMember(newMember(' LOGIN-fixture '), 'test')), duplicate);
-  const attempts = await Promise.allSettled([' Concurrent.Identity ', 'concurrent.identity'].map(username => withDb(() => subject.createMember(newMember(username), 'test'))));
+  const superActor = { userId: 'test-admin', username: 'test', permissions: new Set(['*']) };
+  await assert.rejects(withDb(() => subject.createMember(newMember(' LOGIN-fixture '), superActor)), duplicate);
+  const attempts = await Promise.allSettled([' Concurrent.Identity ', 'concurrent.identity'].map(username => withDb(() => subject.createMember(newMember(username), superActor))));
   assert.equal(attempts.filter(result => result.status === 'fulfilled').length, 1);
   assert.ok(duplicate(attempts.find(result => result.status === 'rejected').reason));
   assert.equal((await admin.query("select count(*)::int n from users where lower(btrim(username))='concurrent.identity'")).rows[0].n, 1);
@@ -276,7 +277,7 @@ try {
   const oldUser = await withDb(() => subject.findUser('mfa-test'));
   globalThis.__alelmSession = { userId: oldUser.id, sessionVersion: oldUser.sessionVersion };
   assert.ok(await withDb(() => subject.loadActor()));
-  await withDb(() => subject.resetMemberPassword(oldUser.id, 'reset-password-123', 'admin'));
+  await withDb(() => subject.resetMemberPassword(oldUser.id, 'reset-password-123', { userId: 'admin', username: 'admin', permissions: new Set(['*']) }));
   await assert.rejects(withDb(() => subject.changeOwnPassword(oldUser.id, 'attacker-password-123', 'mfa-test', oldUser.sessionVersion)), /تغيّرت حماية/);
   assert.equal(await withDb(() => subject.loadActor()), null);
   const resetUser = await withDb(() => subject.findUser('mfa-test'));

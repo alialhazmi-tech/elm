@@ -17,7 +17,7 @@ export async function PATCH(request: Request, context: IdContext) {
   if (!input) return NextResponse.json({ error: "طلب غير صالح." }, { status: 400 });
 
   try {
-    await updateMember(id, input, gate.actor.username);
+    await updateMember(id, input, gate.actor);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return adminErrorResponse(error);
