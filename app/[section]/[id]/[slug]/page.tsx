@@ -23,7 +23,7 @@ import { BodyHtml } from "@/components/content/body-html";
 import { VideoPlayer } from "@/components/content/video-player";
 import { ReadingProgress } from "@/app/_components/reading-progress";
 import { normalizeVideoUrl } from "@/lib/content/video";
-import { brandDate, formatArticleDek, formatReadingMinutes, toLatinDigits } from "@/lib/format";
+import { brandDate, formatArticleDek, formatArticleTimestamp, formatReadingMinutes, toLatinDigits } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
@@ -174,6 +174,10 @@ export default async function ArticlePage({ params }: Params) {
     );
   }
   const published = story.publishedAt ? new Date(story.publishedAt) : null;
+  const publishedTimestamp = formatArticleTimestamp(story.publishedAt);
+  const updatedTimestamp = story.updatedAt && story.publishedAt &&
+    Date.parse(story.updatedAt) > Date.parse(story.publishedAt)
+    ? formatArticleTimestamp(story.updatedAt) : null;
   const isInfographicStory =
     story.section === "infographics" ||
     story.format === "infographics" ||
@@ -196,6 +200,7 @@ export default async function ArticlePage({ params }: Params) {
     description: story.seoDescription || story.excerpt,
     keywords: story.keywords?.length ? story.keywords.join(", ") : undefined,
     datePublished: story.publishedAt,
+    dateModified: updatedTimestamp ? story.updatedAt : undefined,
     articleSection: sectionName(story.section),
     image: story.image ? [story.image] : undefined,
     publisher: { "@type": "Organization", name: "العلم", url: "https://alelm.net" },
@@ -274,15 +279,20 @@ export default async function ArticlePage({ params }: Params) {
                   <div>
                     <b>فريق العلم</b>
                     <span className="meta">
-                      {published && story.publishedAt ? (
-                        <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
-                      ) : null}
-                      {published ? " · " : ""}
                       قراءة {formatReadingMinutes(story.readingMinutes)}
                     </span>
                   </div>
                 </div>
                 <div className="sa-head-actions"><a className="sa-jump" href="#article-body">ابدأ القراءة</a><ArticleLikeButton storyId={story.id} /><ArticleSaveButton storyId={story.id} joinHref={joinHref} /></div>
+                {publishedTimestamp ? (
+                  <div className="sa-timestamps">
+                    <span>النشر: <time dateTime={story.publishedAt}>{publishedTimestamp}</time></span>
+                    {updatedTimestamp ? (
+                      <span>آخر تحديث: <time dateTime={story.updatedAt}>{updatedTimestamp}</time></span>
+                    ) : null}
+                    <span className="sa-timezone">بتوقيت الرياض</span>
+                  </div>
+                ) : null}
               </div>
               {videoUrl ? (
                 <figure className="sa-media sa-video">

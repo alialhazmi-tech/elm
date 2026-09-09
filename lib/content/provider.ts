@@ -149,6 +149,7 @@ type CardRow = {
   breakingUntil: string | null;
   videoUrl: string | null;
   body?: string | null;
+  updatedAt?: string | null;
 };
 
 function mapRow(row: CardRow): Story {
@@ -163,6 +164,7 @@ function mapRow(row: CardRow): Story {
     series: normalizeSeriesSlug(row.seriesSlug),
     image: row.image ?? undefined,
     publishedAt: row.publishedAt ?? undefined,
+    updatedAt: row.updatedAt ?? undefined,
     factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
     format: row.format ?? undefined,
     body: row.body || undefined,
@@ -787,7 +789,7 @@ export const seedContentProvider: ContentProvider = {
       async (db) => {
         const rows = await db
           // القراءة العامة لا تحتاج أعمدة الملكية وإصدارات مسودات التحرير.
-          .select({ ...CARD_COLUMNS, body: storiesTable.body })
+          .select({ ...CARD_COLUMNS, body: storiesTable.body, updatedAt: storiesTable.updatedAt })
           .from(storiesTable)
           .where(and(PUBLISHED, eq(storiesTable.id, clean)))
           .limit(1);

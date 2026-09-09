@@ -55,6 +55,7 @@ export type Story = {
   /** رابط يوتيوب أو تغريدة X لمواد شكل «فيديو» — يُعرض مشغّلًا مضمَّنًا بدل الصورة البارزة. */
   videoUrl?: string;
   publishedAt?: string;
+  updatedAt?: string;
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح». */
   factCheck?: FactCheck;
 };
