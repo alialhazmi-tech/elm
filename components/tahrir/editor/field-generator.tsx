@@ -1,5 +1,7 @@
 "use client";
 
+import { EXCERPT_MAX_CHARS, excerptLength } from "@/lib/content/excerpt";
+
 import { useRef, useState } from "react";
 import { SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -63,7 +65,7 @@ export function FieldGenerator({ tool, getDraft, onApply, disabled }: Props) {
         <Button type="button" size="xs" variant="ghost" onClick={() => { setProposal(null); setError(""); }}>إغلاق</Button>
       </div>
       {proposal.suggestions.map((suggestion, index) => {
-        const tooLong = tool === "headlines" ? suggestion.text.trim().split(/\s+/u).length > 10 : suggestion.text.length > 180;
+        const tooLong = tool === "headlines" ? suggestion.text.trim().split(/\s+/u).length > 10 : excerptLength(suggestion.text) > EXCERPT_MAX_CHARS;
         return <div key={index} className="grid gap-2 rounded-md border bg-background p-3">
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{suggestion.text}</p>
           {suggestion.guard.findings.map((finding, i) => <p key={i} className="text-xs text-muted-foreground">{finding.message}</p>)}

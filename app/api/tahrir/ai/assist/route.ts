@@ -9,6 +9,8 @@ import {
   type AiTool,
   type FullEditProgressStage,
 } from "@/lib/ai/editorial";
+import { loadEditorialTaxonomy } from "@/lib/content/taxonomy-settings";
+import type { EditorialTaxonomy } from "@/lib/content/taxonomy";
 import { textClient } from "@/lib/ai/text-client";
 import { missingTextKeyMessage } from "@/lib/ai/provider-config";
 import { EditorialOutputError } from "@/lib/ai/output-error";
@@ -18,6 +20,7 @@ import { canEditStory, requirePermission } from "@/lib/tahrir/access";
 import { audit, getStory } from "@/lib/tahrir/service";
 
 interface EditorialInput {
+  taxonomy?: EditorialTaxonomy;
   storyId?: string;
   title: string;
   body: string;
@@ -63,7 +66,7 @@ async function generate(tool: AiTool, input: EditorialInput, settings: AiSetting
   const started = Date.now();
   let stage: FullEditProgressStage | "request" = "request";
   try {
-    result = await runEditorialTool(tool, input, settings, { ...options,
+    result = await runEditorialTool(tool, input, settings, { ...options, taxonomy: input.taxonomy,
       onFullEditProgress: value => { stage = value; options.onFullEditProgress?.(value); },
       onUsage: usage => usages.push(usage), onUnmeasured: cents => { unmeasuredCents += cents; } });
   } catch (error) {
@@ -190,6 +193,10 @@ export async function POST(request: Request) {
   }
 
   if (!normalizedInput.body.trim()) return NextResponse.json({ error: "أضف متن المادة أولًا." }, { status: 400 });
+  if (["classify", "metadata", "full_edit"].includes(tool)) {
+    try { normalizedInput.taxonomy = await loadEditorialTaxonomy(); }
+    catch { return NextResponse.json({ error: "تعذّر تحميل التصنيفات المتاحة. حاول لاحقًا." }, { status: 503 }); }
+  }
   if (!textClient()) return NextResponse.json({ error: missingTextKeyMessage() }, { status: 503 });
   if (request.signal.aborted) return new Response(null, { status: 499 });
   if (normalizedInput.storyId) await audit(session.username, "ai:started", normalizedInput.storyId, tool);

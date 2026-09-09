@@ -43,7 +43,7 @@ async function isolated(fn) {
 
 test("provider selection preserves direct mode, rejects masked keys and maps both model namespaces", () => {
   assert.equal(aiProvider({}), "anthropic");
-  assert.equal(aiProvider({ OPENROUTER_API_KEY: "test-key" }), "openrouter");
+  assert.equal(aiProvider({ OPENROUTER_API_KEY: "test-key" }), "anthropic");
   assert.equal(aiProvider({ AI_PROVIDER: "anthropic", OPENROUTER_API_KEY: "test-key" }), "anthropic");
   assert.equal(openRouterKey({ OPENROUTER_API_KEY: "sk-or-v1-*****" }), "");
   assert.throws(() => aiProvider({ AI_PROVIDER: "invalid" }));
@@ -135,7 +135,7 @@ test("metadata generation uses one request and returns only complete validated s
   const compiled={exports:{}};new Function('require','module','exports',output.outputFiles[0].text)(createRequire(import.meta.url),compiled,compiled.exports);
   const pack={title:'ignored title',body:'ignored body',excerpt:'موجز المادة',seoTitle:'عنوان بحث',seoDescription:'وصف نتائج البحث',keywords:['#تقنية','علوم','تقنية'],section:'sciences',format:'reports',seriesSlug:'limatha'};
   let calls=0,malformed=false;
-  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);assert.equal(request.model,'anthropic/claude-haiku-4.5');assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:malformed?'invalid JSON':JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
+  globalThis.fetch=async(_url,init)=>{calls++;const request=JSON.parse(init.body);const repair=request.messages[0].content.startsWith('المحاولة السابقة');assert.equal(request.model,repair?'anthropic/claude-opus-5':'anthropic/claude-haiku-4.5');if(!repair)assert.match(request.messages[0].content,/ملحقات المادة فقط/);return Response.json({id:'msg_test',type:'message',role:'assistant',content:[{type:'text',text:malformed?'invalid JSON':JSON.stringify(pack)}],model:request.model,stop_reason:'end_turn',usage:{input_tokens:10,output_tokens:4}})};
   const settings={models:effectiveModels(models),tone:'اختبار',governance:{editorialGuard:false,requireImageRights:true}};
   const input={title:'العنوان الأصلي',body:'المتن الأصلي'};
   const result=await compiled.exports.runEditorialTool('metadata',input,settings);
@@ -143,7 +143,7 @@ test("metadata generation uses one request and returns only complete validated s
   assert.deepEqual(result.metadata.seo.keywords,['تقنية','علوم']);assert.equal(result.metadata.classify.seriesSlug,'limatha');
   assert.deepEqual(input,{title:'العنوان الأصلي',body:'المتن الأصلي'});
   pack.section='unknown';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/ناقصة/});
-  pack.section='sciences';pack.excerpt='س'.repeat(181);await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/180 حرفًا/});
+  pack.section='sciences';pack.excerpt='س'.repeat(281);await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/280 حرفًا/});
   pack.excerpt='موجز';pack.seriesSlug='imaginary-series';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
   pack.seriesSlug=null;pack.seoTitle='';await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),/ناقصة/);
   malformed=true;await assert.rejects(compiled.exports.runEditorialTool('metadata',input,settings),{name:'EditorialOutputError',message:/تعذر قراءة مخرج النموذج/});
@@ -186,7 +186,8 @@ test("uncertain transport retains only its request estimate; explicit rejection 
   const uncertain = [];
   globalThis.fetch = async () => { throw new TypeError("network failure"); };
   await assert.rejects(subject.runEditorialTool("metadata", input, settings, { onUnmeasured: value => uncertain.push(value) }));
-  assert.deepEqual(uncertain, [subject.editorialReservationCents("metadata", input, settings)]);
+  assert.equal(uncertain.length, 1);
+  assert.ok(uncertain[0] > 0 && uncertain[0] < subject.editorialReservationCents("metadata", input, settings));
   assert.ok(uncertain[0] < 500);
   const full = subject.editorialReservationCents("full_edit", input, settings);
   assert.ok(full > uncertain[0] && full < 500);

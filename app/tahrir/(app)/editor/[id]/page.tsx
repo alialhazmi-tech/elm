@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { SERIES } from "@/lib/content/series";
+import { loadEditorialTaxonomy } from "@/lib/content/taxonomy-settings";
 import { redirect } from "next/navigation";
-import { SECTION_NAMES } from "@/lib/content/seed";
 import { canEditStory, loadActor } from "@/lib/tahrir/access";
 import { getStory, latestArchiveEvents, listRecentMedia } from "@/lib/tahrir/service";
 import { EditorClient } from "@/components/tahrir/editor/editor-client";
@@ -31,7 +30,8 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const mediaRows = await mediaPromise;
   const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
-  const sections = Object.entries(SECTION_NAMES).filter(([slug]) => slug !== "videos");
+  const taxonomy = await loadEditorialTaxonomy();
+  const sections: Array<[string, string]> = taxonomy.sections.map(item => [item.slug, item.shortName || item.name]);
 
   return (
     <main>
@@ -45,7 +45,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
         canApprove={actor?.can("story.publish") ?? false}
         guardControls={settings.governance}
         recentMedia={recentMedia}
-        series={SERIES.map(({ slug, name, color }) => ({ slug, name, color }))}
+        series={taxonomy.series.map(({ slug, name, color }) => ({ slug, name, color }))}
         sections={sections}
         initial={
           story
