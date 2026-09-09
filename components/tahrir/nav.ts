@@ -75,6 +75,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage", comingSoon: true },
       { title: "السلاسل", href: "/tahrir/series", icon: LayersIcon },
+      { title: "التصنيفات والأقسام", href: "/tahrir/taxonomy", icon: LayersIcon, permission: "ai.settings" },
       { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon, permission: "media.upload" },
     ],
   },

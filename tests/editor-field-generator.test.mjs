@@ -37,7 +37,7 @@ test('field generation requires content, proposes before applying, protects edit
     globalThis.fetch=async()=>new Response('<html>Bad Gateway</html>',{status:502});
     await find('توليد العنوان').props.onClick(); assert.match(text(),/تعذّر إكمال التوليد \(502\)/); assert.equal(find('اعتماد العنوان'),undefined);
     props.tool='excerpt';
-    globalThis.fetch=async()=>Response.json({suggestions:[{text:'خ'.repeat(181),guard:{ok:true,findings:[]}}]});
+    globalThis.fetch=async()=>Response.json({suggestions:[{text:'خ'.repeat(281),guard:{ok:true,findings:[]}}]});
     await find('توليد الموجز الذكي').props.onClick(); assert.equal(find('اعتماد الموجز').props.disabled,true);
     globalThis.fetch=async()=>Response.json({suggestions:[{text:'موجز مرفوض',guard:{ok:false,findings:[{message:'معلومة غير موثقة'}]}}]});
     await find('توليد الموجز الذكي').props.onClick(); assert.equal(find('اعتماد الموجز').props.disabled,true);

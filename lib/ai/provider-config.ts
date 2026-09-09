@@ -11,7 +11,8 @@ export function aiProvider(env: Environment = process.env): AiProvider {
   const value = env.AI_PROVIDER?.trim();
   if (value && value !== "openrouter" && value !== "anthropic") throw new Error("AI_PROVIDER يجب أن يكون openrouter أو anthropic.");
   if (value === "openrouter" || value === "anthropic") return value;
-  return openRouterKey(env) ? "openrouter" : "anthropic";
+  // الاتصال المباشر هو الافتراضي؛ وجود مفتاح احتياطي لا يغيّر مزود المنصة.
+  return "anthropic";
 }
 
 export function openRouterModel(model: string, image = false): string {

@@ -36,7 +36,7 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate user_permissions, role_permissions, roles, stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export * from './lib/tahrir/editorial-team'; export { storyTimeline } from './lib/tahrir/story-timeline'; export { invalidateRoleCache, loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export {setTaxonomyHidden,loadTaxonomyVisibility,loadEditorialTaxonomy} from './lib/content/taxonomy-settings'; export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export * from './lib/tahrir/editorial-team'; export { storyTimeline } from './lib/tahrir/story-timeline'; export { invalidateRoleCache, loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/cache$/ }, () => ({ path: "cache", namespace: "test" }));
@@ -56,6 +56,26 @@ try {
     } }],
   });
   const subject = await import(`../${directory}/subject.mjs`);
+  await admin.query("insert into ai_settings(id,data,updated_at) values ('main', $1, 'now')", [JSON.stringify({models:{editorial:'configured-model'},caps:{dailyUsd:17}})]);
+  await Promise.all([
+    withDb(()=>subject.setTaxonomyHidden('section','sciences',true)),
+    withDb(()=>subject.setTaxonomyHidden('series','limatha',true)),
+  ]);
+  await withDb(async()=>{
+    const visibility=await subject.loadTaxonomyVisibility();
+    assert.equal(visibility['section:sciences'],true);
+    assert.equal(visibility['series:limatha'],true);
+    const taxonomy=await subject.loadEditorialTaxonomy();
+    assert.ok(!taxonomy.sections.some(item=>item.slug==='sciences'));
+    assert.ok(!taxonomy.series.some(item=>item.slug==='limatha'));
+    await subject.setTaxonomyHidden('section','sciences',false);
+    assert.ok((await subject.loadEditorialTaxonomy()).sections.some(item=>item.slug==='sciences'));
+    await assert.rejects(subject.setTaxonomyHidden('section','news',true),/إبقاؤه ظاهرًا/);
+    await assert.rejects(subject.setTaxonomyHidden('section','invented',true),/غير معروف/);
+  });
+  assert.deepEqual((await admin.query("select data from ai_settings where id='main'")).rows[0].data,{models:{editorial:'configured-model'},caps:{dailyUsd:17}});
+  await admin.query("delete from ai_settings");
+  checks++;
   // Reproduce a deployed content database that predates editorial workflow columns.
   // The temporary table is confined to this isolated connection and shadows public.stories.
   await withDb(async () => {

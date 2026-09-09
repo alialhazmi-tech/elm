@@ -16,6 +16,7 @@ import { reserveTextCents } from "./pricing";
 import { missingTextKeyMessage } from "./provider-config";
 import { EditorialOutputError } from "./output-error";
 import { excerptInstructions, validateExcerpt } from "./summary-editorial";
+import { classificationInstructions, visibleTaxonomy, type EditorialTaxonomy } from "../content/taxonomy";
 
 import { runPolicyGuard } from "@/lib/policy";
 import type { Finding } from "@/lib/policy/types";
@@ -104,6 +105,7 @@ export type FullEditProgressStage =
   | "complete";
 
 interface EditorialRunOptions {
+  taxonomy?: EditorialTaxonomy;
   signal?: AbortSignal;
   onUsage?: (usage: Usage) => void;
   onUnmeasured?: (reservedCents: number) => void;
@@ -128,7 +130,7 @@ function guardCheck(text: string, as: "title" | "fragment" | "body", enabled: bo
   return { ok: !findings.some((finding) => finding.severity === "blocking"), findings };
 }
 
-const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; selection?: string }) => string> = {
+const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; selection?: string; taxonomy?: EditorialTaxonomy }) => string> = {
   headlines: ({ title, body }) =>
     `اقترح ثلاثة عناوين لهذه المادة، كل عنوان حتى 10 كلمات، من حقائق المتن دون إضافة أو تهويل. أعد JSON فقط بالشكل {"suggestions": ["...", "...", "..."]}.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
   excerpt: ({ title, body }) =>
@@ -137,21 +139,22 @@ const TOOL_PROMPTS: Record<string, (input: { title: string; body: string; select
     `حسّن هذا المقطع صحفيًا: أزل الركاكة والحشو، واحفظ المعنى والحقائق كما هي تمامًا، ولا تضف معلومة. أعد JSON فقط: {"suggestions": ["النص المحسّن"]}.\n\nالمقطع:\n${selection || body}`,
   proofread: ({ body }) =>
     `دقق النص لغويًا وإملائيًا فقط — لا تعد صياغة ولا تغير الأسلوب، صحح الأخطاء وحدها. أعد JSON فقط: {"suggestions": ["النص المدقق كاملًا"]}.\n\nالنص:\n${body}`,
-  classify: ({ title, body }) =>
-    `صنّف المادة. السلاسل: absat أبسط، aghrab أغرب، efhamha-sah افهمها صح، bel-arqam بالأرقام، shakhsiat شخصيات، limatha لماذا، matha-law ماذا لو، bel-tarikh بالتاريخ — أو null إن لم تناسب أي سلسلة. الأقسام: politics, economy, world, ksa, current-events, health, technology, sciences, sport, business, art, culture, varieties, news. الأشكال: news, infographics, videos, reports, podcasts. أعد JSON فقط: {"seriesSlug": "... أو null", "section": "...", "format": "..."}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
+  classify: ({ title, body, taxonomy = visibleTaxonomy() }) =>
+    `صنّف المادة. ${classificationInstructions(taxonomy)} الأشكال: news, infographics, videos, reports, podcasts. أعد JSON فقط: {"seriesSlug": "... أو null", "section": "...", "format": "..."}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
   seo: ({ title, body }) =>
     `ولّد حزمة SEO لهذه المادة: عنوان بحث حتى 60 حرفًا يحمل الكلمة المفتاحية الأهم، ووصف بحث حتى 155 حرفًا يلخص القيمة بلا حشو، و5-8 كلمات مفتاحية عربية يبحث بها الناس فعلًا (بلا وسوم #). أعد JSON فقط: {"seoTitle": "...", "seoDescription": "...", "keywords": ["...", "..."]}.\n\nالعنوان: ${title}\n\nالمتن:\n${body}`,
-  metadata: ({ title, body }) =>
-    `ولّد ملحقات المادة فقط من حقائق المتن: موجز «قبل القراءة» وفق المعايير التالية: ${excerptInstructions} ثم عنوان SEO حتى 60 حرفًا ووصف SEO حتى 155 حرفًا، و5-8 كلمات مفتاحية بلا #. اختر القسم والشكل والسلسلة الأنسب أو null إذا لم تناسبها سلسلة. لا تعد كتابة العنوان أو المتن ولا تضف معلومة. الأقسام: politics,economy,world,ksa,current-events,health,technology,sciences,sport,business,art,culture,varieties,news. الأشكال: news,infographics,videos,reports,podcasts. السلاسل: absat,aghrab,efhamha-sah,bel-arqam,shakhsiat,limatha,matha-law,bel-tarikh. أعد JSON فقط بالشكل {"excerpt":"...","seoTitle":"...","seoDescription":"...","keywords":["..."],"section":"...","format":"...","seriesSlug":null}.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
+  metadata: ({ title, body, taxonomy = visibleTaxonomy() }) =>
+    `ولّد ملحقات المادة فقط من حقائق المتن: موجز «قبل القراءة» وفق المعايير التالية: ${excerptInstructions} ثم عنوان SEO حتى 60 حرفًا ووصف SEO حتى 155 حرفًا، و5-8 كلمات مفتاحية بلا #. اختر القسم والشكل والسلسلة الأنسب أو null إذا لم تناسبها سلسلة. لا تعد كتابة العنوان أو المتن ولا تضف معلومة. ${classificationInstructions(taxonomy)} الأشكال: news,infographics,videos,reports,podcasts. أعد JSON فقط بالشكل {"excerpt":"...","seoTitle":"...","seoDescription":"...","keywords":["..."],"section":"...","format":"...","seriesSlug":null}.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
   full_edit: ({ title, body }) =>
     `حرّر المتن بأسلوب العلم. أعد المتن المحرَّر فقط — بلا عنوان وبلا JSON وبلا تعليق وبلا Markdown. فقرات مفصولة بسطر فارغ. أزل الركاكة والحشو واحفظ كل الحقائق والأرقام والمصادر كما هي. ممنوع إضافة أي معلومة.\n\nالعنوان الحالي: ${title}\n\nالمتن:\n${body}`,
 };
 
-const FULL_EDIT_PACK_PROMPT = ({ title, body }: { title: string; body: string }) =>
+const FULL_EDIT_PACK_PROMPT = ({ title, body, taxonomy = visibleTaxonomy() }: { title: string; body: string; taxonomy?: EditorialTaxonomy }) =>
   [
     "من المادة التالية ولّد الحقول المساعدة فقط. أعد JSON واحدًا:",
     excerptInstructions,
-    '{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة خبرية مكتملة حتى 180 حرفًا","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"absat|aghrab|efhamha-sah|bel-arqam|shakhsiat|limatha|matha-law|bel-tarikh أو null","section":"politics|economy|world|ksa|current-events|health|technology|sciences|sport|business|art|culture|varieties|news","format":"news|infographics|videos|reports|podcasts"}',
+    classificationInstructions(taxonomy),
+    '{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة خبرية مكتملة حتى 280 حرفًا","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"معرف سلسلة متاحة أو null","section":"معرف قسم متاح","format":"news|infographics|videos|reports|podcasts"}',
     "",
     `العنوان الحالي: ${title}`,
     "",
@@ -185,14 +188,16 @@ function requestEstimate(opts: CompletionOptions): number {
   return reserveTextCents(opts.model, systemBlocks(opts.tone, opts.editorialGuard).map(block => block.text).join("\n") + "\n" + opts.user, opts.maxTokens);
 }
 
-export function editorialReservationCents(tool: AiTool, input: { title: string; body: string; selection?: string }, settings: AiSettingsData): number {
+export function editorialReservationCents(tool: AiTool, input: { title: string; body: string; selection?: string; taxonomy?: EditorialTaxonomy }, settings: AiSettingsData): number {
   const common = { tone: settings.tone, editorialGuard: settings.governance.editorialGuard };
+  const repair = ["excerpt", "metadata", "full_edit"].includes(tool)
+    ? requestEstimate({ ...common, model: settings.models.editorial, user: excerptRepairPrompt(input), maxTokens: 1024 }) : 0;
   if (tool === "full_edit") {
     const clipped = { ...input, body: input.body.slice(0, FULL_EDIT_BODY_LIMIT) };
     return requestEstimate({ ...common, model: settings.models.fast, user: TOOL_PROMPTS.full_edit(clipped), maxTokens: 8192 })
-      + requestEstimate({ ...common, model: settings.models.light, user: FULL_EDIT_PACK_PROMPT(input), maxTokens: 2048 });
+      + requestEstimate({ ...common, model: settings.models.light, user: FULL_EDIT_PACK_PROMPT(input), maxTokens: 2048 }) + repair;
   }
-  return requestEstimate({ ...common, model: modelFor(tool, settings), user: TOOL_PROMPTS[tool](input), maxTokens: tool === "proofread" ? 8192 : 2048 });
+  return repair + requestEstimate({ ...common, model: modelFor(tool, settings), user: TOOL_PROMPTS[tool](input), maxTokens: tool === "proofread" ? 8192 : 2048 });
 }
 
 async function complete(
@@ -240,9 +245,39 @@ function modelFor(tool: AiTool, settings: AiSettingsData): string {
   return settings.models.editorial;
 }
 
+function excerptRepairPrompt(input: { title: string; body: string }): string {
+  return `المحاولة السابقة للموجز لم تستوفِ معيار الوضوح والطول. أعد صياغة موجز جديد أقصر من حقائق المصدر، بجملة مكتملة دون اقتطاع ودون حشو. ${TOOL_PROMPTS.excerpt(input)}`;
+}
+
+/** نصلح الموجز وحده مرة واحدة، مع احتساب الطلبين وحفظ بقية الملحقات. */
+async function validateOrRepairExcerpt(anthropic: Anthropic, value: unknown, input: { title: string; body: string }, settings: AiSettingsData, options: EditorialRunOptions, repairs: Usage[]): Promise<string> {
+  try { return validateExcerpt(value, input.title); }
+  catch (error) { if (!(error instanceof EditorialOutputError)) throw error; }
+  const repair = await complete(anthropic, {
+    model: settings.models.editorial, maxTokens: 1024, tone: settings.tone,
+    editorialGuard: settings.governance.editorialGuard, user: excerptRepairPrompt(input),
+    signal: options.signal, onUsage: options.onUsage, onUnmeasured: options.onUnmeasured,
+  });
+  repairs.push(repair.usage);
+  if (repair.stopReason === "max_tokens") throw new EditorialOutputError("توقّف تصحيح الموجز قبل اكتماله؛ لم يُطبّق أي تغيير.");
+  let parsed: Record<string, unknown>;
+  try { parsed = parseJsonObject(repair.text); }
+  catch { throw new EditorialOutputError("تعذّر قراءة الموجز المصحح؛ أعد المحاولة."); }
+  return validateExcerpt(Array.isArray(parsed.suggestions) ? parsed.suggestions[0] : undefined, input.title);
+}
+
+function validateClassification(value: { section?: string; seriesSlug?: string | null; format?: string }, taxonomy: EditorialTaxonomy) {
+  if (!taxonomy.sections.some(item => item.slug === value.section) ||
+    !["news", "infographics", "videos", "reports", "podcasts"].includes(value.format ?? "") ||
+    (value.seriesSlug != null && !taxonomy.series.some(item => item.slug === value.seriesSlug))) {
+    throw new EditorialOutputError("بيانات التصنيف ناقصة أو تتضمن قسمًا أو سلسلة مخفية. أعد التوليد لاختيار تصنيف متاح.");
+  }
+  return { section: value.section!, format: value.format!, seriesSlug: value.seriesSlug ?? null };
+}
+
 async function runFullEdit(
   anthropic: Anthropic,
-  input: { title: string; body: string },
+  input: { title: string; body: string; taxonomy?: EditorialTaxonomy },
   settings: AiSettingsData,
   options: EditorialRunOptions,
 ): Promise<AiResult> {
@@ -327,7 +362,8 @@ async function runFullEdit(
     throw new Error("ملحقات التحرير الشامل ناقصة؛ أعد المحاولة.");
   }
   const title = (pack.title ?? clipped.title).trim() || clipped.title;
-  const excerpt = validateExcerpt(pack.excerpt, title);
+  const repairs: Usage[] = [];
+  const excerpt = await validateOrRepairExcerpt(anthropic, pack.excerpt, { ...input, title }, settings, options, repairs);
   const seoTitle = (pack.seoTitle ?? "").trim();
   const seoDescription = (pack.seoDescription ?? "").trim();
   const keywords = (pack.keywords ?? [])
@@ -348,11 +384,7 @@ async function runFullEdit(
       keywords,
       guard: guardCheck(`${seoTitle} ${seoDescription} ${keywords.join(" ")}`, "fragment", settings.governance.editorialGuard),
     },
-    classify: {
-      seriesSlug: pack.seriesSlug ?? null,
-      section: pack.section ?? "news",
-      format: pack.format ?? "news",
-    },
+    classify: validateClassification(pack, input.taxonomy ?? visibleTaxonomy()),
   };
 
   options.onFullEditProgress?.("complete");
@@ -362,19 +394,20 @@ async function runFullEdit(
     fullEdit,
     usage: {
       model: bodyModel,
-      inputTokens: bodyResult.usage.inputTokens + packResult.usage.inputTokens,
-      outputTokens: bodyResult.usage.outputTokens + packResult.usage.outputTokens,
+      inputTokens: bodyResult.usage.inputTokens + packResult.usage.inputTokens + repairs.reduce((n, u) => n + u.inputTokens, 0),
+      outputTokens: bodyResult.usage.outputTokens + packResult.usage.outputTokens + repairs.reduce((n, u) => n + u.outputTokens, 0),
     },
-    usages: [bodyResult.usage, packResult.usage],
+    usages: [bodyResult.usage, packResult.usage, ...repairs],
   };
 }
 
 export async function runEditorialTool(
   tool: AiTool,
-  input: { title: string; body: string; selection?: string },
+  input: { title: string; body: string; selection?: string; taxonomy?: EditorialTaxonomy },
   settings: AiSettingsData,
   options: EditorialRunOptions = {},
 ): Promise<AiResult> {
+  input = { ...input, taxonomy: options.taxonomy ?? visibleTaxonomy() };
   const anthropic = client();
   if (!anthropic) {
     throw new Error(missingTextKeyMessage());
@@ -421,15 +454,13 @@ export async function runEditorialTool(
   if (tool === "classify") {
     return {
       suggestions: [],
-      classify: {
-        seriesSlug: parsed.seriesSlug ?? null,
-        section: parsed.section ?? "news",
-        format: parsed.format ?? "news",
-      },
+      classify: validateClassification(parsed, input.taxonomy!),
       usage,
     };
   }
 
+  const repairs: Usage[] = [];
+  const combinedUsage = () => ({ ...usage, inputTokens: usage.inputTokens + repairs.reduce((n, u) => n + u.inputTokens, 0), outputTokens: usage.outputTokens + repairs.reduce((n, u) => n + u.outputTokens, 0) });
   const cleanKeywords = (Array.isArray(parsed.keywords) ? parsed.keywords : [])
     .filter((keyword): keyword is string => typeof keyword === "string")
     .map((keyword) => keyword.replace(/^#/, "").trim())
@@ -437,21 +468,18 @@ export async function runEditorialTool(
     .slice(0, 8);
 
   if (tool === "metadata") {
-    const excerpt = validateExcerpt(parsed.excerpt, input.title);
+    const excerpt = await validateOrRepairExcerpt(anthropic, parsed.excerpt, input, settings, options, repairs);
     const seoTitle = typeof parsed.seoTitle === "string" ? parsed.seoTitle.trim() : "";
     const seoDescription = typeof parsed.seoDescription === "string" ? parsed.seoDescription.trim() : "";
-    const sections = ["politics", "economy", "world", "ksa", "current-events", "health", "technology", "sciences", "sport", "business", "art", "culture", "varieties", "news"];
-    const formats = ["news", "infographics", "videos", "reports", "podcasts"];
-    const series = ["absat", "aghrab", "efhamha-sah", "bel-arqam", "shakhsiat", "limatha", "matha-law", "bel-tarikh"];
-    if (!excerpt || excerpt.length > 180 || !seoTitle || seoTitle.length > 60 || !seoDescription || seoDescription.length > 155
-      || !cleanKeywords.length || !sections.includes(parsed.section ?? "") || !formats.includes(parsed.format ?? "")
-      || (parsed.seriesSlug !== null && !series.includes(parsed.seriesSlug ?? ""))) {
+    const classify = validateClassification(parsed, input.taxonomy!);
+    if (!excerpt || !seoTitle || seoTitle.length > 60 || !seoDescription || seoDescription.length > 155
+      || !cleanKeywords.length) {
       throw new EditorialOutputError("ملحقات المادة ناقصة أو تجاوزت الحدود المطلوبة. أعد التوليد.");
     }
-    return { suggestions: [], usage, metadata: {
+    return { suggestions: [], usage: combinedUsage(), usages: [usage, ...repairs], metadata: {
       excerpt: { text: excerpt, guard: guardCheck(excerpt, "fragment", settings.governance.editorialGuard) },
       seo: { seoTitle, seoDescription, keywords: [...new Set(cleanKeywords)], guard: guardCheck(`${seoTitle} ${seoDescription} ${cleanKeywords.join(" ")}`, "fragment", settings.governance.editorialGuard) },
-      classify: { section: parsed.section!, format: parsed.format!, seriesSlug: parsed.seriesSlug ?? null },
+      classify,
     } };
   }
 
@@ -472,14 +500,14 @@ export async function runEditorialTool(
 
   const texts = (Array.isArray(parsed.suggestions) ? parsed.suggestions : []).filter((text): text is string => typeof text === "string" && !!text.trim()).slice(0, tool === "excerpt" ? 1 : 3);
   if (tool === "excerpt") {
-    if (!texts.length) throw new EditorialOutputError("لم يرجع النموذج موجزًا صالحًا. أعد التوليد.");
-    texts[0] = validateExcerpt(texts[0], input.title);
+    texts[0] = await validateOrRepairExcerpt(anthropic, texts[0], input, settings, options, repairs);
   }
   return {
     suggestions: texts.map((text) => ({
       text,
       guard: guardCheck(text, tool === "headlines" ? "title" : "fragment", settings.governance.editorialGuard),
     })),
-    usage,
+    usage: combinedUsage(),
+    usages: [usage, ...repairs],
   };
 }

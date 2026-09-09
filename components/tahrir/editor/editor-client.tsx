@@ -1,5 +1,7 @@
 "use client";
 
+import { EXCERPT_MAX_CHARS, excerptLength } from "@/lib/content/excerpt";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -734,7 +736,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
           <div className="grid gap-2 border-t px-5 py-4">
             <div className="flex items-center justify-between">
               <label htmlFor="story-excerpt" className="text-xs font-semibold text-foreground">الموجز — قبل القراءة</label>
-              <span className={cn("text-[10.5px] tabular-nums", excerpt.length > 180 ? "text-(--t-block)" : "text-muted-foreground")}>{excerpt.length} من 180 حرفًا</span>
+              <span className={cn("text-[10.5px] tabular-nums", excerptLength(excerpt) > EXCERPT_MAX_CHARS ? "text-(--t-block)" : "text-muted-foreground")}>{excerptLength(excerpt)} من {EXCERPT_MAX_CHARS} حرفًا</span>
             </div>
             <Textarea
               id="story-excerpt"

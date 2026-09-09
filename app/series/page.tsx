@@ -1,10 +1,11 @@
+import { loadPublicTaxonomy } from "@/lib/content/taxonomy-settings";
 import type { Metadata } from "next";
 import { sharingMetadata } from "@/lib/sharing";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { toLatinDigits } from "@/lib/format";
-import { listVisibleArchivedSeries, SERIES, seriesDirectory } from "@/lib/content/provider";
+import { listVisibleArchivedSeries, seriesDirectory } from "@/lib/content/provider";
 
 export const revalidate = 300;
 
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function SeriesIndexPage() {
+  const { series: visibleSeries } = await loadPublicTaxonomy();
   const archived = await listVisibleArchivedSeries();
   // دليل واحد بكاش دقيقة: أعداد كل السلاسل وأحدث مادة للنشطة — بلا تحميل الأرشيف.
   const directory = await seriesDirectory();
@@ -23,14 +25,14 @@ export default async function SeriesIndexPage() {
     series,
     count: directory[series.slug]?.count ?? 0,
   }));
-  const catalog = SERIES.map((series) => ({
+  const catalog = visibleSeries.map((series) => ({
     series,
     count: directory[series.slug]?.count ?? 0,
     latest: directory[series.slug]?.latest ?? null,
   }));
   const activeTotal = catalog.reduce((sum, entry) => sum + entry.count, 0);
   const spectrum = {
-    backgroundImage: `linear-gradient(270deg, ${SERIES.map((series) => series.color).join(", ")})`,
+    backgroundImage: `linear-gradient(270deg, ${visibleSeries.map((series) => series.color).join(", ")})`,
   };
 
   return (
@@ -52,7 +54,7 @@ export default async function SeriesIndexPage() {
           </div>
           <p className="sx-index-stat">
             <b className="latin-number" dir="ltr" lang="en">{toLatinDigits(activeTotal)}</b>
-            <span>مادة عبر {SERIES.length} سلاسل</span>
+            <span>مادة عبر {visibleSeries.length} سلاسل</span>
             <small>منذ إطلاق تجربة السلاسل</small>
           </p>
         </section>

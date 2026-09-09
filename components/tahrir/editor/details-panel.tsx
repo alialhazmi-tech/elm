@@ -1,5 +1,8 @@
 "use client";
 
+import { getSectionName } from "@/lib/content/sections";
+import { SERIES } from "@/lib/content/series";
+
 import { useState } from "react";
 import { ArchiveIcon, ArchiveRestoreIcon, ImagePlusIcon, PinIcon, VideoIcon, ZapIcon, ZapOffIcon } from "lucide-react";
 
@@ -204,6 +207,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
       </Section>
 
       <Section title="السلسلة">
+        {props.seriesSlug && !props.series.some(item => item.slug === props.seriesSlug) && <p className="mb-2 text-xs text-muted-foreground">التصنيف الحالي: {SERIES.find(item => item.slug === props.seriesSlug)?.name ?? props.seriesSlug} (مخفي)</p>}
         <div className="flex flex-wrap gap-1.5">
           {props.series.map((item) => {
             const active = props.seriesSlug === item.slug;
@@ -230,7 +234,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
       <Section title="القسم">
         <Select dir="rtl" disabled={props.identityLocked} value={props.section} onValueChange={props.onSection}>
           <SelectTrigger className="w-full" aria-label="القسم">
-            <SelectValue />
+            <SelectValue placeholder={getSectionName(props.section)} />
           </SelectTrigger>
           <SelectContent>
             {props.sections.map(([value, name]) => (

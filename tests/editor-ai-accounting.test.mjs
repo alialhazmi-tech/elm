@@ -7,6 +7,7 @@ const settings = { caps: { dailyUsd: 10, monthlyUsd: 150 }, models: { fast: 'fas
 const output = await build({ stdin: { contents: "export {POST} from './app/api/tahrir/ai/assist/route'; export {EditorialOutputError} from './lib/ai/output-error';", loader: 'ts', resolveDir: process.cwd() }, bundle: true, platform: 'node', format: 'cjs', packages: 'external', write: false,
   plugins: [{ name: 'route-dependencies', setup(builder) {
     const sources = {
+      "@/lib/content/taxonomy-settings": `export const loadEditorialTaxonomy=async()=>({sections:[{slug:"news",name:"أخبار"}],series:[]});`,
       '@/lib/ai/editorial': `export const AI_TOOLS=['metadata','full_edit']; export const editorialReservationCents=()=>37; export const runEditorialTool=(...args)=>globalThis.__aiTest.run(...args);`,
       '@/lib/ai/settings': `export const loadAiSettings=()=>globalThis.__aiTest.settings;`,
       '@/lib/ai/text-client': `export const textClient=()=>globalThis.__aiTest.key?{}:null;`,

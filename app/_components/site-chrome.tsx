@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { BrandMark } from "./brand-mark";
 import { getNewsStrip } from "@/lib/content/provider";
-import { SERIES } from "@/lib/content/series";
+import { loadPublicTaxonomy } from "@/lib/content/taxonomy-settings";
 import { SOCIAL_LINKS } from "@/lib/social-links";
 import { NewsletterForm } from "./newsletter-form";
 import { NewsStrip } from "./news-strip";
@@ -67,7 +67,10 @@ export async function SiteHeader({
   /** Synthetic identity supplied only by the gated account design preview. */
   memberPreview?: MemberIdentity;
 }) {
-  const sectionActive = SECTIONS.some((item) => item.href === active);
+  const taxonomy = await loadPublicTaxonomy();
+  const visibleSections = SECTIONS.filter(item => taxonomy.sections.some(section => item.href === `/${section.slug}`));
+  const visibleSeries = taxonomy.series;
+  const sectionActive = visibleSections.some((item) => item.href === active);
   const seriesActive = active === "/series";
 
   return (
@@ -79,12 +82,14 @@ export async function SiteHeader({
           </Link>
 
           <nav className="topnav" aria-label="التنقل الرئيسي">
+            <Link href="/" className={active === "/" ? "is-active" : undefined}>الرئيسية</Link>
+            <a href="https://jakelelm.alelm.net">جاك العلم</a>
             <div className="nav-item has-menu">
-              <Link href="/politics" className={sectionActive ? "is-active" : undefined} aria-haspopup="true">
+              <Link href={visibleSections.some(item => item.href === "/politics") ? "/politics" : "/news"} className={sectionActive ? "is-active" : undefined} aria-haspopup="true">
                 الأخبار <Caret />
               </Link>
               <div className="nav-panel" role="menu">
-                {SECTIONS.map((item) => (
+                {visibleSections.map((item) => (
                   <Link key={item.href} href={item.href} role="menuitem" className={item.href === active ? "is-active" : undefined}>
                     {item.label}
                   </Link>
@@ -96,7 +101,7 @@ export async function SiteHeader({
                 السلاسل <Caret />
               </Link>
               <div className="nav-panel nav-panel-series" role="menu">
-                {SERIES.map((item) => (
+                {visibleSeries.map((item) => (
                   <Link key={item.slug} href={`/series/${item.slug}`} role="menuitem" style={{ "--sc": item.color } as React.CSSProperties}>
                     <i className="dot" aria-hidden="true" />
                     <span>{item.name}</span>
@@ -106,7 +111,7 @@ export async function SiteHeader({
                 <Link href="/series" role="menuitem" className="nav-all">كل السلاسل ←</Link>
               </div>
             </div>
-            <Link href="/infographics" className={active === "/infographics" ? "is-active" : undefined}>إنفوجرافيك</Link>
+            {taxonomy.sections.some(item => item.slug === "infographics") ? <Link href="/infographics" className={active === "/infographics" ? "is-active" : undefined}>إنفوجرافيك</Link> : null}
             <Link href="/podcasts" className={active === "/podcasts" ? "is-active" : undefined}>بودكاست</Link>
             <Link href="/videos" className={active === "/videos" ? "is-active" : undefined}>فيديو</Link>
           </nav>
@@ -114,16 +119,17 @@ export async function SiteHeader({
           <div className="top-tools">
             <MobileNavigation>
               <Link className="site-drawer-home" href="/" aria-current={active === "/" ? "page" : undefined}>الرئيسية <span aria-hidden="true">←</span></Link>
+              <a className="site-drawer-home" href="https://jakelelm.alelm.net">جاك العلم <span aria-hidden="true">←</span></a>
               <section className="site-drawer-section" aria-label="الأقسام">
                 <h3>الأقسام</h3>
                 <div className="site-drawer-grid">
-                  {SECTIONS.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
+                  {visibleSections.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
                 </div>
               </section>
               <section className="site-drawer-section" aria-label="السلاسل">
                 <div className="site-drawer-section-heading"><h3>السلاسل</h3><Link href="/series">كل السلاسل <span aria-hidden="true">←</span></Link></div>
                 <div className="site-drawer-grid">
-                  {SERIES.map((item) => <Link key={item.slug} href={`/series/${item.slug}`} aria-current={activeSeries === item.slug ? "page" : undefined}>
+                  {visibleSeries.map((item) => <Link key={item.slug} href={`/series/${item.slug}`} aria-current={activeSeries === item.slug ? "page" : undefined}>
                     <i className="site-drawer-dot" style={{ background: item.color }} aria-hidden="true" />{item.name}
                   </Link>)}
                 </div>
@@ -131,7 +137,7 @@ export async function SiteHeader({
               <section className="site-drawer-section" aria-label="مرئي وصوتي">
                 <h3>مرئي وصوتي</h3>
                 <div className="site-drawer-grid">
-                  {FORMATS.map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
+                  {FORMATS.filter(item => item.href !== "/infographics" || taxonomy.sections.some(section => section.slug === "infographics")).map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
                 </div>
               </section>
             </MobileNavigation>
@@ -150,7 +156,7 @@ export async function SiteHeader({
       {rail ? null : (
       <nav className="sx-switch top-series-mobile" aria-label="السلاسل">
         <Link href="/series" className="sx-all">كل السلاسل</Link>
-        {SERIES.map((item) => (
+        {visibleSeries.map((item) => (
           <Link
             key={item.slug}
             href={`/series/${item.slug}`}
@@ -162,12 +168,15 @@ export async function SiteHeader({
         ))}
       </nav>
       )}
-      {rail ? <SeriesRail series={SERIES} /> : null}
+      {rail ? <SeriesRail series={visibleSeries} /> : null}
     </>
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const taxonomy = await loadPublicTaxonomy();
+  const visibleSections = SECTIONS.filter(item => taxonomy.sections.some(section => item.href === `/${section.slug}`));
+  const visibleSeries = taxonomy.series;
   const year = new Date().getFullYear();
 
   return (
@@ -195,13 +204,13 @@ export function SiteFooter() {
           <details className="footer-link-group" open>
             <summary><h3>الأقسام</h3><Caret /></summary>
             <ul className="ft-nav-list ft-cols">
-              {SECTIONS.map((item) => <li key={item.href}><Link href={item.href}>{item.label}</Link></li>)}
+              {visibleSections.map((item) => <li key={item.href}><Link href={item.href}>{item.label}</Link></li>)}
             </ul>
           </details>
           <details className="footer-link-group" open>
             <summary><h3>السلاسل</h3><Caret /></summary>
             <ul className="ft-nav-list ft-cols">
-              {SERIES.map((item) => <li key={item.slug}>
+              {visibleSeries.map((item) => <li key={item.slug}>
                 <Link href={`/series/${item.slug}`} className="ft-series-link">
                   <span className="ft-dot" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.name}
                 </Link>
@@ -212,7 +221,7 @@ export function SiteFooter() {
           <details className="footer-link-group" open>
             <summary><h3>مرئي وصوتي</h3><Caret /></summary>
             <ul className="ft-nav-list">
-              {FORMATS.map((item) => <li key={item.href}><Link href={item.href}>{item.label}</Link></li>)}
+              {FORMATS.filter(item => item.href !== "/infographics" || taxonomy.sections.some(section => section.slug === "infographics")).map((item) => <li key={item.href}><Link href={item.href}>{item.label}</Link></li>)}
               <li><Link href="/search">البحث</Link></li>
             </ul>
           </details>

@@ -1,5 +1,7 @@
 "use client";
 
+import { EXCERPT_MAX_CHARS, excerptLength } from "@/lib/content/excerpt";
+
 import { useRef, useState } from "react";
 import { SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -51,7 +53,7 @@ export function MetadataGenerator({ disabled, lockedSection, getDraft, onApply, 
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
         {data && <>
           <dl className="grid gap-3">
-            {row("الموجز — قبل القراءة", data.excerpt.text)}
+            {row(`الموجز — ${excerptLength(data.excerpt.text)} من ${EXCERPT_MAX_CHARS} حرفًا`, data.excerpt.text)}
             {row("عنوان SEO", data.seo.seoTitle)}
             {row("وصف SEO", data.seo.seoDescription)}
             {row("الكلمات المفتاحية", data.seo.keywords.join("، "))}

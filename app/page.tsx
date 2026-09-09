@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { BriefListen } from "./_components/home-brief-listen";
 import { homeBriefScript } from "@/lib/voice/home-brief";
 import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
+import { loadPublicTaxonomy } from "@/lib/content/taxonomy-settings";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -52,6 +53,7 @@ function LeadHead({ story }: { story: Story }) {
 }
 
 export default async function Home() {
+  const taxonomy = await loadPublicTaxonomy();
   const [home, directory] = await Promise.all([
     seedContentProvider.getHome(),
     seriesDirectory().catch(() => ({} as Awaited<ReturnType<typeof seriesDirectory>>)),
@@ -275,7 +277,7 @@ export default async function Home() {
               <span className="sub">أحدث القصص مرتبة حسب المجال</span>
             </div>
             <div className="panels-grid">
-              {stream.panels.map((panel) => (
+              {stream.panels.filter(panel => taxonomy.sections.some(item => item.slug === panel.slug)).map((panel) => (
                 <div className="panel" key={panel.slug} style={{ "--pc": panel.color } as React.CSSProperties}>
                   <div className="panel-head">
                     <h3><Link className="story-link" href={`/${panel.slug}`}>{panel.name}</Link></h3>
@@ -365,7 +367,7 @@ export default async function Home() {
             <Link className="more" href="/series">كل السلاسل</Link>
           </div>
           <div className="sh-series">
-            {home.series.map((series) => {
+            {home.series.filter(series => taxonomy.series.some(item => item.slug === series.slug)).map((series) => {
               const entry = directory[series.slug];
               return (
                 <Link
