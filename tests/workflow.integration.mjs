@@ -34,9 +34,9 @@ const editor = { userId: "editor-1", username: "editor", displayName: "كاتب"
 try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" });
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
-  await admin.query("truncate stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
+  await admin.query("truncate user_permissions, role_permissions, roles, stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export { loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export * from './lib/tahrir/editorial-team'; export { invalidateRoleCache, loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/cache$/ }, () => ({ path: "cache", namespace: "test" }));
@@ -47,10 +47,10 @@ try {
       builder.onResolve({ filter: /^@\/lib\/content\/provider$/ }, () => ({ path: "provider", namespace: "test" }));
       builder.onResolve({ filter: /^\.\/auth$/ }, args => args.importer.endsWith('/access.ts') ? ({ path: "auth", namespace: "test" }) : undefined);
       builder.onLoad({ filter: /.*/, namespace: "test" }, args => ({ contents: ({
-        cache: "export const unstable_cache = load => load; export function revalidateTag(){}",
+        cache: "export const unstable_cache = load => load; export function revalidateTag(){} export function revalidatePath(path){globalThis.__revalidatedPaths?.push(path)}",
         db: "export function getDb(){return globalThis.__alelmDb.getStore()}",
         session: "export async function getSessionMemberId(){return globalThis.__alelmMemberId ?? null} export function privateJson(value,status=200){return Response.json(value,{status})}",
-        provider: "export const seedContentProvider={getStory:async id=>id==='original'?{id}:null}",
+        provider: "export const seedContentProvider={getStory:async id=>id==='original'?{id}:null}; export function invalidateCorpus(){globalThis.__corpusInvalidations=(globalThis.__corpusInvalidations??0)+1}",
         auth: "export async function getSession(){return globalThis.__alelmSession ?? null}",
       })[args.path], loader: "js" }));
     } }],
@@ -338,7 +338,104 @@ try {
   await admin.query("update stories set status='published' where id='autosave-draft'");
   assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...autoInput,expectedVersion:2,title:'لا يطبق تلقائيا'})))).status,409);
   assert.equal((await withDb(()=>subject.getStory('autosave-draft'))).title,'عنوان بعد التوليد');
+  // Returning to draft saves current edits on the original, with permissions, history and cache invalidation.
+  const unpublishInput = {...autoInput, autosave:false, returnToDraft:true, expectedVersion:2, title:'تعديلات محفوظة بعد سحب النشر', slug:'must-not-change', section:'world'};
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest(unpublishInput)))).status,403);
+  const publisher = {...editor, can:key=>editor.can(key)||key==='story.publish'};
+  const latestOriginal=await withDb(()=>subject.getStory(input.id));
+  await assert.rejects(withDb(()=>subject.saveDraft({...input,returnToDraft:true,expectedVersion:latestOriginal.version},editor)), /صلاحية/);
+  const ineligible=await withDb(()=>subject.saveDraft({...input,id:'unpublish-ineligible'},editor));
+  await assert.rejects(withDb(()=>subject.saveDraft({...input,id:ineligible.id,returnToDraft:true,expectedVersion:ineligible.version},publisher)), /المنشورة فقط/);
+  await admin.query("insert into user_permissions(user_id,permission_key,effect) values('login-fixture','story.publish','allow')");
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...unpublishInput,autosave:true})))).status,400);
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...unpublishInput,expectedVersion:1})))).status,409);
+  const oldPublished = await withDb(()=>subject.getStory('autosave-draft'));
+  globalThis.__revalidatedPaths=[];
+  const invalidationsBefore=globalThis.__corpusInvalidations??0;
+  const unpublishResponse=await withDb(()=>subject.storySaveApi(autoRequest(unpublishInput)));
+  assert.equal(unpublishResponse.status,200);
+  const unpublished=await unpublishResponse.json();
+  assert.equal(unpublished.id,'autosave-draft');assert.equal(unpublished.status,'draft');assert.equal(unpublished.version,3);
+  const unpublishedRow=await withDb(()=>subject.getStory(unpublished.id));
+  assert.equal(unpublishedRow.title,unpublishInput.title);
+  for(const key of ['slug','section','authorId','authorName','publishedAt']) assert.equal(unpublishedRow[key],oldPublished[key]);
+  assert.equal(unpublishedRow.scheduledAt,null);assert.equal(unpublishedRow.revisionOf,null);
+  assert.equal(await withDb(()=>subject.publicContentProvider.getStory(unpublished.id)),null);
+  const previous=(await admin.query("select data from story_versions where story_id='autosave-draft'")).rows;
+  assert.equal(previous.length,1);assert.equal(previous[0].data.story.title,oldPublished.title);
+  assert.equal(previous[0].data.story.status,'published');
+  assert.equal((await admin.query("select count(*)::int n from audit_log where story_id='autosave-draft' and action='story:unpublish'")).rows[0].n,1);
+  assert.ok(globalThis.__revalidatedPaths.includes('/health/autosave-draft/draft-completed'));
+  assert.equal(globalThis.__corpusInvalidations,invalidationsBefore+1);
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...unpublishInput,expectedVersion:3})))).status,409);
+  const republished=await withDb(()=>subject.publishCheckedStory(unpublishedRow,'publisher','republish test'));
+  assert.equal(republished.id,unpublished.id);
+  assert.equal((await withDb(()=>subject.getStory(unpublished.id))).status,'published');
+  // Competing writes cannot both withdraw the same version or create duplicate history.
+  const competing=await Promise.all([1,2].map(()=>withDb(()=>subject.storySaveApi(autoRequest({...unpublishInput,expectedVersion:republished.version})))));
+  assert.deepEqual(competing.map(response=>response.status).sort(),[200,409]);
+  assert.equal((await admin.query("select count(*)::int n from story_versions where story_id='autosave-draft'")).rows[0].n,2);
+  delete globalThis.__revalidatedPaths;delete globalThis.__corpusInvalidations;
+  checks++;
   globalThis.__alelmSession = priorSession; checks++;
+  // Editorial collaboration uses real transactions, live assignment permissions and private notices.
+  await admin.query(`insert into roles(id,label,description,created_at,updated_at) values ('team_editor','محرر اختبار','test',now()::text,now()::text) on conflict do nothing`);
+  await admin.query(`insert into role_permissions(role_id,permission_key) values ('team_editor','story.edit.own') on conflict do nothing`);
+  for (const id of ['team-owner','team-assignee','team-outsider']) await admin.query(`insert into users(id,username,display_name,password_hash,role,created_at) values ($1,$1,$1,'not-a-login','team_editor',now()::text)`,[id]);
+  subject.invalidateRoleCache();
+  const teamActor = id => ({ ...editor, userId:id, username:id, displayName:id });
+  const manager = { ...teamActor('manager'), can: () => true };
+  const owner = teamActor('team-owner'), assignee = teamActor('team-assignee'), outsider = teamActor('team-outsider');
+  const teamDraft = { id:'team-draft', title:'مادة تجريبية للتعاون', body:'متن للمراجعة', excerpt:'موجز', section:'news', seriesSlug:null, image:null };
+  await withDb(()=>subject.saveDraft(teamDraft,owner));
+  await assert.rejects(withDb(()=>subject.readTeam(teamDraft.id,outsider)), error=>error.status===403);
+  await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,owner,{action:'assign',assignedTo:assignee.userId,dueAt:null,expectedVersion:1})), error=>error.status===403);
+  await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,manager,{action:'assign',assignedTo:'missing',dueAt:null,expectedVersion:1})), error=>error.status===400);
+  const assignment = {action:'assign',assignedTo:assignee.userId,dueAt:'2026-09-09T09:00:00.000Z',expectedVersion:1};
+  await withDb(()=>subject.changeTeam(teamDraft.id,manager,assignment));
+  const team = await withDb(()=>subject.readTeam(teamDraft.id,assignee));
+  assert.equal(team.assignedTo,assignee.userId); assert.equal(team.version,2);
+  assert.equal((await withDb(()=>subject.myNotifications(assignee))).length,1);
+  assert.equal((await withDb(()=>subject.myNotifications(outsider))).length,0);
+  await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,manager,assignment)),error=>error.status===409);
+  // The assigned editor can save without acquiring access to other authors' stories.
+  await withDb(()=>subject.saveDraft({...teamDraft,expectedVersion:2,body:'تعديل المحرر المسند'},assignee));
+  await withDb(()=>subject.saveDraft({...teamDraft,id:'team-private'},owner));
+  await assert.rejects(withDb(()=>subject.saveDraft({...teamDraft,id:'team-private',expectedVersion:1},assignee)),error=>error.status===403);
+  await withDb(()=>subject.changeTeam(teamDraft.id,assignee,{action:'comment',body:'راجع المصدر الرسمي قبل النشر https://example.org/source'}));
+  assert.equal((await withDb(()=>subject.readTeam(teamDraft.id,owner))).notes.length,1);
+  assert.equal((await withDb(()=>subject.myNotifications(owner))).length,1);
+  checks++;
+  let teamStory = await withDb(()=>subject.getStory(teamDraft.id));
+  await withDb(()=>subject.setStatus(teamStory,'review',owner.username));
+  const returnInput={action:'return',body:'راجع الأرقام الواردة في الفقرة الثانية.',expectedVersion:4};
+  await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,assignee,returnInput)),error=>error.status===403);
+  const returnAttempts = await Promise.allSettled([1,2].map(()=>withDb(()=>subject.changeTeam(teamDraft.id,manager,returnInput))));
+  assert.equal(returnAttempts.filter(result=>result.status==='fulfilled').length,1);
+  teamStory=await withDb(()=>subject.getStory(teamDraft.id));
+  assert.equal(teamStory.status,'draft'); assert.ok(teamStory.returnedAt); assert.equal(teamStory.version,5);
+  assert.equal((await withDb(()=>subject.readTeam(teamDraft.id,assignee))).notes.filter(note=>note.kind==='return').length,1);
+  await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,manager,{...returnInput,expectedVersion:5})),error=>error.status===409);
+  await withDb(()=>subject.setStatus(teamStory,'review',assignee.username));
+  assert.equal((await withDb(()=>subject.getStory(teamDraft.id))).returnedAt,null);
+  checks++;
+  const ownerSession=crypto.randomUUID(), assigneeSession=crypto.randomUUID();
+  assert.deepEqual(await withDb(()=>subject.updatePresence(teamDraft.id,owner,ownerSession)),[]);
+  assert.equal((await withDb(()=>subject.updatePresence(teamDraft.id,assignee,assigneeSession)))[0].userId,owner.userId);
+  assert.equal((await withDb(()=>subject.updatePresence(teamDraft.id,owner,crypto.randomUUID()))).length,2);
+  await assert.rejects(withDb(()=>subject.updatePresence(teamDraft.id,outsider,crypto.randomUUID())),error=>error.status===403);
+  await admin.query("update editorial_presence set seen_at=$1",[new Date(Date.now()-80_000).toISOString()]);
+  assert.deepEqual(await withDb(()=>subject.updatePresence(teamDraft.id,assignee,assigneeSession)),[]);
+  await withDb(()=>subject.leavePresence(outsider,assigneeSession));
+  assert.equal((await admin.query("select count(*)::int n from editorial_presence where session_id=$1",[assigneeSession])).rows[0].n,1);
+  await withDb(()=>subject.leavePresence(assignee,assigneeSession));
+  assert.equal((await admin.query("select count(*)::int n from editorial_presence where session_id=$1",[assigneeSession])).rows[0].n,0);
+  // Revoking an assignment removes both write access and visibility of prior notifications.
+  teamStory=await withDb(()=>subject.getStory(teamDraft.id));
+  await withDb(()=>subject.changeTeam(teamDraft.id,manager,{...assignment,assignedTo:null,expectedVersion:teamStory.version}));
+  await assert.rejects(withDb(()=>subject.readTeam(teamDraft.id,assignee)),error=>error.status===403);
+  assert.deepEqual(await withDb(()=>subject.myNotifications(assignee)),[]);
+  checks++;
   console.log(`PostgreSQL workflow integration: ${checks} checks passed (including concurrent publish and shared limits).`);
 } finally {
   await admin.end();

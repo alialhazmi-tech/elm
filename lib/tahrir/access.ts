@@ -160,9 +160,9 @@ export async function requireActor(options: { allowTemporaryPassword?: boolean }
  * تحرير مادة: صاحبها بـ story.edit.own، وغيره بـ story.edit.any.
  * الملكية بمعرف المستخدم الثابت؛ الاسم المعروض ليس إثبات ملكية.
  */
-export function canEditStory(actor: Actor, story: { authorId: string | null } | null): boolean {
+export function canEditStory(actor: Actor, story: { authorId: string | null; assignedTo?: string | null } | null): boolean {
   if (actor.mustChangePassword) return false;
   if (story && actor.can("story.edit.any")) return true;
   if (!story) return actor.can("story.create");
-  return actor.can("story.edit.own") && story.authorId === actor.userId;
+  return actor.can("story.edit.own") && (story.authorId === actor.userId || story.assignedTo === actor.userId);
 }

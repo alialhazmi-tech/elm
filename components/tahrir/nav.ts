@@ -1,4 +1,6 @@
 import {
+  BookOpenIcon,
+  ClipboardListIcon,
   BarChart3Icon,
   CalendarClockIcon,
   CheckCheckIcon,
@@ -26,6 +28,7 @@ export interface NavItem {
   icon: LucideIcon;
   /** بند ظاهر للتعريف فقط، بلا تنقّل حتى إطلاقه. */
   comingSoon?: boolean;
+  experimental?: boolean;
   /** المفتاح الذي يُقرأ منه العدد الحي في الشارة. */
   badge?: NavBadgeKey;
   /** الشارة بلون الهوية (الاعتماد) بدل الرمادي. */
@@ -50,6 +53,8 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "العمل اليومي",
     items: [
       { title: "نظرة اليوم", href: "/tahrir", icon: LayoutDashboardIcon, exact: true },
+      { title: "مهامي", href: "/tahrir/tasks", icon: ClipboardListIcon },
+      { title: "دليل الاستخدام", href: "/tahrir/help", icon: BookOpenIcon },
       { title: "المواد", href: "/tahrir/stories", icon: ListIcon, badge: "total" },
       { title: "المحرر", href: "/tahrir/editor/new", icon: PenLineIcon, match: "/tahrir/editor" },
       { title: "الجدولة", href: "/tahrir/schedule", icon: CalendarClockIcon, badge: "scheduled", permission: "story.schedule" },
@@ -76,7 +81,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "الذكاء الاصطناعي",
     items: [
-      { title: "استوديو الإنفوجرافيك", href: "/tahrir/infographics", icon: BarChart3Icon, permission: "ai.infographic" },
+      { title: "استوديو الإنفوجرافيك", href: "/tahrir/infographics", icon: BarChart3Icon, permission: "ai.infographic", experimental: true },
       { title: "توليد الصور", href: "/tahrir/ai-images", icon: SparklesIcon, permission: "ai.image" },
       { title: "إعدادات الذكاء", href: "/tahrir/ai-settings", icon: Settings2Icon, permission: "ai.settings" },
     ],

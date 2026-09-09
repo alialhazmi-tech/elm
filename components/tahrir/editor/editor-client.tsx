@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ExternalLinkIcon, SaveIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
+import { ExternalLinkIcon, FilePenLineIcon, SaveIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
 
 import { StatusPill } from "@/components/tahrir/badges";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -22,6 +22,8 @@ import { uploadStoryImageFile } from "@/lib/story-image-upload";
 import { useDraftRecovery } from "@/components/tahrir/use-draft-recovery";
 import { useDraftAutosave } from "@/components/tahrir/use-draft-autosave";
 
+import { TeamPanel, EditorPresence } from "./team-panel";
+import { ArticlePreview } from "./article-preview";
 import { AiPanel } from "./ai-panel";
 import { FieldGenerator } from "./field-generator";
 import { MetadataGenerator } from "./metadata-generator";
@@ -48,6 +50,7 @@ interface EditorInitial {
   breakingUntil: string | null;
   status: string;
   publishedAt?: string | null;
+  updatedAt?: string | null;
   seoTitle: string;
   seoDescription: string;
   keywords: string[];
@@ -61,6 +64,7 @@ interface Props {
   actorId: string;
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
+  canSubmit?: boolean;
   guardControls: GuardControls;
   series: Array<{ slug: string; name: string; color: string }>;
   sections: Array<[string, string]>;
@@ -124,7 +128,7 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * محرر المادة — المنطق (الحارس الحي، الحفظ، سير الاعتماد، التحرير الشامل المبثوث) كما هو منذ المرحلة
  * الأولى؛ الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ actorId, canApprove, guardControls, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ actorId, canApprove, canSubmit = true, guardControls, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const versionRef = useRef(initial?.version ?? 0);
   const [revisionOf, setRevisionOf] = useState(initial?.revisionOf ?? null);
@@ -163,6 +167,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
   const [busy, setBusy] = useState(false);
   const [workflowBusy, setWorkflowBusy] = useState(false);
   const saveLock = useRef(false);
+  const navigating = useRef(false);
   const saveId = useRef(initial?.id ?? "");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const guardSequence = useRef(0);
@@ -454,7 +459,14 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
     setMessage({ kind: "ok", text: "طُبّق التحرير الشامل — راجع ثم احفظ؛ لا يُنشر شيء آليًا." });
   }
 
-  async function save(automatic = false): Promise<string | null> {
+  function returnToStories() {
+    navigating.current = true;
+    setWorkflowBusy(true);
+    router.replace("/tahrir/stories");
+    router.refresh();
+  }
+
+  async function save(automatic = false, returnToDraft = false): Promise<string | null> {
     if (saveLock.current || (automatic && workflowBusy)) return null;
     if (format === "videos" && !normalizeVideoUrl(videoUrl)) {
       setInspectorTab("details");
@@ -470,8 +482,9 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
     try {
       const response = await fetch("/api/tahrir/story", {
         method: "POST",
+        signal: AbortSignal.timeout(30_000),
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...savedSnapshot, id: saveId.current, expectedVersion: versionRef.current, autosave: automatic, image: image || null, videoUrl: videoUrl.trim() || null }),
+        body: JSON.stringify({ ...savedSnapshot, id: saveId.current, expectedVersion: versionRef.current, autosave: automatic, returnToDraft, image: image || null, videoUrl: videoUrl.trim() || null }),
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.id || typeof data.version !== "number") {
@@ -495,9 +508,27 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       return data.id as string;
     } catch (cause) {
       autosave.markFailed();
-      setMessage({ kind: "err", text: cause instanceof Error ? cause.message : "تعذر الحفظ. بقيت تعديلاتك في المحرر." });
+      setMessage({ kind: "err", text: cause instanceof Error && cause.name !== "TimeoutError" ? cause.message : "تعذر تأكيد الحفظ. بقيت تعديلاتك في المحرر؛ تحقق من آخر نسخة في تبويب آخر قبل إعادة المحاولة." });
       return null;
     } finally { saveLock.current = false; setBusy(false); }
+  }
+
+  async function saveManually() {
+    if (busy || workflowBusy || saveLock.current) return;
+    if (status === "published" && canApprove) return publish();
+    const updatingPublishedStory = status === "published";
+    setWorkflowBusy(true);
+    try {
+      if (await save() && updatingPublishedStory) returnToStories();
+    } finally { if (!navigating.current) setWorkflowBusy(false); }
+  }
+
+  async function returnToDraft() {
+    if (!canApprove || status !== "published" || busy || workflowBusy || saveLock.current) return;
+    setWorkflowBusy(true);
+    try {
+      if (await save(false, true)) returnToStories();
+    } finally { if (!navigating.current) setWorkflowBusy(false); }
   }
 
   async function submitForReview() {
@@ -510,6 +541,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       setBusy(true);
       const response = await fetch("/api/tahrir/story/submit", {
         method: "POST",
+        signal: AbortSignal.timeout(30_000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current }),
       }).catch(() => null);
@@ -547,6 +579,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       setBusy(true);
       const response = await fetch("/api/tahrir/story/schedule", {
         method: "POST",
+        signal: AbortSignal.timeout(30_000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current, scheduledAt: new Date(scheduleAt).toISOString() }),
       }).catch(() => null);
@@ -573,6 +606,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       setBusy(true);
       const response = await fetch("/api/tahrir/story/publish", {
         method: "POST",
+        signal: AbortSignal.timeout(30_000),
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: savedId, expectedVersion: versionRef.current }),
       }).catch(() => null);
@@ -580,7 +614,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
 
       const data = await response?.json().catch(() => null);
       if (!response?.ok) {
-        setMessage({ kind: "err", text: data?.error ?? "تعذر النشر." });
+        setMessage({ kind: "err", text: data?.error ?? "تعذر تأكيد النشر. تحقق من حالة المادة في تبويب آخر قبل إعادة المحاولة." });
         return;
       }
       versionRef.current = data.version;
@@ -589,9 +623,8 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
       setRevisionOf(null);
       setStatus("published");
       setMessage({ kind: "ok", text: "نُشرت المادة على الموقع." });
-      router.replace(`/tahrir/editor/${data.id}`);
-      router.refresh();
-    } finally { setWorkflowBusy(false); }
+      returnToStories();
+    } finally { if (!navigating.current) setWorkflowBusy(false); }
   }
 
   const titleWords = wordCount(title);
@@ -603,6 +636,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
 
   return (
     <div className="flex flex-col gap-3">
+      <EditorPresence key={`presence:${id}`} id={id || null} />
       {recovery.recovery ? <Alert><AlertDescription>وجدنا نسخة محلية تختلف عن آخر نسخة على الخادم. راجعها قبل الاستعادة. <Button variant="outline" onClick={restoreLocalDraft}>استعادة كتابتي</Button> <Button variant="ghost" onClick={() => recovery.dismiss()}>تجاهل النسخة</Button></AlertDescription></Alert> : null}
       {recovery.unavailable ? <Alert><AlertDescription>الحفظ الاحتياطي المحلي غير متاح في هذا المتصفح؛ تابع مؤشر الحفظ على الخادم قبل المغادرة.</AlertDescription></Alert> : null}
       {revisionOf ? <Alert><AlertDescription>مسودة تعديل على مادة معتمدة. لن تتغير النسخة العامة حتى اعتماد هذه المسودة ونشرها.</AlertDescription></Alert> : null}
@@ -610,8 +644,8 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
         <div className="flex flex-wrap items-center gap-2 px-3 py-2">
           <span className="text-[11px] text-muted-foreground">{initial ? "تحرير المادة" : "مادة جديدة"}</span>
           <StatusPill status={status} label={STATUS_LABELS[status] ?? status} />
-          <span role="status" aria-live="polite" className={cn("text-[11px]", autosave.state === "error" ? "text-destructive" : "text-muted-foreground")}>
-            {busy ? "جارٍ الحفظ على الخادم…" : autosave.state === "error" ? "لم يُحفظ على الخادم — أعد الحفظ يدويًا" : recovery.recovery ? "الحفظ التلقائي متوقف حتى مراجعة النسخة المحلية" : status !== "draft" ? "الحفظ التلقائي للمسودات؛ احفظ التعديل يدويًا" : autosave.dirty ? "تعديلات غير محفوظة — تُحفظ تلقائيًا بعد توقف الكتابة" : autosave.savedAt ? `محفوظ على الخادم · ${autosave.savedAt.toLocaleTimeString("ar-SA-u-ca-gregory-nu-latn", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : id ? "محفوظ على الخادم" : "الحفظ التلقائي على الخادم مفعّل"}
+          <span data-tour="save-status" role="status" aria-live="polite" className={cn("text-[11px]", autosave.state === "error" ? "text-destructive" : "text-muted-foreground")}>
+            {workflowBusy ? navigating.current ? "اكتملت العملية؛ جارٍ العودة إلى قائمة المواد…" : "جارٍ إتمام الإجراء على الخادم…" : busy ? "جارٍ الحفظ على الخادم…" : autosave.state === "error" ? "لم يُحفظ على الخادم — أعد الحفظ يدويًا" : recovery.recovery ? "الحفظ التلقائي متوقف حتى مراجعة النسخة المحلية" : status !== "draft" ? `الحفظ التلقائي للمسودات؛ احفظ التعديل يدويًا${initial?.updatedAt ? ` · آخر حفظ: ${new Date(initial.updatedAt).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh", dateStyle: "short", timeStyle: "short" })} (الرياض)` : ""}` : autosave.dirty ? "تعديلات غير محفوظة — تُحفظ تلقائيًا بعد توقف الكتابة" : autosave.savedAt ? `محفوظ على الخادم · ${autosave.savedAt.toLocaleTimeString("ar-SA-u-ca-gregory-nu-latn", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}` : id ? initial?.updatedAt ? `محفوظ على الخادم · ${new Date(initial.updatedAt).toLocaleString("ar-SA-u-ca-gregory-nu-latn", { timeZone: "Asia/Riyadh" })}` : "محفوظ على الخادم" : "الحفظ التلقائي على الخادم مفعّل"}
           </span>
           <span title={allGatesDisabled ? "فحص السياسة التحريرية واشتراط توثيق حقوق الصور معطّلان من إعدادات النظام. النشر يظل متاحًا لمن يملك الصلاحية." : undefined} className={cn("inline-flex items-center gap-1.5 border-s ps-2 text-xs", allGatesDisabled ? "text-(--t-warn)" : gateOpen ? "text-(--t-ok)" : guardBusy ? "text-muted-foreground" : "text-(--t-block)")}>
             <ShieldCheckIcon className="size-3.5" />
@@ -624,6 +658,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
                   : `${blocking} مخالفة قاطعة`}
           </span>
           <div className="ms-auto flex flex-wrap items-center gap-1.5">
+            <ArticlePreview getDraft={() => ({ title, excerpt, body: richRef.current?.getHtml() ?? body, image, section: sections.find(([key]) => key === section)?.[1] ?? section })} />
             {publicHref ? (
               <Button asChild size="sm" variant="ghost">
                 <Link href={publicHref} target="_blank" rel="noreferrer">
@@ -632,11 +667,17 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
                 </Link>
               </Button>
             ) : null}
-            <Button size="sm" variant="outline" onClick={() => void save()} disabled={busy || workflowBusy}>
+            {canApprove && status === "published" ? (
+              <Button size="sm" variant="secondary" onClick={returnToDraft} disabled={busy || workflowBusy} title="حفظ التعديلات وإخفاء المادة عن الموقع حتى نشرها مجددًا">
+                <FilePenLineIcon data-icon="inline-start" />
+                تحويل إلى مسودة
+              </Button>
+            ) : null}
+            <Button size="sm" variant="outline" onClick={saveManually} disabled={busy || workflowBusy || (status === "published" && canApprove && !gateOpen)}>
               <SaveIcon data-icon="inline-start" />
-              {busy ? "يحفظ…" : status === "published" ? "تحديث المادة" : "حفظ المسودة"}
+              {busy ? "يحفظ…" : status === "published" ? canApprove ? "تحديث المادة" : "حفظ مسودة التعديل" : "حفظ المسودة"}
             </Button>
-            {status !== "published" && status !== "archived" ? (
+            {canSubmit && status !== "published" && status !== "archived" ? (
               <Button size="sm" variant="secondary" onClick={submitForReview} disabled={!gateOpen || busy || workflowBusy} title={gateOpen ? undefined : "البوابة مغلقة حتى يكتمل الحارس بلا مخالفة قاطعة"}>
                 <SendIcon data-icon="inline-start" className="rtl:-scale-x-100" />
                 إرسال للاعتماد
@@ -650,6 +691,8 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
           </div>
         </div>
       </Card>
+
+      <TeamPanel key={`team:${id}`} id={id || null} status={status} locked={busy || workflowBusy || status === "archived"} dirty={autosave.dirty} getVersion={() => versionRef.current} onVersion={value => { versionRef.current = value; }} onReturn={returnToStories} />
 
       {/* حقل الرفع المخفي يعيش هنا مع منطق الرفع؛ اللوحة تطلبه بنقرة فقط. */}
       <input
@@ -738,7 +781,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
                     </span>
                   ) : null}
                 </TabsTrigger>
-                <TabsTrigger value="ai">الذكاء</TabsTrigger>
+                <TabsTrigger data-tour="editor-ai" value="ai">الذكاء</TabsTrigger>
               </TabsList>
             </div>
             <div className="max-h-[calc(100vh-var(--header-height)-7rem)] overflow-y-auto">
@@ -801,9 +844,7 @@ export function EditorClient({ actorId, canApprove, guardControls, series, secti
                     setArchiveEvent({ at: new Date().toISOString(), actor: "", reason: "أُرشفت من المحرر" });
                   }}
                   onRestored={() => {
-                    window.location.reload();
-                    setStatus("draft");
-                    setArchiveEvent(null);
+                    returnToStories();
                   }}
                 />
               </TabsContent>

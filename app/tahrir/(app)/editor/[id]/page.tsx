@@ -38,6 +38,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
       {story && <Link className="mx-5 my-2 inline-block text-sm underline" href={`/tahrir/history/${story.revisionOf ?? story.id}`}>سجل النسخ واستعادتها</Link>}
       <EditorClient
         actorId={actor.userId}
+        canSubmit={actor.can("story.submit")}
         canApprove={actor?.can("story.publish") ?? false}
         guardControls={settings.governance}
         recentMedia={recentMedia}
@@ -61,6 +62,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 breakingUntil: story.breakingUntil,
                 status: story.status,
                 publishedAt: story.publishedAt,
+                updatedAt: story.updatedAt,
                 seoTitle: story.seoTitle ?? "",
                 seoDescription: story.seoDescription ?? "",
                 keywords: Array.isArray(story.keywords) ? (story.keywords as string[]) : [],

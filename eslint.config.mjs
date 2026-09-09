@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     "dist/**",
     "out/**",
     "build/**",
+    // مخرجات التشخيص والمعاينات المحلية المولّدة، وليست شيفرة التطبيق.
+    "tmp/**",
     "next-env.d.ts",
     // الكِت المرجعي لا يُفحص: نستنسخ منه ولا نبنيه.
     "shadcn-ui-kit-dashboard-main/**",

@@ -7,7 +7,7 @@ import { auditLog, stories, users } from "@/db/schema";
 import { stripHtmlToText } from "@/lib/content/html";
 import { getDb } from "@/lib/db";
 import { assertCanWrite, assertExpectedVersion, stableIdentity, StoryWriteError, type WriteActor } from "./write-policy";
-import { auditQuery, copySlides, copySource, lockStory, publishCheckedStory } from "./workflow";
+import { auditQuery, copySlides, copySource, lockStory, publishCheckedStory, snapshotQuery } from "./workflow";
 import { usernameEquals } from "./username";
 
 export type StoryRow = typeof stories.$inferSelect;
@@ -70,6 +70,7 @@ export async function getStory(id: string): Promise<StoryRow | null> {
 export interface DraftInput {
   id: string;
   expectedVersion?: number;
+  returnToDraft?: boolean;
   title: string;
   excerpt: string;
   body: string;
@@ -111,7 +112,11 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
   assertCanWrite(actor, existing);
   if (existing) assertExpectedVersion(existing.version, input.expectedVersion);
   if (existing?.status === "archived") throw new StoryWriteError("استعد المادة المؤرشفة قبل تحريرها.");
-  const fork = existing && ["published", "scheduled"].includes(existing.status);
+  if (input.returnToDraft) {
+    if (!actor.can("story.publish")) throw new StoryWriteError("التحويل إلى مسودة من صلاحية المعتمدين فقط.", 403);
+    if (existing?.status !== "published" || existing.revisionOf) throw new StoryWriteError("التحويل إلى مسودة متاح للمادة المنشورة فقط.");
+  }
+  const fork = !input.returnToDraft && existing && ["published", "scheduled"].includes(existing.status);
   const id = fork ? crypto.randomUUID() : input.id;
   // الحفظ التلقائي يبدأ مبكرًا؛ تبقى هوية المسودة الجديدة قابلة للاستكمال.
   // المنشور ومسودات تعديله يحافظان على الرابط والقسم المعتمدين.
@@ -136,8 +141,9 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
   }
   await db.batch([
     lockStory(existing),
+    ...(input.returnToDraft ? [snapshotQuery(id, actor.username)] : []),
     db.update(stories).set({ ...content, status: "draft", scheduledAt: null, version: existing.version + 1 }).where(eq(stories.id, id)),
-    auditQuery(actor.username, "draft:save", id),
+    auditQuery(actor.username, input.returnToDraft ? "story:unpublish" : "draft:save", id),
   ]);
   return { id, ...identity, version: existing.version + 1, status: "draft", revisionOf: existing.revisionOf };
 }
@@ -153,7 +159,7 @@ export async function setStatus(
   const db = requireDb();
   await db.batch([
     lockStory(checked),
-    db.update(stories).set({ status, updatedAt: new Date().toISOString(), version: checked.version + 1 }).where(eq(stories.id, checked.id)),
+    db.update(stories).set({ status, returnedAt: null, updatedAt: new Date().toISOString(), version: checked.version + 1 }).where(eq(stories.id, checked.id)),
     auditQuery(actor, `status:${status}`, checked.id, detail),
   ]);
   return { id: checked.id, slug: checked.slug, section: checked.section, version: checked.version + 1 };

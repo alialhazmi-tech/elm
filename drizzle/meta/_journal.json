@@ -85,6 +85,13 @@
       "when": 1788766280829,
       "tag": "0011_public_search",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788928352559,
+      "tag": "0012_editorial_team",
+      "breakpoints": true
     }
   ]
 }
