@@ -14,16 +14,17 @@ import { missingTextKeyMessage } from "@/lib/ai/provider-config";
 import { EditorialOutputError } from "@/lib/ai/output-error";
 import { loadAiSettings, type AiSettingsData } from "@/lib/ai/settings";
 import { budgetGate, costCents, logUsage } from "@/lib/ai/usage";
-import { requirePermission } from "@/lib/tahrir/access";
-import { audit } from "@/lib/tahrir/service";
+import { canEditStory, requirePermission } from "@/lib/tahrir/access";
+import { audit, getStory } from "@/lib/tahrir/service";
 
 interface EditorialInput {
+  storyId?: string;
   title: string;
   body: string;
   selection?: string;
 }
 
-async function recordUsage(tool: AiTool, result: AiResult, actor: string, reservationId?: string) {
+async function recordUsage(tool: AiTool, result: AiResult, actor: string, reservationId?: string, storyId?: string) {
   const parts = result.usages ?? [result.usage];
   const cents = parts.reduce(
     (sum, part) => sum + costCents(part.model, part.inputTokens, part.outputTokens),
@@ -38,7 +39,7 @@ async function recordUsage(tool: AiTool, result: AiResult, actor: string, reserv
     costCents: cents,
     actor,
   });
-  await audit(actor, `ai:${tool}`, undefined, `${parts.map((part) => part.model).join("+")} · ${cents}¢`).catch(() => console.error("AI_AUDIT_FAILED", { reservationId, tool }));
+  await audit(actor, `ai:${tool}`, storyId, `${parts.map((part) => part.model).join("+")} · ${cents}¢`).catch(() => console.error("AI_AUDIT_FAILED", { reservationId, tool }));
 }
 
 function errorMessage(error: unknown): string {
@@ -78,9 +79,10 @@ async function generate(tool: AiTool, input: EditorialInput, settings: AiSetting
       errorType: error instanceof Error ? error.name : "unknown", stage,
       providerStatus: error && typeof error === "object" && "status" in error && typeof error.status === "number" ? error.status : undefined,
       unmeasuredCents, completedCalls: usages.length });
+    if (input.storyId) await audit(actor, "ai:failed", input.storyId, `تعذر إكمال ${tool}`).catch(() => console.error("AI_AUDIT_FAILED", { tool }));
     throw error;
   }
-  await recordUsage(tool, result, actor, reservationId);
+  await recordUsage(tool, result, actor, reservationId, input.storyId);
   return result;
 }
 
@@ -151,6 +153,7 @@ export async function POST(request: Request) {
   const session = access.actor;
 
   const input = (await request.json().catch(() => null)) as {
+    storyId?: string;
     tool?: string;
     title?: string;
     body?: string;
@@ -162,6 +165,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "أداة غير معروفة." }, { status: 400 });
   }
 
+  if (input?.storyId !== undefined && (typeof input.storyId !== "string" || input.storyId.length > 100)) return NextResponse.json({ error: "معرف المادة غير صحيح." }, { status: 400 });
+  if (input?.storyId) {
+    const story = await getStory(input.storyId);
+    if (!story || !canEditStory(session, story)) return NextResponse.json({ error: "لا تملك صلاحية هذه المادة." }, { status: 403 });
+  }
   const settings = await loadAiSettings();
   const toolKey = tool === "proofread" ? "proofread" : tool;
   if (!settings.tools[toolKey as keyof typeof settings.tools]) {
@@ -172,6 +180,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "المادة أطول من الحد المتاح للتحليل الكامل حاليًا؛ قسّمها قبل إعادة المحاولة." }, { status: 400 });
   }
   const normalizedInput: EditorialInput = {
+    storyId: input?.storyId || undefined,
     title: typeof input?.title === "string" ? input.title.slice(0, 500) : "",
     body: typeof input?.body === "string" ? input.body.slice(0, 40_000) : "",
     selection: typeof input?.selection === "string" ? input.selection.slice(0, 8_000) : undefined,
@@ -183,8 +192,12 @@ export async function POST(request: Request) {
   if (!normalizedInput.body.trim()) return NextResponse.json({ error: "أضف متن المادة أولًا." }, { status: 400 });
   if (!textClient()) return NextResponse.json({ error: missingTextKeyMessage() }, { status: 503 });
   if (request.signal.aborted) return new Response(null, { status: 499 });
+  if (normalizedInput.storyId) await audit(session.username, "ai:started", normalizedInput.storyId, tool);
   const gate = await budgetGate(settings.caps, editorialReservationCents(tool, normalizedInput, settings));
-  if (!gate.ok) return NextResponse.json({ error: gate.reason }, { status: 429 });
+  if (!gate.ok) {
+    if (normalizedInput.storyId) await audit(session.username, "ai:blocked", normalizedInput.storyId, tool);
+    return NextResponse.json({ error: gate.reason }, { status: 429 });
+  }
 
   if (tool === "full_edit" && request.headers.get("accept")?.includes("application/x-ndjson")) {
     return streamFullEdit(request, normalizedInput, settings, session.username, gate.reservationId);

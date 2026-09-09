@@ -1,7 +1,8 @@
 import { eq, sql, getTableColumns } from "drizzle-orm";
-import { auditLog, stories, storyVersions } from "@/db/schema";
+import { stories, storyVersions } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { assertCanWrite, assertExpectedVersion, StoryWriteError, type WriteActor } from "./write-policy";
+import { fieldChanges, type StoryAuditOptions } from "./story-audit";
 
 export type WorkflowStory = typeof stories.$inferSelect;
 export function workflowDb() {
@@ -15,8 +16,16 @@ export function lockStory(story: Pick<WorkflowStory, "id" | "version" | "status"
   return workflowDb().execute(sql`select alelm_assert_story_version(${story.id}, ${story.version}, ${story.status})`);
 }
 
-export function auditQuery(actor: string, action: string, storyId: string, detail = "") {
-  return workflowDb().insert(auditLog).values({ id: crypto.randomUUID(), at: new Date().toISOString(), actor, action, storyId, detail });
+export function auditQuery(actor: string, action: string, storyId: string, detail = "", options: StoryAuditOptions = {}) {
+  const changes = fieldChanges(options.before, options.after);
+  const references = changes.filter(change => ["assignedTo", "authorId"].includes(change.field)).flatMap(change => [change.before, change.after]).filter((value): value is string => typeof value === "string");
+  return workflowDb().execute(sql`insert into audit_log(id,at,actor,action,story_id,detail,context)
+    values(${crypto.randomUUID()},${new Date().toISOString()},${actor},${action},${storyId},${detail},
+      jsonb_build_object('v',1,'actorId',(select id from users where username=${actor} limit 1),
+        'actorName',coalesce((select display_name from users where username=${actor} limit 1),${actor}),
+        'rootStoryId',coalesce(${options.rootStoryId ?? null}::text,(select coalesce(revision_of,id) from stories where id=${storyId}),${storyId}),
+        'references',coalesce((select jsonb_object_agg(id,display_name) from users where id in (select jsonb_array_elements_text(${JSON.stringify(references)}::jsonb))),'{}'::jsonb))
+      || ${JSON.stringify({ changes, ...(options.saveMode ? { saveMode: options.saveMode } : {}) })}::jsonb)`);
 }
 
 export function snapshotQuery(id: string, actor: string) {
@@ -55,7 +64,7 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
     await db.batch([
       lockStory(story),
       db.update(stories).set({ status: "published", returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null, updatedAt: now, version: story.version + 1 }).where(eq(stories.id, story.id)),
-      auditQuery(actor, "status:published", story.id, detail),
+      auditQuery(actor, "status:published", story.id, detail, { before: story, after: { status: "published", returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null } }),
     ]);
     return { id: story.id, slug: story.slug, section: story.section, version: story.version + 1 };
   }
@@ -74,7 +83,8 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
     db.execute(sql`delete from story_slides where story_id=${original.id}`),
     copySlides(story.id, original.id), copySource(story.id, original.id),
     db.update(stories).set({ status: "archived", scheduledAt: null, version: story.version + 1, updatedAt: now }).where(eq(stories.id, story.id)),
-    auditQuery(actor, "revision:published", original.id, `${detail} · ${story.id}`),
+    auditQuery(actor, "revision:published", original.id, `${detail} · ${story.id}`, { before: original, after: { ...content, authorId: original.authorId, authorName: original.authorName, slug: original.slug, section: original.section, status: "published", returnedAt: null, publishedAt: original.publishedAt ?? now, scheduledAt: null } }),
+    auditQuery(actor, "revision:merged", story.id, "اعتماد مسودة التعديل ودمجها في المادة الأصلية", { before: story, after: { status: "archived", scheduledAt: null } }),
   ]);
   return { id: original.id, slug: original.slug, section: original.section, version: original.version + 1 };
 }
@@ -100,7 +110,7 @@ export async function restoreStoryVersion(story: WorkflowStory, versionId: strin
       select gen_random_uuid()::text, ${id}, position,type,title,body,stat,stat_label,image,image_style,image_prompt,source_context,hidden,data
       from jsonb_populate_recordset(null::story_slides, ${JSON.stringify(snapshot.slides)}::jsonb)`),
     db.execute(sql`insert into jak_sources(story_id,source,updated_at) values(${id},${snapshot.source ?? ""},${now})`),
-    auditQuery(actor.username, "revision:restore", id, `${story.id} · version ${version.version}`),
+    auditQuery(actor.username, "revision:restore", id, `استعادة النسخة ${version.version}`, { rootStoryId: story.id, before: story, after: { ...previous, assignedTo: story.assignedTo, dueAt: story.dueAt, returnedAt: null, status: "draft", authorId: actor.userId, authorName: actor.displayName, revisionOf: story.id, scheduledAt: null } }),
   ]);
   return { id, version: 1, format: previous.format };
 }

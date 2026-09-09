@@ -85,6 +85,7 @@ async function saveStory(request: Request) {
     {
       id,
       expectedVersion: input.expectedVersion,
+      autosave: automatic,
       returnToDraft,
       title: input.title.trim(),
       excerpt: input.excerpt?.trim() ?? "",

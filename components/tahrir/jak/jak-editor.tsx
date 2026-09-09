@@ -9,6 +9,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { StoryTimeline } from "@/components/tahrir/story-timeline";
 import {
   ArchiveIcon,
   ArchiveRestoreIcon,
@@ -924,6 +925,7 @@ export function JakEditor({ actorId, canApprove, sections, recentMedia, initial 
           ) : null}
 
           <Card className="gap-2 p-3">
+            <StoryTimeline id={id || null} />
             <div className="grid gap-1.5">
               <Button variant="outline" onClick={save} disabled={busy}>
                 {status === "published" ? "تحديث المنشور" : "حفظ جاك العلم"}

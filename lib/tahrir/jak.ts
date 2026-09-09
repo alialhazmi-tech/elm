@@ -235,6 +235,9 @@ export async function replaceSlides(
   if (!["draft", "review"].includes(story.status)) throw new StoryWriteError("احفظ مسودة مراجعة قبل تعديل الشرائح.");
   const now = new Date().toISOString();
   const sourceToSave = source?.trim();
+  const previousSlides = await listSlides(storyId);
+  const previousSource = sourceToSave ? await getJakSource(storyId) : undefined;
+  const timeline = () => auditQuery(actor.username, "jak:slides-save", storyId, "حفظ ترتيب الشرائح ومحتواها", { before: { ...story, slides: previousSlides, source: previousSource }, after: { body: projectSlides(slides), status: "draft", slides, ...(sourceToSave ? { source: sourceToSave } : {}) } });
   const deleteSlides = () => db.delete(storySlides).where(eq(storySlides.storyId, storyId));
   const updateStory = () => db
     .update(stories)
@@ -269,13 +272,13 @@ export async function replaceSlides(
   // neon-http لا يدعم المعاملات التفاعلية، وbatch ينفذ الاستعلامات
   // كمعاملة HTTP واحدة غير تفاعلية مع الحفاظ على ذرية الاستبدال.
   if (slides.length > 0 && sourceToSave) {
-    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), insertSlides(), updateStory(), upsertSource()]);
+    await db.batch([lockStory(story), timeline(), deleteSlides(), insertSlides(), updateStory(), upsertSource()]);
   } else if (slides.length > 0) {
-    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), insertSlides(), updateStory()]);
+    await db.batch([lockStory(story), timeline(), deleteSlides(), insertSlides(), updateStory()]);
   } else if (sourceToSave) {
-    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), updateStory(), upsertSource()]);
+    await db.batch([lockStory(story), timeline(), deleteSlides(), updateStory(), upsertSource()]);
   } else {
-    await db.batch([lockStory(story), auditQuery(actor.username, "jak:slides-save", storyId), deleteSlides(), updateStory()]);
+    await db.batch([lockStory(story), timeline(), deleteSlides(), updateStory()]);
   }
 
   return { version: story.version + 1 };

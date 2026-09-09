@@ -12,8 +12,8 @@ const output = await build({ stdin: { contents: "export {POST} from './app/api/t
       '@/lib/ai/text-client': `export const textClient=()=>globalThis.__aiTest.key?{}:null;`,
       '@/lib/ai/provider-config': `export const missingTextKeyMessage=()=>"مفتاح غير مضبوط";`,
       '@/lib/ai/usage': `export const costCents=(_m,i,o)=>i+o; export const budgetGate=async(caps,estimate)=>{globalThis.__aiTest.reservations.push({caps,estimate});return {ok:true,reservationId:'reserved'}}; export const logUsage=async entry=>globalThis.__aiTest.entries.push(entry);`,
-      '@/lib/tahrir/access': `export const requirePermission=async()=>({ok:true,actor:{username:'tester'}});`,
-      '@/lib/tahrir/service': `export const audit=async()=>{if(globalThis.__aiTest.auditFails)throw new Error('audit down')};`,
+      '@/lib/tahrir/access': `export const requirePermission=async()=>({ok:true,actor:{username:'tester'}}); export const canEditStory=(_actor,story)=>story?.id==='allowed';`,
+      '@/lib/tahrir/service': `export const getStory=async id=>id==='allowed'?{id}:null; export const audit=async(...args)=>{if(globalThis.__aiTest.auditFails)throw new Error('audit down');globalThis.__aiTest.audits.push(args)};`,
     };
     builder.onResolve({ filter: /^@\// }, args => sources[args.path] ? { path: args.path, namespace: 'mock' } : undefined);
     builder.onLoad({ filter: /.*/, namespace: 'mock' }, args => ({ contents: sources[args.path], loader: 'js' }));
@@ -23,7 +23,7 @@ new Function('require', 'module', 'exports', output.outputFiles[0].text)(createR
 const post = (tool='metadata', body='نص المصدر') => compiled.exports.POST(new Request('http://localhost/api/tahrir/ai/assist', { method:'POST',headers:{'Content-Type':'application/json',Accept:'application/x-ndjson'},body:JSON.stringify({tool,body,title:'المصدر'}) }));
 const usage = { model:'fast',inputTokens:2,outputTokens:3 };
 async function isolated(fn) {
-  globalThis.__aiTest={settings,key:true,reservations:[],entries:[],run:async()=>({suggestions:[],usage})};
+  globalThis.__aiTest={settings,key:true,reservations:[],entries:[],audits:[],run:async()=>({suggestions:[],usage})};
   const log=console.error; const logs=[]; console.error=(...args)=>logs.push(args);
   try {await fn(globalThis.__aiTest,logs);}finally{console.error=log;delete globalThis.__aiTest;}
 }
@@ -81,4 +81,12 @@ test('full-edit response sends heartbeat while working then settles and returns 
     assert.equal((await reader.read()).done,true);assert.equal(cleared,true);
     assert.equal(state.entries.length,1);assert.equal(state.entries[0].costCents,5);
   }finally{globalThis.setInterval=set;globalThis.clearInterval=clear;}
+}));
+
+test('story-linked AI events require live story access and use the authenticated actor',()=>isolated(async state=>{
+  const request=id=>new Request('http://localhost/api/tahrir/ai/assist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tool:'metadata',body:'نص المصدر',storyId:id,actor:'forged'})});
+  assert.equal((await compiled.exports.POST(request('private'))).status,403);
+  assert.equal(state.reservations.length,0);assert.equal(state.audits.length,0);
+  assert.equal((await compiled.exports.POST(request('allowed'))).status,200);
+  assert.deepEqual(state.audits.map(row=>row.slice(0,3)),[['tester','ai:started','allowed'],['tester','ai:metadata','allowed']]);
 }));

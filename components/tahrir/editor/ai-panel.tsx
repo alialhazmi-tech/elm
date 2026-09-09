@@ -22,7 +22,7 @@ interface AssistResult {
 
 interface Props {
   guardEnabled: boolean;
-  getDraft: () => { title: string; body: string; selection?: string };
+  getDraft: () => { storyId?: string; title: string; body: string; selection?: string };
   onInsertTitle: (text: string) => void;
   onInsertExcerpt: (text: string) => void;
   onReplaceBody: (text: string, selectionOnly: boolean) => void;

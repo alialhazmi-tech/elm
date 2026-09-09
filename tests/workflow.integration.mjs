@@ -36,7 +36,7 @@ try {
   await migrate(drizzle(admin), { migrationsFolder: "drizzle" }); // idempotent replay
   await admin.query("truncate user_permissions, role_permissions, roles, stories, story_slides, jak_sources, story_versions, audit_log, request_limits, ai_usage, ai_settings, users, member_saved_stories, member_likes, newsletter_subscribers, member_profiles, interests, member_interests, member_topic_scores, member_story_stats, member_events cascade");
   await build({
-    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export * from './lib/tahrir/editorial-team'; export { invalidateRoleCache, loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
+    stdin: { contents: `export { POST as storySaveApi } from './app/api/tahrir/story/route'; export { POST as loginApi } from './app/api/tahrir/login/route'; export { GET as healthApi } from './app/api/health/route'; export * from './lib/tahrir/service'; export { replaceSlides } from './lib/tahrir/jak'; export * from './lib/tahrir/workflow'; export * from './lib/tahrir/write-policy'; export { consumeLimit } from './lib/tahrir/rate-limit'; export * from './lib/ai/usage'; export * from './lib/personalization/saved'; export { verifyMfa } from './lib/tahrir/mfa'; export { POST as subscribe } from './app/api/newsletter/route'; export { POST as saveApi } from './app/api/me/saved/route'; export { createMember, changeOwnPassword, resetMemberPassword, validatePassword } from './lib/tahrir/admin'; export * from './lib/tahrir/editorial-team'; export { storyTimeline } from './lib/tahrir/story-timeline'; export { invalidateRoleCache, loadActor } from './lib/tahrir/access'; export { saveMemberInterests, seedInterestCatalog, getMemberProfile } from './lib/membership/profile'; export { POST as profileApi } from './app/api/me/profile/route'; export { pageByKeyword, listSitemapEntries, seedContentProvider as publicContentProvider } from './lib/content/provider';`, resolveDir: process.cwd(), loader: "ts" },
     outfile: `${directory}/subject.mjs`, bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-db", setup(builder) {
       builder.onResolve({ filter: /^next\/cache$/ }, () => ({ path: "cache", namespace: "test" }));
@@ -338,6 +338,12 @@ try {
   await admin.query("update stories set status='published' where id='autosave-draft'");
   assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...autoInput,expectedVersion:2,title:'لا يطبق تلقائيا'})))).status,409);
   assert.equal((await withDb(()=>subject.getStory('autosave-draft'))).title,'عنوان بعد التوليد');
+  const autoAudit = (await admin.query("select action,context from audit_log where story_id='autosave-draft' order by at,id")).rows;
+  assert.equal(autoAudit.length, 2, 'rejected or conflicting saves must never create successful audit events');
+  const autoSaveAudit = autoAudit.find(row=>row.action==='draft:save').context;
+  assert.equal(autoSaveAudit.saveMode,'automatic');
+  assert.equal(autoSaveAudit.actorName,'Local fixture');
+  assert.deepEqual(autoSaveAudit.changes.find(change=>change.field==='title'),{field:'title',label:'العنوان',before:'',after:'عنوان بعد التوليد'});
   // Returning to draft saves current edits on the original, with permissions, history and cache invalidation.
   const unpublishInput = {...autoInput, autosave:false, returnToDraft:true, expectedVersion:2, title:'تعديلات محفوظة بعد سحب النشر', slug:'must-not-change', section:'world'};
   assert.equal((await withDb(()=>subject.storySaveApi(autoRequest(unpublishInput)))).status,403);
@@ -431,6 +437,35 @@ try {
   assert.equal((await admin.query("select count(*)::int n from editorial_presence where session_id=$1",[assigneeSession])).rows[0].n,1);
   await withDb(()=>subject.leavePresence(assignee,assigneeSession));
   assert.equal((await admin.query("select count(*)::int n from editorial_presence where session_id=$1",[assigneeSession])).rows[0].n,0);
+  // Story timelines retain server identity and field changes, paginate and enforce each revision's permissions.
+  const beforeTimeline = (await admin.query("select count(*)::int n from audit_log")).rows[0].n;
+  const timeline = await withDb(()=>subject.storyTimeline(teamDraft.id,assignee));
+  assert.ok(timeline.events.some(event=>event.action==='story:assign' && event.fields.includes('المحرر المسؤول')));
+  assert.ok(timeline.events.every(event=>!('changes' in event)));
+  assert.equal((await admin.query("select count(*)::int n from audit_log")).rows[0].n,beforeTimeline);
+  const assignedEvent=timeline.events.find(event=>event.action==='story:assign');
+  const detail=await withDb(()=>subject.storyTimeline(teamDraft.id,assignee,{eventId:assignedEvent.id}));
+  assert.equal(detail.events[0].changes.find(change=>change.field==='assignedTo').after,assignee.userId);
+  assert.equal(detail.events[0].references[assignee.userId],'team-assignee');
+  await admin.query("update users set display_name='اسم جديد' where id='team-assignee'");
+  const renamed=await withDb(()=>subject.storyTimeline(teamDraft.id,assignee));
+  assert.equal(renamed.events.find(event=>event.action==='story:comment').actorName,'team-assignee');
+  await assert.rejects(withDb(()=>subject.storyTimeline(teamDraft.id,outsider)),error=>error.status===403);
+  await assert.rejects(withDb(()=>subject.storyTimeline(teamDraft.id,assignee,{cursor:'malformed'})),error=>error.status===400);
+  await admin.query("insert into stories(id,slug,section,title,status,author_id,revision_of) values('timeline-private-revision','private','news','private','draft','team-outsider','team-draft')");
+  await withDb(()=>subject.auditQuery(outsider.username,'story:comment','timeline-private-revision','private note'));
+  const managerTimeline=await withDb(()=>subject.storyTimeline(teamDraft.id,manager));
+  const privateEvent=managerTimeline.events.find(event=>event.detail==='private note');assert.ok(privateEvent);
+  const assigneeTimeline=await withDb(()=>subject.storyTimeline(teamDraft.id,assignee));assert.ok(!assigneeTimeline.events.some(event=>event.id===privateEvent.id));
+  await assert.rejects(withDb(()=>subject.storyTimeline(teamDraft.id,assignee,{eventId:privateEvent.id})),error=>error.status===404);
+  await withDb(()=>subject.deleteDraft('timeline-private-revision',manager.username));
+  assert.ok((await withDb(()=>subject.storyTimeline(teamDraft.id,manager))).events.some(event=>event.action==='draft:delete' && event.storyId==='timeline-private-revision'));
+  for(let i=0;i<37;i++)await admin.query("insert into audit_log(id,at,actor,action,story_id,detail) values($1,'2027-01-01T00:00:00.000Z','النظام','draft:save','team-draft','legacy')",['timeline-page-'+String(i).padStart(2,'0')]);
+  const firstPage=await withDb(()=>subject.storyTimeline(teamDraft.id,manager));assert.equal(firstPage.events.length,30);assert.ok(firstPage.nextCursor);
+  const secondPage=await withDb(()=>subject.storyTimeline(teamDraft.id,manager,{cursor:firstPage.nextCursor}));
+  assert.equal([...firstPage.events,...secondPage.events].filter(event=>event.id.startsWith('timeline-page-')).length,37);
+  assert.equal(new Set([...firstPage.events,...secondPage.events].map(event=>event.id)).size,firstPage.events.length+secondPage.events.length);
+  checks++;
   // Revoking an assignment removes both write access and visibility of prior notifications.
   teamStory=await withDb(()=>subject.getStory(teamDraft.id));
   await withDb(()=>subject.changeTeam(teamDraft.id,manager,{...assignment,assignedTo:null,expectedVersion:teamStory.version}));

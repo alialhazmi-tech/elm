@@ -57,7 +57,7 @@ export async function changeTeam(id: string, actor: WriteActor, input: Record<st
     const dueAt = input.dueAt === null || input.dueAt === "" ? null : typeof input.dueAt === "string" && Number.isFinite(Date.parse(input.dueAt)) ? new Date(input.dueAt).toISOString() : undefined;
     if (dueAt === undefined) throw new StoryWriteError("موعد التسليم غير صحيح.", 400);
     await db.batch([lockStory(story), db.update(stories).set({ assignedTo, dueAt, version: story.version + 1, updatedAt: now }).where(eq(stories.id, id)),
-      auditQuery(actor.username, "story:assign", id, JSON.stringify({ assignedTo, dueAt })),
+      auditQuery(actor.username, "story:assign", id, assignedTo ? `إسناد المادة إلى ${assignee?.name}` : "إلغاء الإسناد", { before: story, after: { assignedTo, dueAt } }),
       notify(actor, id, [assignedTo], `أسند ${actor.displayName} إليك مادة: ${story.title}`)]);
     return { version: story.version + 1, assignment: { assignedTo, assigneeName: assignee?.name ?? null, dueAt } };
   }
@@ -74,7 +74,7 @@ export async function changeTeam(id: string, actor: WriteActor, input: Record<st
     lockStory(story),
     db.insert(editorialNotes).values({ id: crypto.randomUUID(), storyId: story.revisionOf ?? id, authorId: actor.userId, authorName: actor.displayName, kind: returning ? "return" : "comment", body, createdAt: now }),
     ...(returning ? [db.update(stories).set({ status: "draft", returnedAt: now, version: story.version + 1, updatedAt: now }).where(eq(stories.id, id))] : []),
-    auditQuery(actor.username, returning ? "story:return" : "story:comment", id, body),
+    auditQuery(actor.username, returning ? "story:return" : "story:comment", id, body, { before: story, after: returning ? { status: "draft", returnedAt: now } : {} }),
     notify(actor, id, [story.assignedTo, story.authorId], `${returning ? "أعاد" : "علّق"} ${actor.displayName} ${returning ? "مادة للتعديل" : "على مادة"}: ${story.title}`),
   ]);
   return { version: story.version + (returning ? 1 : 0), ...(returning ? { status: "draft" } : {}) };
