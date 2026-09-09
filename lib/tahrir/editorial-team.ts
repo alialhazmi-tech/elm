@@ -52,13 +52,14 @@ export async function changeTeam(id: string, actor: WriteActor, input: Record<st
     if (!actor.can("story.edit.any")) throw new StoryWriteError("الإسناد متاح لمن يملك تحرير جميع المواد.", 403);
     assertExpectedVersion(story.version, input.expectedVersion);
     const assignedTo = input.assignedTo === null ? null : typeof input.assignedTo === "string" ? input.assignedTo : undefined;
-    if (assignedTo === undefined || (assignedTo && !(await assignableEditors()).some(user => user.id === assignedTo))) throw new StoryWriteError("اختر محررًا فعّالًا من القائمة.", 400);
+    const assignee = assignedTo ? (await assignableEditors()).find(user => user.id === assignedTo) : null;
+    if (assignedTo === undefined || (assignedTo && !assignee)) throw new StoryWriteError("اختر محررًا فعّالًا من القائمة.", 400);
     const dueAt = input.dueAt === null || input.dueAt === "" ? null : typeof input.dueAt === "string" && Number.isFinite(Date.parse(input.dueAt)) ? new Date(input.dueAt).toISOString() : undefined;
     if (dueAt === undefined) throw new StoryWriteError("موعد التسليم غير صحيح.", 400);
     await db.batch([lockStory(story), db.update(stories).set({ assignedTo, dueAt, version: story.version + 1, updatedAt: now }).where(eq(stories.id, id)),
       auditQuery(actor.username, "story:assign", id, JSON.stringify({ assignedTo, dueAt })),
       notify(actor, id, [assignedTo], `أسند ${actor.displayName} إليك مادة: ${story.title}`)]);
-    return { version: story.version + 1 };
+    return { version: story.version + 1, assignment: { assignedTo, assigneeName: assignee?.name ?? null, dueAt } };
   }
   if (input.action !== "comment" && input.action !== "return") throw new StoryWriteError("الإجراء غير صحيح.", 400);
   const body = typeof input.body === "string" ? input.body.trim() : "";

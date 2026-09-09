@@ -392,7 +392,8 @@ try {
   await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,owner,{action:'assign',assignedTo:assignee.userId,dueAt:null,expectedVersion:1})), error=>error.status===403);
   await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,manager,{action:'assign',assignedTo:'missing',dueAt:null,expectedVersion:1})), error=>error.status===400);
   const assignment = {action:'assign',assignedTo:assignee.userId,dueAt:'2026-09-09T09:00:00.000Z',expectedVersion:1};
-  await withDb(()=>subject.changeTeam(teamDraft.id,manager,assignment));
+  const assigned = await withDb(()=>subject.changeTeam(teamDraft.id,manager,assignment));
+  assert.deepEqual(assigned.assignment, { assignedTo: assignee.userId, assigneeName: assignee.displayName, dueAt: assignment.dueAt });
   const team = await withDb(()=>subject.readTeam(teamDraft.id,assignee));
   assert.equal(team.assignedTo,assignee.userId); assert.equal(team.version,2);
   assert.equal((await withDb(()=>subject.myNotifications(assignee))).length,1);
