@@ -1,16 +1,21 @@
 "use client";
 import { useActionState } from "react";
+import { useRouter } from "next/navigation";
 import { MailCheck } from "lucide-react";
 import { FormFeedback } from "./account-forms";
 import { sendMemberVerification, verifyMemberEmail, type AccountFormState } from "./actions";
 
 export function EmailVerificationForm({ email }: { email: string }) {
+  const router = useRouter();
   const [sent, send, sending] = useActionState(sendMemberVerification, {});
   const [verified, verify, verifying] = useActionState(
     async (state: AccountFormState, form: FormData) => {
       const result = await verifyMemberEmail(state, form);
-      if (result.success)
+      if (result.success) {
         window.dispatchEvent(new Event("alelm:profile-updated"));
+        router.replace("/account");
+        router.refresh();
+      }
       return result;
     },
     {},

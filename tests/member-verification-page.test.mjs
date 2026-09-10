@@ -41,9 +41,7 @@ test("verification has its own guarded page and both verified/unverified states"
     assert.doesNotMatch(unverified, /إعدادات الحساب|البيانات الشخصية|ac-profile-head/);
     assert.match(unverified, /href="\/account"/);
     globalThis.__verificationUser.emailVerified = true;
-    const verified = renderToStaticMarkup(await Page());
-    assert.match(verified, /موثّق بالفعل/);
-    assert.doesNotMatch(verified, /<form|name="otp"/);
+    await assert.rejects(Page(), error => error.location === "/account");
     const menu = renderToStaticMarkup(createElement(MemberEntry, { preview: { name: "قارئ", emailVerified: false } }));
     assert.match(menu, /class="account-menu-alert" href="\/account\/verify-email"/);
   } finally {
