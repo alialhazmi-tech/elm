@@ -23,10 +23,14 @@ export function PasswordInput({
   name = "password",
   autoComplete,
   label = "كلمة المرور",
+  invalid,
+  describedBy,
 }: {
   name?: string;
   autoComplete: "new-password" | "current-password";
   label?: string;
+  invalid?: boolean;
+  describedBy?: string;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -42,6 +46,8 @@ export function PasswordInput({
           maxLength={128}
           required
           dir="ltr"
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
         />
         <button
           type="button"
@@ -103,8 +109,31 @@ function SignUpForm({
     signUpMember,
     initialState,
   );
+  const [confirmation, setConfirmation] = useState({ passwordLength: 0, hasValue: false, mismatched: false });
+  const passwordValid = confirmation.passwordLength >= 8 && confirmation.passwordLength <= 128;
+  function readConfirmation(form: HTMLFormElement) {
+    const data = new FormData(form);
+    return { passwordLength: String(data.get("password") ?? "").length, hasValue: Boolean(data.get("confirmPassword")), mismatched: data.get("password") !== data.get("confirmPassword") };
+  }
   return (
-    <form action={formAction} className="member-auth-form" id="signup-panel">
+    <form
+      action={formAction}
+      className="member-auth-form"
+      id="signup-panel"
+      onInput={(event) => setConfirmation(readConfirmation(event.currentTarget))}
+      onReset={() => setConfirmation({ passwordLength: 0, hasValue: false, mismatched: false })}
+      onSubmit={(event) => {
+        // افحص القيم الفعلية أيضًا: بعض أدوات الملء التلقائي لا تطلق حدث input.
+        const current = readConfirmation(event.currentTarget);
+        setConfirmation(current);
+        const invalidPassword = current.passwordLength < 8 || current.passwordLength > 128;
+        if (current.mismatched || invalidPassword) {
+          event.preventDefault();
+          const input = event.currentTarget.elements.namedItem(invalidPassword ? "password" : "confirmPassword");
+          if (input instanceof HTMLInputElement) input.focus();
+        }
+      }}
+    >
       {next && <input type="hidden" name="next" value={next} />}
       <fieldset disabled={!available || pending}>
         <label className="member-field">
@@ -121,13 +150,23 @@ function SignUpForm({
           </span>
         </label>
         <EmailInput />
-        <PasswordInput autoComplete="new-password" />
+        <div className="member-password-validation">
+          <PasswordInput autoComplete="new-password" invalid={confirmation.passwordLength > 0 && !passwordValid} describedBy="signup-password-requirements" />
+          <p id="signup-password-requirements" aria-live="polite" aria-atomic="true" className={`member-password-feedback${confirmation.passwordLength > 0 ? passwordValid ? " member-auth-success" : " member-auth-error" : ""}`}>
+            {confirmation.passwordLength === 0 ? "أدخل من 8 إلى 128 محرفًا." : passwordValid ? "كلمة المرور تستوفي شرط الطول: من 8 إلى 128 محرفًا." : confirmation.passwordLength < 8 ? "كلمة المرور قصيرة؛ أدخل 8 محارف على الأقل." : "كلمة المرور طويلة؛ لا تتجاوز 128 محرفًا."}
+          </p>
+        </div>
         <small className="member-password-hint">
-          من 8 إلى 128 محرفًا. يُنصح بكلمة طويلة وفريدة تجمع حروفًا وأرقامًا ورموزًا مثل ! أو @.
+          يُنصح بكلمة طويلة وفريدة تجمع حروفًا وأرقامًا ورموزًا مثل ! أو @ لزيادة قوتها.
         </small>
-        <PasswordInput name="confirmPassword" autoComplete="new-password" label="تأكيد كلمة المرور" />
+        <div className="member-password-validation">
+          <PasswordInput name="confirmPassword" autoComplete="new-password" label="تأكيد كلمة المرور" invalid={confirmation.hasValue && confirmation.mismatched} describedBy="signup-password-confirmation" />
+          <p id="signup-password-confirmation" aria-live="polite" aria-atomic="true" className={`member-password-feedback${confirmation.hasValue ? confirmation.mismatched ? " member-auth-error" : " member-auth-success" : ""}`}>
+            {confirmation.hasValue ? confirmation.mismatched ? "كلمتا المرور غير متطابقتين." : "كلمتا المرور متطابقتان." : "أعد كتابة كلمة المرور نفسها للتأكيد."}
+          </p>
+        </div>
         <Feedback state={state} />
-        <button className="member-auth-submit" type="submit">
+        <button className="member-auth-submit" type="submit" disabled={confirmation.mismatched || (confirmation.passwordLength > 0 && !passwordValid) || pending}>
           {pending ? "جارٍ إنشاء حسابك…" : "إنشاء حساب مجاني"}
           <ArrowLeft size={18} />
         </button>
