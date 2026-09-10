@@ -190,11 +190,11 @@ function SecretField({
         />
         <button
           type="button"
-          aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+          aria-label={`${visible ? "إخفاء" : "إظهار"} ${label}`}
           aria-pressed={visible}
           onClick={() => setVisible(!visible)}
         >
-          {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+          {visible ? <Eye size={18} /> : <EyeOff size={18} />}
         </button>
       </span>
     </label>
