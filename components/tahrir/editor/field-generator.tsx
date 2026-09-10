@@ -52,7 +52,7 @@ export function FieldGenerator({ tool, getDraft, onApply, disabled }: Props) {
 
   return <div className="grid gap-2 pt-1">
     <div className="flex flex-wrap items-center gap-2">
-      <Button type="button" size="xs" variant="outline" disabled={busy || disabled} onClick={generate}>
+      <Button type="button" size="xs" variant="outline" className="border-(--t-ai-line) bg-(--t-ai) text-(--t-warn) hover:bg-(--t-ai) hover:text-(--t-warn)" disabled={busy || disabled} onClick={generate}>
         <SparklesIcon className={busy ? "size-3.5 animate-pulse" : "size-3.5"} />
         {busy ? "جارٍ التوليد…" : label}
       </Button>

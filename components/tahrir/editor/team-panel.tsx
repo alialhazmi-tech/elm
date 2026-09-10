@@ -53,7 +53,7 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
     } catch (error) { setError(error instanceof Error && error.name !== "TimeoutError" ? error.message : "انتهت مهلة الاتصال. أغلق القسم وافتحه للتحقق من النتيجة قبل إعادة الإجراء."); }
     finally { actionLock.current = false; setPending(false); }
   }
-  return <section className="rounded-xl border bg-card" data-tour="team">
+  return <section className="rounded-xl border bg-(--t-panel)" data-tour="team">
     <button type="button" className="flex w-full items-center justify-between p-4 text-start font-semibold" aria-expanded={open} onClick={() => setOpen(!open)}>الإسناد وملاحظات المراجعة <span className="text-muted-foreground">{open ? "−" : "+"}</span></button>
     {open && <div className="space-y-4 border-t p-4">
       {!id ? <p className="text-sm text-muted-foreground">احفظ المسودة أولًا لتتمكن من إسنادها ومشاركة الملاحظات.</p> : <>
@@ -117,7 +117,7 @@ export function EditorPresence({ id }: { id: string | null }) {
     return () => { stopped = true; controller.abort(); clearInterval(timer); document.removeEventListener("visibilitychange", heartbeat); window.removeEventListener("pagehide", leave); leave(); };
   }, [id]);
   if (!id) return null;
-  if (unavailable) return <p role="status" className="text-xs text-muted-foreground">تعذر التحقق من وجود محررين آخرين. حماية تعارض النسخ ما زالت مفعّلة.</p>;
+  if (unavailable) return <p role="status" className="rounded-md border border-dashed bg-(--t-panel) px-3 py-1.5 text-[11px] text-muted-foreground">تعذر التحقق من وجود محررين آخرين. حماية تعارض النسخ ما زالت مفعّلة.</p>;
   if (!editors.length) return null;
   return <Alert><AlertDescription>{[...new Set(editors.map(editor => editor.name))].join("، ")} يحرر هذه المادة الآن. نسّق التعديلات قبل الحفظ لتجنب تعارض النسخ.</AlertDescription></Alert>;
 }

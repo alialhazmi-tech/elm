@@ -1,7 +1,7 @@
 /* لوحتا الأساس: «هوية العلم» (الافتراضية) ولوحة الكِت المحايدة — تُستورد قبل themes.css. */
 /* ===== هوية العلم — مداد وذهبي وطيف السلاسل ===== */
 [data-theme-preset="alelm"] {
-  --background: #edf1f7;
+  --background: #e4eaf2;
   --foreground: #101e30;
   --card: #ffffff;
   --card-foreground: #101e30;

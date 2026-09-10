@@ -40,6 +40,9 @@ import { useFullEditStream, type EditorMessage } from "./use-full-edit-stream";
 import { useLiveGuard } from "./use-live-guard";
 import { useStoryWorkflow, type StorySnapshot } from "./use-story-workflow";
 
+/** تبويب المفتّش: الفعّال ورقة بيضاء بنص كحلي فوق أرض العمل. */
+const INSPECTOR_TAB = "data-[state=active]:bg-card data-[state=active]:text-(--t-navy) data-[state=active]:shadow-none";
+
 interface EditorInitial {
   version: number;
   revisionOf: string | null;
@@ -71,6 +74,8 @@ interface Props {
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
   canSubmit?: boolean;
+  /** رابط سجل النسخ واستعادتها — يظهر في شريط الإجراءات بجانب السجل الزمني. */
+  historyHref?: string | null;
   guardControls: GuardControls;
   series: Array<{ slug: string; name: string; color: string }>;
   sections: Array<[string, string]>;
@@ -105,7 +110,7 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * use-story-workflow (الحفظ وسير الاعتماد)، use-live-guard (الحارس الحي)، use-full-edit-stream (التحرير الشامل).
  * الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ actorId, canApprove, canSubmit = true, guardControls, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ actorId, canApprove, canSubmit = true, historyHref = null, guardControls, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [revisionOf, setRevisionOf] = useState(initial?.revisionOf ?? null);
   const [id, setId] = useState(initial?.id ?? "");
@@ -377,6 +382,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
         status={status}
         canApprove={canApprove}
         canSubmit={canSubmit}
+        historyHref={historyHref}
         busy={busy}
         workflowBusy={workflowBusy}
         navigating={workflow.navigating.current}
@@ -416,10 +422,10 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
 
       <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* clip يحافظ على الزوايا دون إنشاء حاوية تمرير تعطل تثبيت أدوات التنسيق. */}
-        <Card className="min-w-0 gap-0 overflow-clip py-0">
+        <Card className="min-w-0 gap-0 overflow-clip border-t-[3px] border-t-(--t-navy) py-0" data-tour="paper">
           <div className="grid gap-2 px-5 pt-5 pb-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="story-title" className="text-xs font-semibold text-foreground">العنوان</label>
+              <label htmlFor="story-title" className="text-xs font-semibold text-(--t-navy)">العنوان</label>
               <span className={cn("text-[10.5px] tabular-nums", titleWords > 10 ? "text-(--t-block)" : "text-muted-foreground")}>{titleWords} من 10 كلمات</span>
             </div>
             <Textarea
@@ -430,13 +436,13 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
               onChange={(event) => onTitle(event.target.value)}
               onInput={autoGrow}
               ref={autoGrowOnMount}
-              className="min-h-20 resize-none overflow-hidden rounded-lg border-input bg-muted/20 px-3.5 py-3 font-display text-[22px] leading-relaxed font-bold text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/55 focus-visible:bg-background focus-visible:ring-2 md:text-[22px] dark:bg-muted/20"
+              className="min-h-20 resize-none overflow-hidden rounded-lg border-input bg-background px-3.5 py-3 font-display text-[22px] leading-relaxed font-bold text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/55 focus-visible:bg-card focus-visible:ring-2 md:text-[22px]"
             />
             <FieldGenerator tool="headlines" getDraft={getDraft} onApply={onTitle} disabled={full.fullBusy || busy} />
           </div>
           <div className="grid gap-2 border-t px-5 py-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="story-excerpt" className="text-xs font-semibold text-foreground">الموجز — قبل القراءة</label>
+              <label htmlFor="story-excerpt" className="text-xs font-semibold text-(--t-navy)">الموجز — قبل القراءة</label>
               <span className={cn("text-[10.5px] tabular-nums", excerptLength(excerpt) > EXCERPT_MAX_CHARS ? "text-(--t-block)" : "text-muted-foreground")}>{excerptLength(excerpt)} من {EXCERPT_MAX_CHARS} حرفًا</span>
             </div>
             <Textarea
@@ -449,7 +455,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
                 markDraftChanged();
                 setExcerpt(event.target.value);
               }}
-              className="min-h-22 resize-none rounded-lg border-input bg-muted/20 px-3.5 py-3 text-[14px] leading-relaxed text-foreground shadow-none placeholder:text-muted-foreground/55 focus-visible:bg-background focus-visible:ring-2 dark:bg-muted/20"
+              className="min-h-22 resize-none rounded-lg border-input bg-background px-3.5 py-3 text-[14px] leading-relaxed text-foreground shadow-none placeholder:text-muted-foreground/55 focus-visible:bg-card focus-visible:ring-2"
             />
             <FieldGenerator tool="excerpt" getDraft={getDraft} onApply={(text) => { markDraftChanged(); setExcerpt(text); }} disabled={full.fullBusy || busy} />
           </div>
@@ -473,13 +479,13 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
           <RichBody ref={richRef} initial={initial?.body ?? ""} onChange={(html) => onBody(html)} />
         </Card>
 
-        <Card dir="rtl" className="gap-0 overflow-hidden py-0 text-right xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
+        <Card dir="rtl" className="gap-0 overflow-hidden bg-(--t-panel) py-0 text-right xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
           <Tabs dir="rtl" value={inspectorTab} onValueChange={(value) => setInspectorTab(value as InspectorTab)}>
-            <div className="border-b p-2">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="details">التفاصيل</TabsTrigger>
-                <TabsTrigger value="seo">SEO</TabsTrigger>
-                <TabsTrigger value="guard" className="gap-1.5">
+            <div className="border-b bg-background p-1.5">
+              <TabsList className="grid w-full grid-cols-4 bg-transparent">
+                <TabsTrigger value="details" className={INSPECTOR_TAB}>التفاصيل</TabsTrigger>
+                <TabsTrigger value="seo" className={INSPECTOR_TAB}>SEO</TabsTrigger>
+                <TabsTrigger value="guard" className={cn(INSPECTOR_TAB, "gap-1.5")}>
                   الحارس
                   {guard.report?.findings.length ? (
                     <span className={cn("inline-grid min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold text-white tabular-nums", blocking > 0 ? "bg-(--t-block)" : "bg-(--t-warn)")}>
@@ -487,7 +493,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, guardContr
                     </span>
                   ) : null}
                 </TabsTrigger>
-                <TabsTrigger data-tour="editor-ai" value="ai">الذكاء</TabsTrigger>
+                <TabsTrigger data-tour="editor-ai" value="ai" className={INSPECTOR_TAB}>الذكاء</TabsTrigger>
               </TabsList>
             </div>
             <div className="max-h-[calc(100vh-var(--header-height)-7rem)] overflow-y-auto">
