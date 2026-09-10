@@ -29,6 +29,7 @@
 | `/security` | أمان الحساب (كلمة المرور، MFA) | `account/{password-form,mfa-form}` | `mfa.ts`, `totp.ts`, `crypto.ts` | `account/{password,mfa}` |
 | `/help` | دليل الاستخدام والجولة | `help-tour` | `editorial-tour.ts` | — |
 | `/tahrir/login`, `/tahrir/password` | الدخول وتغيير كلمة المرور المؤقتة | `login-form`, `account/password-form` | `auth.ts`, `rate-limit.ts` | `login`, `logout` |
+| `/tahrir/recover` | استعادة كلمة مرور الإدارة والتحرير بالبريد | `recover/recovery-form` | `password-recovery.ts`, `password-recovery-token.ts` | Server Actions في `recover/actions.ts` |
 
 الطبقات المشتركة:
 
@@ -128,6 +129,7 @@ draft ──(story.submit)──▶ review ──(story.approve + الحارس)�
 - **المظهر:** ثماني لوحات + «هوية العلم» افتراضية، الوضع الداكن بمفتاح `alelm-theme` المشترك مع الموقع، كوكيز `tahrir_theme_*` تُقرأ على الخادم.
 - **ألوان المحرر:** `app/tahrir/editor-colors.css` يفصل ورقة الكتابة والحقول عن أرضية العمل، ويجمع إعدادات التفاصيل في أقسام بخلفيات هادئة وعناوين موحّدة وحدود محايدة خفيفة، دون خطوط زخرفية ملوّنة. الحفظ كحلي، الإرسال أزرق، والاعتماد بلون الهوية؛ التبويب النشط مداد، والمسار النشط في التنقل بلون اللوحة الأساسي. الحالات والأخطاء والتركيز تعتمد الرموز الدلالية في الوضعين وجميع اللوحات. الألوان لا تغيّر الحفظ أو الصلاحيات أو بوابات النشر.
 - **الأمان:** جلسات موقّعة بإصدار (`sessionVersion` يُبطل الجلسات عند تغيير كلمة المرور/التعليق)، MFA اختياري TOTP بسر مشفّر AES-GCM (`TAHRIR_MFA_KEY`)، حدّ معدل في `rate-limit.ts` (انظر R-11 في [`../risk-register.md`](../risk-register.md)).
+- **نسيان كلمة مرور الإدارة:** `/tahrir/login` يربط إلى `/tahrir/recover`. الإرسال يستخدم `ACCOUNT_EMAIL_ENABLED=true` و`RESEND_API_KEY` و`AUTH_SECRET` بطول 32 محرفًا على الأقل، إلى بريد الحساب المخزّن فقط. الرد عام للحساب الموجود وغير الموجود والمعلّق، والعمل بعد الرد يمنع كشف الحساب من زمن الإرسال. سقف الطلب 3 للحساب و20 للشبكة خلال 15 دقيقة، وسقف الاستهلاك 10 للرابط و20 للشبكة. الرابط صالح 15 دقيقة ومربوط بهوية الحساب وتجزئة كلمته ونسخة الجلسة؛ الاستهلاك يحدّث الكلمة ويزيد نسخة الجلسة ويكتب `users:recover-password` ذريًا. لا يتغير الدور أو التعليق أو MFA، ولا يصدر الرابط جلسة دخول. هذه آلية مستقلة عن Neon Auth للقرّاء ولا تحتاج ترحيل قاعدة. الحساب الذي لا يملك بريدًا صالحًا يحتاج مسؤولًا مخوّلًا. الاختبارات: `staff-recovery.test.mjs` و`staff-recovery.integration.mjs`.
 
 ## 8. ما وصل بين #71 و#148
 
@@ -226,4 +228,3 @@ draft ──(story.submit)──▶ review ──(story.approve + الحارس)�
   الشكل (الشرائح مصدر الإسقاط عبر `jak/slides`)، وتحويل مادة قائمة إلى `jakalelm` يرد 409.
 - `GET /api/tahrir/story/[id]` يعيد `capabilities.canReturn` (= `story.approve` ومادة في الاعتماد) — الإعادة للمحرر لا تتبع `story.publish`.
 - `GET /api/tahrir/taxonomy` لا يعرض `jakalelm` ضمن `formats` (يُنشأ من محرره فقط)، و`GET /api/tahrir/series` يعيد `archived` و`count` لكل صف.
-

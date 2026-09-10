@@ -32,9 +32,10 @@ const fixture = {
   },
 };
 
-test("القوالب الثمانية عربية وتمنع حقن HTML وروابط النطاقات الأخرى", () => {
+test("قوالب البريد عربية وتمنع حقن HTML وروابط النطاقات الأخرى", () => {
   for (const kind of [
     "reset-link",
+    "staff-reset-link",
     "verify-otp",
     "verify-link",
     "reset-otp",

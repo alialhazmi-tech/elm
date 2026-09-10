@@ -72,6 +72,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      { source: "/tahrir/recover", headers: [{ key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "private, no-store" }] },
       {
         // روابط iOS العالمية: آبل تشترط JSON صريحًا لملف الربط (بلا امتداد في public/).
         source: "/.well-known/apple-app-site-association",
