@@ -55,7 +55,7 @@ try {
   await mkdir(directory, { recursive: true });
   await build({
     stdin: {
-      contents: `export * from './app/account/actions'; export * from './lib/membership/account-data'; export {saveMemberInterests,seedInterestCatalog} from './lib/membership/profile'; export {requestMemberPasswordReset,resetMemberPassword} from './app/join/actions';`,
+      contents: `export * from './app/account/actions'; export * from './lib/membership/account-data'; export {clearBehavioralData} from './lib/personalization/privacy'; export {saveMemberInterests,seedInterestCatalog} from './lib/membership/profile'; export {requestMemberPasswordReset,resetMemberPassword} from './app/join/actions';`,
       resolveDir: process.cwd(),
       loader: "ts",
     },
@@ -111,6 +111,34 @@ try {
       `insert into member_story_stats(member_id,story_id,active_ms,max_progress,visits,last_visit_at,used_ai,ai_tools,updated_at) values('account-a','account-story-01',120000,100,1,'2026-09-04T00:00:00Z',1,'[]','2026-09-04T00:00:00Z'),('account-a','account-story-02',60000,40,1,'2026-09-04T00:00:00Z',0,'[]','2026-09-04T00:00:00Z'),('account-b','account-story-03',990000,100,1,'2026-09-04T00:00:00Z',1,'[]','2026-09-04T00:00:00Z')`,
     );
     await subject.saveMemberInterests("account-a", ["health", "science"]);
+    // The clear control follows deletable data, not finished reads or explicit preferences.
+    const hasHistory = async id => (await subject.getMemberAccountData(id, `${id}@example.invalid`, "عضو", "settings")).hasBehavioralData;
+    assert.equal(subject.emptyAccountData("account-c", "c@example.invalid", "عضو").hasBehavioralData, false);
+    assert.equal(await hasHistory("account-c"), false); // Other members already have activity.
+    await subject.saveMemberInterests("account-c", ["health"]);
+    await client.query("insert into member_saved_stories(member_id,story_id,created_at) values('account-c','account-story-01','2026-09-04T00:00:00Z')");
+    await client.query("insert into member_likes(member_id,story_id,created_at) values('account-c','account-story-01','2026-09-04T00:00:00Z')");
+    assert.equal(await hasHistory("account-c"), false);
+    const activityFixtures = [
+      "insert into story_reading_sessions(visitor_id,story_id,session_id,member_id,active_ms,max_progress,created_at,updated_at) values('visitor-c','account-story-01','session-c','account-c',1000,2,'2026-09-04T00:00:00Z','2026-09-04T00:00:00Z')",
+      "insert into member_events(id,member_id,story_id,type,created_at) values('event-c','account-c','account-story-01','open','2026-09-04T00:00:00Z')",
+      "insert into member_story_stats(member_id,story_id,active_ms,max_progress,visits,last_visit_at,ai_tools,updated_at) values('account-c','account-story-15',1000,2,1,'2026-09-04T00:00:00Z','[]','2026-09-04T00:00:00Z')", // Non-public story, incomplete reading.
+      "insert into member_topic_scores(member_id,topic_key,kind,source,weight,updated_at) values('account-c','section:science','section','inferred',100,'2026-09-04T00:00:00Z')",
+    ];
+    for (const statement of activityFixtures) {
+      await client.query(statement);
+      assert.equal(await hasHistory("account-c"), true);
+      await subject.clearBehavioralData("account-c");
+      assert.equal(await hasHistory("account-c"), false);
+      assert.equal(await hasHistory("account-a"), true);
+    }
+    assert.equal(Number((await client.query("select count(*) from member_topic_scores where member_id='account-c' and source='explicit'")).rows[0].count), 1);
+    assert.equal(Number((await client.query("select count(*) from member_saved_stories where member_id='account-c'")).rows[0].count), 1);
+    assert.equal(Number((await client.query("select count(*) from member_likes where member_id='account-c'")).rows[0].count), 1);
+    checks++;
+    for (const table of ["member_saved_stories", "member_likes", "member_interests", "member_topic_scores"]) {
+      await client.query(`delete from ${table} where member_id='account-c'`);
+    }
     const account = await subject.getMemberAccountData(
       "account-a",
       "account-a@example.invalid",
@@ -119,6 +147,7 @@ try {
       1,
     );
     assert.equal(account.available, true);
+    assert.equal(account.hasBehavioralData, true);
     assert.equal(account.savedStories.length, 12);
     assert.equal(account.pageCount, 2);
     assert.deepEqual(account.stats, {
@@ -313,6 +342,7 @@ try {
       (await subject.clearInferredSignals({}, form({ confirm: "yes" })))
         .success,
     );
+    assert.equal(await hasHistory("account-a"), false);
     assert.deepEqual(
       (await client.query("select member_id from member_story_stats")).rows,
       [{ member_id: "account-b" }],

@@ -10,6 +10,7 @@ import { getDb } from "@/lib/db";
 import { seedContentProvider } from "@/lib/content/provider";
 import { type Story } from "@/lib/content/types";
 import { getMemberProfile, type MemberProfile } from "./profile";
+import { hasBehavioralData } from "@/lib/personalization/privacy";
 import {
   forYouForMember,
   type RelatedCard,
@@ -54,6 +55,7 @@ export type MemberAccountData = {
   recentHistory: MemberHistoryItem[];
   recommendedStories: RelatedCard[];
   newsletterSubscribed: boolean;
+  hasBehavioralData: boolean;
   page: number;
   pageCount: number;
   available: boolean;
@@ -87,6 +89,7 @@ export function emptyAccountData(
     recentHistory: [],
     recommendedStories: [],
     newsletterSubscribed: false,
+    hasBehavioralData: false,
     page: 1,
     pageCount: 1,
     available: false,
@@ -111,7 +114,7 @@ export async function getMemberAccountData(
     gt(memberStoryStats.visits, 0),
     published,
   );
-  const [profile, [totals], [saves], [likes], newsletter] = await Promise.all([
+  const [profile, [totals], [saves], [likes], newsletter, behavioralDataPresent] = await Promise.all([
     getMemberProfile(userId),
     db
       .select({
@@ -138,6 +141,7 @@ export async function getMemberAccountData(
       .from(newsletterSubscribers)
       .where(eq(newsletterSubscribers.email, userEmail.trim().toLowerCase()))
       .limit(1),
+    hasBehavioralData(userId),
   ]);
   const total =
     tab === "saved"
@@ -251,6 +255,7 @@ export async function getMemberAccountData(
     recentHistory,
     recommendedStories,
     newsletterSubscribed: newsletter.length > 0,
+    hasBehavioralData: behavioralDataPresent,
     page,
     pageCount,
     available: true,

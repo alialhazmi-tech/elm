@@ -625,32 +625,34 @@ export function AccountView({
                           />
                         </AccountAction>
                       </div>
-                      <div className="ac-setting-row ac-clear-row">
-                        <ShieldCheck size={21} />
-                        <div>
-                          <h3>مسح سجل القراءة</h3>
-                          <p>
-                            يحذف سجل قراءتك وما تعلّمناه منه لتخصيص الاقتراحات.
-                            لن تُحذف محفوظاتك أو إعجاباتك أو الموضوعات التي اخترتها.
-                          </p>
-                          <details className="ac-confirm">
-                            <summary>
-                              مسح سجل القراءة وبيانات التخصيص
-                            </summary>
+                      {data.hasBehavioralData && (
+                        <div className="ac-setting-row ac-clear-row">
+                          <ShieldCheck size={21} />
+                          <div>
+                            <h3>مسح سجل القراءة</h3>
                             <p>
-                              هذا الإجراء لا يمكن التراجع عنه. هل ترغب في
-                              المتابعة؟
+                              يحذف سجل قراءتك وما تعلّمناه منه لتخصيص الاقتراحات.
+                              لن تُحذف محفوظاتك أو إعجاباتك أو الموضوعات التي اخترتها.
                             </p>
-                            <AccountAction
-                              action={clearInferredSignals}
-                              label="تأكيد المسح"
-                              className="ac-button ac-button-danger"
-                            >
-                              <input type="hidden" name="confirm" value="yes" />
-                            </AccountAction>
-                          </details>
+                            <details className="ac-confirm">
+                              <summary>
+                                مسح سجل القراءة وبيانات التخصيص
+                              </summary>
+                              <p>
+                                هذا الإجراء لا يمكن التراجع عنه. هل ترغب في
+                                المتابعة؟
+                              </p>
+                              <AccountAction
+                                action={clearInferredSignals}
+                                label="تأكيد المسح"
+                                className="ac-button ac-button-danger"
+                              >
+                                <input type="hidden" name="confirm" value="yes" />
+                              </AccountAction>
+                            </details>
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <Link className="ac-policy-link" href="/privacy-policy">
                         اقرأ سياسة الخصوصية
                         <ArrowLeft size={14} />

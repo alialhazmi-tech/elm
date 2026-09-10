@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 
 import { storyReadingSessions, memberEvents, memberProfiles, memberStoryStats, memberTopicScores } from "@/db/schema";
 import { getDb } from "@/lib/db";
@@ -20,6 +20,21 @@ export async function setPersonalizationEnabled(memberId: string, enabled: boole
       target: memberProfiles.authUserId,
       set: { personalizationEnabled: enabled ? 1 : 0, updatedAt: now },
     });
+}
+
+/** وجود أي بيانات يشملها المسح، حتى لقراءة جزئية أو مادة لم تعد منشورة. */
+export async function hasBehavioralData(memberId: string): Promise<boolean> {
+  const db = getDb();
+  if (!db) return false;
+  const result = await db.execute<{ present: boolean }>(sql`
+    select (
+      exists (select 1 from ${storyReadingSessions} where ${storyReadingSessions.memberId} = ${memberId})
+      or exists (select 1 from ${memberEvents} where ${memberEvents.memberId} = ${memberId})
+      or exists (select 1 from ${memberStoryStats} where ${memberStoryStats.memberId} = ${memberId})
+      or exists (select 1 from ${memberTopicScores} where ${memberTopicScores.memberId} = ${memberId} and ${memberTopicScores.source} <> 'explicit')
+    ) as present
+  `);
+  return result.rows[0].present;
 }
 
 /** يمسح الإشارات المستنتجة ويُبقي الاهتمامات الصريحة. */
