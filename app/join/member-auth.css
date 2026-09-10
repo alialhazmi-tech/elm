@@ -226,6 +226,19 @@
   line-height: 1.7;
   margin-top: -10px;
 }
+.member-password-validation {
+  display: grid;
+  gap: 8px;
+}
+.member-password-feedback {
+  margin: 0;
+  color: var(--ink-3);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.member-input-wrap:has(input[aria-invalid="true"]) {
+  border-color: #ac3540;
+}
 .member-auth-submit {
   display: flex;
   align-items: center;
