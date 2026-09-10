@@ -31,6 +31,7 @@ export default async function AccountPreview({
   data.user.joinedAt = "2026-08-01T10:00:00Z";
   data.user.emailVerified = params.unverified !== "1";
   if (params.empty !== "1") {
+    data.hasBehavioralData = true;
     data.profile = {
       onboardingCompleted: true,
       personalizationEnabled: true,
