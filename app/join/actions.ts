@@ -41,6 +41,8 @@ export async function signUpMember(
     return { error: "أدخل بريدًا إلكترونيًا صحيحًا." };
   if (password.length < 8 || password.length > 128)
     return { error: "كلمة المرور يجب أن تكون بين 8 و128 حرفًا." };
+  if (password !== formData.get("confirmPassword"))
+    return { error: "كلمتا المرور غير متطابقتين." };
 
   try {
     const result = await memberAuth.signUp.email({ email, password, name });

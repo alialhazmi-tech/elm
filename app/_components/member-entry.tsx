@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { endMemberSession } from "@/app/account/actions";
+import { memberSessionStore } from "@/lib/membership/client-session";
 type Identity = { name: string; image?: string | null };
 export type MemberIdentity = Identity & { emailVerified: boolean };
 export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
@@ -17,6 +18,7 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
   const [signOutState, signOut, signingOut] = useActionState(async () => {
     const result = await endMemberSession();
     if (result.success) {
+      memberSessionStore.update(false);
       setViewer((current) => ({ ...current, member: undefined }));
       router.push("/");
       router.refresh();
@@ -63,8 +65,9 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
         signal: request.signal,
       })
         .then((response) => (response.ok ? response.json() : {}))
-        .then((data) => {
+        .then((data: { member?: MemberIdentity; editor?: Identity }) => {
           if (request.signal.aborted) return;
+          memberSessionStore.update(Boolean(data.member));
           setViewer(data);
           setLoaded(true);
         })

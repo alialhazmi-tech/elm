@@ -1,6 +1,8 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { memberSessionStore } from "@/lib/membership/client-session";
 import {
   ArrowLeft,
   Eye,
@@ -44,11 +46,11 @@ export function PasswordInput({
         <button
           type="button"
           className="member-password-eye"
-          aria-label={visible ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+          aria-label={`${visible ? "إخفاء" : "إظهار"} ${label}`}
           aria-pressed={visible}
           onClick={() => setVisible(!visible)}
         >
-          {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+          {visible ? <Eye size={18} /> : <EyeOff size={18} />}
         </button>
       </span>
     </label>
@@ -121,8 +123,9 @@ function SignUpForm({
         <EmailInput />
         <PasswordInput autoComplete="new-password" />
         <small className="member-password-hint">
-          من 8 إلى 128 حرفًا. اختر كلمة مرور خاصة بحسابك.
+          من 8 إلى 128 محرفًا. يُنصح بكلمة طويلة وفريدة تجمع حروفًا وأرقامًا ورموزًا مثل ! أو @.
         </small>
+        <PasswordInput name="confirmPassword" autoComplete="new-password" label="تأكيد كلمة المرور" />
         <Feedback state={state} />
         <button className="member-auth-submit" type="submit">
           {pending ? "جارٍ إنشاء حسابك…" : "إنشاء حساب مجاني"}
@@ -199,6 +202,16 @@ export function JoinForm({
   initialMode?: "signup" | "signin" | "forgot";
 }) {
   const [mode, setMode] = useState<"signup" | "signin" | "forgot">(initialMode);
+  const router = useRouter();
+  const authenticated = useSyncExternalStore(memberSessionStore.subscribe, memberSessionStore.getSnapshot, memberSessionStore.getServerSnapshot);
+  useEffect(() => {
+    // يعيد تشغيل حارس /join الخادمي بعد اكتشاف الهيدر جلسة أحدث من الصفحة.
+    if (authenticated) router.refresh();
+  }, [authenticated, router]);
+  if (authenticated) {
+    const href = next ? `/join?next=${encodeURIComponent(next)}` : "/join";
+    return <div className="member-auth-card"><p role="status">أنت مسجّل الدخول. جارٍ الانتقال إلى حسابك…</p><a className="member-text-button" href={href}>المتابعة إلى حسابك</a></div>;
+  }
   return (
     <div className="member-auth-card">
       <header className="member-form-head">
