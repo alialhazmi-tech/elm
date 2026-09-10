@@ -88,7 +88,7 @@
 /* ===== رموز اللوحة الدلالية (كانت في tahrir.css) — تقرؤها الشارات وحالات الحارس في كل اللوحات ===== */
 .th {
   /* طبقات المحرر الهادئة: لوحة الأدوات، شريط الذكاء، الكحلي الدلالي، ومسودة ذهبية باهتة */
-  --t-panel: #f3f6fa; --t-ai: #fbf5e6; --t-ai-line: #ebd9a8; --t-navy: #1a4282; --t-navy-bg: #e7eef8; --t-draft: #8a6d1f; --t-draft-bg: #f8efd6;
+  --t-panel: #eef2f8; --t-ai: #fbf5e6; --t-ai-line: #ebd9a8; --t-navy: #1a4282; --t-navy-bg: #e7eef8; --t-draft: #8a6d1f; --t-draft-bg: #f8efd6;
   --t-block: #b42318; --t-block-bg: #fdf1ef;
   --t-warn: #92610a; --t-warn-bg: #fdf6e7;
   --t-sug: #2b5c9e; --t-sug-bg: #eef4fc;
@@ -115,6 +115,12 @@
   }
 }
 .th :is(button, a, input, textarea, select):focus-visible { outline-offset: 2px; }
+
+/* لوحة الأدوات (المفتّش): عناصر التحكم بيضاء فوق اللوحة المائلة للرمادي — الأزرار المحدّدة تحمل bg-background
+   (أرض العمل) والحقول شفافة، فتختفي على اللوحة. التبويب الفعّال ورقة بيضاء بنص كحلي. */
+.th [data-tahrir-panel] :is([data-slot="button"][data-variant="outline"], [data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="toggle-group-item"]) { background-color: var(--card); }
+.th [data-tahrir-panel] [data-slot="tabs-list"] { background-color: var(--background); }
+.th [data-tahrir-panel] [data-slot="tabs-trigger"][data-state="active"] { background-color: var(--card); color: var(--t-navy); box-shadow: none; }
 
 /* ===== متن المحرر (Tiptap) — طباعة تحريرية تطابق ما يراه القارئ ===== */
 .tahrir-body {
