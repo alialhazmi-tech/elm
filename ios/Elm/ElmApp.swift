@@ -13,6 +13,7 @@ struct ElmApp: App {
     @State private var notifPrefs = NotificationPrefs()
     @State private var reading = ReadingStore()
     @State private var chrome = ChromeState()
+    @State private var staff = StaffSessionStore()
 
     init() {
         FontRegistration.registerAll()
@@ -22,7 +23,7 @@ struct ElmApp: App {
         WindowGroup {
             RootTabView()
                 .elmRTL()
-                .tint(ElmTheme.navy)
+                .tint(ElmTheme.navyInk)
                 .environment(library)
                 .environment(interests)
                 .environment(appearance)
@@ -34,8 +35,10 @@ struct ElmApp: App {
                 .environment(notifPrefs)
                 .environment(reading)
                 .environment(chrome)
+                .environment(staff)
                 .preferredColorScheme(appearance.colorScheme)
                 .task { await member.restore() }
+                .task { await staff.restore() }
                 .task(id: member.user?.id) { await library.switchAccount(member.user?.id) }
                 .task(id: member.user?.id) { await interests.switchAccount(member.user?.id, appearance: appearance) }
         }

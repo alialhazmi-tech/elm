@@ -9,8 +9,6 @@ struct ElmHeader: View {
     var showTools: Bool = true
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(AppearanceStore.self) private var appearance
-    @Environment(\.colorScheme) private var colorScheme
     @Binding var route: HeaderRoute?
 
     init(
@@ -43,30 +41,26 @@ struct ElmHeader: View {
 
             if !title.isEmpty {
                 Text(title)
-                    .font(ElmFonts.text(.caption2, weight: .medium))
-                    .foregroundStyle(ElmTheme.ink3)
+                    .font(ElmFonts.text(.subheadline, weight: .semibold))
+                    .foregroundStyle(ElmTheme.ink2)
                     .lineLimit(1)
+                    .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             }
 
             if showTools {
-                circleButton(label: "البحث") { route = .search } content: {
-                    Image(systemName: "magnifyingglass").font(.system(size: 14, weight: .semibold))
+                if showBrand {
+                    circleButton(label: "المحفوظات") { route = .saved } content: {
+                        Image(systemName: "bookmark").font(.system(size: 17, weight: .medium))
+                    }
+                    circleButton(label: "الإشعارات") { route = .notifications } content: {
+                        Image(systemName: "bell").font(.system(size: 17, weight: .medium))
+                    }
+                } else if !showBack {
+                    circleButton(label: "البحث") { route = .search } content: {
+                        Image(systemName: "magnifyingglass").font(.system(size: 16, weight: .medium))
+                    }
                 }
-                circleButton(label: "تبديل الوضع اللوني", action: toggleTheme) {
-                    Image(systemName: isDark ? "moon.fill" : "sun.max.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                }
-                circleButton(label: "الإشعارات") { route = .notifications } content: {
-                    Image(systemName: "bell").font(.system(size: 14, weight: .medium))
-                }
-                .overlay(alignment: .topLeading) {
-                    Circle()
-                        .fill(ElmTheme.danger)
-                        .frame(width: 7, height: 7)
-                        .overlay(Circle().stroke(ElmTheme.glass, lineWidth: 1.5))
-                        .offset(x: 1, y: 4)
-                        .accessibilityHidden(true)
-                }
+
             }
         }
         .padding(.horizontal, 18)
@@ -83,35 +77,13 @@ struct ElmHeader: View {
     }
 
     private var brand: some View {
-        HStack(spacing: 9) {
-            // كلمة الهوية في الويب تُرسم بخط العناوين 800 — لا بالكوفي (ذلك لتقارير جاك).
-            Text("العلم")
-                .font(ElmFonts.display(.title3, weight: .heavy))
-                .foregroundStyle(ElmTheme.ink)
-            Rectangle()
-                .fill(ElmTheme.line2)
-                .frame(width: 1, height: 18)
-            Text("المعرفة\nبسلاسة")
-                .font(ElmFonts.text(.caption2))
-                .foregroundStyle(ElmTheme.ink3)
-                .lineSpacing(-1)
-                .fixedSize()
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("العلم، المعرفة بسلاسة")
-        .accessibilityAddTraits(.isHeader)
-    }
-
-    private var isDark: Bool {
-        switch appearance.mode {
-        case .dark: true
-        case .light: false
-        case .system: colorScheme == .dark
-        }
-    }
-
-    private func toggleTheme() {
-        appearance.mode = isDark ? .light : .dark
+        Image("OfficialLogo")
+            .resizable()
+            .scaledToFit()
+            .foregroundStyle(ElmTheme.ink)
+            .frame(width: 82, height: 44)
+            .accessibilityLabel("العلم")
+            .accessibilityAddTraits(.isHeader)
     }
 
     private func circleButton<Content: View>(
@@ -122,9 +94,8 @@ struct ElmHeader: View {
         Button(action: action) {
             content()
                 .foregroundStyle(ElmTheme.ink2)
-                .frame(width: 34, height: 34)
-                .background(ElmTheme.surface2, in: Circle())
-                .overlay(Circle().stroke(ElmTheme.line, lineWidth: 1))
+                .frame(width: 44, height: 44)
+                .background(showBrand ? Color.clear : ElmTheme.surface2, in: Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -133,6 +104,6 @@ struct ElmHeader: View {
 
 /// وجهات يفتحها الرأس — تُدار من الشاشة المضيفة حتى تبقى داخل مكدسها.
 enum HeaderRoute: Hashable, Identifiable {
-    case search, notifications
+    case search, notifications, browse, saved
     var id: Self { self }
 }

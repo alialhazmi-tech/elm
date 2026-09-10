@@ -61,6 +61,8 @@ struct ElmScreen<Content: View>: View {
             switch destination {
             case .search: SearchScreen()
             case .notifications: NotificationsScreen()
+            case .browse: DiscoverScreen(showBack: true)
+            case .saved: SavedScreen()
             }
         }
     }
@@ -101,38 +103,24 @@ extension View {
     }
 }
 
-/// افتتاحية القسم الثلاثية من الويب: شرطة ذهبية 22×4، اسم عريض، سطر شارح خافت —
-/// ثم خط بنية سفلي يفصل الرأس عن مادته.
+/// عنوان القسم ووصفه بتدرج واضح، قابلان للالتفاف مع تكبير النص.
 struct SectionHead: View {
     let title: String
     var subtitle: String? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                HStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 1.5, style: .continuous)
-                        .fill(ElmTheme.gold)
-                        .frame(width: 22, height: 4)
-                        .accessibilityHidden(true)
-                    Text(title)
-                        .font(ElmFonts.display(size: 18, weight: .heavy, relativeTo: .title3))
-                        .foregroundStyle(ElmTheme.ink)
-                }
-                if let subtitle {
-                    Text(subtitle)
-                        .font(ElmFonts.text(size: 11.5, relativeTo: .caption2))
-                        .foregroundStyle(ElmTheme.ink3)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                }
-                Spacer(minLength: 0)
+        VStack(alignment: .leading, spacing: 5) {
+            Text(title)
+                .font(ElmFonts.display(size: 22, weight: .heavy, relativeTo: .title2))
+                .foregroundStyle(ElmTheme.ink)
+            if let subtitle {
+                Text(subtitle)
+                    .font(ElmFonts.text(.subheadline))
+                    .foregroundStyle(ElmTheme.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Rectangle()
-                .fill(ElmTheme.line2)
-                .frame(height: 1)
-                .padding(.top, 10)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }

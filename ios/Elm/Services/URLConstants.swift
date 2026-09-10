@@ -2,15 +2,36 @@ import Foundation
 
 enum URLConstants {
     static let productionAPI = URL(string: "https://elm-production-ea24.up.railway.app")!
-    // Railway is the serving origin until alelm.net is cut over from the legacy site.
-    // Sharing an article on the legacy origin produces links that do not exist there.
-    static let publicSite = productionAPI
+    // Canonical public links; API origin retains existing authenticated sessions.
+    static let publicSite = URL(string: "https://alelm.net")!
 
     #if DEBUG
-    static let localAPI = URL(string: "http://127.0.0.1:3000")
+    // Explicit development origin: never silently mix local and production content.
+    static var localAPI: URL? {
+        guard let raw = ProcessInfo.processInfo.environment["ELM_API_ORIGIN"],
+              let url = URL(string: raw), ["localhost", "127.0.0.1"].contains(url.host ?? "") else { return nil }
+        return url
+    }
     #endif
 
-    static var mediaOrigin: URL { productionAPI }
+    static var contentAPI: URL {
+        #if DEBUG
+        if let localAPI { return localAPI }
+        #endif
+        return productionAPI
+    }
+    static var mediaOrigin: URL { contentAPI }
+
+    /// أصل لوحة «تحرير العلم» — يتبع أصل المحتوى (محلي في التطوير، الإنتاج في الإصدار).
+    static var staffAPI: URL { contentAPI }
+
+    /// أصل العضوية والتفاعل (كوكي Neon Auth تشترط HTTPS)؛ في التطوير يمكن توجيهه صراحةً.
+    static var memberAPI: URL {
+        #if DEBUG
+        if let raw = ProcessInfo.processInfo.environment["ELM_AUTH_ORIGIN"], let url = URL(string: raw) { return url }
+        #endif
+        return productionAPI
+    }
 
     static func mobileHome(on origin: URL) -> URL {
         origin.appending(path: "api/mobile/v1/home")
@@ -21,15 +42,15 @@ enum URLConstants {
     }
 
     static func publicURL(path: String) -> URL {
-        let trimmed = path.hasPrefix("/") ? String(path.dropFirst()) : path
-        return publicSite.appending(path: trimmed)
+        let relative = path.hasPrefix("/") ? path : "/\(path)"
+        return URL(string: relative, relativeTo: publicSite)?.absoluteURL ?? publicSite
     }
 
     static let joinURL = publicURL(path: "/join")
     static let accountURL = publicURL(path: "/account")
 
     static func authURL(_ path: String) -> URL {
-        productionAPI.appending(path: "api/auth").appending(path: path)
+        memberAPI.appending(path: "api/auth").appending(path: path)
     }
 }
 

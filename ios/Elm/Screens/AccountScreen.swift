@@ -8,12 +8,19 @@ struct AccountScreen: View {
     @Environment(MemberSessionStore.self) private var member
     @Environment(OnboardingStore.self) private var onboarding
     @Environment(ReadingStore.self) private var reading
+    @Environment(StaffSessionStore.self) private var staff
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var account = AccountStore()
+    #if DEBUG
+    @State private var debugRoute: AccountDebugRoute?
+    #endif
 
     var body: some View {
-        ElmScreen(title: "حسابي") {
+        ElmScreen(title: "حسابي", onRefresh: { if member.isSignedIn { await account.load() } }) {
             VStack(alignment: .leading, spacing: 0) {
                 identity
                 membershipRow.padding(.top, 14)
+                if member.isSignedIn { statsTiles.padding(.top, 14) }
 
                 group("القراءة") {
                     menuRow(label: "الوضع اللوني", color: SeriesPalette.color(for: "shakhsiat"))
@@ -35,7 +42,15 @@ struct AccountScreen: View {
                         SavedScreen()
                     }
                     Divider().overlay(ElmTheme.line)
-                    linkRow(label: "الإشعارات", value: "", color: ElmTheme.danger) {
+                    linkRow(label: "الإعجابات", value: account.overview?.stats.map { ElmFormat.latinDigits(String($0.likedCount)) } ?? "", color: ElmTheme.danger) {
+                        AccountLikedScreen()
+                    }
+                    Divider().overlay(ElmTheme.line)
+                    linkRow(label: "سجل القراءة", value: account.overview?.stats.map { ElmFormat.latinDigits(String($0.articlesRead)) } ?? "", color: ElmTheme.tealInk) {
+                        AccountHistoryScreen()
+                    }
+                    Divider().overlay(ElmTheme.line)
+                    linkRow(label: "الإشعارات", value: "", color: ElmTheme.focus) {
                         NotificationsScreen()
                     }
                     Divider().overlay(ElmTheme.line)
@@ -55,6 +70,10 @@ struct AccountScreen: View {
                         MembershipScreen()
                     }
                     Divider().overlay(ElmTheme.line)
+                    linkRow(label: "إعدادات الحساب", value: member.isSignedIn ? (account.emailVerified == false ? "البريد غير موثّق" : "") : "للأعضاء", color: ElmTheme.gold) {
+                        AccountSettingsScreen()
+                    }
+                    Divider().overlay(ElmTheme.line)
                     linkRow(label: "الخصوصية", value: "", color: ElmTheme.ink3) {
                         PrivacyScreen()
                     }
@@ -68,6 +87,29 @@ struct AccountScreen: View {
                     }
                 }
 
+                group("تحرير العلم") {
+                    Button { staff.workspacePresented = true } label: {
+                        rowBody(
+                            label: staff.isActive ? "لوحة التحرير" : "الدخول إلى لوحة التحرير",
+                            value: staff.isActive ? (staff.actor?.roleLabel ?? staff.actor?.displayName ?? "") : "للفريق التحريري",
+                            color: ElmTheme.gold,
+                            chevron: true
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityHint("يفتح مساحة عمل الفريق التحريري بحسب صلاحيات حسابك")
+                }
+
+                group("عن العلم") {
+                    PublicPageLink(path: "/about") { rowBody(label: "من نحن", value: "", color: ElmTheme.navyInk, chevron: true) }
+                    Divider().overlay(ElmTheme.line)
+                    PublicPageLink(path: "/contact") { rowBody(label: "تواصل معنا", value: "", color: ElmTheme.navyInk, chevron: true) }
+                    Divider().overlay(ElmTheme.line)
+                    linkRow(label: "نشرة ما وراء العناوين", value: account.overview?.newsletterSubscribed == true ? "مشترك" : "", color: ElmTheme.navyInk) {
+                        AccountSettingsScreen()
+                    }
+                }
+
                 Text("المحتوى من مواد منشورة · المصدر النهائي «تحرير العلم»\n© 2026 العلم — جميع الحقوق محفوظة")
                     .font(ElmFonts.text(.caption2))
                     .foregroundStyle(ElmTheme.ink3)
@@ -78,7 +120,56 @@ struct AccountScreen: View {
             }
             .padding(.horizontal, 18)
             .padding(.top, 16)
+            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .frame(maxWidth: .infinity)
         }
+        .task(id: member.user?.id) {
+            if member.isSignedIn { await account.load() } else { account.overview = nil; account.emailVerified = nil }
+        }
+        #if DEBUG
+        .task { debugRoute = ElmLaunch.account.flatMap(AccountDebugRoute.init(rawValue:)) }
+        .navigationDestination(item: $debugRoute) { route in
+            switch route {
+            case .liked: AccountLikedScreen()
+            case .history: AccountHistoryScreen()
+            case .settings: AccountSettingsScreen()
+            }
+        }
+        #endif
+    }
+
+    // MARK: الإحصاءات
+
+    /// أربع بلاطات من `/api/me/account` — لا أرقام مخترعة: تظهر بعد وصول الرد فقط.
+    @ViewBuilder
+    private var statsTiles: some View {
+        if let stats = account.overview?.stats {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
+                statTile(String(stats.articlesRead), label: "مادة مقروءة")
+                statTile(String(stats.activeMinutes), label: "دقيقة قراءة")
+                statTile(String(stats.savedCount), label: "محفوظة")
+                statTile(String(stats.likedCount), label: "إعجاب")
+            }
+        } else if account.loading {
+            ProgressView().frame(maxWidth: .infinity)
+        } else if let error = account.errorMessage {
+            Text(error).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
+        }
+    }
+
+    private func statTile(_ value: String, label: String) -> some View {
+        VStack(spacing: 3) {
+            Text(ElmFormat.latinDigits(value))
+                .font(ElmFonts.display(.title3, weight: .heavy)).foregroundStyle(ElmTheme.ink).elmLatin()
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Text(label).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, minHeight: 60)
+        .padding(.vertical, 8)
+        .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(ElmFormat.latinDigits(value)) \(label)")
     }
 
     // MARK: الهوية
@@ -120,7 +211,7 @@ struct AccountScreen: View {
                     Text(member.isSignedIn ? "عضويتك فعّالة" : "انضم إلى العلم")
                         .font(ElmFonts.text(.footnote, weight: .bold))
                         .foregroundStyle(ElmTheme.ink)
-                    Text(member.isSignedIn ? "تُدار من حسابك على الموقع" : "احفظ موادك وواصل من أي جهاز")
+                    Text(member.isSignedIn ? "إعداداتك وإعجاباتك وسجلك — كلها هنا" : "احفظ موادك وواصل من أي جهاز")
                         .font(ElmFonts.text(.caption2))
                         .foregroundStyle(ElmTheme.ink3)
                 }
@@ -240,6 +331,13 @@ struct AccountScreen: View {
         return member.firstName.first.map(String.init) ?? "ع"
     }
 }
+
+#if DEBUG
+enum AccountDebugRoute: String, Hashable, Identifiable {
+    case liked, history, settings
+    var id: String { rawValue }
+}
+#endif
 
 /// سياسة مختصرة داخل التطبيق حتى لا يعتمد مسار أساسي على صفحة ويب غير منشورة.
 struct PrivacyScreen: View {

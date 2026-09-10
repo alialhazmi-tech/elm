@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 #endif
 
-/// رموز «المنشور» — مشتقة حرفيًا من `app/globals.css` بالوضعين.
+/// رموز العلم من app/soft.css، مع تباين مناسب للقراءة على iOS.
 enum ElmTheme {
     static func dyn(
         _ light: (CGFloat, CGFloat, CGFloat, CGFloat),
@@ -37,41 +37,37 @@ enum ElmTheme {
         )
     }
 
-    // فاتح / داكن — القيم من :root و prefers-color-scheme: dark
-    static var bg: Color { dyn((0.961, 0.969, 0.984, 1), (0.039, 0.075, 0.133, 1)) }          // #f5f7fb / #0a1322
-    static var surface: Color { dyn((1, 1, 1, 1), (0.063, 0.110, 0.188, 1)) }                 // #ffffff / #101c30
-    static var surface2: Color { dyn((0.933, 0.949, 0.973, 1), (0.086, 0.137, 0.227, 1)) }     // #eef2f8 / #16233a
-    static var ink: Color { dyn((0.063, 0.118, 0.188, 1), (0.914, 0.937, 0.973, 1)) }          // #101e30 / #e9eff8
-    static var ink2: Color { dyn((0.306, 0.373, 0.471, 1), (0.655, 0.714, 0.796, 1)) }         // #4e5f78 / #a7b6cb
-    /// ميتا فقط — لا تستخدم لنص فقرة في الوضع الفاتح (تباين ~3.1:1).
-    static var ink3: Color { dyn((0.518, 0.580, 0.671, 1), (0.443, 0.510, 0.608, 1)) }         // #8494ab / #71829b
-    /// خطوط التفاصيل (صفوف داخل بلوك) — «الورقة المسطّرة» تفرّق بينها وبين حدود البلوكات.
-    static var line: Color { dyn((0.906, 0.925, 0.957, 1), (0.118, 0.176, 0.275, 1)) }         // #e7ecf4 / #1e2d46
-    /// خطوط البنية (حدود البلوكات والأقسام) — أثقل درجة من line عمدًا.
-    static var line2: Color { dyn((0.780, 0.824, 0.886, 1), (0.208, 0.286, 0.424, 1)) }        // #c7d2e2 / #35496c
-    static var navy: Color { dyn((0.071, 0.157, 0.294, 1), (0.086, 0.161, 0.290, 1)) }         // #12284b / #16294a
-    static let navyDeep = hex("0b1a33")
-    /// ذهب الطبعة التحريرية — عُمّق عن #f5b92e القديم ليصير مقروءًا AA فوق السطح.
-    static var gold: Color { dyn((0.812, 0.604, 0.086, 1), (0.878, 0.678, 0.169, 1)) }         // #cf9a16 / #e0ad2b
-    static let accent = hex("2B5C9E")
-    static let success = hex("2eb873")
-    static let focus = hex("3d7ef7")
+    /// رموز الهوية الحالية من app/soft.css. لون الأفعال منفصل عن خلفية الأزرار.
+    private static func adaptive(_ light: UInt32, _ dark: UInt32) -> Color {
+        func rgba(_ value: UInt32) -> (CGFloat, CGFloat, CGFloat, CGFloat) {
+            (CGFloat((value >> 16) & 255) / 255, CGFloat((value >> 8) & 255) / 255, CGFloat(value & 255) / 255, 1)
+        }
+        return dyn(rgba(light), rgba(dark))
+    }
 
-    /// خلفية الأشرطة الزجاجية (رأس الشاشة وشريط التبويب).
-    static var glass: Color { dyn((1, 1, 1, 0.82), (0.063, 0.110, 0.188, 0.86)) }
-    /// كحلي مقروء فوق `surface2`: في الداكن يرتفع إلى #c7d6ee كما في `.day-strip-tag`.
-    static var navyInk: Color { dyn((0.071, 0.157, 0.294, 1), (0.780, 0.839, 0.933, 1)) }
+    static var bg: Color { adaptive(0xfaf9f5, 0x0b1322) }
+    static var surface: Color { adaptive(0xffffff, 0x0b1322) }
+    static var surface2: Color { adaptive(0xf3efe8, 0x141f33) }
+    static var surface3: Color { adaptive(0xeae4d9, 0x142a4d) }
+    static var ink: Color { adaptive(0x141c24, 0xeaf0f8) }
+    static var ink2: Color { adaptive(0x465362, 0xa9b7cc) }
+    // الميتا الصغيرة تحتاج تباينًا أعلى من لون الموقع الخافت.
+    static var ink3: Color { adaptive(0x596878, 0x9aa9bd) }
+    static var line: Color { adaptive(0xe8e2d8, 0x1f2c44) }
+    static var line2: Color { adaptive(0xd4ccc0, 0x33456a) }
+    static let navy = hex("1a4282")
+    static let navyDeep = hex("14356a")
+    static var navyInk: Color { adaptive(0x1a4282, 0x8eb4ff) }
+    static var accent: Color { navyInk }
+    static var gold: Color { adaptive(0xb8923a, 0xd4b46a) }
+    static let success = hex("2a9a6e")
+    static let focus = hex("3d6fad")
+    static var glass: Color { dyn((1, 1, 1, 0.96), (0.043, 0.075, 0.133, 0.96)) }
+    static let danger = hex("c45468")
+    static let teal = hex("2d9a8c")
+    static var tealInk: Color { adaptive(0x21786d, 0x76d4c4) }
 
-    static let danger = hex("ef476f")
-    static let teal = hex("12b5a0")
-    static let tealInk = hex("0e9083")
-
-    /// طيف السلاسل الثماني بترتيب `series.ts` — يبدأ من جهة القراءة (اليمين).
-    static let spectrum: [Color] = [
-        hex("12b5a0"), hex("ef476f"), hex("eda313"), hex("3d7ef7"),
-        hex("8b5cf6"), hex("14a8d6"), hex("f26a1b"), hex("c08a2e"),
-    ]
-
+    static var spectrum: [Color] { SeriesPalette.active.map(\.color) }
     static var spectrumGradient: LinearGradient {
         LinearGradient(colors: spectrum, startPoint: .trailing, endPoint: .leading)
     }
@@ -91,8 +87,8 @@ enum ElmTheme {
         )
     }
 
-    /// زوايا الوسائط في الطبعة التحريرية — شبه قائمة كما في `--r-ui: 4px`.
-    static let radiusUI: CGFloat = 4
+    /// زوايا الوسائط من --r-ui في هوية الموقع الحالية.
+    static let radiusUI: CGFloat = 14
     static let radiusSm: CGFloat = 12
     static let radiusMd: CGFloat = 18
     static let radiusLg: CGFloat = 26

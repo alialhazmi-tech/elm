@@ -15,10 +15,11 @@ struct MobileHomePayload: Codable, Sendable {
     var numbers: [NumberStat]
     var series: [SeriesChip]
     var mostRead: [StoryCard]
+    var presentation: HomePresentation?
 
     enum CodingKeys: String, CodingKey {
         case contract, generatedAt, breaking, brief, hero, minis, mosaic
-        case dataStory, question, videos, numbers, series, mostRead
+        case dataStory, question, videos, numbers, series, mostRead, presentation
     }
 
     init(from decoder: Decoder) throws {
@@ -37,11 +38,13 @@ struct MobileHomePayload: Codable, Sendable {
         numbers = try c.decodeIfPresent([NumberStat].self, forKey: .numbers) ?? []
         series = try c.decodeIfPresent([SeriesChip].self, forKey: .series) ?? []
         mostRead = try c.decodeIfPresent([StoryCard].self, forKey: .mostRead) ?? []
+        presentation = try c.decodeIfPresent(HomePresentation.self, forKey: .presentation)
     }
 
     var prefetchURLs: [URL] {
         var cards: [StoryCard] = [hero] + minis + mosaic + videos + mostRead
         if let dataStory { cards.append(dataStory) }
+        cards += presentation?.stream?.river ?? []
         return cards.compactMap(\.imageURL)
     }
 }
@@ -53,6 +56,8 @@ struct BreakingItem: Codable, Sendable {
 }
 
 struct BriefItem: Codable, Identifiable, Sendable {
+    var publishedAt: String?
+    var excerpt: String?
     var title: String
     var href: String
     var color: String
@@ -75,6 +80,25 @@ struct StoryCard: Codable, Identifiable, Hashable, Sendable {
     var href: String?
     var body: String?
     var factCheck: FactCheck?
+    // mobile-story.v3 — كلها اختيارية حتى تظل الكاشات والخوادم الأقدم تُفكّ.
+    var bodyHtml: String?
+    var blocks: [ArticleBlock]?
+    var videoUrl: String?
+    var videoEmbedUrl: String?
+    var videoKind: String?
+    var keywords: [StoryKeyword]?
+    var links: [StoryLink]?
+    var updatedAt: String?
+
+    /// بلوكات المتن: من الخادم أولًا، ثم من HTML المنقّى، ثم من النص الخالص.
+    var articleBlocks: [ArticleBlock] {
+        if let blocks, !blocks.isEmpty { return blocks }
+        if let bodyHtml, !bodyHtml.isEmpty { return ArticleBlocks.parse(html: bodyHtml) }
+        return ArticleBlocks.parse(html: body ?? "")
+    }
+
+    var videoURL: URL? { videoUrl.flatMap(URL.init(string:)) }
+    var videoEmbedURL: URL? { videoEmbedUrl.flatMap(URL.init(string:)) }
 
     var path: String {
         if let href, !href.isEmpty { return href }
@@ -93,6 +117,7 @@ struct StoryCard: Codable, Identifiable, Hashable, Sendable {
     enum CodingKeys: String, CodingKey {
         case id, slug, section, title, excerpt, eyebrow, readingMinutes
         case series, format, image, publishedAt, href, body, factCheck
+        case bodyHtml, blocks, videoUrl, videoEmbedUrl, videoKind, keywords, links, updatedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -111,6 +136,14 @@ struct StoryCard: Codable, Identifiable, Hashable, Sendable {
         href = try c.decodeIfPresent(String.self, forKey: .href)
         body = try c.decodeIfPresent(String.self, forKey: .body)
         factCheck = try c.decodeIfPresent(FactCheck.self, forKey: .factCheck)
+        bodyHtml = try c.decodeIfPresent(String.self, forKey: .bodyHtml)
+        blocks = try? c.decodeIfPresent([ArticleBlock].self, forKey: .blocks)
+        videoUrl = try c.decodeIfPresent(String.self, forKey: .videoUrl)
+        videoEmbedUrl = try c.decodeIfPresent(String.self, forKey: .videoEmbedUrl)
+        videoKind = try c.decodeIfPresent(String.self, forKey: .videoKind)
+        keywords = try? c.decodeIfPresent([StoryKeyword].self, forKey: .keywords)
+        links = try? c.decodeIfPresent([StoryLink].self, forKey: .links)
+        updatedAt = try c.decodeIfPresent(String.self, forKey: .updatedAt)
     }
 
     init(
@@ -127,7 +160,10 @@ struct StoryCard: Codable, Identifiable, Hashable, Sendable {
         publishedAt: String? = nil,
         href: String? = nil,
         body: String? = nil,
-        factCheck: FactCheck? = nil
+        factCheck: FactCheck? = nil,
+        videoUrl: String? = nil,
+        videoEmbedUrl: String? = nil,
+        videoKind: String? = nil
     ) {
         self.id = id
         self.slug = slug
@@ -143,6 +179,19 @@ struct StoryCard: Codable, Identifiable, Hashable, Sendable {
         self.href = href
         self.body = body
         self.factCheck = factCheck
+        self.videoUrl = videoUrl
+        self.videoEmbedUrl = videoEmbedUrl
+        self.videoKind = videoKind
+    }
+
+    /// يُكمل حقول الفيديو من بطاقة البذرة إن خلت نسخة الخادم/الكاش منها (خادم أقدم من v3).
+    func inheritingVideo(from seed: StoryCard) -> StoryCard {
+        guard videoEmbedUrl == nil, videoUrl == nil, seed.videoEmbedUrl != nil || seed.videoUrl != nil else { return self }
+        var copy = self
+        copy.videoUrl = seed.videoUrl
+        copy.videoEmbedUrl = seed.videoEmbedUrl
+        copy.videoKind = seed.videoKind
+        return copy
     }
 }
 
@@ -184,6 +233,265 @@ struct SeriesChip: Codable, Identifiable, Hashable, Sendable {
 struct FactCheck: Codable, Hashable, Sendable {
     var rumor: String
     var truth: String
+}
+
+/// كلمة مفتاحية للمادة — `href` هو `/keywords/{encoded}`.
+struct StoryKeyword: Codable, Hashable, Identifiable, Sendable {
+    var keyword: String
+    var href: String
+    var id: String { keyword }
+}
+
+/// رابط خارجي ورد في المتن.
+struct StoryLink: Codable, Hashable, Identifiable, Sendable {
+    var href: String
+    var label: String
+    var id: String { href }
+    var url: URL? { URL(string: href) }
+}
+
+// MARK: - البودكاست
+
+struct PodcastShow: Codable, Hashable, Identifiable, Sendable {
+    var storyId: String
+    var name: String
+    var cover: String?
+    var accent: String?
+    var youtube: String?
+    var href: String?
+    var id: String { storyId }
+    var coverURL: URL? { ElmMedia.url(cover) }
+    var accentColor: Color { accent.map { ElmTheme.hex($0) } ?? ElmTheme.navyInk }
+}
+
+struct PodcastEpisode: Codable, Hashable, Identifiable, Sendable {
+    var title: String
+    var audioUrl: String
+    var mime: String?
+    var publishedAt: String?
+    var duration: String?
+    var description: String?
+    var episode: String?
+    var season: String?
+    var id: String { audioUrl }
+    var audioURL: URL? { URL(string: audioUrl) }
+
+    enum CodingKeys: String, CodingKey { case title, audioUrl, mime, publishedAt, duration, description, episode, season }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        title = try c.decodeIfPresent(String.self, forKey: .title) ?? ""
+        audioUrl = try c.decodeIfPresent(String.self, forKey: .audioUrl) ?? ""
+        mime = try c.decodeIfPresent(String.self, forKey: .mime)
+        publishedAt = try c.decodeIfPresent(String.self, forKey: .publishedAt)
+        duration = try c.decodeIfPresent(String.self, forKey: .duration)
+        description = try c.decodeIfPresent(String.self, forKey: .description)
+        episode = try c.decodeIfPresent(String.self, forKey: .episode)
+        season = try c.decodeIfPresent(String.self, forKey: .season)
+    }
+}
+
+/// `podcast` داخل حمولة المادة.
+struct PodcastBundle: Codable, Hashable, Sendable {
+    var show: PodcastShow
+    var episodes: [PodcastEpisode]
+
+    enum CodingKeys: String, CodingKey { case show, episodes }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        show = try c.decode(PodcastShow.self, forKey: .show)
+        episodes = (try? c.decodeIfPresent([PodcastEpisode].self, forKey: .episodes)) ?? []
+    }
+}
+
+/// `GET /api/mobile/v1/podcasts` — برنامج مع حلقاته.
+struct PodcastShowEntry: Codable, Hashable, Identifiable, Sendable {
+    var show: PodcastShow
+    var episodes: [PodcastEpisode]
+    var id: String { show.storyId }
+
+    init(from decoder: Decoder) throws {
+        show = try PodcastShow(from: decoder)
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        episodes = (try? c.decodeIfPresent([PodcastEpisode].self, forKey: .episodes)) ?? []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        try show.encode(to: encoder)
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(episodes, forKey: .episodes)
+    }
+
+    enum CodingKeys: String, CodingKey { case episodes }
+}
+
+struct PodcastsPayload: Codable, Sendable {
+    var shows: [PodcastShowEntry]
+    enum CodingKeys: String, CodingKey { case shows }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        shows = try c.decodeIfPresent([PodcastShowEntry].self, forKey: .shows) ?? []
+    }
+}
+
+// MARK: - التصنيف والكلمات وجاك
+
+struct TaxonomySection: Codable, Hashable, Identifiable, Sendable {
+    var slug: String
+    var name: String
+    var shortName: String
+    var color: String?
+    var id: String { slug }
+
+    enum CodingKeys: String, CodingKey { case slug, name, shortName, color }
+    init(slug: String, name: String, shortName: String, color: String?) {
+        self.slug = slug; self.name = name; self.shortName = shortName; self.color = color
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        slug = try c.decode(String.self, forKey: .slug)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? slug
+        shortName = try c.decodeIfPresent(String.self, forKey: .shortName) ?? name
+        color = try c.decodeIfPresent(String.self, forKey: .color)
+    }
+}
+
+struct TaxonomyPayload: Codable, Sendable {
+    var sections: [TaxonomySection]
+    var series: [SeriesChip]
+    var archivedSeries: [SeriesChip]
+
+    enum CodingKeys: String, CodingKey { case sections, series, archivedSeries }
+    init(sections: [TaxonomySection], series: [SeriesChip], archivedSeries: [SeriesChip]) {
+        self.sections = sections; self.series = series; self.archivedSeries = archivedSeries
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        sections = try c.decodeIfPresent([TaxonomySection].self, forKey: .sections) ?? []
+        series = try c.decodeIfPresent([SeriesChip].self, forKey: .series) ?? []
+        archivedSeries = try c.decodeIfPresent([SeriesChip].self, forKey: .archivedSeries) ?? []
+    }
+}
+
+struct KeywordPage: Codable, Sendable {
+    var keyword: String
+    var stories: [StoryCard]
+    var total: Int
+    var page: Int
+    var nextPage: Int?
+
+    enum CodingKeys: String, CodingKey { case keyword, stories, total, page, nextPage }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        keyword = try c.decodeIfPresent(String.self, forKey: .keyword) ?? ""
+        stories = try c.decodeIfPresent([StoryCard].self, forKey: .stories) ?? []
+        total = try c.decodeIfPresent(Int.self, forKey: .total) ?? stories.count
+        page = try c.decodeIfPresent(Int.self, forKey: .page) ?? 1
+        nextPage = try c.decodeIfPresent(Int.self, forKey: .nextPage)
+    }
+}
+
+struct JakPayload: Codable, Sendable {
+    var stories: [StoryCard]
+    enum CodingKeys: String, CodingKey { case stories }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        stories = try c.decodeIfPresent([StoryCard].self, forKey: .stories) ?? []
+    }
+}
+
+// MARK: - حساب العضو (`mobile-account.v1`)
+
+struct AccountUser: Codable, Sendable {
+    var name: String
+    var email: String
+    var joinedAt: String?
+    var emailVerified: Bool
+    var image: String?
+
+    enum CodingKeys: String, CodingKey { case name, email, joinedAt, emailVerified, image }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        email = try c.decodeIfPresent(String.self, forKey: .email) ?? ""
+        joinedAt = try c.decodeIfPresent(String.self, forKey: .joinedAt)
+        emailVerified = try c.decodeIfPresent(Bool.self, forKey: .emailVerified) ?? false
+        image = try c.decodeIfPresent(String.self, forKey: .image)
+    }
+}
+
+struct AccountStats: Codable, Sendable {
+    var articlesRead: Int
+    var activeMinutes: Int
+    var savedCount: Int
+    var likedCount: Int
+    var aiInteractions: Int
+
+    enum CodingKeys: String, CodingKey { case articlesRead, activeMinutes, savedCount, likedCount, aiInteractions }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        articlesRead = try c.decodeIfPresent(Int.self, forKey: .articlesRead) ?? 0
+        activeMinutes = try c.decodeIfPresent(Int.self, forKey: .activeMinutes) ?? 0
+        savedCount = try c.decodeIfPresent(Int.self, forKey: .savedCount) ?? 0
+        likedCount = try c.decodeIfPresent(Int.self, forKey: .likedCount) ?? 0
+        aiInteractions = try c.decodeIfPresent(Int.self, forKey: .aiInteractions) ?? 0
+    }
+}
+
+/// عنصر القائمة: محفوظ/معجب `{story, savedAt}` أو سجل `{story, progress, lastVisitAt}`.
+struct AccountItem: Codable, Identifiable, Sendable {
+    var story: StoryCard
+    var savedAt: String?
+    var progress: Int?
+    var lastVisitAt: String?
+    var id: String { story.apiId }
+
+    enum CodingKeys: String, CodingKey { case story, savedAt, progress, lastVisitAt }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        story = try c.decode(StoryCard.self, forKey: .story)
+        savedAt = try c.decodeIfPresent(String.self, forKey: .savedAt)
+        progress = try c.decodeIfPresent(Int.self, forKey: .progress)
+        lastVisitAt = try c.decodeIfPresent(String.self, forKey: .lastVisitAt)
+    }
+}
+
+struct AccountPayload: Codable, Sendable {
+    var memberId: String
+    var tab: String
+    var user: AccountUser?
+    var stats: AccountStats?
+    var newsletterSubscribed: Bool
+    var personalizationEnabled: Bool
+    var items: [AccountItem]
+    var page: Int
+    var pageCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case memberId, tab, user, stats, newsletterSubscribed, personalizationEnabled, items, page, pageCount
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        memberId = try c.decodeIfPresent(String.self, forKey: .memberId) ?? ""
+        tab = try c.decodeIfPresent(String.self, forKey: .tab) ?? "overview"
+        user = try? c.decodeIfPresent(AccountUser.self, forKey: .user)
+        stats = try? c.decodeIfPresent(AccountStats.self, forKey: .stats)
+        newsletterSubscribed = try c.decodeIfPresent(Bool.self, forKey: .newsletterSubscribed) ?? false
+        personalizationEnabled = try c.decodeIfPresent(Bool.self, forKey: .personalizationEnabled) ?? true
+        items = (try? c.decodeIfPresent([AccountItem].self, forKey: .items)) ?? []
+        page = try c.decodeIfPresent(Int.self, forKey: .page) ?? 1
+        pageCount = try c.decodeIfPresent(Int.self, forKey: .pageCount) ?? 1
+    }
+}
+
+/// `GET /api/viewer` — هل بريد العضو موثّق؟
+struct ViewerPayload: Codable, Sendable {
+    struct Member: Codable, Sendable {
+        var name: String?
+        var image: String?
+        var emailVerified: Bool?
+    }
+    var member: Member?
 }
 
 struct SlideSide: Codable, Hashable, Sendable {
@@ -266,9 +574,10 @@ struct StoryDetailPayload: Codable, Sendable {
     var slides: [StorySlide]?
     var jak: JakReport?
     var factCheck: FactCheck?
+    var podcast: PodcastBundle?
 
     enum CodingKeys: String, CodingKey {
-        case contract, story, series, related, nextInSeries, slides, jak
+        case contract, story, series, related, nextInSeries, slides, jak, podcast
     }
 
     init(from decoder: Decoder) throws {
@@ -281,6 +590,7 @@ struct StoryDetailPayload: Codable, Sendable {
         slides = try c.decodeIfPresent([StorySlide].self, forKey: .slides)
         jak = try c.decodeIfPresent(JakReport.self, forKey: .jak)
         factCheck = story.factCheck
+        podcast = try? c.decodeIfPresent(PodcastBundle.self, forKey: .podcast)
     }
 }
 
@@ -367,3 +677,37 @@ struct SeriesFeedPayload: Codable, Sendable {
     }
 }
 
+
+struct HomePresentation: Codable, Sendable {
+    var briefFrom: Int
+    var briefScript: String
+    var newsStrip: [NewsStripItem]
+    var stream: HomeWebStream?
+    var seriesDirectory: [SeriesEntry]
+    var archive: [StoryCard]
+}
+struct NewsStripItem: Codable, Identifiable, Sendable {
+    var title: String
+    var href: String
+    var urgent: Bool
+    var id: String { href }
+}
+struct HomeWebStream: Codable, Sendable {
+    var river: [StoryCard]
+    var pulse: HomePulse
+    var panels: [HomeSectionPanel]
+    var infographics: [StoryCard]
+}
+struct HomePulse: Codable, Sendable {
+    var todayCount: Int
+    var lastAt: String?
+}
+struct HomeSectionPanel: Codable, Identifiable, Sendable {
+    var slug: String
+    var name: String
+    var color: String
+    var lead: StoryCard?
+    var rows: [StoryCard]
+    var todayCount: Int
+    var id: String { slug }
+}

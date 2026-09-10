@@ -8,6 +8,8 @@ struct RootTabView: View {
     @Environment(ConnectivityStore.self) private var connectivity
     @Environment(NarrationStore.self) private var narration
     @Environment(ChromeState.self) private var chrome
+    @Environment(StaffSessionStore.self) private var staff
+    private let podcast = PodcastPlayerStore.shared
 
     var body: some View {
         TabView(selection: $tab) {
@@ -20,10 +22,9 @@ struct RootTabView: View {
                 .tag(item)
             }
         }
-        // شريط التبويب النظامي مخفي: الشرطة الذهبية فوق الأيقونة النشطة
-        // علامة العلم، ولا يمكن رسمها داخل الشريط النظامي.
+        // وجهات ثابتة تحفظ مكدس التنقل لكل تبويب.
         .overlay(alignment: .bottom) {
-            if !chrome.immersive {
+            if !chrome.immersive && !chrome.readerVisible {
                 ElmTabBar(selection: $tab, namespace: tabIndicator)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
@@ -31,16 +32,22 @@ struct RootTabView: View {
         .animation(.snappy(duration: 0.25), value: chrome.immersive)
         // لا لافتة فوق القارئ الغامر: تغطي شريط تقدم التقرير، والمحتوى محفوظ أصلًا.
         .overlay(alignment: .top) {
-            if connectivity.isOffline && !chrome.immersive {
+            if connectivity.isOffline && !chrome.immersive && !chrome.readerVisible {
                 OfflinePill()
                     .padding(.top, 4)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .overlay(alignment: .bottom) {
-            if narration.state != .idle && !chrome.immersive {
+            if narration.state != .idle && !chrome.immersive && !chrome.readerVisible {
                 NarrationBar()
                     .padding(.bottom, 78)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if podcast.isActive && !chrome.immersive && !chrome.readerVisible {
+                // مشغّل البودكاست المصغّر فوق شريط التبويب في كل التبويبات؛ القارئ يعرض نسخته داخله.
+                PodcastMiniBar()
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 82)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -56,8 +63,15 @@ struct RootTabView: View {
         )) {
             AuthSheet().elmRTL()
         }
+        .fullScreenCover(isPresented: Binding(
+            get: { staff.workspacePresented },
+            set: { staff.workspacePresented = $0 }
+        )) {
+            StaffWorkspace().elmRTL()
+        }
         .animation(.snappy, value: connectivity.isOffline)
         .animation(.snappy, value: narration.state)
+        .animation(.snappy, value: podcast.isActive)
         .modifier(LaunchArgumentsModifier(tab: $tab))
     }
 
@@ -65,8 +79,8 @@ struct RootTabView: View {
     private func screen(for tab: RootTab) -> some View {
         switch tab {
         case .home: HomeScreen()
-        case .series: SeriesScreen()
-        case .ask: AskScreen()
+        case .series: DiscoverScreen()
+        case .ask: SearchScreen(showBack: false)
         case .forYou: ForYouScreen()
         case .account: AccountScreen()
         }
@@ -76,6 +90,7 @@ struct RootTabView: View {
 /// يطبّق وسائط الإطلاق في نسخة التطوير فقط، ولا أثر له في الإصدار.
 private struct LaunchArgumentsModifier: ViewModifier {
     @Binding var tab: RootTab
+    @Environment(StaffSessionStore.self) private var staff
 
     #if DEBUG
     @State private var screen: ElmLaunch.Screen?
@@ -85,6 +100,11 @@ private struct LaunchArgumentsModifier: ViewModifier {
             .task {
                 if let requested = ElmLaunch.tab { tab = requested }
                 screen = ElmLaunch.screen
+                if ElmLaunch.staffOpen { staff.workspacePresented = true }
+                if ElmLaunch.podcastPlay, ElmLaunch.screen == nil,
+                   let entry = try? await APIClient.fetchPodcasts().shows.first, let episode = entry.episodes.first {
+                    PodcastPlayerStore.shared.play(episode, from: entry.show)
+                }
             }
             .fullScreenCover(item: $screen) { requested in
                 NavigationStack {
@@ -97,6 +117,7 @@ private struct LaunchArgumentsModifier: ViewModifier {
                     case .story: DebugStoryLoader(kind: .report)
                     case .article: DebugStoryLoader(kind: .article)
                     case .stories: DebugStoryLoader(kind: .stories)
+                    case .podcasts: PodcastsScreen()
                     }
                 }
                 .elmRTL()

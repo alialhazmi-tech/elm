@@ -4,8 +4,23 @@ import { NextResponse } from "next/server";
 import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText } from "@/lib/content/html";
 import { normalizeVideoUrl } from "@/lib/content/video";
 import { canEditStory, requireActor } from "@/lib/tahrir/access";
+import { appStoryList } from "@/lib/tahrir/app-read";
 import { deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
+
+/** قائمة المواد للتطبيق — منطق شاشة «المواد» نفسه (30/صفحة، الفلاتر، قصّ رقم الصفحة). */
+export async function GET(request: Request) {
+  const gate = await requireActor();
+  if (!gate.ok) return gate.response;
+  const params = new URL(request.url).searchParams;
+  const payload = await appStoryList(gate.actor, {
+    status: params.get("status"),
+    p: params.get("p"),
+    q: params.get("q"),
+    series: params.get("series"),
+  });
+  return NextResponse.json(payload, { headers: { "Cache-Control": "private, no-store" } });
+}
 
 export async function POST(request: Request) {
   try { return await saveStory(request); } catch (error) { return writeError(error); }

@@ -10,7 +10,7 @@ enum FontRegistration {
     static func registerAll() {
         guard !didRegister else { return }
         didRegister = true
-        ["Alexandria", "ReadexPro", "NotoKufiArabic"].forEach { registerFont(named: $0, ext: "ttf") }
+        ["Alexandria", "ReadexPro", "NotoKufiArabic", "IBMPlexSansArabic-Regular", "IBMPlexSansArabic-Medium", "IBMPlexSansArabic-SemiBold", "IBMPlexSansArabic-Bold"].forEach { registerFont(named: $0, ext: "ttf") }
         applyChromeAppearance()
     }
 

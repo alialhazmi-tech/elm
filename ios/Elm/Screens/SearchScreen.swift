@@ -43,6 +43,8 @@ final class SearchStore {
 
 /// 1g — البحث: يتجاهل التشكيل واختلاف الهمزات، ومرشّحات بالسلاسل.
 struct SearchScreen: View {
+    var showBack = true
+    var initialQuery = ""
     @Environment(\.dismiss) private var dismiss
     @State private var query = ""
     @State private var filter = "الكل"
@@ -60,7 +62,7 @@ struct SearchScreen: View {
     }
 
     var body: some View {
-        ElmScreen(title: "البحث", showBack: true) {
+        ElmScreen(title: "البحث", showBack: showBack, showTools: false) {
             VStack(alignment: .leading, spacing: 0) {
                 field
 
@@ -87,7 +89,10 @@ struct SearchScreen: View {
             .padding(.horizontal, 18)
             .padding(.top, 14)
         }
-        .onAppear { fieldFocused = true }
+        .onAppear {
+            if query.isEmpty { query = initialQuery }
+            fieldFocused = initialQuery.isEmpty
+        }
         .onChange(of: query) { _, newValue in
             searchTask?.cancel()
             searchTask = Task {

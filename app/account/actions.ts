@@ -2,7 +2,6 @@
 import { getMemberSession } from "@/lib/membership/session";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
 import { saveMemberInterests } from "@/lib/membership/profile";
 import { MEMBER_INTEREST_IDS } from "@/lib/membership/interests";
@@ -12,8 +11,8 @@ import {
 } from "@/lib/personalization/privacy";
 import { setSaved } from "@/lib/personalization/saved";
 import { setLiked } from "@/lib/personalization/likes";
-import { newsletterSubscribers } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { setNewsletterSubscription } from "@/lib/membership/newsletter";
 import { notifyAccountChange } from "@/lib/membership/email/notifications";
 
 export type AccountFormState = { error?: string; success?: string };
@@ -134,28 +133,13 @@ export async function toggleNewsletter(
 ): Promise<AccountFormState> {
   const user = await currentMember();
   if (!user?.email) return expired;
-  const db = getDb();
-  if (!db) return failed;
-  const email = user.email.trim().toLowerCase();
+  if (!getDb()) return failed;
   const enabled = formData.get("enabled");
   if (enabled !== "0" && enabled !== "1") return failed;
   if (enabled === "1" && !user.emailVerified)
     return { error: "تحقق من بريدك الإلكتروني قبل الاشتراك في النشرة." };
   try {
-    if (enabled === "0")
-      await db
-        .delete(newsletterSubscribers)
-        .where(eq(newsletterSubscribers.email, email));
-    else
-      await db
-        .insert(newsletterSubscribers)
-        .values({
-          id: crypto.randomUUID(),
-          email,
-          source: "account",
-          createdAt: new Date().toISOString(),
-        })
-        .onConflictDoNothing();
+    await setNewsletterSubscription(user.email, enabled === "1");
     return saved(
       enabled === "1"
         ? "تم تسجيل اشتراكك في النشرة."

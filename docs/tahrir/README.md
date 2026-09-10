@@ -90,6 +90,25 @@ draft ──(story.submit)──▶ review ──(story.approve + الحارس)�
 - **الجولة التعريفية:** ست خطوات بحسب الصلاحيات (`editorial-tour.ts`)، لا تنشئ ولا تنشر.
 التفاصيل والتحقق: [`editorial-onboarding.md`](editorial-onboarding.md).
 
+### واجهات القراءة للتطبيق (2026-09-10)
+
+مسارات GET رقيقة تعيد بيانات الشاشات نفسها للتطبيق الأصلي — المنطق في `lib/tahrir/app-read.ts`، البوابة أول سطر، وكل رد `Cache-Control: private, no-store`. العقد الكامل بأمثلة JSON في [`../ios/API_MOBILE_V1.md`](../ios/API_MOBILE_V1.md) (قسم 2026-09-10)، والاختبار `tests/mobile-tahrir.integration.mjs`.
+
+| المسار | البوابة | يقابل الشاشة |
+|---|---|---|
+| `GET /api/tahrir/me` | `requireActor` (تُقبل كلمة المرور المؤقتة وغياب MFA) | الهوية والصلاحيات + بوابتا النشر |
+| `GET /api/tahrir/overview` | `requireActor` | نظرة اليوم |
+| `GET /api/tahrir/story?status=&p=&q=&series=` | `requireActor` | المواد (30/صفحة) |
+| `GET /api/tahrir/story/[id]` | `requireActor` + `canEditStory` (403) | المحرر (قراءة فقط) |
+| `GET /api/tahrir/tasks?filter=&page=` | `requireActor` | مهامي |
+| `GET /api/tahrir/taxonomy` | `requireActor` (`visibility` لمن يملك `ai.settings`) | التصنيفات |
+| `GET /api/tahrir/media?f=&p=&q=` | `media.upload` | الوسائط (24/صفحة) |
+| `GET /api/tahrir/audit?limit=` | `audit.view` | سجل التدقيق |
+| `GET /api/tahrir/stats` | `stats.view` | الإحصاءات |
+| `GET /api/tahrir/schedule` | `story.schedule` | الجدولة |
+| `GET /api/tahrir/series` | `requireActor` | السلاسل والمقترحات |
+| `GET /api/tahrir/story/history?id=` | `requireActor` + `canEditStory` | سجل النسخ |
+
 ## 5. الوسائط
 
 مرقّمة على الخادم (24 لكل صفحة، `listMediaPage` + `countMedia`)، مرشّح الحقوق (`all/ok/pending`) والبحث والصفحة في الاستعلام. الرفع حتى 8MB (PNG/JPEG/WebP) إلى مسار UUID في S3، والحقوق تُوثَّق أو تُسحب بـ`media.rights`؛ بوابة «اشتراط توثيق الحقوق» تمنع نشر مادة بصورة غير موثقة. الشاشات التي تحتاج مصغّرات فقط تستدعي `listRecentMedia` بحدّ 6–8.

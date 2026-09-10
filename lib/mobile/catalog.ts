@@ -1,26 +1,51 @@
 import { PUBLIC_CONTENT_CACHE_CONTROL } from "@/lib/content/cache-policy";
 import {
   contentSource,
+  listByFormat,
   listPublicSlides,
   listRecent,
   listVisibleArchivedSeries,
+  pageByKeyword,
   seedContentProvider,
   seriesOf,
+  seriesDirectory,
 } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
 import { stripHtmlToText } from "@/lib/content/html";
+import { decodeKeywordParam } from "@/lib/content/keywords";
 import { MEDIA_WIDTH, optimizedMedia, toMobileCard, type MobileSeriesChip, type MobileStoryCard } from "@/lib/mobile/home";
+import type { MobileBlock } from "@/lib/mobile/blocks";
+import {
+  storyBody,
+  storyKeywordLinks,
+  storyPodcast,
+  storyVideo,
+  toMobileEpisode,
+  toMobilePodcastShow,
+  type MobileKeyword,
+  type MobilePodcast,
+  type MobilePodcastEpisode,
+  type MobilePodcastShow,
+  type MobileVideoKind,
+} from "@/lib/mobile/story-extras";
+import { fetchEpisodes, PODCAST_SHOWS } from "@/lib/podcasts";
 import { isReportPalette, REPORT_PALETTES, type ReportPalette, type SlideData } from "@/lib/tahrir/jak";
 import { forYouForMember } from "@/lib/personalization/recommend";
 import { normalizeArabic } from "@/lib/policy/normalize";
+import { FALLBACK_SITE as SITE } from "@/lib/mobile/origin";
 
 // v2: الشرائح تحمل بيانات نوعها كاملة (المقارنة والمسار والقائمة والاقتباس)
 // وطابع التقرير اللوني — بلا ذلك يصل التقرير للتطبيق فارغًا من مادته.
-export const MOBILE_STORY_CONTRACT = "mobile-story.v2";
+// v3 (2026-09-10): المتن الغني ككتل + HTML منقّى، الفيديو بنوعه، الكلمات، روابط المصادر، والبودكاست —
+// بلا حذف لأي حقل من v2؛ `story.body` يبقى نصًا خالصًا للعملاء القديمة.
+export const MOBILE_STORY_CONTRACT = "mobile-story.v3";
 export const MOBILE_SERIES_INDEX_CONTRACT = "mobile-series-index.v1";
 export const MOBILE_SERIES_FEED_CONTRACT = "mobile-series-feed.v1";
 export const MOBILE_SEARCH_CONTRACT = "mobile-search.v1";
 export const MOBILE_FOR_YOU_CONTRACT = "mobile-for-you.v1";
+export const MOBILE_PODCASTS_CONTRACT = "mobile-podcasts.v1";
+export const MOBILE_KEYWORDS_CONTRACT = "mobile-keywords.v1";
+export const MOBILE_JAK_CONTRACT = "mobile-jak.v1";
 
 export type MobileSlide = {
   id: string;
@@ -57,14 +82,28 @@ export type MobileJakReport = {
 export type MobileStoryPayload = {
   contract: typeof MOBILE_STORY_CONTRACT;
   story: MobileStoryCard & {
+    /** نص خالص (v2) — للعملاء القديمة ولمشاركة النص. */
     body: string;
     factCheck: { rumor: string; truth: string } | null;
+    /** HTML منقّى بالوسوم المسموحة فقط (v3). */
+    bodyHtml: string;
+    /** المتن ككتل حتمية بلا HTML (v3). */
+    blocks: MobileBlock[];
+    videoUrl: string | null;
+    videoEmbedUrl: string | null;
+    videoKind: MobileVideoKind | null;
+    keywords: MobileKeyword[];
+    links: Array<{ href: string; label: string }>;
+    updatedAt: string | null;
+    seoDescription: string | null;
   };
   series: MobileSeriesChip | null;
   related: MobileStoryCard[];
   nextInSeries: MobileStoryCard | null;
   slides: MobileSlide[] | null;
   jak: MobileJakReport | null;
+  /** برنامج البودكاست وحلقاته لمواد شكل «بودكاست» المسجّلة؛ null لغيرها. */
+  podcast: MobilePodcast | null;
 };
 
 export type MobileSeriesEntry = MobileSeriesChip & {
@@ -105,7 +144,11 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
     ? related.find((item) => item.series === series.slug) ?? null
     : null;
 
-  const slideRows = story.format === "jakalelm" ? await listPublicSlides(story.id) : [];
+  const [slideRows, podcast] = await Promise.all([
+    story.format === "jakalelm" ? listPublicSlides(story.id) : Promise.resolve([]),
+    storyPodcast(story, origin ?? SITE),
+  ]);
+  const body = storyBody(story.body ?? story.excerpt);
   const slides: MobileSlide[] | null =
     slideRows.length > 0
       ? slideRows.map((row) => {
@@ -139,13 +182,81 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
       ...toMobileCard(story, origin, MEDIA_WIDTH.full),
       body: stripHtmlToText(story.body ?? story.excerpt),
       factCheck: story.factCheck ?? null,
+      bodyHtml: body.bodyHtml,
+      blocks: body.blocks,
+      ...storyVideo(story),
+      keywords: storyKeywordLinks(story.keywords),
+      links: body.links,
+      updatedAt: story.updatedAt ?? null,
+      seoDescription: story.seoDescription ?? null,
     },
     series: series ? toChip(series) : null,
     related: related.map((item) => toMobileCard(item, origin)),
     nextInSeries: nextInSeries ? toMobileCard(nextInSeries, origin) : null,
     slides,
     jak,
+    podcast,
   };
+}
+
+export type MobilePodcastsPayload = {
+  contract: typeof MOBILE_PODCASTS_CONTRACT;
+  shows: Array<MobilePodcastShow & { href: string | null; episodes: MobilePodcastEpisode[] }>;
+};
+
+/** برامج البودكاست كلها بحلقاتها — الغلاف من البرنامج أو من صورة مادته؛ فشل خلاصة يعطي حلقات فارغة. */
+export async function toMobilePodcasts(origin?: string): Promise<MobilePodcastsPayload> {
+  const shows = await Promise.all(
+    PODCAST_SHOWS.map(async (show) => {
+      const [story, episodes] = await Promise.all([
+        seedContentProvider.getStory(show.storyId).catch(() => null),
+        fetchEpisodes(show).catch(() => []),
+      ]);
+      return {
+        ...toMobilePodcastShow(show, origin ?? SITE, story?.image),
+        href: story ? toMobileCard(story, origin).href : null,
+        episodes: episodes.map((episode) => toMobileEpisode(episode, origin ?? SITE)),
+      };
+    }),
+  );
+  return { contract: MOBILE_PODCASTS_CONTRACT, shows };
+}
+
+export type MobileKeywordsPayload = {
+  contract: typeof MOBILE_KEYWORDS_CONTRACT;
+  keyword: string;
+  stories: MobileStoryCard[];
+  total: number;
+  page: number;
+  nextPage: number | null;
+};
+
+/** أرشيف كلمة مفتاحية صريحة بترقيم الويب نفسه؛ null لكلمة بلا مواد منشورة. */
+export async function toMobileKeywords(rawKeyword: string, page: string | null, origin?: string): Promise<MobileKeywordsPayload | null> {
+  const keyword = decodeKeywordParam(rawKeyword).trim();
+  if (!keyword || keyword.length > 80) return null;
+  const result = await pageByKeyword(keyword, page);
+  if (result.total === 0) return null;
+  return {
+    contract: MOBILE_KEYWORDS_CONTRACT,
+    keyword,
+    stories: result.items.map((item) => toMobileCard(item, origin)),
+    total: result.total,
+    page: result.page,
+    nextPage: result.page < result.pageCount ? result.page + 1 : null,
+  };
+}
+
+export type MobileJakPayload = { contract: typeof MOBILE_JAK_CONTRACT; stories: MobileStoryCard[] };
+
+export const MOBILE_JAK_MAX = 60;
+
+/** تقارير جاك العلم المنشورة — بطاقات فقط؛ التقرير نفسه يُفتح عبر story/:id. */
+export async function toMobileJak(rawLimit: string | null, origin?: string): Promise<MobileJakPayload> {
+  const parsed = Number.parseInt(rawLimit ?? "", 10);
+  const limit = Number.isFinite(parsed) && parsed > 0 ? Math.min(MOBILE_JAK_MAX, parsed) : 40;
+  const stories = await listByFormat("jakalelm", limit);
+  return { contract: MOBILE_JAK_CONTRACT, stories: stories.map((item) => toMobileCard(item, origin)) };
 }
 
 /** الطابع اللوني مسطّحًا: التطبيق لا يعرف مفاتيح REPORT_PALETTES ولا يجب أن يعرفها. */
@@ -156,25 +267,18 @@ function jakReportOf(slideData: Array<SlideData | null>): MobileJakReport {
   return { palette: key, base: palette.base, base2: palette.base2, glow: palette.glow, glow2: palette.glow2 };
 }
 
-async function toEntry(
-  series: { slug: string; name: string; description: string; color: string; archived?: boolean },
-  origin?: string,
-): Promise<MobileSeriesEntry> {
-  const stories = await seedContentProvider.listBySeries(series.slug);
-  return {
+export async function toMobileSeriesIndex(origin?: string): Promise<MobileSeriesIndexPayload> {
+  const [archived, directory] = await Promise.all([listVisibleArchivedSeries(), seriesDirectory()]);
+  const entry = (series: { slug: string; name: string; description: string; color: string; archived?: boolean }): MobileSeriesEntry => ({
     ...toChip(series),
     archived: Boolean(series.archived),
-    count: stories.length,
-    latest: stories[0] ? toMobileCard(stories[0], origin) : null,
-  };
-}
-
-export async function toMobileSeriesIndex(origin?: string): Promise<MobileSeriesIndexPayload> {
-  const archived = await listVisibleArchivedSeries();
+    count: directory[series.slug]?.count ?? 0,
+    latest: directory[series.slug]?.latest ? toMobileCard(directory[series.slug].latest!, origin) : null,
+  });
   return {
     contract: MOBILE_SERIES_INDEX_CONTRACT,
-    series: await Promise.all(SERIES.map((item) => toEntry(item, origin))),
-    archived: await Promise.all(archived.map((item) => toEntry(item, origin))),
+    series: SERIES.map(entry),
+    archived: archived.map(entry),
   };
 }
 

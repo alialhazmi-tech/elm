@@ -285,3 +285,77 @@ xcrun simctl launch <sim> net.alelm.app -elmScreen saved    # search|notificatio
 11. **مهلة خادم التطوير كانت 0.8 ثانية** فيسقط أول طلب دائمًا (Next يترجم المسار عند
     أول طلب) ويعود التطبيق للإنتاج بصمت — فتُختبر نسخة قديمة من العقد بلا أن تدري.
     صارت 3 ثوانٍ في DEBUG وحده.
+
+---
+
+## 2026-09-10 — القارئ
+
+اكتمال جانب القارئ فوق عقد `mobile-story.v3` والمسارات الجديدة (`podcasts` / `taxonomy` / `keywords` / `jak` / `me/account`). كل الحقول الجديدة تُفكّ بـ`decodeIfPresent` فتظل الكاشات والخوادم الأقدم (الإنتاج يخدم v2 حتى لحظة كتابة هذا) تعمل.
+
+### ما بُني
+
+| الملف | الدور |
+| --- | --- |
+| `Services/HomeModels.swift` | `StoryCard` + `bodyHtml/blocks/videoUrl/videoEmbedUrl/videoKind/keywords/links/updatedAt`، و`articleBlocks` (خادم → HTML محلي → نص خالص)، و`inheritingVideo(from:)`. أنواع جديدة: `StoryKeyword` `StoryLink` `PodcastShow/Episode/Bundle/ShowEntry` `TaxonomyPayload` `KeywordPage` `JakPayload` `AccountPayload/Item/Stats/User` `ViewerPayload`. `StoryDetailPayload.podcast` |
+| `Services/APIClient.swift` | مسارات جديدة عبر `ElmHTTP`: بودكاست/تصنيف/كلمة/جاك/حساب/إعجاب/نشرة/viewer/أحداث/نبضة القراءة، ومسارات Neon Auth: `update-user` `change-password` `email-otp/*` `request-password-reset` (ثم `forget-password` عند 404) — بلا ترويسة Origin كما في جلسة العضوية القائمة |
+| `Services/ElmLinks.swift` | توجيه روابط المتن: `/section/id/slug` على أصل العلم → `StoryDestination` أصلًا، `/keywords/x` → `KeywordScreen`، وما عداه Safari داخل التطبيق |
+| `Services/PodcastPlayerStore.swift` | مفرد `shared` (لا يمكن حقنه في `ElmApp`): AVPlayer + `AVAudioSession(.playback, .spokenAudio, .longFormAudio)` + `MPNowPlayingInfoCenter` + `MPRemoteCommandCenter` (تشغيل/إيقاف/±15ث/تمرير) + إيقاف عند مقاطعة النظام. يبثّ `.elmPodcastDidStart` |
+| `Services/NarrationStore.swift` | جلسة `.playback` قبل النطق (تنجو من مفتاح الصمت والقفل)، يوقف البودكاست عند البدء، ويصمت عند بدء البودكاست |
+| `Services/ReadingTracker.swift` | `article_open` (عضو) عند الفتح، نبضة `/api/content/reading` كل 15ث نشطة وعند الإغلاق (زائر وعضو، `sessionId` UUIDv4)، `listen` عند بدء الاستماع. يتوقف مع `scenePhase`، لا يحجب الواجهة، إعادة محاولة واحدة عند الإغلاق فقط |
+| `Services/TaxonomyStore.swift` | الأقسام/السلاسل من الخادم بكاش `taxonomy.v1` وسقوط للقائمة المضمّنة |
+| `Services/ElmFormat.swift` | `durationLabel` (ثوانٍ أو `mm:ss`) و`clock` |
+| `Services/ImageStore.swift` | `uiImage(_:)` لغلاف «يُشغَّل الآن» |
+| `Screens/VideoEmbedView.swift` | WKWebView (`allowsInlineMediaPlayback`) داخل HTML دنيا `dir=rtl`، نسبة 16:9 ليوتيوب و4:5 لإنستقرام و1:1 لـX، وزر «افتح على …» |
+| `Screens/PodcastsScreen.swift` | `PodcastsScreen` (البرامج بأغلفتها + حلقات المختار)، `PodcastEpisodeList/Row`، `PodcastMiniBar` (تقدّم + ±15ث) |
+| `Screens/KeywordScreen.swift` | مواد الكلمة بترقيم الصفحات؛ 404 = حالة فارغة لا خطأ |
+| `Screens/JakListScreen.swift` | تقارير جاك العلم كبلاطات تفتح القارئ الغامر |
+| `Screens/AccountListScreens.swift` | `AccountLikedScreen` / `AccountHistoryScreen` (`?tab=liked|history`)، إزالة الإعجاب عبر `POST /api/me/like`، `GuestGate` الموحّد |
+| `Screens/AccountSettingsScreen.swift` | `AccountStore` (نظرة الحساب + `emailVerified` من `/api/viewer`) والشاشة: الاسم، توثيق البريد (يظهر فقط عند `emailVerified == false`)، كلمة المرور، النشرة، التخصيص، مسح المستنتج، الخروج |
+| `Screens/StoryDetailScreen.swift` | المتن عبر `ArticleBodyView` من البلوكات، الفيديو المضمّن، حلقات البرنامج داخل المادة + الشريط المصغّر، شرائح الكلمات، «روابط وردت في المادة»، سطر «حُدّثت في»، `openURL` → `ElmLinks`، ربط `ReadingTracker`، القراءة الصوتية من `ArticleBlocks.paragraphs` |
+| `Screens/DiscoverScreen.swift` | الأقسام من `TaxonomyStore` (4 أعمدة على iPad)، «بودكاست» و«جاك العلم» أصليان، `GridLayout` لصفوف الأشكال |
+| `Screens/HomeScreen.swift` | iPad: الصدارة يمينًا والموجز + أول الجديد يسارًا، وصفوف بعمودين، وإنفوجرافيك/أرقام بثلاثة؛ «بودكاست العلم» أصلي |
+| `Screens/AccountScreen.swift` | بلاطات الإحصاءات الأربع للعضو (من `/api/me/account`؛ لا تظهر قبل الرد)، صفوف الإعجابات/السجل/إعدادات الحساب بدل «إدارة الحساب على الموقع» |
+| `Screens/AuthSheet.swift` | «نسيت كلمة المرور؟» في وضع الدخول — يطلب البريد فقط ويشرح أن التعيين يكتمل على الموقع |
+| `Info.plist` | `UIBackgroundModes: audio` |
+
+حُذف بعد التحقق بـgrep من غياب أي مرجع: `HomeMasthead.swift`، `ScreenChrome.swift`، `AskScreen.swift` (تبويب `ask` يفتح `SearchScreen`)، ومن `HomeComponents.swift`: `BreakingBanner` `SeriesBelt` `LeadRegion` `WhyPanel` `NumbersRail` `MostReadList` `HomeFooter`.
+
+### وسائط إطلاق جديدة (DEBUG)
+
+```
+-elmStory <id> [-elmStoryVideo <embedUrl>]   # من تبويب الرئيسية؛ الثانية تزرع مشغّل يوتيوب للمعاينة
+-elmHomeSection reader-body|reader-keywords|reader-podcast|reader-end
+-elmDiscover podcasts|jak|keyword:<كلمة>
+-elmAccount liked|history|settings
+```
+
+### ما تحقق على المحاكي
+
+iPhone 17e وiPad Pro 11-inch (M5) ضد خادم محلي (`ELM_API_ORIGIN`): متن `ios-rich-1` (عناوين/قوائم/اقتباس/روابط/غامق/مائل)، الكلمات والروابط، مشغّل يوتيوب المضمّن (ببذرة `-elmStoryVideo` لأن مادة `ios-video-1` اختفت من القاعدة المحلية والإنتاج ما زال v2)، البودكاست بالأغلفة والمدد، شاشة الكلمة، الأقسام من التصنيف، حالات الزائر في الإعجابات/الإعدادات (401)، وتخطيطات iPad العمودية. **لم تُلتقط لقطة أفقية**: أوامر التدوير عبر AppleScript لم تصل إلى Simulator (بلا صلاحية Accessibility للطرفية) — والفرع نفسه يعمل في الاتجاهين لأن `horizontalSizeClass == .regular` فيهما على 11 بوصة، والمحتوى محصور بـ1040/1000 نقطة ومتمركز.
+
+### المتبقي
+
+- **ربط `PodcastMiniBar` عالميًا فوق شريط التبويب** يحتاج تعديل `RootTabView` (خارج نطاق هذا التسليم)؛ الآن يظهر داخل شاشة البودكاست ومادة البرنامج فقط، والصوت يستمر في الخلفية وعلى شاشة القفل على كل حال.
+- شاشات العضوية (الإعجابات/السجل/الإعدادات/الإحصاءات/OTP/كلمة المرور/الاستعادة) تحقق فيها البناء والمنطق وحالة الزائر فقط — لا حسابات على الإنتاج.
+- `podcast` داخل المادة (`format == podcasts`) لم يُعرض حيًا: القاعدة المحلية بلا مادة برنامج منشورة.
+
+### فخاخ جديدة مثبتة بالتجربة
+
+12. **`Text` قصير داخل `NavigationLink` في صف افتتاحية القارئ يُقصّ** («لماذا» → «لم…») رغم اتساع الصف؛ `.fixedSize()` على النص يحلّها.
+13. **`xcrun simctl launch --terminate-running-process` المتتالي بسرعة** قد يعرض الوسائط السابقة (تبويب الرئيسية بدل «استكشف») — انتظر انتهاء الإطلاق السابق أو أعد اللقطة.
+14. **قيمة `nil ?? (await …)` في Swift 6** ترفض (`'async' call in an autoclosure`)؛ اكتب `var x = a; if x == nil { x = await b }`.
+15. **`ElmAPIError` في `catch`**: الاسم `error` داخل `catch` هو الخطأ لا الحالة؛ اكتب `self.error = …` وإلا فخطأ «cannot assign to value».
+16. **إغلاق `.onDisappear` يصل عند دفع مادة مرتبطة فوق القارئ** لا عند الرجوع فقط؛ `ReadingTracker.begin` يعيد فتح الجلسة من `onAppear` بدل `resume` حتى لا يتوقف العدّ بعد العودة.
+
+---
+
+## 2026-09-10 — لوحة «تحرير العلم» داخل التطبيق والآيباد
+
+نُفّذت مساحة التحرير كاملة بحسب الصلاحيات (الدخول وMFA، نظرة اليوم، المواد والإجراءات، المحرر ببلوكات،
+الفريق والسجل الزمني وسجل النسخ، الوسائط والحقوق، مهامي، التنبيهات، الجدولة، السلاسل، التدقيق، الإحصاءات،
+الحسابات الإدارية والأدوار، إعدادات النظام، ملفي). التفاصيل والفخاخ والتحقق الآلي في
+[`STAFF-WORKSPACE.md`](STAFF-WORKSPACE.md)، والمقارنة الكاملة مع المنصة في [`PARITY-2026-09-10.md`](PARITY-2026-09-10.md).
+الآيباد صار مدعومًا (`TARGETED_DEVICE_FAMILY = 1,2` وكل الاتجاهات)، والتاريخ ميلادي بتوقيت الرياض بأرقام لاتينية.
+مسارات الخادم الجديدة (قراءة رقيقة بنفس البوابات) في `API_MOBILE_V1.md` § 2026-09-10 و`docs/tahrir/README.md`.
+البيئة المحلية المعزولة للتطوير: `scripts/neon-local-proxy.mjs` + `NEON_LOCAL_PROXY` في `lib/db.ts`.
+

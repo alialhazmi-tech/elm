@@ -29,7 +29,7 @@ test("عقد المادة والسلاسل للموبايل يحافظ على ا
     read("app/api/mobile/v1/series/[slug]/route.ts"),
     read("docs/ios/API_MOBILE_V1.md"),
   ]);
-  assert.match(catalog, /mobile-story\.v2/);
+  assert.match(catalog, /mobile-story\.v3/);
   assert.match(catalog, /mobile-series-index\.v1/);
   assert.match(catalog, /mobile-series-feed\.v1/);
   assert.match(catalog, /stripHtmlToText/);
@@ -159,6 +159,6 @@ test("عقد المادة v2 ينقل بيانات صفحات جاك وطابع�
   assert.match(catalog, /glow2/);
   assert.doesNotMatch(catalog, /REPORT_PALETTE_NAMES/);
 
-  assert.match(docs, /mobile-story\.v2/);
+  assert.match(docs, /mobile-story\.v3/);
   assert.match(docs, /"jak"/);
 });

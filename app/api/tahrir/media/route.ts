@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { requestOrigin } from "@/lib/mobile/origin";
 import { putStoredImage } from "@/lib/storage/images";
 import { requirePermission } from "@/lib/tahrir/access";
+import { appMedia } from "@/lib/tahrir/app-read";
 import { readImageMeta } from "@/lib/tahrir/imageMeta";
 import { addMedia } from "@/lib/tahrir/service";
 
@@ -11,6 +13,15 @@ const EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/webp": "webp",
 };
+
+/** صفحة من المكتبة للتطبيق — نفس مرشّحات شاشة الوسائط (24/صفحة) وروابط مطلقة. */
+export async function GET(request: Request) {
+  const gate = await requirePermission("media.upload");
+  if (!gate.ok) return gate.response;
+  const params = new URL(request.url).searchParams;
+  const payload = await appMedia({ f: params.get("f"), p: params.get("p"), q: params.get("q") }, requestOrigin(request));
+  return NextResponse.json(payload, { headers: { "Cache-Control": "private, no-store" } });
+}
 
 /**
  * رفع صورة إلى المكتبة — تحفظ في مخزن S3 المتوافق بمسار UUID قصير.

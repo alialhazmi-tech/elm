@@ -520,7 +520,7 @@ export type StoryLite = {
   [K in keyof typeof LITE_COLUMNS]: (typeof stories.$inferSelect)[K];
 };
 
-const recencyOrder = desc(sql`coalesce(${stories.updatedAt}, ${stories.publishedAt})`);
+export const recencyOrder = desc(sql`coalesce(${stories.updatedAt}, ${stories.publishedAt})`);
 
 /**
  * عدّادات الحالات: layout والصفحة يتشاركان النتيجة داخل الطلب عبر cache()،
@@ -547,7 +547,8 @@ function titlePattern(q: string): string {
   return `%${cleaned}%`;
 }
 
-function pageWhere(status: StoryStatus | undefined, filters: StoryFilters): SQL {
+/** شرط قائمة المواد (الحالة + البحث + السلسلة) — مشترك مع واجهات القراءة للتطبيق. */
+export function pageWhere(status: StoryStatus | undefined, filters: StoryFilters): SQL {
   const clauses: SQL[] = [status ? eq(stories.status, status) : ne(stories.status, "archived")];
   if (filters.q?.trim()) clauses.push(ilike(stories.title, titlePattern(filters.q)));
   if (filters.seriesSlug) clauses.push(eq(stories.seriesSlug, filters.seriesSlug));

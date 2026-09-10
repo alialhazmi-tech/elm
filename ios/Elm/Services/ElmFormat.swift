@@ -96,14 +96,38 @@ enum ElmFormat {
         }
     }
 
+    /// تاريخ اليوم ميلاديًا بتوقيت الرياض مع اسم اليوم — أرقام لاتينية كما على الموقع.
     static func todayStrip() -> String {
-        let now = Date()
-        return "\(format(now, calendar: Calendar(identifier: .islamicUmmAlQura))) · \(format(now, calendar: Calendar(identifier: .gregorian)))"
+        format(Date(), calendar: Calendar(identifier: .gregorian), withWeekday: true)
     }
 
     static func brandDate(_ iso: String?) -> String? {
         guard let iso, let date = parseDate(iso) else { return nil }
-        return "\(format(date, calendar: Calendar(identifier: .islamicUmmAlQura))) — \(format(date, calendar: Calendar(identifier: .gregorian)))"
+        return format(date, calendar: Calendar(identifier: .gregorian))
+    }
+
+    /// مدة الحلقة: ثوانٍ ("4228") أو "mm:ss"/"h:mm:ss" كما تصل من الخلاصة — تُعرض h:mm:ss بأرقام لاتينية.
+    static func durationLabel(_ raw: String?) -> String? {
+        guard let raw = raw.map(latinDigits)?.trimmingCharacters(in: .whitespaces), !raw.isEmpty else { return nil }
+        let seconds: Int
+        if raw.contains(":") {
+            let parts = raw.split(separator: ":").compactMap { Int($0) }
+            guard !parts.isEmpty else { return nil }
+            seconds = parts.reduce(0) { $0 * 60 + $1 }
+        } else if let value = Double(raw) {
+            seconds = Int(value)
+        } else {
+            return nil
+        }
+        return clock(seconds)
+    }
+
+    /// h:mm:ss أو m:ss.
+    static func clock(_ totalSeconds: Int) -> String {
+        let total = max(0, totalSeconds)
+        let hours = total / 3600, minutes = (total % 3600) / 60, seconds = total % 60
+        if hours > 0 { return "\(hours):\(twoDigit(minutes)):\(twoDigit(seconds))" }
+        return "\(minutes):\(twoDigit(seconds))"
     }
 
     static func bodyParagraphs(_ raw: String) -> [String] {
@@ -136,13 +160,15 @@ enum ElmFormat {
         return String(match.1)
     }
 
-    private static func format(_ date: Date, calendar: Calendar) -> String {
+    private static func format(_ date: Date, calendar: Calendar, withWeekday: Bool = false) -> String {
         var cal = calendar
         cal.locale = Locale(identifier: "ar_SA")
+        cal.timeZone = TimeZone(identifier: "Asia/Riyadh") ?? .current
         let formatter = DateFormatter()
         formatter.calendar = cal
+        formatter.timeZone = cal.timeZone
         formatter.locale = Locale(identifier: "ar_SA@numbers=latn")
-        formatter.dateFormat = "d MMMM yyyy"
+        formatter.dateFormat = withWeekday ? "EEEE d MMMM yyyy" : "d MMMM yyyy"
         return latinDigits(formatter.string(from: date))
     }
 

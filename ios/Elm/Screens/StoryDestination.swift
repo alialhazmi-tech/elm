@@ -25,4 +25,6 @@ enum JakFormat {
 @Observable
 final class ChromeState {
     var immersive = false
+    var activeReaders: Set<UUID> = []
+    var readerVisible: Bool { !activeReaders.isEmpty }
 }

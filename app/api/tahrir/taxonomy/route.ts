@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { requirePermission } from "@/lib/tahrir/access";
+import { requireActor, requirePermission } from "@/lib/tahrir/access";
+import { appTaxonomy } from "@/lib/tahrir/app-read";
 import { audit } from "@/lib/tahrir/service";
 import { setTaxonomyHidden } from "@/lib/content/taxonomy-settings";
 import { TAXONOMY_SECTIONS, TAXONOMY_SERIES } from "@/lib/content/taxonomy";
 import { revalidatePublicContent } from "@/lib/tahrir/revalidatePublic";
+
+/** التصنيفات للمحرر في التطبيق؛ خريطة الظهور الكاملة لمن يملك `ai.settings` فقط. */
+export async function GET() {
+  const gate = await requireActor();
+  if (!gate.ok) return gate.response;
+  return NextResponse.json(await appTaxonomy(gate.actor), { headers: { "Cache-Control": "private, no-store" } });
+}
 
 export async function PATCH(request: Request) {
   const gate = await requirePermission("ai.settings", "إظهار التصنيفات وإخفاؤها من صلاحية رئيس التحرير.");

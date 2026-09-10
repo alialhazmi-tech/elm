@@ -9,6 +9,8 @@ struct AuthSheet: View {
     @State private var name = ""
     @State private var email = ""
     @State private var password = ""
+    @State private var resetBusy = false
+    @State private var resetMessage: String?
     @FocusState private var focused: Field?
 
     private enum Field { case name, email, password }
@@ -64,6 +66,24 @@ struct AuthSheet: View {
                     .buttonStyle(.plain)
                     .disabled(member.loading)
 
+                    if mode == .signIn {
+                        Button { Task { await requestReset() } } label: {
+                            Text(resetBusy ? "لحظة…" : "نسيت كلمة المرور؟")
+                                .font(ElmFonts.text(.footnote, weight: .semibold))
+                                .foregroundStyle(ElmTheme.navyInk)
+                                .frame(minHeight: 44)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(resetBusy)
+                        .accessibilityHint("يرسل رابط استعادة كلمة المرور إلى بريدك")
+                        if let resetMessage {
+                            Label(resetMessage, systemImage: "envelope")
+                                .font(ElmFonts.text(.footnote))
+                                .foregroundStyle(ElmTheme.ink2)
+                                .lineSpacing(3)
+                        }
+                    }
+
                     Label("جلسة آمنة محفوظة في الجهاز. لا نخزن كلمة مرورك داخل التطبيق.", systemImage: "lock.shield")
                         .font(ElmFonts.text(.caption))
                         .foregroundStyle(ElmTheme.ink2)
@@ -78,7 +98,25 @@ struct AuthSheet: View {
                     Button("إغلاق") { dismiss() }
                 }
             }
-            .onChange(of: mode) { _, _ in member.errorMessage = nil }
+            .onChange(of: mode) { _, _ in member.errorMessage = nil; resetMessage = nil }
+        }
+    }
+
+    /// يطلب بريد الاستعادة فقط؛ تعيين كلمة المرور يكتمل على الموقع من الرابط المرسل.
+    private func requestReset() async {
+        let clean = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard clean.contains("@"), clean.contains(".") else {
+            resetMessage = "اكتب بريدك الإلكتروني أولًا ثم اضغط «نسيت كلمة المرور؟»."
+            focused = .email
+            return
+        }
+        resetBusy = true
+        defer { resetBusy = false }
+        do {
+            try await APIClient.requestPasswordReset(email: clean)
+            resetMessage = "إذا كان البريد مرتبطًا بحساب، فستصلك رسالة برابط الاستعادة. افتح الرابط لتعيين كلمة مرور جديدة ثم عد للدخول هنا."
+        } catch {
+            resetMessage = ElmAPIError.wrap(error).message
         }
     }
 

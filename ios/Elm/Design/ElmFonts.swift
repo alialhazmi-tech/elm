@@ -4,12 +4,12 @@ import CoreText
 import UIKit
 #endif
 
-/// Alexandria للعناوين، Readex Pro للمتن، Noto Kufi للوجوتايب — مع Dynamic Type.
+/// Alexandria للعناوين، IBM Plex Sans Arabic للمتن، Noto Kufi للوجوتايب — مع Dynamic Type.
 /// الملفات المضمّنة خطوط متغيرة؛ الوزن يُضبط عبر محور `wght` لا عبر Trait على Regular،
 /// لأن Trait يُبقي الوجه Regular في العربية فيظهر النص رفيعًا رغم طلب Bold/Heavy.
 enum ElmFonts {
     static let display = "Alexandria-Regular"
-    static let text = "ReadexPro-Regular"
+    static let text = "IBMPlexSansArabic-Regular"
     static let logo = "NotoKufiArabic-Regular"
 
     static func display(_ style: Font.TextStyle, weight: Font.Weight = .bold) -> Font {
@@ -41,6 +41,10 @@ enum ElmFonts {
     #endif
 
     private static func sized(name: String, size: CGFloat, weight: Font.Weight, style: Font.TextStyle) -> Font {
+        if name == text {
+            // SwiftUI scales and updates static font faces when Dynamic Type changes.
+            return .custom(textFace(weight), size: size, relativeTo: style)
+        }
         #if canImport(UIKit)
         if let font = weightedUIFont(name: name, size: size, weight: uiWeight(weight)) {
             return Font(UIFontMetrics(forTextStyle: uiTextStyle(style)).scaledFont(for: font))
@@ -49,8 +53,22 @@ enum ElmFonts {
         return .custom(name, size: size, relativeTo: style)
     }
 
+    private static func textFace(_ weight: Font.Weight) -> String {
+        let face: String
+        switch weight {
+        case .bold, .heavy, .black: face = "Bold"
+        case .semibold: face = "SemiBold"
+        case .medium: face = "Medium"
+        default: face = "Regular"
+        }
+        return "IBMPlexSansArabic-\(face)"
+    }
+
     private static func scaled(name: String, style: Font.TextStyle, weight: Font.Weight) -> Font {
         #if canImport(UIKit)
+        if name == text {
+            return .custom(textFace(weight), size: basePointSize(style), relativeTo: style)
+        }
         let uiStyle = uiTextStyle(style)
         // لا تستخدم preferredFont.pointSize هنا: هو مكبّر أصلًا حسب Dynamic Type،
         // وتمريره إلى UIFontMetrics يكرر التكبير مرتين في أحجام الوصول.
@@ -71,6 +89,16 @@ enum ElmFonts {
     )
 
     private static func weightedUIFont(name: String, size: CGFloat, weight: UIFont.Weight) -> UIFont? {
+        if name.hasPrefix("IBMPlexSansArabic") {
+            let face: String
+            switch weight {
+            case .bold, .heavy, .black: face = "Bold"
+            case .semibold: face = "SemiBold"
+            case .medium: face = "Medium"
+            default: face = "Regular"
+            }
+            return UIFont(name: "IBMPlexSansArabic-\(face)", size: size)
+        }
         guard let base = UIFont(name: name, size: size) else { return nil }
         let wght = axisWeight(weight, fontName: name, base: base)
         // ابنِ واصفًا من العائلة لا من PostScript Regular؛ إضافة Trait على Regular

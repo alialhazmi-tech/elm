@@ -3,7 +3,7 @@
  * وعلى Cloudflare Workers (وجهة النشر) دون مقابس TCP.
  */
 
-import { neon } from "@neondatabase/serverless";
+import { neon, neonConfig } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 
 import * as schema from "../db/schema.ts";
@@ -16,6 +16,11 @@ let cached: Database | null | undefined;
 export function getDb(): Database | null {
   if (cached !== undefined) return cached;
   const url = process.env.DATABASE_URL;
+  // تطوير محلي فقط: توجيه HTTP إلى وكيل يحاكي Neon فوق Postgres محلي (scripts/neon-local-proxy.mjs).
+  const localProxy = process.env.NEON_LOCAL_PROXY;
+  if (localProxy && process.env.NODE_ENV !== "production" && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?\/sql$/.test(localProxy)) {
+    neonConfig.fetchEndpoint = localProxy;
+  }
   cached = url ? drizzle(neon(url), { schema }) : null;
   return cached;
 }

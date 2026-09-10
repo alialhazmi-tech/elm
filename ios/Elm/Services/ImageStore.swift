@@ -91,6 +91,18 @@ final class ImageStore: @unchecked Sendable {
         #endif
     }
 
+    #if canImport(UIKit)
+    /// صورة UIKit للغلاف في مركز «يُشغَّل الآن».
+    func uiImage(_ url: URL, maxPixel: CGFloat = 600) async -> UIImage? {
+        if let ui = memory.object(forKey: memKey(url, maxPixel: maxPixel)) { return ui }
+        var data = diskData(url)
+        if data == nil { data = await download(url) }
+        guard let data, let ui = Self.decode(data, maxPixel: maxPixel) else { return nil }
+        remember(ui, for: url, maxPixel: maxPixel)
+        return ui
+    }
+    #endif
+
     private func download(_ url: URL) async -> Data? {
         let task: Task<Data?, Never> = lock.withLock {
             if let existing = inflight[url] { return existing }

@@ -28,25 +28,26 @@ final class SeriesIndexStore {
                         latest: nil
                     )
                 }
-                errorMessage = "يُعرض الدليل المحلي — التغذية الكاملة بعد وصول العقد."
+                errorMessage = "تعذر تحديث السلاسل. يمكنك تصفح الدليل المحفوظ والمحاولة مجددًا."
             }
         }
         loading = false
     }
 }
 
-/// 1d — السلاسل الثماني: الطيف كاملًا، والأرشيف المتقاعد ظاهر لا محذوف.
+/// 1d — سلاسل العلم: الطيف كاملًا، والأرشيف المتقاعد ظاهر لا محذوف.
 struct SeriesScreen: View {
+    var showBack = false
     @State private var store = SeriesIndexStore()
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        ElmScreen(title: "السلاسل", onRefresh: { await store.load() }) {
+        ElmScreen(title: "السلاسل", showBack: showBack, onRefresh: { await store.load() }) {
             VStack(alignment: .leading, spacing: 0) {
-                Text("السلاسل الثماني")
+                Text("سلاسل العلم")
                     .font(ElmFonts.display(.title, weight: .heavy))
                     .foregroundStyle(ElmTheme.ink)
-                Text("العلم يستقبل الخبر ويخرجه طيفًا: لكل سلسلة زاوية، ولكل زاوية لون.")
+                Text("زوايا مختلفة لفهم العالم. اختر السلسلة التي تثير فضولك.")
                     .font(ElmFonts.text(.footnote))
                     .foregroundStyle(ElmTheme.ink2)
                     .lineSpacing(4)
@@ -62,8 +63,8 @@ struct SeriesScreen: View {
                 }
 
                 LazyVGrid(columns: columns, spacing: 10) {
-                    ForEach(Array(store.active.enumerated()), id: \.element.id) { index, entry in
-                        card(entry, number: index + 1)
+                    ForEach(store.active) { entry in
+                        card(entry)
                     }
                 }
                 .padding(.top, 16)
@@ -89,16 +90,13 @@ struct SeriesScreen: View {
             : [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
     }
 
-    private func card(_ entry: SeriesEntry, number: Int) -> some View {
+    private func card(_ entry: SeriesEntry) -> some View {
         let color = ElmTheme.hex(entry.color)
         return NavigationLink {
             SeriesFeedScreen(chip: entry.asChip)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                Text(ElmFormat.twoDigit(number))
-                    .font(ElmFonts.display(.footnote, weight: .heavy))
-                    .foregroundStyle(color)
-                    .elmLatin()
+                Circle().fill(color).frame(width: 12, height: 12).accessibilityHidden(true)
                 Text(entry.name)
                     .font(ElmFonts.display(.headline, weight: .heavy))
                     .foregroundStyle(ElmTheme.ink)
@@ -109,7 +107,6 @@ struct SeriesScreen: View {
                     .multilineTextAlignment(.leading)
                     .lineSpacing(2)
                     .padding(.top, 4)
-                Spacer(minLength: 6)
                 Text(entry.count > 0 ? ElmFormat.materialLabel(entry.count) : "تصفّح السلسلة")
                     .font(ElmFonts.text(.caption2))
                     .foregroundStyle(ElmTheme.ink3)
@@ -124,7 +121,7 @@ struct SeriesScreen: View {
             }
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
-            .shadow(color: .black.opacity(0.05), radius: 12, y: 4)
+
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(entry.name)، \(entry.description)")
@@ -169,90 +166,9 @@ struct SeriesScreen: View {
 /// 1d↩ — تغذية سلسلة واحدة.
 struct SeriesFeedScreen: View {
     let chip: SeriesChip
-    @State private var feed: SeriesFeedPayload?
-    @State private var loading = false
-    @State private var errorMessage: String?
-
-    private var header: SeriesEntry {
-        feed?.series ?? SeriesEntry(
-            slug: chip.slug, name: chip.name,
-            description: chip.description.isEmpty ? SeriesPalette.blurb(for: chip.slug) : chip.description,
-            color: chip.color, archived: false, count: 0, latest: nil
-        )
-    }
-
     var body: some View {
-        ElmScreen(title: chip.name, showBack: true, onRefresh: { await load() }) {
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 7) {
-                    Text(header.archived ? "من أرشيف العلم — اكتملت رسالتها" : "سلسلة معرفية")
-                        .font(ElmFonts.text(.caption2, weight: .bold))
-                        .foregroundStyle(ElmTheme.hex(header.color))
-                    Text(header.name)
-                        .font(ElmFonts.display(.title, weight: .heavy))
-                        .foregroundStyle(ElmTheme.ink)
-                    Text(header.description)
-                        .font(ElmFonts.text(.footnote))
-                        .foregroundStyle(ElmTheme.ink2)
-                        .lineSpacing(3)
-                    Text(countLabel)
-                        .font(ElmFonts.text(.caption2, weight: .medium))
-                        .foregroundStyle(ElmTheme.ink3)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
-                .background(ElmTheme.hex(header.color).opacity(0.12))
-                .overlay(alignment: .top) {
-                    Rectangle().fill(ElmTheme.hex(header.color)).frame(height: 3)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(ElmFonts.text(.footnote))
-                        .foregroundStyle(ElmTheme.ink2)
-                }
-
-                if let stories = feed?.stories, !stories.isEmpty {
-                    LazyVStack(spacing: 12) {
-                        ForEach(Array(stories.enumerated()), id: \.element.id) { index, story in
-                            if index == 0 {
-                                StoryTile(story: story, tall: true)
-                            } else {
-                                MiniStoryRow(story: story)
-                            }
-                        }
-                    }
-                } else if !loading {
-                    Text("مواد هذه السلسلة في الطريق.")
-                        .font(ElmFonts.text(.callout))
-                        .foregroundStyle(ElmTheme.ink2)
-                        .padding(.vertical, 24)
-                }
-            }
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
-        }
-        .task { await load() }
-        .overlay {
-            if loading && feed == nil { ProgressView().tint(ElmTheme.navy) }
-        }
-    }
-
-    private var countLabel: String {
-        let total = feed?.total ?? header.count
-        return total == 0 ? "لا مواد منشورة بعد" : "\(ElmFormat.materialLabel(total)) منشورة"
-    }
-
-    private func load() async {
-        loading = true
-        defer { loading = false }
-        do {
-            feed = try await APIClient.fetchSeriesFeed(slug: chip.slug)
-            ImageStore.shared.prefetch((feed?.stories ?? []).compactMap(\.imageURL))
-        } catch {
-            errorMessage = "تعذر تحميل تغذية السلسلة."
-        }
+        BrowseFeedScreen(kind: "series", slug: chip.slug, title: chip.name,
+                         subtitle: chip.description.isEmpty ? SeriesPalette.blurb(for: chip.slug) : chip.description)
     }
 }
 
@@ -267,6 +183,7 @@ extension SeriesPalette {
         case "shakhsiat": "سِيَر صنعت أثرًا"
         case "limatha": "الأسباب خلف الظواهر"
         case "matha-law": "سيناريوهات واحتمالات"
+        case "matha-baad": "قراءة التداعيات"
         case "bel-tarikh": "الزمن يعطي السياق"
         default: ""
         }

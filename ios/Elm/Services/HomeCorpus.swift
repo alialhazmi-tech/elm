@@ -12,7 +12,8 @@ enum HomeCorpus {
         }
         var seen = Set<String>()
         var out: [StoryCard] = []
-        let pool = [home.hero] + home.minis + home.mosaic + [home.dataStory].compactMap { $0 } + home.videos + home.mostRead
+        var pool = [home.hero] + home.minis + home.mosaic + [home.dataStory].compactMap { $0 } + home.videos + home.mostRead
+        pool += home.presentation?.stream?.river ?? []
         for card in pool {
             if seen.insert(card.apiId).inserted {
                 out.append(card)
