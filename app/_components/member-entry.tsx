@@ -134,7 +134,7 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
         {needsVerification && (
           <Link
             className="account-menu-alert"
-            href={`${accountHref}?tab=settings${preview ? "&unverified=1" : ""}#ac-verify-title`}
+            href="/account/verify-email"
             onClick={close}
           >
             <span className="account-menu-alert-marker" aria-hidden="true" />

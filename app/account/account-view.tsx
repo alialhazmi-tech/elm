@@ -31,7 +31,6 @@ import { sectionName, seriesOf } from "@/lib/content/provider";
 import {
   AccountAction,
   DetailsForm,
-  EmailVerificationNotice,
   InterestsForm,
   PasswordForm,
 } from "./account-forms";
@@ -289,8 +288,10 @@ export function AccountView({
           </div>
         </header>
         {!user.emailVerified && (
-          <div className="ac-verification-banner">
-            <EmailVerificationNotice key={user.email} email={user.email} />
+          <div className="ac-verification-notice">
+            <Mail size={18} aria-hidden="true" />
+            <span>بريدك الإلكتروني غير موثّق.</span>
+            <Link href="/account/verify-email">توثيق البريد</Link>
           </div>
         )}
         <div className="ac-layout">
