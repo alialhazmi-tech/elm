@@ -1,7 +1,7 @@
 "use client";
 import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { memberSessionStore } from "@/lib/membership/client-session";
 import {
   ArrowLeft,
@@ -234,13 +234,19 @@ function ForgotForm({
 export function JoinForm({
   next,
   available = true,
-  initialMode = "signup",
 }: {
   next?: string | null;
   available?: boolean;
-  initialMode?: "signup" | "signin" | "forgot";
 }) {
-  const [mode, setMode] = useState<"signup" | "signin" | "forgot">(initialMode);
+  const searchParams = useSearchParams();
+  const requestedMode = searchParams.get("mode");
+  const mode = requestedMode === "signup" || requestedMode === "forgot" ? requestedMode : "signin";
+  function setMode(nextMode: "signup" | "signin" | "forgot") {
+    if (nextMode === mode) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("mode", nextMode);
+    window.history.pushState(null, "", `/join?${params.toString()}`);
+  }
   const router = useRouter();
   const authenticated = useSyncExternalStore(memberSessionStore.subscribe, memberSessionStore.getSnapshot, memberSessionStore.getServerSnapshot);
   useEffect(() => {
@@ -273,17 +279,17 @@ export function JoinForm({
         <div className="member-auth-tabs" aria-label="طريقة الدخول">
           <button
             type="button"
+            aria-pressed={mode === "signin"}
+            onClick={() => setMode("signin")}
+          >
+            تسجيل الدخول
+          </button>
+          <button
+            type="button"
             aria-pressed={mode === "signup"}
             onClick={() => setMode("signup")}
           >
             حساب جديد
-          </button>
-          <button
-            type="button"
-            aria-pressed={mode === "signin"}
-            onClick={() => setMode("signin")}
-          >
-            لدي حساب
           </button>
         </div>
       )}
