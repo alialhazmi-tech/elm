@@ -9,6 +9,7 @@ import { getMemberSession } from "@/lib/membership/session";
 import { signOutMember } from "@/app/account/actions";
 import { JoinForm } from "./join-form";
 import { safeInternalPath } from "@/lib/membership/paths";
+import { loadActor } from "@/lib/tahrir/access";
 import "./member-auth.css";
 
 export const metadata: Metadata = {
@@ -56,6 +57,8 @@ export default async function JoinPage({
       redirect(profile.onboardingCompleted ? (next ?? "/account") : "/welcome");
     }
   }
+  // جلسة الإدارة تظهر في الهيدر أيضًا؛ لا نعرض بجانبها نموذج دخول العضوية.
+  if (await loadActor()) redirect("/");
   return (
     <>
       <SiteHeader />
