@@ -16,11 +16,27 @@ final class NarrationStore: NSObject, AVSpeechSynthesizerDelegate {
     var storyId: String?
 
     @ObservationIgnored private var podcastObserver: NSObjectProtocol?
+    @ObservationIgnored private var summaryObserver: NSObjectProtocol?
+    @ObservationIgnored private var interruptionObserver: NSObjectProtocol?
 
     override init() {
         super.init()
         synthesizer.delegate = self
         // بدء حلقة بودكاست يُسكت القراءة الصوتية — لا صوتان معًا.
+        // مقاطعة نظامية: تحديث الحالة إلى «متوقف مؤقتًا» حتى لا يبقى الزر «إيقاف مؤقت» بعد المكالمة.
+        interruptionObserver = NotificationCenter.default.addObserver(forName: AVAudioSession.interruptionNotification, object: nil, queue: .main) { [weak self] note in
+            guard let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt, AVAudioSession.InterruptionType(rawValue: raw) == .began else { return }
+            Task { @MainActor in
+                guard let self, self.state == .playing else { return }
+                if self.synthesizer.pauseSpeaking(at: .word) { self.state = .paused } else { self.state = .paused }
+            }
+        }
+        summaryObserver = NotificationCenter.default.addObserver(forName: .elmSummaryAudioDidStart, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.state != .idle else { return }
+                self.stop()
+            }
+        }
         podcastObserver = NotificationCenter.default.addObserver(forName: .elmPodcastDidStart, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in
                 guard let self, self.state != .idle else { return }
@@ -39,6 +55,7 @@ final class NarrationStore: NSObject, AVSpeechSynthesizerDelegate {
     func start(story: StoryCard, paragraphs: [String]) {
         synthesizer.stopSpeaking(at: .immediate)
         PodcastPlayerStore.shared.pause()
+        SummaryAudioStore.shared.stop()
         activateAudioSession()
         title = story.title
         storyId = story.apiId

@@ -36,10 +36,20 @@ struct PodcastsScreen: View {
     @State private var store = PodcastsStore()
     @State private var selected: String?
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.dynamicTypeSize) private var typeSize
     private let player = PodcastPlayerStore.shared
 
     private var current: PodcastShowEntry? {
         store.shows.first { $0.id == selected } ?? store.shows.first
+    }
+
+    /// «أحدث الحلقات» عبر كل البرامج — أحدث 3 من كل برنامج ثم أحدث 5 إجمالًا، كما على الويب.
+    private var latestAcrossShows: [(show: PodcastShow, episode: PodcastEpisode)] {
+        store.shows
+            .flatMap { entry in entry.episodes.prefix(3).map { (show: entry.show, episode: $0) } }
+            .sorted { ($0.episode.publishedAt ?? "") > ($1.episode.publishedAt ?? "") }
+            .prefix(5)
+            .map { $0 }
     }
 
     var body: some View {
@@ -60,11 +70,22 @@ struct PodcastsScreen: View {
                         Button("إعادة المحاولة") { Task { await store.load() } }.frame(minHeight: 44)
                     }
                 } else if store.loading && store.shows.isEmpty {
-                    ProgressView("جاري تحميل البرامج").font(ElmFonts.text(.caption)).frame(maxWidth: .infinity).padding(.top, 40)
+                    ProgressView("جارٍ تحميل البرامج").font(ElmFonts.text(.caption)).frame(maxWidth: .infinity).padding(.top, 40)
                 } else if store.shows.isEmpty {
                     ContentUnavailableView("لا برامج منشورة بعد", systemImage: "headphones")
                 } else {
                     showsRail
+                    let latest = latestAcrossShows
+                    if store.shows.count > 1, !latest.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            SectionHead(title: "أحدث الحلقات", subtitle: "من كل البرامج")
+                            VStack(spacing: 8) {
+                                ForEach(latest, id: \.episode.id) { item in
+                                    PodcastEpisodeRow(show: item.show, episode: item.episode, showsName: true)
+                                }
+                            }
+                        }
+                    }
                     if let current { episodes(of: current) }
                 }
                 if let error = store.errorMessage, !store.shows.isEmpty {
@@ -96,11 +117,13 @@ struct PodcastsScreen: View {
                                 .overlay { RemoteImage(url: entry.show.coverURL, maxPixel: 600) }
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(active ? entry.show.accentColor : .clear, lineWidth: 3))
-                            Text(entry.show.name).font(ElmFonts.display(.subheadline, weight: .bold)).foregroundStyle(ElmTheme.ink).lineLimit(1)
+                            Text(entry.show.name).font(ElmFonts.display(.subheadline, weight: .bold)).foregroundStyle(ElmTheme.ink)
+                                .lineLimit(2).multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                             Text(ElmFormat.countedNoun(entry.episodes.count, one: "حلقة واحدة", two: "حلقتان", few: "حلقات", many: "حلقة"))
                                 .font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
                         }
-                        .frame(width: 132)
+                        // عرض مرن مع تكبير النص حتى لا يُقصّ اسم البرنامج.
+                        .frame(width: typeSize.isAccessibilitySize ? 200 : 132)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("برنامج \(entry.show.name)")
@@ -117,7 +140,7 @@ struct PodcastsScreen: View {
                 SectionHead(title: entry.show.name, subtitle: "الحلقات الأحدث أولًا")
                 if let youtube = entry.show.youtube, let url = URL(string: youtube) {
                     Link(destination: url) {
-                        Image(systemName: "play.rectangle").font(.system(size: 18)).frame(width: 44, height: 44)
+                        Image(systemName: "play.rectangle").font(.system(.body)).frame(width: 44, height: 44)
                     }.accessibilityLabel("قناة البرنامج على يوتيوب").foregroundStyle(ElmTheme.ink2)
                 }
             }
@@ -152,6 +175,8 @@ struct PodcastEpisodeList: View {
 struct PodcastEpisodeRow: View {
     let show: PodcastShow
     let episode: PodcastEpisode
+    /// اسم البرنامج فوق العنوان — للصفوف المجمّعة عبر البرامج.
+    var showsName = false
     private let player = PodcastPlayerStore.shared
 
     private var isCurrent: Bool { player.isCurrent(episode) }
@@ -168,11 +193,14 @@ struct PodcastEpisodeRow: View {
         Button { player.play(episode, from: show) } label: {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: symbol)
-                    .font(.system(size: 15, weight: .bold))
+                    .font(.system(.subheadline, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 44, height: 44)
                     .background(isCurrent ? show.accentColor : ElmTheme.navy, in: Circle())
                 VStack(alignment: .leading, spacing: 5) {
+                    if showsName {
+                        Text(show.name).font(ElmFonts.text(.caption2, weight: .bold)).foregroundStyle(show.accentColor)
+                    }
                     Text(episode.title)
                         .font(ElmFonts.text(.subheadline, weight: isCurrent ? .bold : .medium))
                         .foregroundStyle(ElmTheme.ink)
@@ -198,7 +226,7 @@ struct PodcastEpisodeRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(isCurrent && player.state == .playing ? "إيقاف" : "تشغيل") الحلقة: \(episode.title)")
+        .accessibilityLabel("\(isCurrent && player.state == .playing ? "إيقاف" : "تشغيل") الحلقة: \(episode.title)\(showsName ? "، من \(show.name)" : "")")
     }
 }
 
@@ -222,17 +250,17 @@ struct PodcastMiniBar: View {
                     }
                     Spacer(minLength: 0)
                     Button { player.skip(-15) } label: {
-                        Image(systemName: "gobackward.15").font(.system(size: 18)).frame(width: 40, height: 44)
+                        Image(systemName: "gobackward.15").font(.system(.body)).frame(width: 40, height: 44)
                     }.accessibilityLabel("رجوع 15 ثانية")
                     Button { player.toggle() } label: {
                         Group {
                             if player.state == .loading { ProgressView().tint(.white) }
-                            else { Image(systemName: player.state == .playing ? "pause.fill" : "play.fill").font(.system(size: 17, weight: .bold)) }
+                            else { Image(systemName: player.state == .playing ? "pause.fill" : "play.fill").font(.system(.body, weight: .bold)) }
                         }
                         .foregroundStyle(.white).frame(width: 44, height: 44).background(ElmTheme.navy, in: Circle())
                     }.accessibilityLabel(player.state == .playing ? "إيقاف مؤقت" : "تشغيل")
                     Button { player.stop() } label: {
-                        Image(systemName: "xmark").font(.system(size: 14, weight: .semibold)).frame(width: 36, height: 44)
+                        Image(systemName: "xmark").font(.system(.footnote, weight: .semibold)).frame(width: 36, height: 44)
                     }.accessibilityLabel("إغلاق المشغّل")
                 }
                 .buttonStyle(.plain).foregroundStyle(ElmTheme.ink2)

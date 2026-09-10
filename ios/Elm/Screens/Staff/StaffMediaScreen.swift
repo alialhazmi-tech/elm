@@ -53,6 +53,7 @@ struct StaffMediaScreen: View {
                     StaffEmptyView(title: "لا صور في هذه القائمة", symbol: "photo")
                 } else {
                     grid
+                    if let error { StaffInlineError(message: error.message, retry: { Task { await load(page: page) } }) }
                     if loading { ProgressView().frame(maxWidth: .infinity) }
                     pagination
                 }
@@ -95,7 +96,7 @@ struct StaffMediaScreen: View {
                         .overlay(alignment: .topLeading) {
                             Image(systemName: item.rightsCleared ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
                                 .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(item.rightsCleared ? ElmTheme.tealInk : ElmTheme.hex("b8760a"))
+                                .foregroundStyle(item.rightsCleared ? ElmTheme.tealInk : ElmTheme.warn)
                                 .padding(5)
                                 .background(.ultraThinMaterial, in: Circle())
                                 .padding(6)
@@ -103,7 +104,8 @@ struct StaffMediaScreen: View {
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("\(item.filename ?? "صورة") — \(item.rightsCleared ? "موثّقة الحقوق" : "بلا توثيق")")
+                .accessibilityLabel("\(item.filename ?? "صورة") — \(item.rightsCleared ? "موثّقة الحقوق" : "بلا توثيق حقوق")")
+                .accessibilityHint("يفتح تفاصيل الصورة")
             }
         }
     }
@@ -245,7 +247,7 @@ struct StaffMediaDetailSheet: View {
                     Text([item.mime, StaffFormat.bytes(item.bytes), item.width.flatMap { w in item.height.map { "\(w)×\($0)" } }, item.uploadedBy, item.createdAt.map(StaffFormat.smart)].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · "))
                         .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
                     Label(item.rightsCleared ? "الحقوق موثّقة" : "بلا توثيق حقوق", systemImage: item.rightsCleared ? "checkmark.seal.fill" : "exclamationmark.triangle.fill")
-                        .font(ElmFonts.text(.footnote, weight: .bold)).foregroundStyle(item.rightsCleared ? ElmTheme.tealInk : ElmTheme.hex("b8760a"))
+                        .font(ElmFonts.text(.footnote, weight: .bold)).foregroundStyle(item.rightsCleared ? ElmTheme.tealInk : ElmTheme.warn)
                     if let current = item.flags, !current.isEmpty { Text("ملاحظة الحقوق: \(current)").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2) }
                     if canRights {
                         StaffField(label: "مصدر الصورة أو ملاحظة الحقوق", placeholder: "مثال: تصوير العلم / رخصة مفتوحة", text: $flags, axis: .vertical)
@@ -306,6 +308,7 @@ struct StaffMediaPickerSheet: View {
                     Toggle("الموثّقة فقط", isOn: $onlyCleared).font(ElmFonts.text(.footnote)).tint(ElmTheme.tealInk)
                         .onChange(of: onlyCleared) { _, _ in Task { await load() } }
                     if let error, items.isEmpty { StaffErrorView(error: error) { Task { await load() } } }
+                    else if let error { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 104), spacing: 8)], spacing: 8) {
                         ForEach(items) { item in
                             Button { onPick(item.url); dismiss() } label: {
@@ -313,14 +316,15 @@ struct StaffMediaPickerSheet: View {
                                     .overlay { RemoteImage(url: item.imageURL, maxPixel: 400) }
                                     .overlay(alignment: .topLeading) {
                                         if !item.rightsCleared {
-                                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(ElmTheme.hex("b8760a"))
+                                            Image(systemName: "exclamationmark.triangle.fill").font(.system(size: 11, weight: .bold)).foregroundStyle(ElmTheme.warn)
                                                 .padding(5).background(.ultraThinMaterial, in: Circle()).padding(6)
                                         }
                                     }
                                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel(item.filename ?? "صورة")
+                            .accessibilityLabel("\(item.filename ?? "صورة") — \(item.rightsCleared ? "موثّقة الحقوق" : "بلا توثيق حقوق")")
+                            .accessibilityHint("يختارها صورةً بارزة للمادة")
                         }
                     }
                     if loading { ProgressView().frame(maxWidth: .infinity) }

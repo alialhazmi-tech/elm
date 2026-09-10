@@ -60,6 +60,7 @@ try {
       export { GET as scheduleApi } from './app/api/tahrir/schedule/route';
       export { GET as seriesApi } from './app/api/tahrir/series/route';
       export { GET as historyApi } from './app/api/tahrir/story/history/route';
+      export { POST as storySaveApi } from './app/api/tahrir/story/route';
       export { GET as accountApi } from './app/api/me/account/route';
       export { POST as newsletterApi } from './app/api/me/newsletter/route';
       export { invalidateRoleCache } from './lib/tahrir/access';
@@ -180,7 +181,7 @@ try {
   const own = await json(await withDb(() => subject.storyDetailApi(request("/x"), params({ id: "draft-own" }))));
   assert.equal(own.story.id, "draft-own"); assert.equal(own.story.version, 1); assert.equal(own.story.pinned, false);
   assert.deepEqual(own.story.keywords, []); assert.equal(own.story.seoTitle, "");
-  assert.deepEqual(own.capabilities, { canEdit: true, canSubmit: true, canApprove: false, canSchedule: false, canArchive: false, canRestore: false, canDelete: true, canAssign: false });
+  assert.deepEqual(own.capabilities, { canEdit: true, canSubmit: true, canApprove: false, canReturn: false, canSchedule: false, canArchive: false, canRestore: false, canDelete: true, canAssign: false });
   assert.equal(own.historyHref, "/tahrir/history/draft-own"); assert.equal(own.archiveEvent, null);
   assert.equal((await json(await withDb(() => subject.storyDetailApi(request("/x"), params({ id: "draft-assigned" }))))).story.assignedTo, "editor-1");
   await json(await withDb(() => subject.storyDetailApi(request("/x"), params({ id: "draft-other" }))), 403);
@@ -192,6 +193,23 @@ try {
   assert.equal(archivedView.archiveEvent.reason, "سبب الأرشفة الكافي"); assert.equal(archivedView.capabilities.canDelete, false);
   as("viewer-1");
   await json(await withDb(() => subject.storyDetailApi(request("/x"), params({ id: "draft-own" }))), 403);
+  // الإعادة للمحرر تشترط story.approve وتصح لمادة في الاعتماد فقط.
+  as("manager-1");
+  assert.equal((await json(await withDb(() => subject.storyDetailApi(request("/x"), params({ id: "in-review" }))))).capabilities.canReturn, true);
+  assert.equal((await json(await withDb(() => subject.storyDetailApi(request("/x"), params({ id: "draft-other" }))))).capabilities.canReturn, false);
+  checks++;
+
+  // 11b. حماية مواد جاك من الكتابة فوق الإسقاط أو تبديل الشكل عبر مسار الحفظ العام.
+  await insertStory({ id: "jak-1", title: "تقرير جاك", status: "draft", authorId: "editor-2", format: "jakalelm", body: "<p>إسقاط الشرائح</p>" });
+  as("manager-1");
+  const saveJak = await withDb(() => subject.storySaveApi(request("/api/tahrir/story", { method: "POST", body: JSON.stringify({ id: "jak-1", expectedVersion: 1, title: "تقرير جاك معدّل", excerpt: "", body: "<p>كتابة فوق الإسقاط</p>", section: "news", slug: "jak-1", seriesSlug: null, image: null, format: "news", seoTitle: "", seoDescription: "", keywords: [] }) })));
+  assert.equal(saveJak.status, 200, await saveJak.text());
+  const jakRow = (await admin.query("select body, format, title from stories where id='jak-1'")).rows[0];
+  assert.equal(jakRow.body, "<p>إسقاط الشرائح</p>", "متن جاك لا يُكتب فوقه");
+  assert.equal(jakRow.format, "jakalelm", "شكل جاك ثابت");
+  assert.equal(jakRow.title, "تقرير جاك معدّل", "العنوان يُحفظ");
+  const convert = await withDb(() => subject.storySaveApi(request("/api/tahrir/story", { method: "POST", body: JSON.stringify({ id: "draft-other", expectedVersion: 1, title: "تحويل", excerpt: "", body: "<p>x</p>", section: "news", slug: "draft-other", seriesSlug: null, image: null, format: "jakalelm", seoTitle: "", seoDescription: "", keywords: [] }) })));
+  assert.equal(convert.status, 409, "لا تحويل مادة قائمة إلى جاك");
   checks++;
 
   // 12. مهامي — موادّي والمسند إليّ بالمرشّحات الأربعة.
@@ -210,7 +228,7 @@ try {
   const taxonomy = await json(await withDb(() => subject.taxonomyApi()));
   assert.ok(taxonomy.sections.some((item) => item.slug === "news" && item.shortName === "أخبار"));
   assert.ok(taxonomy.series.some((item) => item.slug === "absat" && item.archived === false));
-  assert.deepEqual(taxonomy.formats.map((item) => item.id), ["news", "infographics", "videos", "reports", "podcasts", "jakalelm"]);
+  assert.deepEqual(taxonomy.formats.map((item) => item.id), ["news", "infographics", "videos", "reports", "podcasts"]);
   assert.equal(taxonomy.visibility, null);
   as("admin-1");
   assert.deepEqual((await json(await withDb(() => subject.taxonomyApi()))).visibility, {});
@@ -246,7 +264,8 @@ try {
   as("admin-1");
   const audit = await json(await withDb(() => subject.auditApi(request("/api/tahrir/audit?limit=1"))));
   assert.equal(audit.rows.length, 1); assert.equal(audit.rows[0].actorName, "الاسم manager-1"); assert.equal(typeof audit.loadedAt, "number");
-  assert.equal((await json(await withDb(() => subject.auditApi(request("/api/tahrir/audit"))))).rows.length, 2);
+  // سجلان مزروعان + سجل حفظ مادة جاك من الفحص 11b.
+  assert.equal((await json(await withDb(() => subject.auditApi(request("/api/tahrir/audit"))))).rows.length, 3);
   checks++;
 
   // 17. الجدولة — 403 للمحرر؛ للمعتمد قائمة مرتبة بالموعد.

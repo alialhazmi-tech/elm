@@ -4,6 +4,7 @@
  * `app/api/tahrir/*` رقيقة: بوابة الصلاحية ثم استدعاء الدالة ثم `Cache-Control: private, no-store`.
  */
 
+import { SERIES } from "@/lib/content/series";
 import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 
 import { stories, storyVersions } from "@/db/schema";
@@ -305,6 +306,8 @@ export async function appStoryDetail(actor: Actor, id: string) {
       canSubmit: actor.can("story.submit"),
       // الاعتماد من المحرر يمر ببوابة النشر نفسها (`story.publish`) كما في شاشة المحرر.
       canApprove: actor.can("story.publish"),
+      // الإعادة للمحرر تشترط `story.approve` (كما `editorial-team.ts`) وتصح لمادة في الاعتماد فقط.
+      canReturn: actor.can("story.approve") && story.status === "review",
       canSchedule: actor.can("story.schedule"),
       canArchive: actor.can("story.archive"),
       canRestore: actor.can("story.restore"),
@@ -384,7 +387,8 @@ export async function appTaxonomy(actor: Actor) {
   return {
     sections: taxonomy.sections.map((item) => ({ slug: item.slug, name: item.name, shortName: item.shortName || item.name, color: item.color ?? null })),
     series: taxonomy.series.map((item) => ({ slug: item.slug, name: item.name, color: item.color, archived: Boolean(item.archived) })),
-    formats: Object.entries(FORMAT_LABELS).map(([id, label]) => ({ id, label })),
+    // «جاك العلم» يُنشأ من محرره فقط (الويب يستثنيه من رقائق الشكل)؛ يبقى في التسميات للعرض.
+    formats: Object.entries(FORMAT_LABELS).filter(([id]) => id !== "jakalelm").map(([id, label]) => ({ id, label })),
     visibility,
   };
 }
@@ -483,7 +487,16 @@ export async function appSeries() {
   return {
     distribution,
     proposals,
-    rows: rows.map((row) => ({ slug: row.slug, name: row.name, description: row.description, color: row.color, hidden: row.hidden === 1 })),
+    rows: rows.map((row) => ({
+      slug: row.slug,
+      name: row.name,
+      description: row.description,
+      color: row.color,
+      hidden: row.hidden === 1,
+      // كما في صفحة السلاسل: المتقاعدة وحدها لها مفتاح إظهار، والعدد من التوزيع.
+      archived: !SERIES.some((item) => item.slug === row.slug),
+      count: distribution.find((item) => item.seriesSlug === row.slug)?.total ?? 0,
+    })),
   };
 }
 

@@ -83,8 +83,14 @@ async function saveStory(request: Request) {
   if (automatic && !existing && !input.title.trim() && !stripHtmlToText(input.body ?? "").trim()) {
     return NextResponse.json({ error: "أضف عنوانًا أو متنًا لبدء حفظ المسودة." }, { status: 400 });
   }
+  // مواد «جاك العلم»: المتن إسقاط آلي من الشرائح (`lib/tahrir/jak.ts`) والشكل ثابت — أي عميل
+  // (ومنه التطبيق) لا يستطيع الكتابة فوق الإسقاط أو تبديل الشكل عبر هذا المسار؛ الشرائح من `jak/slides`.
+  const isJak = existing?.format === "jakalelm";
+  if (existing && !isJak && input.format?.trim() === "jakalelm") {
+    return NextResponse.json({ error: "تقارير جاك العلم تُنشأ من محررها؛ لا يمكن تحويل مادة قائمة إلى تقرير." }, { status: 409 });
+  }
   // متن المحرر الغني يُنقّى عند الحفظ — والعرض ينقّي ثانية (القاعدة ليست مصدر ثقة).
-  const rawBody = input.body ?? "";
+  const rawBody = isJak ? (existing?.body ?? "") : (input.body ?? "");
   const body = looksLikeHtml(rawBody) ? sanitizeBodyHtml(rawBody) : rawBody;
   const keywords = Array.isArray(input.keywords)
     ? input.keywords
@@ -109,7 +115,7 @@ async function saveStory(request: Request) {
       slug,
       seriesSlug: input.seriesSlug || null,
       image: input.image?.trim() || null,
-      format: input.format?.trim() || undefined,
+      format: isJak ? "jakalelm" : (input.format?.trim() || undefined),
       seoTitle: input.seoTitle?.trim().slice(0, 90) ?? "",
       seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",
       keywords,

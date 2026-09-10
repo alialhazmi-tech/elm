@@ -21,7 +21,7 @@ struct KeywordScreen: View {
         ElmScreen(title: "كلمة مفتاحية", showBack: true, onRefresh: { await load(reset: true) }) {
             LazyVStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 8) {
-                    Image(systemName: "number").font(.system(size: 22, weight: .bold)).foregroundStyle(ElmTheme.gold)
+                    Image(systemName: "number").font(.system(.title2, weight: .bold)).foregroundStyle(ElmTheme.gold)
                     Text(keyword).font(ElmFonts.display(.largeTitle, weight: .bold)).foregroundStyle(ElmTheme.ink)
                 }.accessibilityElement(children: .combine).accessibilityAddTraits(.isHeader)
                 if let total { Text("\(ElmFormat.materialLabel(total)) منشورة").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3) }
@@ -29,7 +29,17 @@ struct KeywordScreen: View {
                     ForEach(stories) { story in NativeStoryRow(story: story) }
                 }
                 if notFound {
-                    ContentUnavailableView("لا مواد منشورة لهذه الكلمة", systemImage: "doc.text.magnifyingglass")
+                    // كما على الويب: رسالة + رابط «ابحث عن «كلمة» في الأرشيف».
+                    ContentUnavailableView {
+                        Label("لا توجد مواد منشورة بهذه الكلمة حاليًا", systemImage: "doc.text.magnifyingglass")
+                    } description: {
+                        Text("قد تجدها بصياغة أخرى في الأرشيف.")
+                    } actions: {
+                        NavigationLink { SearchScreen(initialQuery: keyword) } label: {
+                            Label("ابحث عن «\(keyword)» في الأرشيف", systemImage: "magnifyingglass")
+                                .font(ElmFonts.text(.body, weight: .semibold)).frame(minHeight: 44)
+                        }
+                    }
                 } else if let error {
                     Text(error).font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2)
                     Button("إعادة المحاولة") { Task { await load(reset: stories.isEmpty) } }.frame(minHeight: 44)

@@ -37,8 +37,15 @@ struct ElmApp: App {
                 .environment(chrome)
                 .environment(staff)
                 .preferredColorScheme(appearance.colorScheme)
-                .task { await member.restore() }
-                .task { await staff.restore() }
+                .task {
+                    SummaryAudioStore.shared.isSignedIn = { [member] in member.isSignedIn }
+                    await member.restore()
+                }
+                .task {
+                    await staff.restore()
+                    // إقلاع بارد بلا جلسة لوحة: لا نعيد فتح غطاء اللوحة فوق القارئ.
+                    if staff.phase == .signedOut, staff.expiryNotice == nil { staff.workspacePresented = false }
+                }
                 .task(id: member.user?.id) { await library.switchAccount(member.user?.id) }
                 .task(id: member.user?.id) { await interests.switchAccount(member.user?.id, appearance: appearance) }
         }

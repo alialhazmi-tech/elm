@@ -18,7 +18,7 @@ struct StaffSeriesScreen: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("السلاسل").font(ElmFonts.display(.title2, weight: .heavy)).foregroundStyle(ElmTheme.ink)
                 if let notice { StaffInlineNotice(message: notice, symbol: "checkmark.circle") }
-                if let error { StaffInlineError(message: error.message) }
+                if let error, payload != nil { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                 if let payload {
                     if let rows = payload.rows, !rows.isEmpty {
                         StaffSectionTitle(title: "السلاسل الحالية")
@@ -28,9 +28,10 @@ struct StaffSeriesScreen: View {
                                     Circle().fill(ElmTheme.hex(row.color ?? "1a4282")).frame(width: 10, height: 10)
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(row.name).font(ElmFonts.text(.footnote, weight: .semibold)).foregroundStyle(ElmTheme.ink)
-                                        Text([row.count.map { StaffFormat.storiesCount($0) }, row.archived == true ? "متقاعدة" : nil].compactMap { $0 }.joined(separator: " · ")).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
+                                        Text([row.count.map { StaffFormat.storiesCount($0) }, row.archived == true ? (row.hidden == true ? "متقاعدة · مخفية" : "متقاعدة · ظاهرة") : "نشطة"].compactMap { $0 }.joined(separator: " · ")).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
                                     }
                                     Spacer()
+                                    // مفتاح الإظهار للسلاسل المتقاعدة فقط (كما `series/page.tsx`)؛ النشطة ظاهرة دائمًا.
                                     if row.archived == true, staff.can("series.visibility") {
                                         ElmToggle(isOn: row.hidden != true) { Task { await setHidden(row) } }.accessibilityLabel("إظهار \(row.name)")
                                     }
@@ -75,8 +76,11 @@ struct StaffSeriesScreen: View {
                                 StaffField(label: "ما القيمة التي تضيفها؟", text: $valueCase, axis: .vertical)
                                 StaffField(label: "ما الفجوة التي تسدّها؟", text: $gapCase, axis: .vertical)
                                 StaffField(label: "ما الأثر المتوقع؟", text: $impactCase, axis: .vertical)
-                                StaffPrimaryButton(title: "إرسال المقترح", symbol: "paperplane") { Task { await propose() } }
-                                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                                Text("شروط الإنشاء من الدستور — باب السلاسل: القيمة المعرفية، وتغطية ما لا تغطيه القائمة، وأثر متوقع. الحقول الأربعة مطلوبة.")
+                                    .font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
+                                StaffPrimaryButton(title: "رفع المقترح لاعتماد رئيس التحرير", symbol: "paperplane") { Task { await propose() } }
+                                    .disabled(!proposalComplete)
+                                    .opacity(proposalComplete ? 1 : 0.55)
                             }
                         }
                     }
@@ -90,6 +94,11 @@ struct StaffSeriesScreen: View {
             .padding(.top, 8)
         }
         .task { if payload == nil { await load() } }
+    }
+
+    /// كما `series-client.tsx`: الاسم والقيمة والفجوة والأثر كلها `required`.
+    private var proposalComplete: Bool {
+        [name, valueCase, gapCase, impactCase].allSatisfy { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }
 
     private func statusLabel(_ status: String?) -> String {
@@ -150,6 +159,7 @@ struct StaffAuditScreen: View {
                 .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(ElmTheme.line2, lineWidth: 1))
                 if let error, rows.isEmpty { StaffErrorView(error: error) { Task { await load() } } }
+                else if let error { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                 else if filtered.isEmpty && !loading { StaffEmptyView(title: "لا سجلات مطابقة", symbol: "list.bullet.rectangle") }
                 VStack(spacing: 0) {
                     ForEach(filtered) { entry in
@@ -201,7 +211,7 @@ struct StaffStatsScreen: View {
                     let counts = payload.counts ?? [:]
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                         StaffStatTile(value: String(counts["published"] ?? 0), label: "منشورة", tint: ElmTheme.tealInk)
-                        StaffStatTile(value: String(counts["review"] ?? 0), label: "بانتظار الاعتماد", tint: ElmTheme.hex("b8760a"))
+                        StaffStatTile(value: String(counts["review"] ?? 0), label: "بانتظار الاعتماد", tint: ElmTheme.warn)
                         StaffStatTile(value: String(counts["scheduled"] ?? 0), label: "مجدولة", tint: ElmTheme.focus)
                         StaffStatTile(value: String(counts["draft"] ?? 0), label: "مسودات", tint: ElmTheme.ink2)
                     }
@@ -210,7 +220,7 @@ struct StaffStatsScreen: View {
                     if let formats = payload.formatDistribution, !formats.isEmpty { bars("توزيع الأشكال", formats.map { (formatLabel($0.format ?? $0.display), $0.count, ElmTheme.focus) }) }
                     if let authors = payload.topAuthors, !authors.isEmpty { bars("أعلى الكتّاب", authors.map { ($0.display, $0.count, ElmTheme.gold) }) }
                     if let reading = payload.readingTime {
-                        bars("زمن القراءة", [("سريعة ≤3 د", reading.quick, ElmTheme.tealInk), ("متوسطة 4–7", reading.medium, ElmTheme.navyInk), ("طويلة ≥8", reading.long, ElmTheme.hex("6b5a96"))])
+                        bars("زمن القراءة", [("سريعة (أقل من 3 دقائق)", reading.quick, ElmTheme.tealInk), ("متوسطة (3–5 دقائق)", reading.medium, ElmTheme.navyInk), ("مطولة (أكثر من 5 دقائق)", reading.long, ElmTheme.hex("6b5a96"))])
                     }
                 } else if let error {
                     StaffErrorView(error: error) { Task { await load() } }
@@ -225,7 +235,7 @@ struct StaffStatsScreen: View {
     }
 
     private func formatLabel(_ value: String) -> String {
-        StaffTaxonomyPayload.defaultFormats.first { $0.id == value }?.label ?? value
+        StaffTaxonomyPayload.formatLabel(value)
     }
 
     private func bars(_ title: String, _ items: [(String, Int, Color)]) -> some View {
@@ -235,7 +245,7 @@ struct StaffStatsScreen: View {
             VStack(spacing: 8) {
                 ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                     HStack(spacing: 10) {
-                        Text(item.0).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2).frame(width: 96, alignment: .leading).lineLimit(1)
+                        Text(item.0).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2).frame(width: 120, alignment: .leading).lineLimit(2).minimumScaleFactor(0.8)
                         GeometryReader { proxy in
                             RoundedRectangle(cornerRadius: 4).fill(item.2).frame(width: max(4, proxy.size.width * CGFloat(item.1) / CGFloat(peak)))
                         }
@@ -270,7 +280,7 @@ struct StaffSettingsScreen: View {
         StaffScreen(title: "إعدادات النظام", showBack: showBack, onRefresh: { await load() }) {
             VStack(alignment: .leading, spacing: 16) {
                 Text("إعدادات النظام").font(ElmFonts.display(.title2, weight: .heavy)).foregroundStyle(ElmTheme.ink)
-                if let error { StaffInlineError(message: error.message) }
+                if let error { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                 if let governance {
                     StaffCard {
                         Text("بوابات النشر").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)
@@ -287,16 +297,20 @@ struct StaffSettingsScreen: View {
                     StaffCard {
                         Text("ظهور الأقسام").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)
                         ForEach(taxonomy.sections) { section in
-                            toggleRow(section.label, detail: section.slug, isOn: !(taxonomy.visibility?["section:\(section.slug)"] ?? false)) {
-                                Task { await setHidden("section", section.slug, hidden: !(taxonomy.visibility?["section:\(section.slug)"] ?? false)) }
+                            // قسم «أخبار» عام وظاهر دائمًا — المفتاح معطّل كما `taxonomy-client.tsx`.
+                            let fixed = section.slug == "news"
+                            let hidden = taxonomy.visibility?["section:\(section.slug)"] ?? false
+                            toggleRow(section.label, detail: fixed ? "قسم عام — ظاهر دائمًا" : hidden ? "مخفي من القوائم والتوليد" : "ظاهر في القوائم والتوليد", isOn: !hidden, disabled: fixed) {
+                                Task { await setHidden("section", section.slug, hidden: !hidden) }
                             }
                         }
                     }
                     StaffCard {
                         Text("ظهور السلاسل").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)
                         ForEach(taxonomy.series) { series in
-                            toggleRow(series.name, detail: series.slug, isOn: !(taxonomy.visibility?["series:\(series.slug)"] ?? false)) {
-                                Task { await setHidden("series", series.slug, hidden: !(taxonomy.visibility?["series:\(series.slug)"] ?? false)) }
+                            let hidden = taxonomy.visibility?["series:\(series.slug)"] ?? false
+                            toggleRow(series.name, detail: hidden ? "مخفية من القوائم والتوليد" : "ظاهرة في القوائم والتوليد", isOn: !hidden) {
+                                Task { await setHidden("series", series.slug, hidden: !hidden) }
                             }
                         }
                     }
@@ -310,14 +324,17 @@ struct StaffSettingsScreen: View {
         .task { if governance == nil { await load() } }
     }
 
-    private func toggleRow(_ title: String, detail: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+    private func toggleRow(_ title: String, detail: String, isOn: Bool, disabled: Bool = false, action: @escaping () -> Void) -> some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(ElmFonts.text(.footnote, weight: .semibold)).foregroundStyle(ElmTheme.ink)
                 Text(detail).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
             }
             Spacer()
-            ElmToggle(isOn: isOn, action: action).accessibilityLabel(title)
+            ElmToggle(isOn: isOn, action: action)
+                .disabled(disabled || busy)
+                .opacity(disabled ? 0.45 : 1)
+                .accessibilityLabel("إظهار \(title)")
         }
         .padding(.vertical, 4)
     }

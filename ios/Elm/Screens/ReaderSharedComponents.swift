@@ -40,22 +40,32 @@ struct HomeNewsStrip: View {
     var body: some View {
         if !items.isEmpty {
             let item = items[index % items.count]
+            let urgent = item.isUrgentNow
             NavigationLink {
-                StoryDestination(seed: StoryCard(id: item.href, slug: item.href, section: "news", title: item.title, excerpt: "", eyebrow: "", href: item.href))
+                StoryDestination(seed: StoryCard(id: item.href, slug: item.href, section: "news", title: item.title, excerpt: "", eyebrow: item.label ?? "", href: item.href))
             } label: {
                 HStack(spacing: 8) {
-                    Circle().fill(item.urgent ? ElmTheme.danger : ElmTheme.success).frame(width: 7, height: 7)
-                    Text("الأحدث").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.navyInk)
+                    Circle().fill(urgent ? ElmTheme.danger : ElmTheme.success).frame(width: 7, height: 7)
+                        .accessibilityHidden(true)
+                    Text(urgent ? "عاجل" : "الأحدث")
+                        .font(ElmFonts.text(.caption, weight: .bold))
+                        .foregroundStyle(urgent ? ElmTheme.danger : ElmTheme.navyInk)
                     Text(item.title).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink)
                         .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                        .id(item.id)
+                        .transition(reduceMotion ? .identity : .opacity)
                     Spacer(minLength: 0)
                 }
                 .frame(minHeight: 40)
                 .padding(.horizontal, 18)
                 .background(ElmTheme.surface3)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.25), value: index)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("\(urgent ? "عاجل" : "الأحدث"): \(item.title)")
+            .accessibilityHint(items.count > 1 ? "\(ElmFormat.latinDigits(String(items.count))) عناوين تتناوب" : "")
             .task(id: items.map(\.id)) {
+                index = 0
                 guard !reduceMotion, items.count > 1 else { return }
                 while !Task.isCancelled {
                     do { try await Task.sleep(for: .seconds(6)) } catch { return }
@@ -92,7 +102,10 @@ struct HomeBriefCard: View {
                 Text("موجز العلم").font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
             }
             if let count = presentation?.briefFrom {
-                Text("مختار من \(count) مادة منشورة في أرشيفنا")
+                // كما على الويب: «تحديث منذ N، مختار من M» — التحديث من أحدث مادة في الموجز.
+                let latest = items.compactMap(\.publishedAt).sorted().last
+                let updated = ElmFormat.relativeTime(latest).map { "تحديث \($0)، " } ?? ""
+                Text("\(updated)مختار من \(ElmFormat.latinDigits(String(count))) مادة منشورة في أرشيفنا")
                     .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
             }
             HomeBriefListen().id(presentation?.briefScript ?? items.map(\.title).joined())
@@ -130,58 +143,33 @@ struct HomeBriefCard: View {
 }
 
 private struct HomeBriefListen: View {
-    @State private var player: AVAudioPlayer?
-    @State private var loading = false
-    @State private var error: String?
-    @State private var task: Task<Void, Never>?
-    @Environment(NarrationStore.self) private var narration
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            TimelineView(.periodic(from: .now, by: 1)) { _ in
-                Button {
-                    if loading { task?.cancel(); loading = false; return }
-                    if let player {
-                        if player.isPlaying { player.pause() } else { player.play() }
-                        return
-                    }
-                    narration.stop()
-                    loading = true; error = nil
-                    task = Task { await load() }
-                } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: loading ? "stop.fill" : player?.isPlaying == true ? "pause.fill" : "play.fill")
-                            .foregroundStyle(.white).frame(width: 44, height: 44).background(ElmTheme.navy, in: Circle())
-                        Text(loading ? "جارٍ تجهيز الصوت…" : player?.isPlaying == true ? "إيقاف مؤقت" : "استمع للموجز")
-                            .font(ElmFonts.text(.subheadline, weight: .semibold)).foregroundStyle(ElmTheme.navyInk)
-                    }
-                }.buttonStyle(.plain)
-            }
-            if player != nil {
-                Text("تم توليد الصوت عبر HUMAIN").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
-            }
-            if let error { Text(error).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2) }
-        }
-        .onDisappear { task?.cancel(); player?.stop(); loading = false }
+        // يستمر صوت الموجز أثناء التصفح — الشريط المصغّر العالمي في RootTabView يعرضه.
+        SummaryListenView(kind: .home)
     }
-    @MainActor private func load() async {
-        defer { loading = false }
-        var request = URLRequest(url: URLConstants.contentAPI.appending(path: "api/content/listen"))
-        request.httpMethod = "POST"
-        request.timeoutInterval = 115
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(URLConstants.contentAPI.absoluteString, forHTTPHeaderField: "Origin")
-        request.httpBody = Data(#"{"kind":"home"}"#.utf8)
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            try Task.checkCancellation()
-            guard let response = response as? HTTPURLResponse,
-                  response.statusCode == 200, response.mimeType == "audio/wav" else {
-                error = "تعذر تجهيز الصوت الآن. حاول مرة أخرى."; return
-            }
-            let audio = try AVAudioPlayer(data: data)
-            guard audio.prepareToPlay(), audio.play() else { error = "تعذر تشغيل الصوت."; return }
-            player = audio
-        } catch is CancellationError { return }
-        catch { if !Task.isCancelled { self.error = "تعذر تجهيز الصوت الآن. حاول مرة أخرى." } }
+}
+
+/// صيغ القارئ التي لا تملكها `ElmFormat`: طابع النشر «d MMMM yyyy، HH:mm» ميلاديًا بتوقيت الرياض وبأرقام لاتينية.
+enum ElmReaderFormat {
+    static func articleTimestamp(_ iso: String?) -> String? {
+        guard let date = ElmDates.parse(iso) else { return nil }
+        var cal = Calendar(identifier: .gregorian)
+        cal.locale = Locale(identifier: "ar_SA")
+        cal.timeZone = TimeZone(identifier: "Asia/Riyadh") ?? .current
+        let formatter = DateFormatter()
+        formatter.calendar = cal
+        formatter.timeZone = cal.timeZone
+        formatter.locale = Locale(identifier: "ar_SA@numbers=latn")
+        formatter.dateFormat = "d MMMM yyyy، HH:mm"
+        return ElmFormat.latinDigits(formatter.string(from: date))
+    }
+
+    /// الموجز مقصوص عند 200 حرف على حدود الكلمات كما في `trimExcerpt` على الويب.
+    static func trimExcerpt(_ text: String, limit: Int = 200) -> String {
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard clean.count > limit else { return clean }
+        let cut = String(clean.prefix(limit))
+        let trimmed = cut.lastIndex(of: " ").map { String(cut[..<$0]) } ?? cut
+        return trimmed.trimmingCharacters(in: .whitespacesAndNewlines) + "…"
     }
 }

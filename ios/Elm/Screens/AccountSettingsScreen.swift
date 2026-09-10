@@ -6,9 +6,13 @@ import SwiftUI
 final class AccountStore {
     var overview: AccountPayload?
     var emailVerified: Bool?
+    /// الصورة الشخصية من `memberProfiles.avatarUrl` (تصل عبر `/api/viewer` و`/api/me/account`، لا عبر `get-session`).
+    var avatar: String?
     var loading = false
     var errorMessage: String?
     var guest = false
+
+    var avatarURL: URL? { ElmMedia.url(avatar) }
 
     func load() async {
         loading = overview == nil
@@ -20,11 +24,17 @@ final class AccountStore {
             let payload = try await account
             overview = payload
             guest = false
-            if let member = try? await viewer.member { emailVerified = member.emailVerified ?? payload.user?.emailVerified }
-            else { emailVerified = payload.user?.emailVerified }
+            if let member = try? await viewer.member {
+                emailVerified = member.emailVerified ?? payload.user?.emailVerified
+                avatar = member.image ?? payload.user?.image
+            } else {
+                emailVerified = payload.user?.emailVerified
+                avatar = payload.user?.image
+            }
         } catch let api as ElmAPIError where api.isUnauthorized {
             guest = true
             overview = nil
+            avatar = nil
         } catch {
             errorMessage = ElmAPIError.wrap(error).message
         }
@@ -88,7 +98,11 @@ struct AccountSettingsScreen: View {
         }
         .task(id: member.user?.id) {
             name = member.user?.name ?? ""
-            if member.isSignedIn { await store.load() }
+            if member.isSignedIn {
+                await store.load()
+                // 401 رغم جلسة يظنها التطبيق قائمة: نعيد التحقق (خروج أو تعليق).
+                if store.guest { await member.revalidate() }
+            }
         }
     }
 
@@ -96,26 +110,28 @@ struct AccountSettingsScreen: View {
 
     private var nameCard: some View {
         card("الاسم") {
-            Text("الاسم الذي نناديك به ويظهر في حسابك.").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2)
+            Text("الاسم الذي نناديك به ويظهر في حسابك — من حرفين إلى \(ElmFormat.latinDigits("40")) حرفًا.").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2)
             TextField("الاسم", text: $name)
                 .textContentType(.name).textInputAutocapitalization(.words)
+                .submitLabel(.done)
                 .modifier(SettingsField())
-            actionButton(savingName ? "لحظة…" : "حفظ الاسم", disabled: savingName || name.trimmingCharacters(in: .whitespaces).isEmpty || name == member.user?.name) {
+            actionButton(savingName ? "جارٍ الحفظ…" : "حفظ الاسم", disabled: savingName || name.trimmingCharacters(in: .whitespaces).isEmpty || name == member.user?.name) {
                 Task { await saveName() }
             }
             if let nameMessage { note(nameMessage) }
         }
     }
 
+    /// `app/account/actions.ts`: الاسم من 2 إلى 40 حرفًا برسالة الويب.
     private func saveName() async {
         let clean = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard clean.count >= 2 else { nameMessage = "اكتب اسمًا من حرفين على الأقل."; return }
+        guard (2...40).contains(clean.count) else { nameMessage = "اكتب اسمًا من حرفين إلى 40 حرفًا."; return }
         savingName = true
         defer { savingName = false }
         do {
             try await APIClient.updateUserName(clean)
             await member.restore()
-            nameMessage = "حُفظ الاسم."
+            nameMessage = "تم تحديث اسمك."
         } catch { nameMessage = ElmAPIError.wrap(error).message }
     }
 
@@ -123,13 +139,15 @@ struct AccountSettingsScreen: View {
 
     private var verificationCard: some View {
         card("توثيق البريد") {
-            Label("بريدك غير موثّق بعد. التوثيق يلزم للاشتراك في النشرة واستعادة كلمة المرور.", systemImage: "envelope.badge")
+            // الويب يشترط التوثيق للنشرة فقط؛ استعادة كلمة المرور لا تتطلبه.
+            Label("بريدك غير موثّق بعد. التوثيق يلزم للاشتراك في النشرة.", systemImage: "envelope.badge")
                 .font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2).lineSpacing(3)
             if otpSent {
                 TextField("رمز التحقق من بريدك", text: $otp)
                     .keyboardType(.numberPad).textContentType(.oneTimeCode)
                     .modifier(SettingsField(ltr: true))
-                actionButton(verifying ? "لحظة…" : "تأكيد الرمز", disabled: verifying || otp.trimmingCharacters(in: .whitespaces).count < 4) {
+                // الويب: رمز من 6 أرقام.
+                actionButton(verifying ? "لحظة…" : "تأكيد الرمز", disabled: verifying || ElmFormat.latinDigits(otp.trimmingCharacters(in: .whitespaces)).count != 6) {
                     Task { await verify() }
                 }
                 Button("إعادة إرسال الرمز") { Task { await sendOTP() } }.font(ElmFonts.text(.footnote)).frame(minHeight: 40).disabled(verifying)
@@ -168,27 +186,32 @@ struct AccountSettingsScreen: View {
     private var passwordCard: some View {
         card("كلمة المرور") {
             SecureField("كلمة المرور الحالية", text: $currentPassword).textContentType(.password).modifier(SettingsField(ltr: true))
-            SecureField("كلمة المرور الجديدة (8 أحرف على الأقل)", text: $newPassword).textContentType(.newPassword).modifier(SettingsField(ltr: true))
+            SecureField("كلمة المرور الجديدة (من 8 إلى 128 حرفًا)", text: $newPassword).textContentType(.newPassword).modifier(SettingsField(ltr: true))
             SecureField("تأكيد كلمة المرور الجديدة", text: $confirmPassword).textContentType(.newPassword).modifier(SettingsField(ltr: true))
-            Text("سيُخرج التغيير الأجهزة الأخرى من حسابك.").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
-            actionButton(savingPassword ? "لحظة…" : "تغيير كلمة المرور", disabled: savingPassword || currentPassword.isEmpty || newPassword.count < 8) {
+            // `account-forms.tsx`
+            Text("استخدم من \(ElmFormat.latinDigits("8")) إلى \(ElmFormat.latinDigits("128")) حرفًا. بعد التغيير، ستحتاج إلى تسجيل الدخول مجددًا على أجهزتك الأخرى.")
+                .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).lineSpacing(3)
+            actionButton(savingPassword ? "جارٍ الحفظ…" : "تغيير كلمة المرور", disabled: savingPassword || currentPassword.isEmpty || newPassword.isEmpty) {
                 Task { await changePassword() }
             }
             if let passwordMessage { note(passwordMessage) }
         }
     }
 
+    /// شروط `app/account/actions.ts` بالترتيب نفسه ورسائله: الحالية، الطول 8–128، التطابق، الاختلاف عن الحالية.
     private func changePassword() async {
-        guard newPassword == confirmPassword else { passwordMessage = "كلمتا المرور غير متطابقتين."; return }
-        guard newPassword.count <= 128 else { passwordMessage = "كلمة المرور يجب أن تكون بين 8 و128 حرفًا."; return }
+        guard !currentPassword.isEmpty, currentPassword.count <= 128 else { passwordMessage = "أدخل كلمة المرور الحالية."; return }
+        guard (8...128).contains(newPassword.count) else { passwordMessage = "اختر كلمة مرور جديدة من 8 إلى 128 حرفًا."; return }
+        guard newPassword == confirmPassword else { passwordMessage = "كلمتا المرور الجديدتان غير متطابقتين."; return }
+        guard newPassword != currentPassword else { passwordMessage = "اختر كلمة مرور مختلفة عن الحالية."; return }
         savingPassword = true
         defer { savingPassword = false }
         do {
             try await APIClient.changePassword(current: currentPassword, new: newPassword)
             currentPassword = ""; newPassword = ""; confirmPassword = ""
-            passwordMessage = "غُيّرت كلمة المرور."
+            passwordMessage = "تم تغيير كلمة المرور وتسجيل الخروج من الجلسات الأخرى."
         } catch let api as ElmAPIError {
-            if case .invalid = api { passwordMessage = "كلمة المرور الحالية غير صحيحة." }
+            if case .invalid = api { passwordMessage = "تعذر تغيير كلمة المرور. تحقق من كلمة المرور الحالية." }
             else { passwordMessage = api.message }
         } catch { passwordMessage = ElmAPIError.wrap(error).message }
     }

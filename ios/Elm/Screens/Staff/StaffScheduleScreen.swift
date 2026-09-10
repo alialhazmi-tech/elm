@@ -15,6 +15,9 @@ struct StaffScheduleScreen: View {
                     Text("النشر يتم من الخادم في موعده بتوقيت الرياض بعد تجاوز الحارس.").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
                 }
                 if let payload {
+                    if payload.automatic == false {
+                        StaffInlineError(message: "المجدول لا يُنشر تلقائيًا في هذه البيئة — مشغّل الجدولة الداخلي غير مفعّل؛ تحقق من إعداد التشغيل قبل الاعتماد على النشر التلقائي.")
+                    }
                     if let next = payload.nextScheduledAt {
                         StaffInlineNotice(message: "أقرب موعد: \(StaffFormat.dateTime(next))", symbol: "clock")
                     }

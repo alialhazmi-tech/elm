@@ -5,7 +5,8 @@ import Foundation
 enum ElmAPIError: Error, LocalizedError, Equatable {
     case offline
     case timeout
-    case unauthorized(String)
+    /// `mfaRequired` = الخادم يطلب رمز التحقق بخطوتين لهذه البيانات (`{mfaRequired:true}` مع 401).
+    case unauthorized(String, mfaRequired: Bool = false)
     case forbidden(String, permission: String?, mfaRequired: Bool)
     case conflict(String)
     case guardBlocked(String, blocking: [String])
@@ -21,11 +22,14 @@ enum ElmAPIError: Error, LocalizedError, Equatable {
         switch self {
         case .offline: return "لا يوجد اتصال بالإنترنت."
         case .timeout: return "انتهت مهلة الطلب. حاول مجددًا."
-        case .unauthorized(let text): return text.isEmpty ? "الجلسة منتهية. سجّل الدخول مجددًا." : text
+        case .unauthorized(let text, _): return text.isEmpty ? "الجلسة منتهية. سجّل الدخول مجددًا." : text
         case .forbidden(let text, _, _): return text.isEmpty ? "ليست لديك صلاحية هذا الإجراء." : text
         case .conflict(let text): return text.isEmpty ? "تغيّرت البيانات منذ فتحها. أعد التحميل." : text
         case .guardBlocked(let text, _): return text.isEmpty ? "الحارس التحريري يمنع هذا الإجراء." : text
-        case .rateLimited(let text, _): return text.isEmpty ? "محاولات كثيرة. حاول بعد قليل." : text
+        case .rateLimited(let text, let retry):
+            let base = text.isEmpty ? "محاولات كثيرة. حاول بعد قليل." : text
+            if let retry, retry > 0 { return "\(base) (بعد \(ElmFormat.latinDigits(String(max(1, retry / 60)))) دقيقة)" }
+            return base
         case .notFound(let text): return text.isEmpty ? "العنصر غير موجود." : text
         case .invalid(let text): return text.isEmpty ? "البيانات غير صالحة." : text
         case .server(let status, let text): return text.isEmpty ? "تعذر إتمام الطلب (\(status))." : text
@@ -46,7 +50,12 @@ enum ElmAPIError: Error, LocalizedError, Equatable {
     }
 
     /// رسالة الخادم من `{error, permission?, mfaRequired?, blocking?}` أو نص بديل.
-    static func from(status: Int, data: Data) -> ElmAPIError {
+    var needsMFACode: Bool {
+        if case .unauthorized(_, let mfa) = self { return mfa }
+        return false
+    }
+
+    static func from(status: Int, data: Data, retryAfter: Int? = nil) -> ElmAPIError {
         struct Finding: Decodable { var ruleId: String?; var message: String? }
         struct Envelope: Decodable {
             var error: String?
@@ -64,12 +73,12 @@ enum ElmAPIError: Error, LocalizedError, Equatable {
             return finding.message ?? rule
         }
         switch status {
-        case 401: return .unauthorized(text)
+        case 401: return .unauthorized(text, mfaRequired: envelope?.mfaRequired ?? false)
         case 403: return .forbidden(text, permission: envelope?.permission, mfaRequired: envelope?.mfaRequired ?? false)
         case 404: return .notFound(text)
         case 409: return .conflict(text)
         case 422: return .guardBlocked(text, blocking: blockingMessages.isEmpty ? (envelope?.blocking ?? []) : blockingMessages)
-        case 429: return .rateLimited(text, retryAfter: nil)
+        case 429: return .rateLimited(text, retryAfter: retryAfter)
         case 400, 413, 415: return .invalid(text)
         default: return .server(status, text)
         }
@@ -178,7 +187,8 @@ enum ElmHTTP {
         }
         guard let http = response as? HTTPURLResponse else { throw ElmAPIError.decoding }
         guard (200..<300).contains(http.statusCode) || http.statusCode == 304 else {
-            throw ElmAPIError.from(status: http.statusCode, data: data)
+            let retry = http.value(forHTTPHeaderField: "Retry-After").flatMap { Int($0) }
+            throw ElmAPIError.from(status: http.statusCode, data: data, retryAfter: retry)
         }
         return (data, http)
     }

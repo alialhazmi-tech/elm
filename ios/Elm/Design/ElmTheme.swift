@@ -64,6 +64,8 @@ enum ElmTheme {
     static let focus = hex("3d6fad")
     static var glass: Color { dyn((1, 1, 1, 0.96), (0.043, 0.075, 0.133, 0.96)) }
     static let danger = hex("c45468")
+    /// تحذير/بانتظار (كهرماني) بزوج داكن — بدل `hex("b8760a")` الثابت الذي يبهت في الوضع الداكن.
+    static var warn: Color { adaptive(0xb8760a, 0xe0a640) }
     static let teal = hex("2d9a8c")
     static var tealInk: Color { adaptive(0x21786d, 0x76d4c4) }
 

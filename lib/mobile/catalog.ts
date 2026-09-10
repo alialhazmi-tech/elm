@@ -11,6 +11,11 @@ import {
   seriesDirectory,
 } from "@/lib/content/provider";
 import { SERIES } from "@/lib/content/series";
+import { loadPublicTaxonomy } from "@/lib/content/taxonomy-settings";
+import { LIST_PAGE_SIZE, paginate } from "@/lib/content/pagination";
+import { refreshedShareUrl } from "@/lib/sharing-contract";
+import { sharingOrigin } from "@/lib/sharing";
+import { storyHref } from "@/lib/content/types";
 import { stripHtmlToText } from "@/lib/content/html";
 import { decodeKeywordParam } from "@/lib/content/keywords";
 import { MEDIA_WIDTH, optimizedMedia, toMobileCard, type MobileSeriesChip, type MobileStoryCard } from "@/lib/mobile/home";
@@ -96,6 +101,8 @@ export type MobileStoryPayload = {
     links: Array<{ href: string; label: string }>;
     updatedAt: string | null;
     seoDescription: string | null;
+    /** رابط المشاركة بإصدار البطاقة كما يشاركه الويب (`refreshedShareUrl`). */
+    shareUrl: string;
   };
   series: MobileSeriesChip | null;
   related: MobileStoryCard[];
@@ -182,6 +189,7 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
       ...toMobileCard(story, origin, MEDIA_WIDTH.full),
       body: stripHtmlToText(story.body ?? story.excerpt),
       factCheck: story.factCheck ?? null,
+      shareUrl: refreshedShareUrl(storyHref(story), sharingOrigin()),
       bodyHtml: body.bodyHtml,
       blocks: body.blocks,
       ...storyVideo(story),
@@ -268,7 +276,10 @@ function jakReportOf(slideData: Array<SlideData | null>): MobileJakReport {
 }
 
 export async function toMobileSeriesIndex(origin?: string): Promise<MobileSeriesIndexPayload> {
-  const [archived, directory] = await Promise.all([listVisibleArchivedSeries(), seriesDirectory()]);
+  const [archived, directory, taxonomy] = await Promise.all([listVisibleArchivedSeries(), seriesDirectory(), loadPublicTaxonomy()]);
+  // كما في صفحة /series: السلاسل النشطة مرشّحة بإخفاء التصنيف من «تحرير العلم».
+  const visible = new Set(taxonomy.series.map((item) => item.slug));
+  const activeSeries = visible.size > 0 ? SERIES.filter((item) => visible.has(item.slug)) : SERIES;
   const entry = (series: { slug: string; name: string; description: string; color: string; archived?: boolean }): MobileSeriesEntry => ({
     ...toChip(series),
     archived: Boolean(series.archived),
@@ -277,7 +288,7 @@ export async function toMobileSeriesIndex(origin?: string): Promise<MobileSeries
   });
   return {
     contract: MOBILE_SERIES_INDEX_CONTRACT,
-    series: SERIES.map(entry),
+    series: activeSeries.map(entry),
     archived: archived.map(entry),
   };
 }
@@ -311,24 +322,32 @@ export type MobileSearchPayload = {
   query: string;
   results: MobileStoryCard[];
   total: number;
+  /** ترقيم كما في صفحة /search: 18 نتيجة للصفحة حتى 200 نتيجة. */
+  page: number;
+  pageCount: number;
+  nextPage: number | null;
 };
 
-export async function toMobileSearch(query: string, origin?: string): Promise<MobileSearchPayload> {
+export async function toMobileSearch(query: string, origin?: string, page?: string | null): Promise<MobileSearchPayload> {
   const trimmed = query.trim();
   const needle = foldSearchText(trimmed);
   if (!needle) {
-    return { contract: MOBILE_SEARCH_CONTRACT, query: trimmed, results: [], total: 0 };
+    return { contract: MOBILE_SEARCH_CONTRACT, query: trimmed, results: [], total: 0, page: 1, pageCount: 1, nextPage: null };
   }
 
   // البحث في SQL عبر المزود: نفس التطبيع (همزات/تشكيل/نزع «الـ») على كامل الأرشيف،
   // لا على نافذة الذاكرة — فالمواد القديمة تبقى قابلة للعثور.
   const stories = await seedContentProvider.search(trimmed);
+  const slice = paginate(stories, page, LIST_PAGE_SIZE);
 
   return {
     contract: MOBILE_SEARCH_CONTRACT,
     query: trimmed,
-    results: stories.slice(0, 40).map((item) => toMobileCard(item, origin)),
-    total: stories.length,
+    results: slice.items.map((item) => toMobileCard(item, origin)),
+    total: slice.total,
+    page: slice.page,
+    pageCount: slice.pageCount,
+    nextPage: slice.page < slice.pageCount ? slice.page + 1 : null,
   };
 }
 

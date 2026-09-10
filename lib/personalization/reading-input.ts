@@ -22,6 +22,14 @@ export function readingOrigin(request: Request): string | null {
     "https://www.alelm.net",
     "https://elm-production-ea24.up.railway.app",
   ]);
+  // تطوير محلي فقط: التطبيق على المحاكي يرسل 127.0.0.1 بينما Next يرى localhost (أو العكس).
+  if (process.env.NODE_ENV !== "production") {
+    const local = new URL(request.url);
+    if (["localhost", "127.0.0.1"].includes(local.hostname)) {
+      allowed.add(`${local.protocol}//localhost${local.port ? `:${local.port}` : ""}`);
+      allowed.add(`${local.protocol}//127.0.0.1${local.port ? `:${local.port}` : ""}`);
+    }
+  }
   const railwayDomain = process.env.RAILWAY_PUBLIC_DOMAIN;
   if (railwayDomain && /^[a-z0-9-]+\.up\.railway\.app$/i.test(railwayDomain)) allowed.add(`https://${railwayDomain}`);
   return allowed.has(origin) ? origin : null;

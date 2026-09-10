@@ -20,46 +20,18 @@ final class PollStore {
     func choice(for storyId: String) -> String? { votes[storyId] }
 }
 
-/// تفضيلات الإشعارات: موجز الصباح وحده مُفعّل افتراضيًا، وما عداه بقرار القارئ.
+/// لا إشعارات دفع ولا تفضيلات إشعارات للأعضاء (لا على الويب ولا في التطبيق) — المفاتيح السابقة كانت
+/// وهمية لا تسجّل شيئًا فأُزيلت مع شاشتها. يبقى النوع فارغًا لأن `ElmApp` يحقنه؛ يُحذف مع تعديل `ElmApp`.
 @MainActor
 @Observable
 final class NotificationPrefs {
-    enum Kind: String, CaseIterable, Identifiable {
-        case morning, breaking, series, streak
-        var id: String { rawValue }
-
-        var label: String {
-            switch self {
-            case .morning: "موجز الصباح"
-            case .breaking: "العاجل فقط"
-            case .series: "كل مادة جديدة في سلاسلي"
-            case .streak: "تذكير سلسلة القراءة"
-            }
-        }
-
-        var defaultOn: Bool { self == .morning }
-    }
-
-    private let key = "elm.notifprefs.v1"
-    private(set) var enabled: [String: Bool] = [:]
-
     init() {
-        if let stored = UserDefaults.standard.dictionary(forKey: key) as? [String: Bool] {
-            enabled = stored
-        } else {
-            enabled = Dictionary(uniqueKeysWithValues: Kind.allCases.map { ($0.rawValue, $0.defaultOn) })
-        }
-    }
-
-    func isOn(_ kind: Kind) -> Bool { enabled[kind.rawValue] ?? kind.defaultOn }
-
-    func toggle(_ kind: Kind) {
-        enabled[kind.rawValue] = !isOn(kind)
-        UserDefaults.standard.set(enabled, forKey: key)
+        UserDefaults.standard.removeObject(forKey: "elm.notifprefs.v1")
     }
 }
 
-/// التنزيل التلقائي وسلسلة القراءة — أساس شاشتي المحفوظات و«لك أنت».
+/// التنزيل التلقائي وأيام القراءة على الجهاز. سلسلة القراءة (`streak`/`week`) لم تعد تُعرض في أي شاشة
+/// (لا نظير لها في الحساب على الويب)؛ بقيت للتوافق مع `markRead` في القارئ.
 @MainActor
 @Observable
 final class ReadingStore {

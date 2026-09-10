@@ -32,9 +32,14 @@ export type MobileStoryVideo = {
   videoKind: MobileVideoKind | null;
 };
 
-/** رابط الفيديو القياسي من الحقل أو من المتن، مع رابط التضمين ونوعه. */
-export function storyVideo(story: { videoUrl?: string | null; body?: string | null }): MobileStoryVideo {
-  const videoUrl = normalizeVideoUrl(story.videoUrl) ?? findVideoUrlInText(story.body);
+/**
+ * رابط الفيديو القياسي مع رابط التضمين ونوعه — بقاعدة صفحة الويب نفسها (`page.tsx`):
+ * المشغّل لمواد شكل «فيديو» فقط ومن حقل `videoUrl` وحده؛ رابط يوتيوب داخل متن خبر يبقى رابطًا.
+ */
+export function storyVideo(story: { videoUrl?: string | null; body?: string | null; format?: string | null }): MobileStoryVideo {
+  const videoUrl = story.format === "videos"
+    ? normalizeVideoUrl(story.videoUrl) ?? findVideoUrlInText(story.body)
+    : null;
   const videoKind: MobileVideoKind | null = !videoUrl
     ? null
     : youtubeIdFrom(videoUrl)

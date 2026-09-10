@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// الدخول والتسجيل — ورقة مستقلة عن شاشة العضوية (1i) التي تعرض الخطط.
+/// الدخول والتسجيل — ورقة مستقلة عن شاشة العضوية (المجانية). قواعد التحقق ورسائلها من `app/join/actions.ts`.
 struct AuthSheet: View {
     @Environment(MemberSessionStore.self) private var member
     @Environment(\.dismiss) private var dismiss
@@ -46,16 +46,12 @@ struct AuthSheet: View {
                             .accessibilityLabel("خطأ: \(error)")
                     }
 
-                    Button {
-                        Task {
-                            if await member.authenticate(mode: mode, name: name, email: email, password: password) {
-                                dismiss()
-                            }
-                        }
-                    } label: {
+                    Button(action: submit) {
                         HStack {
                             if member.loading { ProgressView().tint(.white) }
-                            Text(member.loading ? "لحظة…" : (mode == .signUp ? "إنشاء حسابي" : "دخول آمن"))
+                            Text(member.loading
+                                 ? (mode == .signUp ? "جارٍ إنشاء حسابك…" : "جارٍ تسجيل الدخول…")
+                                 : (mode == .signUp ? "إنشاء حساب مجاني" : "تسجيل الدخول"))
                         }
                         .font(ElmFonts.text(.subheadline, weight: .bold))
                         .foregroundStyle(.white)
@@ -84,6 +80,17 @@ struct AuthSheet: View {
                         }
                     }
 
+                    // `join-form.tsx`: نستخدم بيانات حسابك لتقديم خدمات العضوية وفق سياسة الخصوصية.
+                    HStack(spacing: 4) {
+                        Text("نستخدم بيانات حسابك لتقديم خدمات العضوية وفق")
+                        PublicPageLink(path: "/privacy-policy") {
+                            Text("سياسة الخصوصية.").underline().foregroundStyle(ElmTheme.navyInk)
+                        }
+                    }
+                    .font(ElmFonts.text(.caption))
+                    .foregroundStyle(ElmTheme.ink2)
+                    .fixedSize(horizontal: false, vertical: true)
+
                     Label("جلسة آمنة محفوظة في الجهاز. لا نخزن كلمة مرورك داخل التطبيق.", systemImage: "lock.shield")
                         .font(ElmFonts.text(.caption))
                         .foregroundStyle(ElmTheme.ink2)
@@ -98,14 +105,24 @@ struct AuthSheet: View {
                     Button("إغلاق") { dismiss() }
                 }
             }
+            .onAppear { mode = member.authInitialMode; member.errorMessage = nil }
             .onChange(of: mode) { _, _ in member.errorMessage = nil; resetMessage = nil }
+        }
+    }
+
+    private func submit() {
+        guard !member.loading else { return }
+        Task {
+            if await member.authenticate(mode: mode, name: name, email: email, password: password) {
+                dismiss()
+            }
         }
     }
 
     /// يطلب بريد الاستعادة فقط؛ تعيين كلمة المرور يكتمل على الموقع من الرابط المرسل.
     private func requestReset() async {
         let clean = email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard clean.contains("@"), clean.contains(".") else {
+        guard MemberSessionStore.validEmail(clean) else {
             resetMessage = "اكتب بريدك الإلكتروني أولًا ثم اضغط «نسيت كلمة المرور؟»."
             focused = .email
             return
@@ -127,10 +144,10 @@ struct AuthSheet: View {
                 .foregroundStyle(ElmTheme.gold)
                 .frame(width: 58, height: 58)
                 .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            Text("معرفة أقرب إليك.")
+            Text(mode == .signIn ? "مكتبتك واهتماماتك بانتظارك." : "مساحتك. للمعرفة التي تهمّك.")
                 .font(ElmFonts.display(.title, weight: .heavy))
                 .foregroundStyle(ElmTheme.ink)
-            Text("احفظ موادك وواصل من أي جهاز، ودع صفحة «لك أنت» تتعلم اهتماماتك بوضوح وتحكم.")
+            Text("قراءاتك، اختياراتك، وما تودّ العودة إليه. كلّها في مكان واحد، بعضوية مجانية.")
                 .font(ElmFonts.text(.callout))
                 .foregroundStyle(ElmTheme.ink2)
                 .lineSpacing(4)
@@ -148,6 +165,8 @@ struct AuthSheet: View {
                 .autocorrectionDisabled(field != .name)
                 .keyboardType(keyboard)
                 .textContentType(field == .name ? .givenName : .emailAddress)
+                .submitLabel(.next)
+                .onSubmit { focused = field == .name ? .email : .password }
                 .focused($focused, equals: field)
                 .padding(14)
                 .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -164,9 +183,11 @@ struct AuthSheet: View {
             Text("كلمة المرور")
                 .font(ElmFonts.text(.caption, weight: .bold))
                 .foregroundStyle(ElmTheme.ink)
-            SecureField(mode == .signUp ? "8 أحرف على الأقل" : "كلمة المرور", text: $password)
+            SecureField(mode == .signUp ? "من 8 إلى 128 حرفًا" : "كلمة المرور", text: $password)
                 .font(ElmFonts.text(.callout))
                 .textContentType(mode == .signUp ? .newPassword : .password)
+                .submitLabel(.go)
+                .onSubmit(submit)
                 .focused($focused, equals: .password)
                 .padding(14)
                 .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))

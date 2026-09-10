@@ -29,24 +29,26 @@ test("المتن الإرثي بلا وسوم يصبح فقرات HTML وكتل�
 });
 
 test("الفيديو يُطبَّع من الحقل أو يُلتقط من المتن ويُصنَّف بنوعه", () => {
-  assert.deepEqual(storyVideo({ videoUrl: "https://youtu.be/dQw4w9WgXcQ?si=abc" }), {
+  assert.deepEqual(storyVideo({ format: "videos", videoUrl: "https://youtu.be/dQw4w9WgXcQ?si=abc" }), {
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     videoEmbedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?rel=0&modestbranding=1&hl=ar",
     videoKind: "youtube",
   });
-  assert.deepEqual(storyVideo({ videoUrl: "https://x.com/alelm/status/1830000000000000001" }), {
+  assert.deepEqual(storyVideo({ format: "videos", videoUrl: "https://x.com/alelm/status/1830000000000000001" }), {
     videoUrl: "https://x.com/i/status/1830000000000000001",
     videoEmbedUrl: "https://twitter.com/i/videos/tweet/1830000000000000001?language_code=ar&dnt=true",
     videoKind: "x",
   });
-  assert.deepEqual(storyVideo({ videoUrl: "https://www.instagram.com/reels/ABCdef123/" }), {
+  assert.deepEqual(storyVideo({ format: "videos", videoUrl: "https://www.instagram.com/reels/ABCdef123/" }), {
     videoUrl: "https://www.instagram.com/reel/ABCdef123/",
     videoEmbedUrl: "https://www.instagram.com/reel/ABCdef123/embed/",
     videoKind: "instagram",
   });
   // الحقل فارغ والرابط في المتن (مواد قديمة).
-  assert.equal(storyVideo({ videoUrl: null, body: "<p>شاهد https://www.youtube.com/watch?v=dQw4w9WgXcQ&amp;t=5</p>" }).videoKind, "youtube");
-  assert.deepEqual(storyVideo({ videoUrl: "https://example.com/video.mp4", body: "لا رابط" }), { videoUrl: null, videoEmbedUrl: null, videoKind: null });
+  assert.equal(storyVideo({ format: "videos", videoUrl: null, body: "<p>شاهد https://www.youtube.com/watch?v=dQw4w9WgXcQ&amp;t=5</p>" }).videoKind, "youtube");
+  // قاعدة الويب: لا مشغّل لخبر يحمل رابط يوتيوب في متنه أو حقله.
+  assert.deepEqual(storyVideo({ format: "news", videoUrl: "https://youtu.be/dQw4w9WgXcQ", body: "<p>https://www.youtube.com/watch?v=dQw4w9WgXcQ</p>" }), { videoUrl: null, videoEmbedUrl: null, videoKind: null });
+  assert.deepEqual(storyVideo({ format: "videos", videoUrl: "https://example.com/video.mp4", body: "لا رابط" }), { videoUrl: null, videoEmbedUrl: null, videoKind: null });
   assert.deepEqual(storyVideo({}), { videoUrl: null, videoEmbedUrl: null, videoKind: null });
 });
 

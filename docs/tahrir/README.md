@@ -219,3 +219,11 @@ draft ──(story.submit)──▶ review ──(story.approve + الحارس)�
 - الجداول على الجوال: الأعمدة الثانوية تختفي تحت `md:` وتظهر شارات تحت العنوان، وأزرار الصف 36px، وحاويات `overflow-x-auto` بتلاشٍ عند الحافة (`scroll-fade-x`).
 - الأرقام لاتينية دائمًا؛ التواريخ بتوقيت الرياض عبر `formatRiyadh*`.
 - الحركة تحترم `prefers-reduced-motion` (كتلة عامة في `shadcn.css`).
+
+### تصحيحات 2026-09-10 (مراجعة التطبيق)
+
+- `POST /api/tahrir/story` يحمي مواد «جاك العلم»: لمادة قائمة بشكل `jakalelm` يُتجاهل `body` القادم من أي عميل ويُثبَّت
+  الشكل (الشرائح مصدر الإسقاط عبر `jak/slides`)، وتحويل مادة قائمة إلى `jakalelm` يرد 409.
+- `GET /api/tahrir/story/[id]` يعيد `capabilities.canReturn` (= `story.approve` ومادة في الاعتماد) — الإعادة للمحرر لا تتبع `story.publish`.
+- `GET /api/tahrir/taxonomy` لا يعرض `jakalelm` ضمن `formats` (يُنشأ من محرره فقط)، و`GET /api/tahrir/series` يعيد `archived` و`count` لكل صف.
+

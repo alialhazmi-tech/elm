@@ -84,8 +84,9 @@ enum ArticleBlocks {
             }
             guard !content.isEmpty else { level = nil; align = nil; postId = nil; return }
             switch current {
-            case "heading": blocks.append(ArticleBlock(type: "heading", runs: content, level: level ?? 2))
-            case "quote": blocks.append(ArticleBlock(type: postId == nil ? "quote" : "xpost", runs: content, postId: postId))
+            // المحاذاة تُحفظ للعناوين والاقتباسات أيضًا (Tiptap يخزّن `text-align` على p/h2/h3/blockquote).
+            case "heading": blocks.append(ArticleBlock(type: "heading", runs: content, level: level ?? 2, align: align))
+            case "quote": blocks.append(ArticleBlock(type: postId == nil ? "quote" : "xpost", runs: content, align: align, postId: postId))
             default: blocks.append(ArticleBlock(type: "paragraph", runs: content, align: align))
             }
             current = "paragraph"
@@ -125,7 +126,7 @@ enum ArticleBlocks {
                 if !closing { current = "heading"; level = tag == "h3" || tag == "h4" ? 3 : 2; align = alignment(in: attrs) }
             case "blockquote":
                 closeBlock()
-                if !closing { current = "quote"; postId = attribute("data-x-post", in: attrs) }
+                if !closing { current = "quote"; postId = attribute("data-x-post", in: attrs); align = alignment(in: attrs) }
             case "ul", "ol":
                 closeBlock()
                 if closing {

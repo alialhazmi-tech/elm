@@ -15,6 +15,9 @@ enum ElmLinks {
         "privacy", "welcome", "tahrir", "uploads", "_next", "podcast-audio", "infographics-data",
     ]
 
+    /// هل المقطع الأول محجوز (ليس قسمًا)؟
+    static func isReserved(_ segment: String) -> Bool { reserved.contains(segment) }
+
     static func isElmHost(_ host: String?) -> Bool {
         guard let host = host?.lowercased() else { return false }
         if host == "alelm.net" || host == "www.alelm.net" { return true }
@@ -23,12 +26,28 @@ enum ElmLinks {
         return false
     }
 
-    static func route(_ url: URL) -> ElmLinkRoute {
+    /// المخطط الخاص `alelm://` — المضيف هو أول مقطع من المسار: `alelm://politics/263004/slug`.
+    static let scheme = "alelm"
+
+    /// يحوّل رابط المخطط الخاص إلى رابط على أصل العلم؛ روابط الويب تمر كما هي.
+    static func normalized(_ url: URL) -> URL {
+        guard url.scheme?.lowercased() == scheme else { return url }
+        var path = "/" + (url.host ?? "") + url.path
+        if let query = url.query, !query.isEmpty { path += "?" + query }
+        return URL(string: path, relativeTo: URLConstants.publicSite)?.absoluteURL ?? url
+    }
+
+    static func route(_ raw: URL) -> ElmLinkRoute {
+        let url = normalized(raw)
         let relative = url.host == nil || isElmHost(url.host)
         guard relative else { return .external(url) }
         let parts = url.path.split(separator: "/").map(String.init).filter { !$0.isEmpty }
         if parts.count == 2, parts[0] == "keywords" {
             return .keyword(parts[1].removingPercentEncoding ?? parts[1])
+        }
+        // رابط المشاركة المُصدَّر `/share/{id}/{ver}` — المعرّف هو المقطع الثاني، والقسم يأتي من الخادم.
+        if parts.count == 3, parts[0] == "share" {
+            return .story(StoryCard(id: parts[1], slug: parts[1], section: "news", title: "", excerpt: "", href: "/share/\(parts[1])/\(parts[2])"))
         }
         if parts.count == 3, !reserved.contains(parts[0]) {
             let path = "/" + parts.joined(separator: "/")

@@ -39,6 +39,7 @@ struct StaffNotificationsScreen: View {
                     .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
                 }
+                if let error, !items.isEmpty { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                 if loading { ProgressView().frame(maxWidth: .infinity) }
             }
             .padding(.horizontal, 18)

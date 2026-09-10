@@ -144,8 +144,9 @@ enum StaffAPI {
         _ = try await ElmHTTP.request(url("story/restore"), method: "POST", json: ["id": id])
     }
 
-    static func restoreVersion(id: String, versionId: String, expectedVersion: Int) async throws {
-        _ = try await ElmHTTP.request(url("story/history"), method: "POST", json: ["id": id, "versionId": versionId, "expectedVersion": expectedVersion])
+    /// استعادة نسخة كمسودة جديدة — يعيد معرّف المسودة للانتقال إليها (كما `history-restore.tsx`).
+    static func restoreVersion(id: String, versionId: String, expectedVersion: Int) async throws -> StaffRestoreResult {
+        try await ElmHTTP.send(url("story/history"), json: ["id": id, "versionId": versionId, "expectedVersion": expectedVersion])
     }
 
     static func changeTeam(id: String, action: String, assignedTo: String? = nil, dueAt: String? = nil, body: String? = nil, expectedVersion: Int) async throws -> Data {
@@ -157,8 +158,14 @@ enum StaffAPI {
         return data
     }
 
-    static func presence(id: String, sessionId: String, leave: Bool = false) async throws {
-        _ = try await ElmHTTP.request(url("story/\(id)/presence"), method: leave ? "DELETE" : "POST", json: ["sessionId": sessionId], timeout: 10)
+    /// نبضة حضور — يعيد المحررين الحاضرين الآن `{editors:[{userId,name}]}` (بمن فيهم المرسل).
+    static func presence(id: String, sessionId: String) async throws -> [StaffPresenceEditor] {
+        let payload: StaffPresencePayload = try await ElmHTTP.send(url("story/\(id)/presence"), json: ["sessionId": sessionId], timeout: 10)
+        return payload.editors ?? []
+    }
+
+    static func leavePresence(id: String, sessionId: String) async throws {
+        _ = try await ElmHTTP.request(url("story/\(id)/presence"), method: "DELETE", json: ["sessionId": sessionId], timeout: 10)
     }
 
     static func uploadMedia(_ file: ElmMultipartFile) async throws -> StaffUploadResult {

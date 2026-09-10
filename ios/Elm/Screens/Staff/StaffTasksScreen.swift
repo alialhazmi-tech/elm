@@ -47,6 +47,7 @@ struct StaffTasksScreen: View {
                     .padding(.horizontal, 14)
                     .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
+                    if let error { StaffInlineError(message: error.message, retry: { Task { await load(page: page) } }) }
                     if loading { ProgressView().frame(maxWidth: .infinity) }
                     HStack {
                         if page > 1 { Button("السابقة") { Task { await load(page: page - 1) } } }
@@ -70,7 +71,7 @@ struct StaffTasksScreen: View {
                 StatusPill(status: task.storyStatus, label: task.statusLabel)
                 if task.revisionOf != nil { Text("مسودة تعديل").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3) }
                 if task.assignedTo == staff.actor?.userId { Text("مسندة إليك").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3) }
-                if task.returnedAt != nil { Text("أُعيدت للتعديل — راجع الملاحظات").font(ElmFonts.text(.caption2, weight: .semibold)).foregroundStyle(ElmTheme.hex("b8760a")) }
+                if task.returnedAt != nil { Text("أُعيدت للتعديل — راجع الملاحظات").font(ElmFonts.text(.caption2, weight: .semibold)).foregroundStyle(ElmTheme.warn) }
             }
             if let due = task.dueAt {
                 Text("التسليم: \(StaffFormat.dateTime(due)) (الرياض)\(task.overdue == true ? " · متأخرة" : "")")

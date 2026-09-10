@@ -22,8 +22,30 @@ extension APIClient {
         return try await ElmHTTP.get(components.url ?? base)
     }
 
-    static func fetchJak(limit: Int = 40) async throws -> JakPayload {
+    /// فهرس جاك العلم: 36 تقريرًا كما في `/jak` على الويب.
+    static func fetchJak(limit: Int = 36) async throws -> JakPayload {
         try await ElmHTTP.get(ElmHTTP.url(URLConstants.contentAPI, "api/mobile/v1/jak", query: ["limit": String(limit)]))
+    }
+
+    /// الشريط الإخباري المتناوب — يُحدَّث كل 60 ثانية وعند العودة إلى المقدمة كما على الويب.
+    static func fetchNewsStrip() async throws -> [NewsStripItem] {
+        let payload: NewsStripPayload = try await ElmHTTP.get(ElmHTTP.url(URLConstants.contentAPI, "api/content/news-strip"), timeout: 12)
+        return payload.items
+    }
+
+    /// البحث بترقيم الصفحات (18/صفحة) — عبر `ElmHTTP` حتى يُميَّز انقطاع الشبكة عن «لا نتائج».
+    static func fetchSearchPage(query: String, page: Int) async throws -> SearchPage {
+        try await ElmHTTP.get(ElmHTTP.url(URLConstants.contentAPI, "api/mobile/v1/search", query: ["q": query, "page": String(page)]), timeout: 20)
+    }
+
+    /// «مؤشرات المادة» العامة — تتحدث كل 60 ثانية أثناء القراءة.
+    static func fetchInsights(storyId: String) async throws -> StoryInsights {
+        try await ElmHTTP.get(ElmHTTP.url(URLConstants.contentAPI, "api/content/insights", query: ["storyId": storyId]), timeout: 12)
+    }
+
+    /// «نرشّح لك»: مخصّصة للعضو بكوكي العضوية، وللزائر ترشيح عام بلا تخصيص.
+    static func fetchRelated(storyId: String) async throws -> RelatedPayload {
+        try await ElmHTTP.get(ElmHTTP.url(URLConstants.memberAPI, "api/me/related", query: ["storyId": storyId]), timeout: 12)
     }
 
     /// `tab` = saved | liked | history | nil (نظرة عامة: الإحصاءات + أول 3 محفوظات).
@@ -51,13 +73,17 @@ extension APIClient {
     }
 
     /// نبضة القراءة العامة (زائر أو عضو) — تشترط ترويسة Origin، وElmHTTP يضعها من أصل الرابط.
-    static func sendReading(storyId: String, sessionId: String, activeMs: Int, progress: Int) async throws {
-        try await ElmHTTP.request(
+    /// يعيد `accepted` من الخادم (false عند إيقاف التخصيص) ليتوقف النبض كما يفعل الويب.
+    @discardableResult
+    static func sendReading(storyId: String, sessionId: String, activeMs: Int, progress: Int) async throws -> Bool? {
+        let (data, _) = try await ElmHTTP.request(
             ElmHTTP.url(URLConstants.memberAPI, "api/content/reading"),
             method: "POST",
             json: ["storyId": storyId, "sessionId": sessionId, "activeMs": activeMs, "progress": progress],
             timeout: 12
         )
+        struct Reply: Decodable { var accepted: Bool? }
+        return (try? JSONDecoder().decode(Reply.self, from: data))?.accepted
     }
 
     // MARK: Neon Auth (Better-Auth) — بلا ترويسة Origin كما في جلسة العضوية القائمة
@@ -92,5 +118,19 @@ extension APIClient {
         } catch ElmAPIError.notFound {
             try await ElmHTTP.request(URLConstants.authURL("forget-password"), method: "POST", json: body, origin: false)
         }
+    }
+
+    // MARK: أدوات القارئ الذكية (للأعضاء) — `POST /api/me/ai`
+
+    struct ReaderToolResult: Decodable {
+        var text: String
+        var points: [String]?
+    }
+
+    /// `tool` = summary | simplify | discuss (مع `question`). الخادم يعيد 401 للزائر و429 عند تجاوز 30/يوم.
+    static func readerTool(_ tool: String, storyId: String, question: String? = nil) async throws -> ReaderToolResult {
+        var body: [String: Any] = ["tool": tool, "storyId": storyId]
+        if let question { body["question"] = question }
+        return try await ElmHTTP.send(ElmHTTP.url(URLConstants.memberAPI, "api/me/ai"), json: body, timeout: 60)
     }
 }

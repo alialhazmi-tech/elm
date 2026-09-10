@@ -42,9 +42,31 @@ struct SavedScreen: View {
                 .padding(.top, 12)
 
                 autoDownloadRow.padding(.top, 14)
+                if let notice = library.mergeNotice {
+                    HStack(spacing: 10) {
+                        Label(notice, systemImage: "checkmark.circle.fill")
+                            .font(ElmFonts.text(.footnote, weight: .medium))
+                            .foregroundStyle(ElmTheme.ink)
+                        Spacer(minLength: 0)
+                        Button { library.dismissMergeNotice() } label: {
+                            Image(systemName: "xmark").font(.system(size: 11, weight: .semibold)).foregroundStyle(ElmTheme.ink3).frame(width: 32, height: 32)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("إخفاء الإشعار")
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .background(ElmTheme.success.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(.top, 10)
+                }
                 if let error = library.syncError {
-                    Text(error).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink2).padding(.top, 10)
-                    Button("إعادة المزامنة") { Task { await library.synchronize() } }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label(error, systemImage: "wifi.slash").font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2).lineSpacing(3)
+                        Button("إعادة المحاولة") { Task { await library.synchronize() } }
+                            .font(ElmFonts.text(.footnote, weight: .semibold)).frame(minHeight: 44)
+                    }
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .padding(.top, 10)
                 }
 
                 if items.isEmpty {

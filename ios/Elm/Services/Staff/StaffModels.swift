@@ -257,6 +257,8 @@ struct StaffStory: Codable, Equatable, Sendable {
     var imageURL: URL? { ElmMedia.url(image) }
     var publicPath: String { "/\(section)/\(id)/\(slug.isEmpty ? id : slug)" }
     var isNew: Bool { version == 0 }
+    /// تقارير «جاك العلم» تُبنى من الشرائح على الويب؛ متنها إسقاط آلي لا يُحرَّر نصًا.
+    var isJak: Bool { format == "jakalelm" }
 
     /// بصمة المحتوى الذي يكتبه المحرر — تغيّر الإصدار أو الحالة من الخادم ليس تعديلًا يستوجب حفظًا.
     var contentSignature: String {
@@ -273,8 +275,10 @@ struct StaffCapabilities: Codable, Equatable, Sendable {
     var canRestore: Bool
     var canDelete: Bool
     var canAssign: Bool
+    /// الإعادة للمحرر تشترط `story.approve` (لا `story.publish`) ومادة في الاعتماد — كما `editorial-team.ts`.
+    var canReturn: Bool
 
-    enum CodingKeys: String, CodingKey { case canEdit, canSubmit, canApprove, canSchedule, canArchive, canRestore, canDelete, canAssign }
+    enum CodingKeys: String, CodingKey { case canEdit, canSubmit, canApprove, canSchedule, canArchive, canRestore, canDelete, canAssign, canReturn }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         canEdit = try c.decodeIfPresent(Bool.self, forKey: .canEdit) ?? false
@@ -285,6 +289,7 @@ struct StaffCapabilities: Codable, Equatable, Sendable {
         canRestore = try c.decodeIfPresent(Bool.self, forKey: .canRestore) ?? false
         canDelete = try c.decodeIfPresent(Bool.self, forKey: .canDelete) ?? false
         canAssign = try c.decodeIfPresent(Bool.self, forKey: .canAssign) ?? false
+        canReturn = try c.decodeIfPresent(Bool.self, forKey: .canReturn) ?? false
     }
     init(actor: StaffActor, story: StaffStory?) {
         let owns = story.map { $0.authorId == actor.userId || $0.assignedTo == actor.userId } ?? true
@@ -296,6 +301,7 @@ struct StaffCapabilities: Codable, Equatable, Sendable {
         canRestore = actor.can("story.restore")
         canDelete = canEdit && (story?.status ?? "draft") == "draft"
         canAssign = actor.can("story.edit.any")
+        canReturn = actor.can("story.approve") && story?.status == "review"
     }
 }
 
@@ -434,10 +440,22 @@ struct StaffTaxonomyPayload: Decodable {
     var formats: [StaffFormatOption]?
     var visibility: [String: Bool]?
 
+    /// الأشكال القابلة للاختيار من المحرر — «جاك العلم» يُنشأ من محرر الشرائح على الويب فقط (كما `details-panel.tsx`).
     static let defaultFormats: [StaffFormatOption] = [
         .init(id: "news", label: "خبر"), .init(id: "infographics", label: "إنفوجرافيك"), .init(id: "videos", label: "فيديو"),
-        .init(id: "reports", label: "تقرير"), .init(id: "podcasts", label: "بودكاست"), .init(id: "jakalelm", label: "جاك العلم"),
+        .init(id: "reports", label: "تقرير"), .init(id: "podcasts", label: "بودكاست"),
     ]
+
+    /// تسمية للعرض فقط — تشمل «جاك العلم» لأن المواد القائمة قد تحمله.
+    static func formatLabel(_ id: String) -> String {
+        if id == "jakalelm" { return "جاك العلم" }
+        return defaultFormats.first { $0.id == id }?.label ?? id
+    }
+
+    /// قائمة المحرر: من الخادم إن وُجدت وإلا الافتراضية، مع استبعاد «جاك العلم» دائمًا.
+    static func editableFormats(_ server: [StaffFormatOption]?) -> [StaffFormatOption] {
+        (server ?? defaultFormats).filter { $0.id != "jakalelm" }
+    }
 }
 
 struct StaffNote: Codable, Identifiable, Equatable, Sendable {
@@ -452,6 +470,17 @@ struct StaffNote: Codable, Identifiable, Equatable, Sendable {
 struct StaffEditor: Codable, Identifiable, Equatable, Sendable {
     var id: String
     var name: String
+}
+
+/// محرر حاضر الآن — رد `POST story/:id/presence` `{editors:[{userId,name}]}`.
+struct StaffPresenceEditor: Codable, Identifiable, Equatable, Sendable {
+    var userId: String
+    var name: String
+    var id: String { userId }
+}
+
+struct StaffPresencePayload: Decodable {
+    var editors: [StaffPresenceEditor]?
 }
 
 struct StaffTeamPayload: Decodable {
@@ -502,6 +531,13 @@ struct StaffHistoryPayload: Decodable {
         var revisionOf: String?
         var format: String?
     }
+}
+
+/// رد `POST story/history` — مسودة الاستعادة الجديدة.
+struct StaffRestoreResult: Decodable {
+    var id: String
+    var version: Int?
+    var format: String?
 }
 
 struct StaffVersionText: Decodable {
@@ -576,6 +612,8 @@ struct StaffStatsPayload: Decodable {
 struct StaffSchedulePayload: Decodable {
     var scheduled: [StaffStoryRow]
     var nextScheduledAt: String?
+    /// المشغّل الداخلي يعمل (`ALELM_SCHEDULER_INTERVAL_MS` موجب) — وإلا فالمجدول لا يُنشر تلقائيًا.
+    var automatic: Bool?
 }
 
 struct StaffProposal: Codable, Identifiable, Equatable, Sendable {
@@ -691,10 +729,36 @@ struct StaffAIResult: Decodable {
     var suggestions: [StaffAISuggestion]?
     var text: String?
     var seo: SEO?
+    var classify: Classify?
     struct SEO: Decodable {
         var seoTitle: String?
         var seoDescription: String?
         var keywords: [String]?
+        /// حكم الحارس على الحزمة — لا تُطبَّق إلا إن كان `ok == true` (كما `seo-panel.tsx`).
+        var guardOK: Bool?
+        var guardMessages: [String]
+
+        enum CodingKeys: String, CodingKey { case seoTitle, seoDescription, keywords, guardReport = "guard" }
+        private struct GuardReport: Decodable {
+            var ok: Bool?
+            var findings: [Finding]?
+            struct Finding: Decodable { var severity: String?; var message: String? }
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            seoTitle = try c.decodeIfPresent(String.self, forKey: .seoTitle)
+            seoDescription = try c.decodeIfPresent(String.self, forKey: .seoDescription)
+            keywords = try c.decodeIfPresent([String].self, forKey: .keywords)
+            let report = try? c.decodeIfPresent(GuardReport.self, forKey: .guardReport)
+            guardOK = report?.ok
+            guardMessages = (report?.findings ?? []).compactMap(\.message)
+        }
+    }
+    /// اقتراح التصنيف — `{seriesSlug, section, format}`.
+    struct Classify: Decodable {
+        var seriesSlug: String?
+        var section: String?
+        var format: String?
     }
 }
 

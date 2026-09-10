@@ -31,7 +31,12 @@
 
 ## قواعد العمل المحفوظة
 
-- كل إجراء يحمل `expectedVersion`؛ 409 يظهر كتعارض صريح مع خيار تحميل نسخة الخادم أو الحفظ فوقها، والتعديل محفوظ محليًا.
+- كل إجراء يحمل `expectedVersion`؛ 409 يظهر كتعارض صريح مع خيارين: «تحميل نسخة الخادم» أو «الاحتفاظ بنسختي» (يعيد جلب
+  الإصدار الجديد ثم يحفظ تعديلاتك فوقه بـ`expectedVersion` الجديد) — لا حفظ بلا إصدار (الخادم يرفضه دائمًا).
+- مواد «جاك العلم» للقراءة فقط في التطبيق (تُحرَّر شرائحها من الويب)؛ الخادم يحمي متنها وشكلها أيضًا.
+- مادة منشورة يعدّلها المعتمد: «تحديث المادة» = حفظ مسودة تعديل ثم نشرها فورًا (كما الويب)؛ و«تحويل إلى مسودة» يسحبها من الموقع.
+- الإعادة للمحرر تتبع `capabilities.canReturn` (= `story.approve` ومادة في الاعتماد).
+- اقتراحات الذكاء للمتن تُطبَّق على الفقرات فقط (العناوين والقوائم والاقتباسات تبقى)، وحزمة SEO لا تُطبَّق إن لم تجتز الحارس.
 - 422 من الحارس تُعرض برسائل المخالفات (`findings[].message`) لا بمعرّفات القواعد فقط.
 - الحفظ التلقائي للمسودات فقط كل ثانيتين بعد التوقف عن الكتابة، ويتوقف عند الخطأ حتى ينجح حفظ يدوي.
   نسخة استرداد محلية 7 أيام في `UserDefaults` (`elm.staff.recovery.<id>`) تُعرض عند الفتح إن كانت أحدث من الخادم.
@@ -47,7 +52,9 @@
 xcrun simctl launch --terminate-running-process <sim> net.alelm.app \
   -elmStaffUser admin_ios -elmStaffPass … -elmStaffSection stories -elmStaffStory <id> -elmStaffAction publish
 ```
-الإجراءات: `submit | publish | archive | restore | return | edit | upload`، و`-elmStaffFresh 1` يمسح الكوكي لتصوير
+الإجراءات: `submit | publish | archive | restore | return | edit | upload | open | keepmine | unpublish`،
+و`-elmStaffPanel details|seo|guard` يفتح تبويب المحرر، و`-elmMarkupSelfTest 1` يشغّل فحص جولة الترميز (يطبع PASS/FAIL في السجل)،
+و`-elmStaffFresh 1` يمسح الكوكي لتصوير
 الدخول، و`-elm.onboarding.v2 1` يتخطى الترحيب على محاكٍ جديد. مع `SIMCTL_CHILD_ELM_API_ORIGIN=http://127.0.0.1:3106`
 يعمل كل شيء على القاعدة المحلية المعزولة (انظر `scripts/neon-local-proxy.mjs`).
 

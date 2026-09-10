@@ -76,7 +76,10 @@ struct StaffWorkspace: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var tab: StaffSection = .overview
     @State private var sidebarSelection: StaffSection? = .overview
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
     @State private var unread = 0
+    @State private var unreadEtag: String?
+    @State private var pollTask: Task<Void, Never>?
 
     var body: some View {
         ZStack {
@@ -103,11 +106,16 @@ struct StaffWorkspace: View {
                 sidebarSelection = section
             }
             #endif
-            await refreshUnread()
+            startPolling()
         }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { Task { await staff.restore(); await refreshUnread() } }
+            // استطلاع التنبيهات كل 30 ثانية بـETag في المقدمة فقط (كما `notifications.tsx`).
+            if phase == .active { Task { await staff.restore() }; startPolling() } else { pollTask?.cancel(); pollTask = nil }
         }
+        .onChange(of: staff.phase) { _, phase in
+            if phase == .active { startPolling() } else { pollTask?.cancel(); pollTask = nil }
+        }
+        .onDisappear { pollTask?.cancel(); pollTask = nil }
     }
 
     // MARK: آيفون — تبويبات
@@ -130,7 +138,7 @@ struct StaffWorkspace: View {
     // MARK: آيباد — شريط جانبي
 
     private var splitLayout: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             List(selection: $sidebarSelection) {
                 Section {
                     ForEach(StaffSection.visible(for: staff.actor)) { section in
@@ -171,7 +179,8 @@ struct StaffWorkspace: View {
                 }
             }
             .navigationTitle("تحرير العلم")
-            .toolbar(.hidden, for: .navigationBar)
+            // شريط العمود ظاهر حتى يبقى زر إظهار/إخفاء الشريط الجانبي في المتناول.
+            .navigationBarTitleDisplayMode(.inline)
             .scrollContentBackground(.hidden)
             .background(ElmTheme.surface2)
         } detail: {
@@ -189,7 +198,7 @@ struct StaffWorkspace: View {
         case .stories: StaffStoriesScreen()
         case .tasks: StaffTasksScreen()
         case .media: StaffMediaScreen()
-        case .notifications: StaffNotificationsScreen(onRead: { Task { await refreshUnread() } })
+        case .notifications: StaffNotificationsScreen(onRead: { unreadEtag = nil; Task { await refreshUnread() } })
         case .schedule: StaffScheduleScreen()
         case .series: StaffSeriesScreen()
         case .audit: StaffAuditScreen()
@@ -202,10 +211,21 @@ struct StaffWorkspace: View {
         }
     }
 
+    private func startPolling() {
+        pollTask?.cancel()
+        pollTask = Task {
+            while !Task.isCancelled {
+                await refreshUnread()
+                try? await Task.sleep(for: .seconds(30))
+            }
+        }
+    }
+
     private func refreshUnread() async {
         guard staff.phase == .active else { return }
-        if let (payload, _) = try? await StaffAPI.notifications(etag: nil), let payload {
-            unread = payload.notifications.filter { $0.readAt == nil }.count
+        if let (payload, tag) = try? await StaffAPI.notifications(etag: unreadEtag) {
+            unreadEtag = tag
+            if let payload { unread = payload.notifications.filter { $0.readAt == nil }.count }
         }
     }
 }
@@ -214,6 +234,7 @@ struct StaffWorkspace: View {
 struct StaffMoreScreen: View {
     @Environment(StaffSessionStore.self) private var staff
     let unread: Int
+    @State private var debugSection: StaffSection?
 
     private var sections: [StaffSection] {
         StaffSection.visible(for: staff.actor).filter { !StaffSection.primary.contains($0) }
@@ -257,23 +278,36 @@ struct StaffMoreScreen: View {
             .padding(.horizontal, 18)
             .padding(.top, 12)
         }
-        .navigationDestination(for: StaffSection.self) { section in
-            switch section {
-            case .notifications: StaffNotificationsScreen(onRead: nil)
-            case .schedule: StaffScheduleScreen(showBack: true)
-            case .series: StaffSeriesScreen(showBack: true)
-            case .audit: StaffAuditScreen(showBack: true)
-            case .stats: StaffStatsScreen(showBack: true)
-            case .members: StaffMembersScreen(showBack: true)
-            case .roles: StaffRolesScreen(showBack: true)
-            case .settings: StaffSettingsScreen(showBack: true)
-            case .profile: StaffProfileScreen(showBack: true)
-            case .help: StaffHelpScreen()
-            case .overview: StaffOverviewScreen(unread: unread)
-            case .stories: StaffStoriesScreen(showBack: true)
-            case .tasks: StaffTasksScreen(showBack: true)
-            case .media: StaffMediaScreen(showBack: true)
+        .navigationDestination(for: StaffSection.self) { section in destination(section) }
+        .navigationDestination(item: $debugSection) { section in destination(section) }
+        #if DEBUG
+        // `-elmStaffSection series` على الآيفون يدفع القسم من «المزيد» مباشرة للقطات بلا نقر.
+        .task {
+            if let section = ElmLaunch.staffSection.flatMap(StaffSection.init(rawValue:)), !StaffSection.primary.contains(section), section != .help {
+                try? await Task.sleep(for: .milliseconds(300))
+                debugSection = section
             }
+        }
+        #endif
+    }
+
+    @ViewBuilder
+    private func destination(_ section: StaffSection) -> some View {
+        switch section {
+        case .notifications: StaffNotificationsScreen(onRead: nil)
+        case .schedule: StaffScheduleScreen(showBack: true)
+        case .series: StaffSeriesScreen(showBack: true)
+        case .audit: StaffAuditScreen(showBack: true)
+        case .stats: StaffStatsScreen(showBack: true)
+        case .members: StaffMembersScreen(showBack: true)
+        case .roles: StaffRolesScreen(showBack: true)
+        case .settings: StaffSettingsScreen(showBack: true)
+        case .profile: StaffProfileScreen(showBack: true)
+        case .help: StaffHelpScreen()
+        case .overview: StaffOverviewScreen(unread: unread)
+        case .stories: StaffStoriesScreen(showBack: true)
+        case .tasks: StaffTasksScreen(showBack: true)
+        case .media: StaffMediaScreen(showBack: true)
         }
     }
 }

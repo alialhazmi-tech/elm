@@ -2,6 +2,7 @@ import SwiftUI
 
 /// صفحة المادة داخل اللوحة: الحالة والبيانات والإجراءات بحسب الصلاحية، ومداخل التحرير
 /// والفريق والسجل الزمني وسجل النسخ. الإجراءات تحمل `expectedVersion` وتعرض 409 كتعارض صريح.
+/// مواد «جاك العلم» لا تُحرَّر من هنا (متنها إسقاط من الشرائح) — تُعرض بياناتها مع إشعار.
 struct StaffStoryScreen: View {
     @Environment(StaffSessionStore.self) private var staff
     let id: String
@@ -17,9 +18,18 @@ struct StaffStoryScreen: View {
     @State private var scheduleDate = Date().addingTimeInterval(3600)
     @State private var showDelete = false
     @State private var showReturn = false
+    @State private var showReturnToDraft = false
     @State private var returnReason = ""
     @State private var editorPresented = false
     @State private var readerPresented = false
+
+    /// رقائق أسباب الأرشفة كما في `story-actions.tsx`.
+    static let archiveReasonChips = [
+        "خطأ وقائعي يحتاج تصحيحًا",
+        "تكرار لمادة أخرى",
+        "طلب إزالة أو تحديث رسمي",
+        "لم تعد صالحة للنشر",
+    ]
 
     private var story: StaffStory? { payload?.story }
     private var capabilities: StaffCapabilities? {
@@ -32,7 +42,7 @@ struct StaffStoryScreen: View {
                 if let story {
                     head(story)
                     if let notice { StaffInlineNotice(message: notice, symbol: "checkmark.circle") }
-                    if let error { StaffInlineError(message: error.message) }
+                    if let error { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                     actions(story)
                     facts(story)
                     links(story)
@@ -62,26 +72,46 @@ struct StaffStoryScreen: View {
                 }.elmRTL()
             }
         }
-        .alert("أرشفة المادة", isPresented: $showArchive) {
-            TextField("سبب الأرشفة (8 أحرف على الأقل)", text: $archiveReason)
-            Button("أرشفة", role: .destructive) { Task { await run("archive") { try await StaffAPI.archive(id: id, reason: archiveReason) } } }
-            Button("إلغاء", role: .cancel) {}
-        } message: { Text("تختفي المادة من الموقع ويُسجَّل السبب باسمك.") }
-        .alert("حذف المسودة", isPresented: $showDelete) {
-            Button("حذف", role: .destructive) { Task { await run("delete") { try await StaffAPI.deleteDraft(id: id) } } }
-            Button("إلغاء", role: .cancel) {}
-        } message: { Text("لا يمكن التراجع عن حذف المسودة.") }
-        .alert("إعادة المادة للتعديل", isPresented: $showReturn) {
-            TextField("سبب الإعادة", text: $returnReason)
-            Button("إعادة") {
+        .sheet(isPresented: $showArchive) {
+            StaffReasonSheet(
+                title: "أرشفة المادة",
+                message: "تختفي المادة من الموقع فورًا ويُسجَّل السبب باسمك. اختر سببًا جاهزًا أو اكتب سببك.",
+                placeholder: "سبب الأرشفة",
+                chips: Self.archiveReasonChips,
+                minLength: 8,
+                maxLength: 4000,
+                confirmTitle: "أرشفة",
+                destructive: true,
+                reason: $archiveReason
+            ) {
+                Task { await run("archive") { try await StaffAPI.archive(id: id, reason: archiveReason) } }
+            }.elmRTL()
+        }
+        .sheet(isPresented: $showReturn) {
+            StaffReasonSheet(
+                title: "إعادة المادة للتعديل",
+                message: "تعود المادة مسودة إلى كاتبها مع ملاحظتك. حدّد التعديل المطلوب وأضف روابط المصادر عند الحاجة.",
+                placeholder: "سبب الإعادة",
+                minLength: 8,
+                maxLength: 4000,
+                confirmTitle: "إعادة للمحرر مع السبب",
+                reason: $returnReason
+            ) {
                 Task {
                     await run("return") {
                         _ = try await StaffAPI.changeTeam(id: id, action: "return", body: returnReason, expectedVersion: story?.version ?? 0)
                     }
                 }
-            }
+            }.elmRTL()
+        }
+        .alert("حذف المسودة", isPresented: $showDelete) {
+            Button("حذف", role: .destructive) { Task { await run("delete") { try await StaffAPI.deleteDraft(id: id) } } }
             Button("إلغاء", role: .cancel) {}
-        } message: { Text("تعود المادة مسودة إلى كاتبها مع ملاحظتك.") }
+        } message: { Text("لا يمكن التراجع عن حذف المسودة.") }
+        .alert("تحويل إلى مسودة", isPresented: $showReturnToDraft) {
+            Button("تحويل إلى مسودة", role: .destructive) { Task { await returnToDraft() } }
+            Button("إلغاء", role: .cancel) {}
+        } message: { Text("تُخفى المادة عن الموقع وتعود مسودة بنصها الحالي حتى نشرها مجددًا.") }
         .sheet(isPresented: $showSchedule) { scheduleSheet.elmRTL() }
     }
 
@@ -91,6 +121,7 @@ struct StaffStoryScreen: View {
         VStack(alignment: .leading, spacing: 10) {
             ElmFlow(spacing: 6) {
                 StatusPill(status: story.storyStatus)
+                if story.isJak { Text("جاك العلم").font(ElmFonts.text(.caption2, weight: .semibold)).foregroundStyle(ElmTheme.gold) }
                 if story.revisionOf != nil { Text("مسودة تعديل لمادة منشورة").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3) }
                 if story.pinned { Label("مثبتة", systemImage: "pin.fill").font(ElmFonts.text(.caption2, weight: .semibold)).foregroundStyle(ElmTheme.gold) }
                 if let until = story.breakingUntil, StaffFormat.parse(until).map({ $0 > Date() }) == true {
@@ -109,6 +140,9 @@ struct StaffStoryScreen: View {
                     .overlay { RemoteImage(url: story.imageURL) }
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
+            if story.isJak {
+                StaffInlineNotice(message: StaffEditorScreen.jakNotice, symbol: "rectangle.on.rectangle.slash")
+            }
             if let archive = payload?.archiveEvent {
                 StaffInlineNotice(message: "أُرشفت \(StaffFormat.dateTime(archive.at))\(archive.actor.map { " بواسطة \($0)" } ?? "") — \(archive.reason)", symbol: "archivebox")
             }
@@ -122,8 +156,9 @@ struct StaffStoryScreen: View {
         let caps = capabilities
         let status = story.storyStatus
         VStack(spacing: 10) {
-            if caps?.canEdit == true, status != .archived {
-                StaffPrimaryButton(title: status == .published ? "فتح مسودة تعديل" : "تحرير المادة", symbol: "pencil") { editorPresented = true }
+            // مواد جاك لا تُفتح في محرر النص — تحريرها من لوحة الويب (الشرائح).
+            if caps?.canEdit == true, status != .archived, !story.isJak {
+                StaffPrimaryButton(title: status == .published ? (caps?.canApprove == true ? "تحرير المادة المنشورة" : "فتح مسودة تعديل") : "تحرير المادة", symbol: "pencil") { editorPresented = true }
             }
             if status == .draft, caps?.canSubmit == true {
                 StaffPrimaryButton(title: "رفع للاعتماد", symbol: "paperplane", busy: busy == "submit", tint: ElmTheme.focus) {
@@ -139,8 +174,12 @@ struct StaffStoryScreen: View {
                 if [.draft, .review].contains(status), caps?.canSchedule == true {
                     StaffSecondaryButton(title: "جدولة", symbol: "calendar.badge.clock") { showSchedule = true }
                 }
-                if status == .review, caps?.canApprove == true {
+                // الإعادة بحسب `canReturn` من الخادم (`story.approve` + حالة الاعتماد) لا `canApprove`.
+                if status == .review, caps?.canReturn == true {
                     StaffSecondaryButton(title: "إعادة للتعديل", symbol: "arrow.uturn.right") { showReturn = true }
+                }
+                if status == .published, caps?.canApprove == true, !story.isJak {
+                    StaffSecondaryButton(title: "تحويل إلى مسودة", symbol: "doc.badge.arrow.up") { showReturnToDraft = true }
                 }
             }
             HStack(spacing: 10) {
@@ -166,7 +205,7 @@ struct StaffStoryScreen: View {
         StaffCard {
             fact("القسم", ElmFormat.sectionName(story.section))
             if let series = story.seriesSlug { fact("السلسلة", SeriesPalette.active.first { $0.id == series }?.name ?? series) }
-            fact("الشكل", StaffTaxonomyPayload.defaultFormats.first { $0.id == story.format }?.label ?? story.format)
+            fact("الشكل", StaffTaxonomyPayload.formatLabel(story.format))
             if let author = story.authorName, !author.isEmpty { fact("الكاتب", author) }
             if let due = story.dueAt { fact("موعد التسليم", StaffFormat.dateTime(due)) }
             if let scheduled = story.scheduledAt, story.storyStatus == .scheduled { fact("موعد النشر", StaffFormat.dateTime(scheduled)) }
@@ -217,10 +256,9 @@ struct StaffStoryScreen: View {
                 Text("موعد النشر بتوقيت الرياض").font(ElmFonts.display(.title3, weight: .bold)).foregroundStyle(ElmTheme.ink)
                 DatePicker("الموعد", selection: $scheduleDate, in: Date()..., displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.graphical)
-                    .environment(\.timeZone, TimeZone(identifier: "Asia/Riyadh")!)
-                    .environment(\.locale, Locale(identifier: "ar-SA@calendar=gregorian;numbers=latn"))
+                    .riyadhPicker()
                     .tint(ElmTheme.navyInk)
-                Text("سيُنشر تلقائيًا في \(StaffFormat.dateTime(StaffFormat.iso(scheduleDate))) بعد تجاوز الحارس.")
+                Text("يُنشر \(StaffFormat.dateTime(StaffFormat.iso(scheduleDate))) بتوقيت الرياض بعد تجاوز الحارس.")
                     .font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2)
                 StaffPrimaryButton(title: "تأكيد الجدولة", symbol: "calendar.badge.checkmark", busy: busy == "schedule") {
                     showSchedule = false
@@ -246,7 +284,8 @@ struct StaffStoryScreen: View {
         case "archive": archiveReason = "أرشفة تجريبية من تطبيق iOS"; await run("archive") { try await StaffAPI.archive(id: id, reason: archiveReason) }
         case "restore": await run("restore") { try await StaffAPI.restore(id: id) }
         case "return": returnReason = "إعادة تجريبية من التطبيق — راجع الفقرة الثانية"; await run("return") { _ = try await StaffAPI.changeTeam(id: id, action: "return", body: returnReason, expectedVersion: story?.version ?? 0) }
-        case "edit": editorPresented = true
+        case "unpublish": await returnToDraft()
+        case "edit", "open", "keepmine": editorPresented = true
         default: break
         }
     }
@@ -259,8 +298,15 @@ struct StaffStoryScreen: View {
             payload = try await StaffAPI.story(id: id)
             error = nil
         } catch {
-            let api = staff.handle(error)
-            if payload == nil { self.error = api } else { self.error = api }
+            self.error = staff.handle(error)
+        }
+    }
+
+    /// «تحويل إلى مسودة»: حفظ الحقول الحالية مع `returnToDraft:true` و`expectedVersion` — تُخفى المادة عن الموقع (كما `action-bar.tsx`).
+    private func returnToDraft() async {
+        guard let story else { return }
+        await run("unpublish") {
+            _ = try await StaffAPI.save(story, expectedVersion: story.version, autosave: false, returnToDraft: true)
         }
     }
 
@@ -297,6 +343,7 @@ struct StaffStoryScreen: View {
         case "restore": "استُعيدت المادة كمسودة."
         case "delete": "حُذفت المسودة."
         case "return": "أُعيدت المادة إلى كاتبها."
+        case "unpublish": "حُوّلت المادة إلى مسودة وأُخفيت عن الموقع."
         default: "تم."
         }
     }

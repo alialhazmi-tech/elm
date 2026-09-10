@@ -1,27 +1,35 @@
 import Foundation
 import Observation
 
+/// المحفوظات: للعضو عبر `/api/me/saved` بطابور معلّق؛ وللزائر على الجهاز فقط (ميزة تطبيق، الويب يشترط الدخول).
+/// عند أول دخول تُدمج محفوظات الزائر في الحساب (تُرسل `saved:true` لكل واحدة) ثم يُمسح مفتاح الزائر.
 @MainActor
 @Observable
 final class LibraryStore {
     private struct Pending: Codable, Equatable { let saved: Bool; let token: UUID }
+    private static let guestKey = "elm.saved.v1"
     private var memberId: String?
     private var generation = UUID()
     private var syncing = false
     private var pending: [String: Pending] = [:]
-    private var key: String { memberId.map { "elm.saved.member.\($0)" } ?? "elm.saved.v1" }
+    private var key: String { memberId.map { "elm.saved.member.\($0)" } ?? Self.guestKey }
     var items: [StoryCard] = []
     var syncError: String?
+    /// إشعار لمرة واحدة بعد دمج محفوظات الزائر في الحساب.
+    var mergeNotice: String?
 
     init() { load() }
 
     func switchAccount(_ id: String?) async {
         if memberId != id {
+            let guestItems = id != nil && memberId == nil ? Self.guestItems() : []
             memberId = id
             generation = UUID()
             syncing = false
             syncError = nil
+            mergeNotice = nil
             load()
+            if let id, !guestItems.isEmpty { merge(guestItems, into: id) }
         }
         await synchronize()
     }
@@ -36,6 +44,8 @@ final class LibraryStore {
         persist()
         Task { await synchronize() }
     }
+
+    func dismissMergeNotice() { mergeNotice = nil }
 
     func synchronize() async {
         guard let account = memberId, !syncing else { return }
@@ -71,6 +81,25 @@ final class LibraryStore {
         } catch {
             if epoch == generation { syncError = "المحفوظات متاحة على الجهاز. تعذرت المزامنة؛ اسحب للتحديث والمحاولة." }
         }
+    }
+
+    /// محفوظات الزائر تدخل طابور الحساب (`saved:true`) فتُرفع مع أول مزامنة، ويُمسح مفتاح الزائر فورًا
+    /// حتى لا تعود بعد الخروج كأنها لم تُنقل.
+    private func merge(_ guestItems: [StoryCard], into account: String) {
+        for story in guestItems.reversed() where !contains(story) {
+            items.insert(story, at: 0)
+        }
+        for story in guestItems {
+            pending[story.apiId] = Pending(saved: true, token: UUID())
+        }
+        persist()
+        UserDefaults.standard.removeObject(forKey: Self.guestKey)
+        UserDefaults.standard.removeObject(forKey: Self.guestKey + ".pending")
+        mergeNotice = "نُقلت محفوظاتك إلى حسابك"
+    }
+
+    private static func guestItems() -> [StoryCard] {
+        UserDefaults.standard.data(forKey: guestKey).flatMap { try? JSONDecoder().decode([StoryCard].self, from: $0) } ?? []
     }
 
     private func load() {

@@ -52,7 +52,7 @@ struct ElmHeader: View {
                     circleButton(label: "المحفوظات") { route = .saved } content: {
                         Image(systemName: "bookmark").font(.system(size: 17, weight: .medium))
                     }
-                    circleButton(label: "الإشعارات") { route = .notifications } content: {
+                    circleButton(label: "آخر المستجدات") { route = .notifications } content: {
                         Image(systemName: "bell").font(.system(size: 17, weight: .medium))
                     }
                 } else if !showBack {

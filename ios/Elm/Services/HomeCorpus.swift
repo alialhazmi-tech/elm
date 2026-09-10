@@ -12,8 +12,9 @@ enum HomeCorpus {
         }
         var seen = Set<String>()
         var out: [StoryCard] = []
-        var pool = [home.hero] + home.minis + home.mosaic + [home.dataStory].compactMap { $0 } + home.videos + home.mostRead
+        var pool = (home.hasHero ? [home.hero] : []) + home.minis + home.mosaic + [home.dataStory].compactMap { $0 } + home.videos + home.mostRead
         pool += home.presentation?.stream?.river ?? []
+        pool += (home.presentation?.stream?.panels ?? []).flatMap { ($0.lead.map { [$0] } ?? []) + $0.rows }
         for card in pool {
             if seen.insert(card.apiId).inserted {
                 out.append(card)

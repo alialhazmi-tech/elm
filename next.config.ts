@@ -73,6 +73,11 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       {
+        // روابط iOS العالمية: آبل تشترط JSON صريحًا لملف الربط (بلا امتداد في public/).
+        source: "/.well-known/apple-app-site-association",
+        headers: [{ key: "Content-Type", value: "application/json" }, { key: "Cache-Control", value: "public, max-age=3600" }],
+      },
+      {
         // قبل قطع النطاق: أصل Railway لا يدخل فهرس قوقل حتى لا ينافس alelm.net القديم.
         // canonical المطلق إلى alelm.net قائم أيضًا، وهذه الترويسة تحسم الازدواج نهائيًا.
         source: "/:path*",

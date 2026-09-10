@@ -29,7 +29,7 @@ struct JakListScreen: View {
                         Button("إعادة المحاولة") { Task { await load() } }.frame(minHeight: 44)
                     }
                 } else if loading && stories.isEmpty {
-                    ProgressView("جاري تحميل التقارير").font(ElmFonts.text(.caption)).frame(maxWidth: .infinity).padding(.top, 40)
+                    ProgressView("جارٍ تحميل التقارير").font(ElmFonts.text(.caption)).frame(maxWidth: .infinity).padding(.top, 40)
                 } else if loaded && stories.isEmpty {
                     ContentUnavailableView("لا تقارير منشورة بعد", systemImage: "rectangle.stack")
                 } else {

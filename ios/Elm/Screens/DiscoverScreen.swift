@@ -50,7 +50,7 @@ struct DiscoverScreen: View {
                         ForEach(taxonomy.topicSections) { item in
                             NavigationLink { BrowseFeedScreen(slug: item.slug, title: item.shortName, subtitle: item.name == item.shortName ? "" : item.name) } label: {
                                 HStack(spacing: 12) {
-                                    Image(systemName: TaxonomyStore.symbol(for: item.slug)).font(.system(size: 20))
+                                    Image(systemName: TaxonomyStore.symbol(for: item.slug)).font(.system(.title3))
                                         .foregroundStyle(item.color.map { ElmTheme.hex($0) } ?? ElmTheme.navyInk).frame(width: 25)
                                     Text(item.shortName).font(ElmFonts.text(.body, weight: .medium))
                                 }.frame(maxWidth: .infinity, minHeight: 66, alignment: .leading)
@@ -96,13 +96,13 @@ struct DiscoverScreen: View {
     }
     private func formatRow(_ title: String, detail: String, symbol: String) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: symbol).font(.system(size: 24)).foregroundStyle(ElmTheme.navyInk).frame(width: 34)
+            Image(systemName: symbol).font(.system(.title2)).foregroundStyle(ElmTheme.navyInk).frame(width: 34)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(ElmFonts.text(.headline, weight: .semibold))
                 Text(detail).font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2)
             }
             Spacer(minLength: 0)
-            Image(systemName: "chevron.left").font(.system(size: 12)).foregroundStyle(ElmTheme.ink3)
+            Image(systemName: "chevron.left").font(.system(.caption)).foregroundStyle(ElmTheme.ink3)
         }.padding(16).frame(maxWidth: .infinity).background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 16))
     }
 }
@@ -163,11 +163,14 @@ struct BrowseFeedScreen: View {
     let slug: String
     let title: String
     var subtitle = ""
+    /// كيكر فوق العنوان — «من أرشيف العلم» للسلاسل المتقاعدة كما على الويب.
+    var kicker: String? = nil
     @State private var stories: [StoryCard] = []
     @State private var total: Int?
     @State private var nextPage: Int? = 1
     @State private var loading = false
     @State private var error: String?
+    @State private var notFound = false
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -179,13 +182,20 @@ struct BrowseFeedScreen: View {
     var body: some View {
         ElmScreen(title: title, showBack: true, onRefresh: { await load(reset: true) }) {
             LazyVStack(alignment: .leading, spacing: 18) {
+                if let kicker, !kicker.isEmpty {
+                    KickerBar(label: kicker, color: ElmTheme.gold)
+                }
                 Text(title).font(ElmFonts.display(.largeTitle, weight: .bold)).foregroundStyle(ElmTheme.ink)
                 if !subtitle.isEmpty { Text(subtitle).font(ElmFonts.text(.body)).foregroundStyle(ElmTheme.ink2) }
-                if let total { Text("\(ElmFormat.materialLabel(total)) منشورة").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3) }
+                if let total, !notFound { Text("\(ElmFormat.materialLabel(total)) منشورة").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3) }
                 LazyVGrid(columns: columns, alignment: .leading, spacing: 18) {
                     ForEach(stories) { story in NativeStoryRow(story: story) }
                 }
-                if let error {
+                if notFound {
+                    // قسم/سلسلة مجهولان = 404 على الويب لا خطأ اتصال.
+                    ContentUnavailableView(kind == "series" ? "السلسلة غير موجودة" : "القسم غير موجود", systemImage: "questionmark.folder",
+                                           description: Text("تحقق من الرابط أو تصفّح الأقسام من «استكشف»."))
+                } else if let error {
                     Text(error).font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2)
                     Button("إعادة المحاولة") { Task { await load(reset: stories.isEmpty) } }.frame(minHeight: 44)
                 } else if stories.isEmpty && !loading && total != nil {
@@ -207,6 +217,7 @@ struct BrowseFeedScreen: View {
         guard !loading, let page = reset ? 1 : nextPage else { return }
         loading = true
         error = nil
+        notFound = false
         defer { loading = false }
         do {
             let result = try await APIClient.fetchBrowse(kind: kind, slug: slug, page: page)
@@ -217,6 +228,8 @@ struct BrowseFeedScreen: View {
             nextPage = result.nextPage
             ImageStore.shared.prefetch(result.stories.compactMap(\.imageURL))
         } catch is CancellationError { }
+        catch APIClientError.badStatus(404) { notFound = true; nextPage = nil }
+        catch ElmAPIError.notFound { notFound = true; nextPage = nil }
         catch { self.error = "تعذر تحميل الأرشيف. تحقق من الاتصال وأعد المحاولة." }
     }
 }

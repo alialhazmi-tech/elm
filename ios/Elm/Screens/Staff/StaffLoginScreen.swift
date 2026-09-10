@@ -73,10 +73,8 @@ struct StaffLoginScreen: View {
                 .textContentType(.username)
                 .submitLabel(.next)
                 .onSubmit { focused = .password }
-            StaffSecureField(label: "كلمة المرور", text: $password)
+            StaffSecureField(label: "كلمة المرور", text: $password, submitLabel: .go, onSubmit: submitLogin)
                 .focused($focused, equals: .password)
-                .submitLabel(.go)
-                .onSubmit { submitLogin() }
             StaffPrimaryButton(title: staff.loading ? "جارٍ الدخول…" : "دخول", symbol: "lock.open", busy: staff.loading, action: submitLogin)
         }
     }
@@ -86,6 +84,8 @@ struct StaffLoginScreen: View {
             StaffField(label: "رمز التحقق", placeholder: "123456", text: $code, keyboard: .numberPad, ltr: true, hint: "من تطبيق المصادقة، أو رمز استرداد.")
                 .focused($focused, equals: .code)
                 .textContentType(.oneTimeCode)
+                .submitLabel(.go)
+                .onSubmit { Task { _ = await staff.submitCode(code.trimmingCharacters(in: .whitespaces)) } }
             StaffPrimaryButton(title: staff.loading ? "جارٍ التحقق…" : "تأكيد", symbol: "checkmark.shield", busy: staff.loading) {
                 Task { _ = await staff.submitCode(code.trimmingCharacters(in: .whitespaces)) }
             }
@@ -96,19 +96,15 @@ struct StaffLoginScreen: View {
 
     private var passwordForm: some View {
         VStack(spacing: 14) {
-            StaffSecureField(label: "كلمة المرور المؤقتة", text: $current, contentType: .password)
+            StaffSecureField(label: "كلمة المرور المؤقتة", text: $current, contentType: .password, submitLabel: .next, onSubmit: { focused = .next })
                 .focused($focused, equals: .current)
-            StaffSecureField(label: "كلمة المرور الجديدة", text: $next, contentType: .newPassword)
+            StaffSecureField(label: "كلمة المرور الجديدة", text: $next, contentType: .newPassword, submitLabel: .next, onSubmit: { focused = .confirm })
                 .focused($focused, equals: .next)
-            StaffSecureField(label: "تأكيد كلمة المرور", text: $confirm, contentType: .newPassword)
+            StaffSecureField(label: "تأكيد كلمة المرور", text: $confirm, contentType: .newPassword, submitLabel: .go, onSubmit: submitPasswordChange)
                 .focused($focused, equals: .confirm)
             Text("عشرة محارف على الأقل وتختلف عن المؤقتة. تُنهي كل الجلسات الأخرى.")
                 .font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).frame(maxWidth: .infinity, alignment: .leading)
-            StaffPrimaryButton(title: staff.loading ? "جارٍ الحفظ…" : "حفظ والمتابعة", symbol: "key", busy: staff.loading) {
-                guard next == confirm else { staff.errorMessage = "كلمتا المرور غير متطابقتين."; return }
-                guard next.count >= 10 else { staff.errorMessage = "كلمة المرور 10 محارف على الأقل."; return }
-                Task { _ = await staff.changePassword(current: current, next: next) }
-            }
+            StaffPrimaryButton(title: staff.loading ? "جارٍ الحفظ…" : "حفظ والمتابعة", symbol: "key", busy: staff.loading, action: submitPasswordChange)
             StaffSecondaryButton(title: "الخروج", symbol: "rectangle.portrait.and.arrow.right", destructive: true) { Task { await staff.signOut() } }
         }
     }
@@ -120,6 +116,12 @@ struct StaffLoginScreen: View {
                 .frame(minHeight: 420)
             StaffSecondaryButton(title: "الخروج", symbol: "rectangle.portrait.and.arrow.right", destructive: true) { Task { await staff.signOut() } }
         }
+    }
+
+    private func submitPasswordChange() {
+        guard next == confirm else { staff.errorMessage = "كلمتا المرور غير متطابقتين."; return }
+        guard next.count >= 10 else { staff.errorMessage = "كلمة المرور 10 محارف على الأقل."; return }
+        Task { _ = await staff.changePassword(current: current, next: next) }
     }
 
     private func submitLogin() {

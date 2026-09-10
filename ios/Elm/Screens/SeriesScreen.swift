@@ -56,10 +56,17 @@ struct SeriesScreen: View {
                 SpectrumBar().padding(.top, 14)
 
                 if let error = store.errorMessage {
-                    Text(error)
-                        .font(ElmFonts.text(.caption2))
-                        .foregroundStyle(ElmTheme.ink3)
-                        .padding(.top, 10)
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Text(error)
+                            .font(ElmFonts.text(.caption2))
+                            .foregroundStyle(ElmTheme.ink3)
+                        Spacer(minLength: 0)
+                        Button("إعادة المحاولة") { Task { await store.load() } }
+                            .font(ElmFonts.text(.caption2, weight: .bold))
+                            .foregroundStyle(ElmTheme.navyInk)
+                            .frame(minHeight: 44)
+                    }
+                    .padding(.top, 6)
                 }
 
                 LazyVGrid(columns: columns, spacing: 10) {
@@ -93,7 +100,7 @@ struct SeriesScreen: View {
     private func card(_ entry: SeriesEntry) -> some View {
         let color = ElmTheme.hex(entry.color)
         return NavigationLink {
-            SeriesFeedScreen(chip: entry.asChip)
+            SeriesFeedScreen(chip: entry.asChip, archived: entry.archived)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
                 Circle().fill(color).frame(width: 12, height: 12).accessibilityHidden(true)
@@ -141,7 +148,7 @@ struct SeriesScreen: View {
             ElmFlow(spacing: 7) {
                 ForEach(store.archived) { entry in
                     NavigationLink {
-                        SeriesFeedScreen(chip: entry.asChip)
+                        SeriesFeedScreen(chip: entry.asChip, archived: true)
                     } label: {
                         Text(entry.name)
                             .font(ElmFonts.text(.footnote))
@@ -166,9 +173,12 @@ struct SeriesScreen: View {
 /// 1d↩ — تغذية سلسلة واحدة.
 struct SeriesFeedScreen: View {
     let chip: SeriesChip
+    /// سلسلة متقاعدة: كيكر «من أرشيف العلم» كما على الويب.
+    var archived = false
     var body: some View {
         BrowseFeedScreen(kind: "series", slug: chip.slug, title: chip.name,
-                         subtitle: chip.description.isEmpty ? SeriesPalette.blurb(for: chip.slug) : chip.description)
+                         subtitle: chip.description.isEmpty ? SeriesPalette.blurb(for: chip.slug) : chip.description,
+                         kicker: archived ? "من أرشيف العلم" : nil)
     }
 }
 
@@ -194,11 +204,18 @@ extension SeriesPalette {
 struct ElmFlow: Layout {
     var spacing: CGFloat = 8
 
+    /// حجم الشريحة: المثالي، وإن تجاوز عرض الحاوية يُقترح عليها العرض فتلتف بدل أن تُقصّ يسارًا.
+    private func fitted(_ view: LayoutSubview, in width: CGFloat) -> CGSize {
+        let ideal = view.sizeThatFits(.unspecified)
+        guard width.isFinite, ideal.width > width else { return ideal }
+        return view.sizeThatFits(ProposedViewSize(width: width, height: nil))
+    }
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = proposal.width ?? .infinity
         var x: CGFloat = 0, y: CGFloat = 0, lineHeight: CGFloat = 0
         for view in subviews {
-            let size = view.sizeThatFits(.unspecified)
+            let size = fitted(view, in: width)
             if x + size.width > width, x > 0 {
                 x = 0
                 y += lineHeight + spacing
@@ -213,7 +230,7 @@ struct ElmFlow: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         var x: CGFloat = 0, y: CGFloat = 0, lineHeight: CGFloat = 0
         for view in subviews {
-            let size = view.sizeThatFits(.unspecified)
+            let size = fitted(view, in: bounds.width)
             if x + size.width > bounds.width, x > 0 {
                 x = 0
                 y += lineHeight + spacing

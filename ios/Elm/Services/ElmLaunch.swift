@@ -44,5 +44,7 @@ enum ElmLaunch {
     static var staffFresh: Bool { value("-elmStaffFresh") == "1" }
     /// `-elmPodcastPlay 1` يشغّل أول حلقة عند فتح شاشة البودكاست — لتصوير المشغّل المصغّر.
     static var podcastPlay: Bool { value("-elmPodcastPlay") == "1" }
+    /// `-elmSummaryPlay 1` يضغط «استمع للموجز» تلقائيًا بعد فتح المادة — لإثبات ما يُشغَّل.
+    static var summaryPlay: Bool { value("-elmSummaryPlay") == "1" }
 }
 #endif

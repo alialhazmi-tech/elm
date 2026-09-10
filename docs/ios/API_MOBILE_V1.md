@@ -299,3 +299,18 @@
 | `GET /api/tahrir/schedule` | `story.schedule` | `{ scheduled: StoryListRow[] (مرتبة بالموعد، حتى 100), nextScheduledAt: string\|null, automatic: boolean }` |
 | `GET /api/tahrir/series` | جلسة | `{ distribution: [{ seriesSlug, total, week }], proposals: [{ id, name, valueCase, gapCase, impactCase, proposedBy, status, createdAt }], rows: [{ slug, name, description, color, hidden: boolean }] }` |
 | `GET /api/tahrir/story/history?id=` | جلسة + `canEditStory` | `{ versions: [{ id, version, actor, createdAt, title: string\|null }], story: { id, status, version, revisionOf, format }, canRestore: boolean }` |
+
+## تصحيحات المراجعة السلوكية — 2026-09-10 (مساءً)
+
+- `GET /api/mobile/v1/story/:id` (`mobile-story.v3`): `videoUrl/videoEmbedUrl/videoKind` تُملأ **لمواد شكل `videos` فقط** كما في صفحة الويب
+  (`app/[section]/[id]/[slug]/page.tsx:189`)؛ رابط يوتيوب داخل متن خبر يبقى رابطًا ضمن `links`. أُضيف `story.shareUrl`
+  (رابط المشاركة بإصدار البطاقة عبر `refreshedShareUrl`) ليطابق ما يشاركه الويب.
+- `GET /api/mobile/v1/search?q=&page=`: ترقيم كما في `/search` — 18 نتيجة للصفحة حتى 200، مع `total` و`page` و`pageCount`
+  و`nextPage`. العملاء القديمة تقرأ `results` كما كانت (الصفحة الأولى).
+- `GET /api/mobile/v1/home` (`series`) و`GET /api/mobile/v1/series` (`series`): مرشّحان بإخفاء التصنيف من «تحرير العلم»
+  (`loadPublicTaxonomy`) كما الرئيسية وصفحة `/series`.
+- `POST /api/content/listen`: التطبيق يستخدمه لموجز المادة (`kind:"story"`) وموجز الرئيسية بمشغّل واحد؛ النص المقروء هو
+  `story.excerpt` فقط — ثبت بالنسخ النصي لصوت الإنتاج.
+- روابط iOS العالمية: `public/.well-known/apple-app-site-association` بترويسة `application/json` (next.config) للتطبيق
+  `CBU7MJEC5R.net.alelm.app`.
+

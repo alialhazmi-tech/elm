@@ -24,18 +24,33 @@ enum InterestCatalog {
         .init(id: "travel", label: "السفر", description: "وجهات وتجارب ومدن", color: "20899a", contentKeys: ["travel", "سفر", "سياحة", "وجهة"]),
         .init(id: "sport", label: "الرياضة", description: "منافسات وأندية وصناعة الرياضة", color: "ef476f", contentKeys: ["sport", "رياضة", "نادي", "دوري"]),
     ]
+
+    /// حدود الويب: التهيئة 3–7 (`/welcome`)، والحساب حتى 12 (`app/account/actions.ts`).
+    static let onboardingMinimum = 3
+    static let onboardingMaximum = 7
+    static let accountMaximum = 12
+}
+
+extension Notification.Name {
+    /// ملف العضو بلا اهتمامات (لم يُكمل التهيئة على الويب أو التطبيق) — `OnboardingStore` يعرض شاشة الاهتمامات.
+    static let elmMemberNeedsOnboarding = Notification.Name("elm.member.needsOnboarding")
 }
 
 @MainActor
 @Observable
 final class InterestStore {
+    private static let guestKey = "elm.interests.v1"
     private var memberId: String?
     private var epoch = UUID()
     private var revision = 0
-    private var key: String { memberId.map { "elm.interests.member.\($0)" } ?? "elm.interests.v1" }
+    /// حسابات عُرضت عليها التهيئة في هذه الجلسة — مرة واحدة لكل حساب في كل إقلاع.
+    private var promptedAccounts: Set<String> = []
+    private var key: String { memberId.map { "elm.interests.member.\($0)" } ?? Self.guestKey }
     var syncError: String?
     var syncing = false
     var selected: Set<String> = []
+    /// الحساب الحالي لم يحفظ اهتمامات بعد (`interestIds` فارغة على الخادم).
+    var needsOnboarding = false
 
     var items: [InterestItem] {
         InterestCatalog.all.filter { selected.contains($0.id) }
@@ -48,7 +63,9 @@ final class InterestStore {
     }
 
     func switchAccount(_ id: String?, appearance: AppearanceStore) async {
-        memberId = id; epoch = UUID(); revision = 0; syncing = false; syncError = nil
+        // اختيارات الزائر على هذا الجهاز تُقترح كقيمة ابتدائية للحساب الذي لم يُكمل تهيئته.
+        let guestSelection = Set(UserDefaults.standard.stringArray(forKey: Self.guestKey) ?? [])
+        memberId = id; epoch = UUID(); revision = 0; syncing = false; syncError = nil; needsOnboarding = false
         selected = Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
         appearance.switchAccount(id)
         guard let id else { return }
@@ -57,13 +74,25 @@ final class InterestStore {
             let profile = try await APIClient.fetchProfile()
             guard token == epoch, profile.memberId == id else { return }
             if version == revision {
-                selected = Set(profile.interestIds)
-                UserDefaults.standard.set(Array(selected), forKey: key)
                 appearance.personalizationEnabled = profile.personalizationEnabled
+                if profile.interestIds.isEmpty {
+                    // كما على الويب: الدخول أو التسجيل بلا اهتمامات يقود إلى `/welcome`.
+                    needsOnboarding = true
+                    if selected.isEmpty { selected = guestSelection }
+                    UserDefaults.standard.set(Array(selected), forKey: key)
+                    if !promptedAccounts.contains(id) {
+                        promptedAccounts.insert(id)
+                        NotificationCenter.default.post(name: .elmMemberNeedsOnboarding, object: nil)
+                    }
+                } else {
+                    selected = Set(profile.interestIds)
+                    UserDefaults.standard.set(Array(selected), forKey: key)
+                }
             }
         } catch { if token == epoch { syncError = "تعذرت مزامنة تفضيلات الحساب. حاول مجددًا." } }
     }
 
+    /// `POST /api/me/profile action=interests` — الخادم يضبط `onboardingCompleted=1` مع الحفظ.
     func save() async -> Bool {
         guard let memberId else { return true }
         let token = epoch
@@ -71,6 +100,7 @@ final class InterestStore {
         defer { if token == epoch { syncing = false } }
         do {
             try await APIClient.updateProfile(memberId: memberId, action: "interests", interests: Array(selected))
+            if token == epoch { needsOnboarding = false }
             return token == epoch
         } catch { if token == epoch { syncError = "لم تُحفظ الاهتمامات في حسابك. تحقق من الاتصال وحاول مجددًا." }; return false }
     }

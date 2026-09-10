@@ -1,105 +1,66 @@
 import SwiftUI
 
-/// 1i — العضوية: خطتان، تجربة 7 أيام، والشراء عبر StoreKit 2 في مرحلة M4.
+/// العضوية مجانية كما على `/join` — لا خطط ولا أسعار ولا تجربة: نصوص الويب نفسها، ودعوة
+/// «إنشاء حساب مجاني» / «لدي حساب» للزائر، وحالة «عضوية مجانية» للعضو.
 struct MembershipScreen: View {
     @Environment(MemberSessionStore.self) private var member
-    @State private var plan = "yearly"
-    @State private var note: String?
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var account = AccountStore()
 
-    private struct Plan: Identifiable {
-        let id: String
-        let name: String
-        let price: String
-        let per: String
-        let note: String
-        let badge: String?
+    private struct Perk: Identifiable {
+        let symbol: String
+        let title: String
+        let detail: String
+        var id: String { title }
     }
 
-    private let plans: [Plan] = [
-        .init(id: "monthly", name: "شهرية", price: "29", per: " ر.س/شهر",
-              note: "كل المزايا، بلا التزام — ألغِ متى شئت.", badge: nil),
-        .init(id: "yearly", name: "سنوية", price: "249", per: " ر.س/سنة",
-              note: "بسعر سبعة أشهر — وأرشيف العلم كاملًا.", badge: "الأوفر"),
-    ]
-
-    private let perks = [
-        "الأرشيف كاملًا — سلاسل العلم والمواد الموسعة",
-        "«اسأل العلم» بلا حد يومي، مع مصادر من مواد المحررين",
-        "الاستماع للمواد والتنزيل للقراءة بلا اتصال",
-        "موجز صباحي مخصص من اهتماماتك",
+    /// `app/join/page.tsx` — قائمة المزايا بنصها.
+    private let perks: [Perk] = [
+        .init(symbol: "safari", title: "ترشيحات أقرب لاهتماماتك", detail: "اختر الموضوعات التي تحب متابعتها."),
+        .init(symbol: "bookmark", title: "مكتبة تعود إليها", detail: "احفظ المواد وتابع سجل قراءاتك."),
+        .init(symbol: "checkmark.shield", title: "أنت تتحكم بتجربتك", detail: "عدّل اهتماماتك وإعدادات الخصوصية."),
     ]
 
     var body: some View {
-        ElmScreen(title: "العضوية", showBack: true) {
+        ElmScreen(title: "العضوية", showBack: true, onRefresh: { if member.isSignedIn { await account.load() } }) {
             VStack(alignment: .leading, spacing: 0) {
-                hero
-
-                VStack(spacing: 10) {
-                    ForEach(plans) { item in
-                        planCard(item)
-                    }
-                }
-                .padding(.top, 14)
-
-                VStack(alignment: .leading, spacing: 9) {
-                    ForEach(perks, id: \.self) { perk in
-                        HStack(alignment: .top, spacing: 10) {
-                            Text("✓")
-                                .font(ElmFonts.text(.footnote, weight: .bold))
-                                .foregroundStyle(ElmTheme.teal)
-                            Text(perk)
-                                .font(ElmFonts.text(.footnote))
-                                .foregroundStyle(ElmTheme.ink2)
-                                .multilineTextAlignment(.leading)
-                                .lineSpacing(3)
-                            Spacer(minLength: 0)
-                        }
-                    }
-                }
-                .padding(.top, 16)
-
-                Button(action: subscribe) {
-                    Text(member.isSignedIn ? "اشترك الآن" : "أنشئ حسابك ثم اشترك")
-                        .font(ElmFonts.text(.subheadline, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 15)
-                        .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .padding(.top, 18)
-
-                if let note {
-                    Text(note)
-                        .font(ElmFonts.text(.caption2))
-                        .foregroundStyle(ElmTheme.ink2)
-                        .multilineTextAlignment(.center)
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 10)
+                if member.suspended {
+                    SuspendedPanel()
+                } else {
+                    hero
+                    perksList.padding(.top, 16)
+                    if member.isSignedIn { memberCard.padding(.top, 18) } else { guestActions.padding(.top, 18) }
                 }
 
-                Text("تجربة 7 أيام مجانًا · يمكنك الإلغاء متى شئت")
-                    .font(ElmFonts.text(.caption2))
-                    .foregroundStyle(ElmTheme.ink3)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 10)
+                PublicPageLink(path: "/privacy-policy") {
+                    Text("سياسة الخصوصية")
+                        .font(ElmFonts.text(.footnote, weight: .semibold))
+                        .foregroundStyle(ElmTheme.navyInk)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                }
+                .padding(.top, 10)
+                .accessibilityHint("تفتح سياسة الخصوصية من الموقع")
             }
             .padding(.horizontal, 18)
             .padding(.top, 16)
+            .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
+            .frame(maxWidth: .infinity)
         }
+        .task(id: member.user?.id) { if member.isSignedIn { await account.load() } }
     }
 
     private var hero: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("عضوية العلم")
+            Text("أهلًا بك في العلم")
                 .font(ElmFonts.text(.caption2, weight: .bold))
                 .foregroundStyle(ElmTheme.gold)
-            Text("اقرأ أعمق، وبلا ضجيج.")
+            Text("مساحتك.\nللمعرفة التي تهمّك.")
                 .font(ElmFonts.display(.title2, weight: .heavy))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.leading)
+                .lineSpacing(3)
                 .padding(.top, 8)
-            Text("الأرشيف كاملًا، «اسأل العلم» بلا حد، الاستماع والتنزيل — ونشرة المحررين.")
+            Text("قراءاتك، اختياراتك، وما تودّ العودة إليه.\nكلّها في مكان واحد، بعضوية مجانية.")
                 .font(ElmFonts.text(.footnote))
                 .foregroundStyle(Color(red: 0.78, green: 0.82, blue: 0.89))
                 .lineSpacing(4)
@@ -113,59 +74,131 @@ struct MembershipScreen: View {
             Rectangle().fill(ElmTheme.spectrumGradient).frame(height: 4)
         }
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 
-    private func planCard(_ item: Plan) -> some View {
-        let selected = plan == item.id
-        return Button { plan = item.id } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 9) {
-                    Text(item.name)
-                        .font(ElmFonts.display(.headline, weight: .heavy))
-                        .foregroundStyle(ElmTheme.ink)
-                    if let badge = item.badge {
-                        Text(badge)
-                            .font(ElmFonts.text(.caption2, weight: .bold))
-                            .foregroundStyle(Color(red: 0.16, green: 0.11, blue: 0))
-                            .padding(.horizontal, 9)
-                            .padding(.vertical, 3)
-                            .background(ElmTheme.gold, in: Capsule())
+    private var perksList: some View {
+        VStack(spacing: 10) {
+            ForEach(perks) { perk in
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: perk.symbol)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(ElmTheme.accent)
+                        .frame(width: 38, height: 38)
+                        .background(ElmTheme.accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(perk.title)
+                            .font(ElmFonts.display(.subheadline, weight: .bold))
+                            .foregroundStyle(ElmTheme.ink)
+                        Text(perk.detail)
+                            .font(ElmFonts.text(.footnote))
+                            .foregroundStyle(ElmTheme.ink2)
+                            .lineSpacing(3)
                     }
                     Spacer(minLength: 0)
-                    HStack(alignment: .firstTextBaseline, spacing: 1) {
-                        Text(item.price)
-                            .font(ElmFonts.display(.title3, weight: .heavy))
-                            .foregroundStyle(ElmTheme.ink)
-                        Text(item.per)
-                            .font(ElmFonts.text(.caption2, weight: .medium))
-                            .foregroundStyle(ElmTheme.ink3)
-                    }
-                    .elmLatin()
                 }
-                Text(item.note)
-                    .font(ElmFonts.text(.caption))
-                    .foregroundStyle(ElmTheme.ink2)
-                    .multilineTextAlignment(.leading)
-                    .padding(.top, 6)
+                .padding(13)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .elmCard(radius: 16, elevated: false)
+                .accessibilityElement(children: .combine)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(15)
-            .background(selected ? ElmTheme.surface2 : ElmTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(selected ? ElmTheme.ink : ElmTheme.line, lineWidth: 1.5)
-            )
         }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 
-    private func subscribe() {
-        guard member.isSignedIn else {
-            member.authPresented = true
-            return
+    private var guestActions: some View {
+        VStack(spacing: 10) {
+            Button {
+                member.authInitialMode = .signUp
+                member.authPresented = true
+            } label: {
+                Text("إنشاء حساب مجاني")
+                    .font(ElmFonts.text(.subheadline, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            Button {
+                member.authInitialMode = .signIn
+                member.authPresented = true
+            } label: {
+                Text("لدي حساب")
+                    .font(ElmFonts.text(.subheadline, weight: .bold))
+                    .foregroundStyle(ElmTheme.ink)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(ElmTheme.line2, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
         }
-        // لا شراء وهمي: الاشتراك يمر عبر StoreKit 2 في المرحلة M4.
-        note = "الشراء داخل التطبيق يُفعَّل مع StoreKit 2. حتى ذلك الحين تُدار العضوية من حسابك على الموقع."
+    }
+
+    private var memberCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.seal.fill").foregroundStyle(ElmTheme.success)
+                Text("عضوية مجانية")
+                    .font(ElmFonts.display(.headline, weight: .heavy))
+                    .foregroundStyle(ElmTheme.ink)
+            }
+            if let name = member.user?.name, !name.isEmpty {
+                Text(name).font(ElmFonts.text(.footnote, weight: .semibold)).foregroundStyle(ElmTheme.ink)
+            }
+            if let email = member.user?.email {
+                Text(email).font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2).elmLatin()
+            }
+            if let joined = ElmFormat.brandDate(account.overview?.user?.joinedAt) {
+                Text("عضو منذ \(joined)").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
+            }
+            Text("لا رسوم ولا خطط مدفوعة. الاسم وكلمة المرور والنشرة والخصوصية من «إعدادات الحساب».")
+                .font(ElmFonts.text(.caption))
+                .foregroundStyle(ElmTheme.ink2)
+                .lineSpacing(3)
+            NavigationLink { AccountSettingsScreen() } label: {
+                Text("إعدادات الحساب")
+                    .font(ElmFonts.text(.subheadline, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 46)
+                    .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .elmCard(radius: 16, elevated: false)
+    }
+}
+
+/// حالة الحساب المعلّق بنص `/join` نفسه وزر الخروج (المسار الوحيد المتاح للمعلّق).
+struct SuspendedPanel: View {
+    @Environment(MemberSessionStore.self) private var member
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(ElmTheme.danger)
+            Text(MemberSessionStore.suspendedTitle)
+                .font(ElmFonts.display(.title2, weight: .heavy))
+                .foregroundStyle(ElmTheme.ink)
+                .accessibilityAddTraits(.isHeader)
+            Text(MemberSessionStore.suspendedText)
+                .font(ElmFonts.text(.body))
+                .foregroundStyle(ElmTheme.ink2)
+                .lineSpacing(4)
+            Button { Task { await member.signOut() } } label: {
+                Text(member.loading ? "لحظة…" : "تسجيل الخروج")
+                    .font(ElmFonts.text(.subheadline, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(ElmTheme.navyDeep, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(member.loading)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ElmTheme.danger.opacity(0.06), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(ElmTheme.danger.opacity(0.35), lineWidth: 1))
     }
 }

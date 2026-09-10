@@ -14,38 +14,59 @@ struct ArticleInteractionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Button { Task { await save(liked: !(state?.liked ?? false)) } } label: {
-                Label(state?.liked == true ? "أعجبتني" : "أعجبني", systemImage: state?.liked == true ? "hand.thumbsup.fill" : "hand.thumbsup")
+                Label(saving ? "جارٍ الحفظ…" : state?.liked == true ? "أعجبتني" : "أعجبني", systemImage: state?.liked == true ? "hand.thumbsup.fill" : "hand.thumbsup")
                     .font(ElmFonts.text(.body, weight: .semibold)).frame(minHeight: 44)
             }.disabled(state == nil || saving || loading)
             Divider()
-            Text("هل غيّرت هذه المادة فهمك للموضوع؟")
+            Text("سؤال الختام — هل غيّرت هذه المادة فهمك للموضوع؟")
                 .font(ElmFonts.display(.headline, weight: .bold)).foregroundStyle(ElmTheme.ink)
             ForEach(options.indices, id: \.self) { index in
+                let total = state?.counts.reduce(0, +) ?? 0
+                let count = (state?.counts.indices.contains(index) == true) ? state!.counts[index] : 0
+                let pct = total > 0 ? Int((Double(count) / Double(total) * 100).rounded()) : 0
+                let chosen = state?.closingAnswer
                 Button { Task { await save(answer: index) } } label: {
                     HStack(spacing: 10) {
-                        Text(options[index]).font(ElmFonts.text(.body))
+                        Text("\(chosen == index ? "✓ " : "")\(options[index])").font(ElmFonts.text(.body))
                         Spacer(minLength: 0)
-                        if state?.closingAnswer == index { Image(systemName: "checkmark.circle.fill") }
-                        if let state, state.closingAnswer != nil, state.counts.reduce(0, +) > 0 {
-                            let count = state.counts.indices.contains(index) ? state.counts[index] : 0
-                            Text("\(Int((Double(count) / Double(state.counts.reduce(0, +)) * 100).rounded()))%")
-                                .font(ElmFonts.text(.caption, weight: .bold))
+                        if chosen != nil, total > 0 {
+                            Text("\(ElmFormat.latinDigits(String(pct)))%").font(ElmFonts.text(.caption, weight: .bold)).monospacedDigit()
                         }
-                    }.foregroundStyle(ElmTheme.ink).padding(14).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-                        .background(state?.closingAnswer == index ? ElmTheme.surface3 : ElmTheme.surface, in: RoundedRectangle(cornerRadius: 14))
+                    }
+                    .foregroundStyle(ElmTheme.ink).padding(14).frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                    // شريط النسبة كما على الويب (`.poll-opt .fill`) — يظهر بعد الإجابة فقط.
+                    .background {
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 14).fill(chosen == index ? ElmTheme.surface3 : ElmTheme.surface)
+                            if chosen != nil, total > 0 {
+                                GeometryReader { proxy in
+                                    RoundedRectangle(cornerRadius: 14).fill(ElmTheme.navyInk.opacity(0.12)).frame(width: proxy.size.width * CGFloat(pct) / 100)
+                                }
+                            }
+                        }
+                    }
                 }.buttonStyle(.plain).disabled(state == nil || saving || loading)
-                    .accessibilityAddTraits(state?.closingAnswer == index ? .isSelected : [])
+                    .accessibilityAddTraits(chosen == index ? .isSelected : [])
+                    .accessibilityValue(chosen != nil && total > 0 ? "\(ElmFormat.latinDigits(String(pct))) بالمئة" : "")
             }
-            if loading || saving { ProgressView(saving ? "جارٍ حفظ إجابتك" : "جارٍ تحميل التفاعل") }
+            // نص الحالة كما في `poll.tsx` على الويب حرفيًا.
             if let error {
                 Text(error).font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2)
                 Button("إعادة تحميل التفاعل") { Task { await reload() } }.frame(minHeight: 44).disabled(loading || saving)
-            } else if let state, state.closingAnswer != nil {
-                Text("تم حفظ إجابتك. \(state.counts.reduce(0, +)) إجابة مسجلة؛ يمكنك تغيير اختيارك.")
-                    .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2)
+            } else {
+                Text(pollNote).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2)
             }
         }.padding(18).background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 20))
         .task { await reload() }
+    }
+
+    private var pollNote: String {
+        if saving { return "جارٍ حفظ إجابتك…" }
+        guard let state else { return "جارٍ تحميل السؤال…" }
+        if state.closingAnswer != nil {
+            return "تم حفظ إجابتك · \(ElmFormat.latinDigits(String(state.counts.reduce(0, +)))) إجابة مسجّلة. يمكنك تغيير اختيارك دون إضافة صوت آخر."
+        }
+        return "متاح للجميع. تُحتسب إجابة واحدة لكل حساب، أو متصفح للزائر."
     }
 
     @MainActor private func reload() async {

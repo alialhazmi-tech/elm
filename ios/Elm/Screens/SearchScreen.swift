@@ -5,15 +5,24 @@ import SwiftUI
 final class SearchStore {
     var results: [StoryCard] = []
     var total = 0
+    var page = 1
+    var nextPage: Int?
     var loading = false
+    var loadingMore = false
+    /// نتائج محلية من الحزمة المحفوظة — تظهر مع رسالة الاتصال لا بديلًا عنها.
     var fromCache = false
+    /// خطأ اتصال/خادم — ليس «لا نتائج».
     var errorMessage: String?
+    private var query = ""
 
     func search(_ raw: String) async {
-        let query = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        query = trimmed
+        guard !trimmed.isEmpty else {
             results = []
             total = 0
+            page = 1
+            nextPage = nil
             fromCache = false
             errorMessage = nil
             loading = false
@@ -25,34 +34,67 @@ final class SearchStore {
         defer { loading = false }
 
         do {
-            let payload = try await APIClient.fetchSearch(query: query)
+            let payload = try await APIClient.fetchSearchPage(query: trimmed, page: 1)
+            guard query == trimmed, !Task.isCancelled else { return }
             results = payload.results
             total = payload.total
+            page = payload.page
+            nextPage = payload.nextPage
             fromCache = false
+        } catch is CancellationError {
         } catch {
-            let local = HomeCorpus.search(query)
+            guard query == trimmed else { return }
+            let api = ElmAPIError.wrap(error)
+            let local = HomeCorpus.search(trimmed)
             results = local
             total = local.count
+            page = 1
+            nextPage = nil
             fromCache = !local.isEmpty
-            if local.isEmpty {
-                errorMessage = "لا نتائج مطابقة. جرّب كلمة أعم أو تصفّح السلاسل."
-            }
+            errorMessage = api.isConnectivity
+                ? "تعذر الاتصال بالخادم. تحقق من الشبكة وأعد المحاولة."
+                : "تعذر إتمام البحث الآن. أعد المحاولة."
+        }
+    }
+
+    /// الصفحة التالية (18/صفحة) — تُلحق بالنتائج بلا تكرار.
+    func loadMore() async {
+        guard !loadingMore, !loading, let next = nextPage else { return }
+        let current = query
+        loadingMore = true
+        defer { loadingMore = false }
+        do {
+            let payload = try await APIClient.fetchSearchPage(query: current, page: next)
+            guard query == current, !Task.isCancelled else { return }
+            var seen = Set(results.map(\.apiId))
+            results += payload.results.filter { seen.insert($0.apiId).inserted }
+            total = payload.total
+            page = payload.page
+            nextPage = payload.nextPage
+        } catch is CancellationError {
+        } catch {
+            guard query == current else { return }
+            errorMessage = ElmAPIError.wrap(error).isConnectivity
+                ? "تعذر تحميل المزيد. تحقق من الشبكة وأعد المحاولة."
+                : "تعذر تحميل المزيد الآن. أعد المحاولة."
         }
     }
 }
 
-/// 1g — البحث: يتجاهل التشكيل واختلاف الهمزات، ومرشّحات بالسلاسل.
+/// 1g — البحث: يتجاهل التشكيل واختلاف الهمزات، ومرشّحات بالسلاسل، وترقيم 18/صفحة كما على الويب.
 struct SearchScreen: View {
     var showBack = true
     var initialQuery = ""
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var query = ""
     @State private var filter = "الكل"
     @State private var store = SearchStore()
     @State private var searchTask: Task<Void, Never>?
     @FocusState private var fieldFocused: Bool
 
-    private var filters: [String] { ["الكل"] + SeriesPalette.active.prefix(4).map(\.name) }
+    /// كل السلاسل الفاعلة (لا الأربع الأولى فقط).
+    private var filters: [String] { ["الكل"] + SeriesPalette.active.map(\.name) }
 
     private var filtered: [StoryCard] {
         guard filter != "الكل" else { return store.results }
@@ -148,7 +190,8 @@ struct SearchScreen: View {
                     .font(ElmFonts.text(.caption2, weight: .bold))
                     .foregroundStyle(ElmTheme.ink3)
                 ElmFlow(spacing: 7) {
-                    ForEach(["مضيق هرمز", "غينيس", "الرياض", "الجاذبية"], id: \.self) { item in
+                    // الاقتراحات نفسها كما على `/search`.
+                    ForEach(["التنجستن", "غينيس", "الرياض"], id: \.self) { item in
                         Button { query = item } label: {
                             Text(item)
                                 .font(ElmFonts.text(.footnote))
@@ -164,45 +207,92 @@ struct SearchScreen: View {
             }
         } else if store.loading && store.results.isEmpty {
             ProgressView().tint(ElmTheme.navy).frame(maxWidth: .infinity).padding(.top, 24)
-        } else if filtered.isEmpty {
-            Text(store.errorMessage ?? "لا نتائج ضمن هذا المرشّح.")
-                .font(ElmFonts.text(.callout))
-                .foregroundStyle(ElmTheme.ink2)
-                .padding(.top, 8)
         } else {
-            LazyVStack(spacing: 0) {
-                ForEach(filtered) { story in
-                    NavigationLink {
-                        StoryDestination(seed: story)
-                    } label: {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Text(kicker(story))
-                                .font(ElmFonts.text(.caption2, weight: .bold))
-                                .foregroundStyle(story.series.map(SeriesPalette.color(for:)) ?? ElmTheme.accent)
-                            Text(story.title)
-                                .font(ElmFonts.display(.subheadline, weight: .bold))
-                                .foregroundStyle(ElmTheme.ink)
-                                .multilineTextAlignment(.leading)
-                                .padding(.top, 4)
-                            if !story.excerpt.isEmpty {
-                                Text(story.excerpt)
-                                    .font(ElmFonts.text(.caption))
-                                    .foregroundStyle(ElmTheme.ink3)
-                                    .multilineTextAlignment(.leading)
-                                    .lineLimit(2)
-                                    .lineSpacing(3)
-                                    .padding(.top, 5)
-                            }
+            if let error = store.errorMessage {
+                // الخطأ خطأ — لا يُقدَّم أبدًا كـ«لا نتائج».
+                VStack(alignment: .leading, spacing: 10) {
+                    Label(error, systemImage: "wifi.slash")
+                        .font(ElmFonts.text(.footnote, weight: .medium))
+                        .foregroundStyle(ElmTheme.ink2)
+                    Button("إعادة المحاولة") { Task { await store.search(query) } }
+                        .font(ElmFonts.text(.footnote, weight: .semibold))
+                        .foregroundStyle(ElmTheme.navyInk)
+                        .frame(minHeight: 44)
+                }
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .padding(.bottom, 8)
+            }
+            if store.errorMessage == nil, store.total == 0 {
+                Text("لا نتائج مطابقة. جرّب كلمة أعم أو تصفّح السلاسل.")
+                    .font(ElmFonts.text(.callout))
+                    .foregroundStyle(ElmTheme.ink2)
+                    .padding(.top, 8)
+            } else if filtered.isEmpty, !store.results.isEmpty {
+                Text("لا نتائج ضمن هذا المرشّح.")
+                    .font(ElmFonts.text(.callout))
+                    .foregroundStyle(ElmTheme.ink2)
+                    .padding(.top, 8)
+            } else {
+                LazyVStack(spacing: 0) {
+                    ForEach(filtered) { story in
+                        NavigationLink {
+                            StoryDestination(seed: story)
+                        } label: {
+                            resultRow(story)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 13)
-                        .contentShape(Rectangle())
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("\(kicker(story))، \(story.title)")
+                        Divider().overlay(ElmTheme.line)
                     }
-                    .buttonStyle(.plain)
-                    Divider().overlay(ElmTheme.line)
+                }
+                if store.loadingMore {
+                    ProgressView().tint(ElmTheme.navy).frame(maxWidth: .infinity).padding(16)
+                } else if store.nextPage != nil, filter == "الكل" {
+                    Button("عرض المزيد") { Task { await store.loadMore() } }
+                        .font(ElmFonts.text(.body, weight: .semibold))
+                        .foregroundStyle(ElmTheme.ink)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .background(ElmTheme.surface2, in: Capsule())
+                        .padding(.top, 14)
+                        .accessibilityHint("الصفحة \(ElmFormat.latinDigits(String(store.page + 1))) من النتائج")
                 }
             }
         }
+    }
+
+    /// صف النتيجة: كيكر وعنوان وموجز، ومصغّرة كبطاقة الفسيفساء على الويب.
+    private func resultRow(_ story: StoryCard) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(kicker(story))
+                    .font(ElmFonts.text(.caption2, weight: .bold))
+                    .foregroundStyle(story.series.map(SeriesPalette.color(for:)) ?? ElmTheme.accent)
+                Text(story.title)
+                    .font(ElmFonts.display(.subheadline, weight: .bold))
+                    .foregroundStyle(ElmTheme.ink)
+                    .multilineTextAlignment(.leading)
+                    .padding(.top, 4)
+                if !story.excerpt.isEmpty {
+                    Text(story.excerpt)
+                        .font(ElmFonts.text(.caption))
+                        .foregroundStyle(ElmTheme.ink3)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                        .lineSpacing(3)
+                        .padding(.top, 5)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            if story.imageURL != nil, !typeSize.isAccessibilitySize {
+                RemoteImage(url: story.imageURL, height: 69, maxPixel: 320)
+                    .frame(width: 92)
+                    .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusUI, style: .continuous))
+            }
+        }
+        .padding(.vertical, 13)
+        .contentShape(Rectangle())
     }
 
     private func kicker(_ story: StoryCard) -> String {
@@ -216,8 +306,17 @@ struct SearchScreen: View {
         if query.trimmingCharacters(in: .whitespaces).isEmpty {
             return "اكتب كلمتك — البحث يتجاهل التشكيل واختلاف الهمزات و«الـ»."
         }
-        let count = ElmFormat.latinDigits(String(filtered.count))
-        let source = store.fromCache ? " من الحزمة المحفوظة" : ""
-        return "\(count) نتائج\(source) · يتجاهل التشكيل واختلاف الهمزات"
+        if store.loading && store.results.isEmpty { return "جارٍ البحث…" }
+        if store.errorMessage != nil {
+            return store.fromCache
+                ? "نتائج محلية من الحزمة المحفوظة (\(ElmFormat.latinDigits(String(store.results.count))))"
+                : "تعذر الاتصال — لا نتائج محلية لهذه الكلمة"
+        }
+        let total = ElmFormat.latinDigits(String(store.total))
+        let shown = ElmFormat.latinDigits(String(store.results.count))
+        if store.total > store.results.count {
+            return "\(total) نتيجة · عرض 1–\(shown) · يتجاهل التشكيل واختلاف الهمزات"
+        }
+        return "\(total) نتيجة — البحث يتجاهل التشكيل واختلاف الهمزات"
     }
 }

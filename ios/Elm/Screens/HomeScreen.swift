@@ -3,9 +3,12 @@ import SwiftUI
 /// A daily reading desk with separate context and visual selections.
 struct HomeScreen: View {
     @State private var store = HomeStore()
+    @State private var taxonomy = TaxonomyStore()
+    @State private var deepLinks = DeepLinkRouter.shared
     @State private var selection = HomeSelection.today
     @Environment(\.dynamicTypeSize) private var typeSize
     @Environment(\.horizontalSizeClass) private var sizeClass
+    @Environment(\.scenePhase) private var scenePhase
     #if DEBUG
     @State private var debugStory: StoryCard?
     #endif
@@ -20,10 +23,10 @@ struct HomeScreen: View {
 
     var body: some View {
         ScrollViewReader { proxy in
-            ElmScreen(showBrand: true, onRefresh: { await store.refresh() }) {
+            ElmScreen(showBrand: true, onRefresh: { await store.refresh(); await store.refreshStrip(force: true) }) {
                 if let home = store.payload { feed(home) }
                 else if store.loading {
-                    ProgressView("جاري تحميل الرئيسية").frame(maxWidth: .infinity).padding(.top, 100)
+                    ProgressView("جارٍ تحميل الرئيسية").frame(maxWidth: .infinity).padding(.top, 100)
                 } else {
                     ContentUnavailableView {
                         Label("تعذر تحميل الرئيسية", systemImage: "wifi.slash")
@@ -32,6 +35,16 @@ struct HomeScreen: View {
                 }
             }
             .task { await store.load() }
+            .task { await taxonomy.load() }
+            // العودة إلى المقدمة: الشريط الإخباري يُجلب من جديد إن مضت 60 ثانية — كما يفعل الويب.
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active, store.payload != nil { Task { await store.refreshStrip() } }
+            }
+            // الروابط العميقة (`https://alelm.net/...` و`alelm://`) تُدفع في مكدس تبويب الرئيسية.
+            .elmDeepLinks()
+            .navigationDestination(item: Binding(get: { deepLinks.pending }, set: { deepLinks.pending = $0 })) { route in
+                DeepLinkDestination(route: route)
+            }
             #if DEBUG
             .task {
                 if let id = ElmLaunch.storyId {
@@ -45,12 +58,38 @@ struct HomeScreen: View {
                 if store.payload != nil, let section = ElmLaunch.homeSection {
                     if ["numbers", "media", "infographics"].contains(section) { selection = .visual }
                     if section == "context" { selection = .context }
-                    await Task.yield()
-                    proxy.scrollTo(section, anchor: .top)
+                    // LazyVStack لا يكون قد أنشأ الهدف عند أول محاولة — نكرر بضع مرات.
+                    for _ in 0..<4 {
+                        try? await Task.sleep(for: .milliseconds(350))
+                        withAnimation(nil) { proxy.scrollTo(section, anchor: .top) }
+                    }
+                }
+            }
+            // `-elmDeepLink <url>` يمرّ بمسار الرابط العميق نفسه (بلا حوار النظام في المحاكي) — للقطات فقط.
+            .task {
+                let args = ProcessInfo.processInfo.arguments
+                if let i = args.firstIndex(of: "-elmDeepLink"), i + 1 < args.count, let url = URL(string: args[i + 1]) {
+                    try? await Task.sleep(for: .milliseconds(800))
+                    deepLinks.open(url)
                 }
             }
             #endif
         }
+    }
+
+    /// لوحات الأقسام مرشّحة بالأقسام الظاهرة في التصنيف (كما تفعل الرئيسية على الويب).
+    private func visiblePanels(_ home: MobileHomePayload) -> [HomeSectionPanel] {
+        let panels = home.presentation?.stream?.panels ?? []
+        let visible = Set(taxonomy.sections.map(\.slug))
+        return visible.isEmpty ? panels : panels.filter { visible.contains($0.slug) }
+    }
+
+    /// عدسات السلاسل مرشّحة بالسلاسل الظاهرة (حزمة الرئيسية مرشّحة خادميًا، والتصنيف يؤكدها).
+    private func visibleSeries(_ home: MobileHomePayload) -> [SeriesEntry] {
+        let entries = home.presentation?.seriesDirectory ?? []
+        var visible = Set(home.series.map(\.slug))
+        if taxonomy.fromServer { visible.formUnion(taxonomy.series.map(\.slug)) }
+        return visible.isEmpty ? entries : entries.filter { visible.contains($0.slug) }
     }
 
     private func feed(_ home: MobileHomePayload) -> some View {
@@ -60,8 +99,9 @@ struct HomeScreen: View {
                     .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2)
             }
             DayStrip()
-            if let breaking = home.breaking {
-                HomeNewsStrip(items: [NewsStripItem(title: breaking.title, href: breaking.href, urgent: true)])
+            let strip = store.strip(for: home)
+            if !strip.isEmpty {
+                HomeNewsStrip(items: strip)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             if typeSize.isAccessibilitySize {
@@ -75,7 +115,7 @@ struct HomeScreen: View {
                 if wide {
                     // الصدارة يمينًا، والموجز مع أول الجديد يسارًا — عمودان بنسبة 3:2.
                     HStack(alignment: .top, spacing: 28) {
-                        NativeHomeLead(story: home.hero).id("lead").frame(maxWidth: .infinity)
+                        lead(home).id("lead").frame(maxWidth: .infinity)
                         VStack(alignment: .leading, spacing: 18) {
                             if !home.brief.isEmpty { NativeBriefEntry(home: home).id("brief") }
                             ForEach(latest.prefix(3)) { NativeStoryRow(story: $0) }
@@ -83,17 +123,21 @@ struct HomeScreen: View {
                     }
                     let rest = Array(latest.dropFirst(3))
                     if !rest.isEmpty {
-                        SectionHead(title: "الجديد الآن")
+                        latestHead(home)
                         rows(rest)
                     }
                 } else {
-                    NativeHomeLead(story: home.hero).id("lead")
+                    lead(home).id("lead")
                     if !home.brief.isEmpty { NativeBriefEntry(home: home).id("brief") }
                     if !latest.isEmpty {
-                        SectionHead(title: "الجديد الآن")
+                        latestHead(home)
                         rows(latest)
                     }
                 }
+                let panels = visiblePanels(home)
+                if !panels.isEmpty { HomeSectionPanels(panels: panels, wide: wide).id("panels") }
+                let lenses = visibleSeries(home)
+                if !lenses.isEmpty { HomeSeriesLenses(entries: lenses, wide: wide).id("series") }
             case .context:
                 SectionHead(title: "وراء الخبر", subtitle: "اقرأ السياق، وافهم ما وراء العنوان.").id("context")
                 rows(home.mosaic)
@@ -127,6 +171,33 @@ struct HomeScreen: View {
         }.padding(.horizontal, 20).padding(.top, 14)
             .frame(maxWidth: wide ? 1040 : .infinity)
             .frame(maxWidth: .infinity)
+    }
+
+    /// الصدارة، أو حالة الويب الفارغة «لا مواد منشورة بعد» حين لا صدارة في الحزمة.
+    @ViewBuilder
+    private func lead(_ home: MobileHomePayload) -> some View {
+        if home.hasHero {
+            NativeHomeLead(story: home.hero)
+        } else {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("لا مواد منشورة بعد").font(ElmFonts.display(size: 26, weight: .heavy, relativeTo: .title))
+                    .foregroundStyle(ElmTheme.ink)
+                Text("الأرشيف يُجهَّز الآن. ستظهر المواد هنا فور اكتمال السحب.")
+                    .font(ElmFonts.text(.body)).foregroundStyle(ElmTheme.ink2).lineSpacing(4)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 20))
+            .accessibilityElement(children: .combine)
+        }
+    }
+
+    /// رأس «الجديد الآن» مع سطر النبض من `presentation.stream.pulse`.
+    private func latestHead(_ home: MobileHomePayload) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionHead(title: "الجديد الآن")
+            if let pulse = home.presentation?.stream?.pulse { HomePulseLine(pulse: pulse) }
+        }.id("latest")
     }
 
     /// صفوف المواد: عمود واحد على iPhone، وعمودان على iPad.

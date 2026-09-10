@@ -10,6 +10,8 @@ struct RootTabView: View {
     @Environment(ChromeState.self) private var chrome
     @Environment(StaffSessionStore.self) private var staff
     private let podcast = PodcastPlayerStore.shared
+    private let summary = SummaryAudioStore.shared
+    private let deepLinks = DeepLinkRouter.shared
 
     var body: some View {
         TabView(selection: $tab) {
@@ -43,6 +45,12 @@ struct RootTabView: View {
                 NarrationBar()
                     .padding(.bottom, 78)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
+            } else if summary.state != .idle && !chrome.immersive && !chrome.readerVisible {
+                // الموجز الصوتي (الرئيسية أو مادة) يستمر أثناء التصفح ويظهر هنا كما يبقى `<audio>` على صفحة الويب.
+                SummaryMiniBar()
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 82)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             } else if podcast.isActive && !chrome.immersive && !chrome.readerVisible {
                 // مشغّل البودكاست المصغّر فوق شريط التبويب في كل التبويبات؛ القارئ يعرض نسخته داخله.
                 PodcastMiniBar()
@@ -72,6 +80,11 @@ struct RootTabView: View {
         .animation(.snappy, value: connectivity.isOffline)
         .animation(.snappy, value: narration.state)
         .animation(.snappy, value: podcast.isActive)
+        .animation(.snappy, value: summary.state)
+        // الرابط العميق يُدفع في مكدس الرئيسية؛ ننتقل إلى تبويبها ونغلق اللوحة إن كانت مفتوحة.
+        .onChange(of: deepLinks.pending != nil) { _, hasRoute in
+            if hasRoute { tab = .home; staff.workspacePresented = false }
+        }
         .modifier(LaunchArgumentsModifier(tab: $tab))
     }
 
@@ -101,6 +114,8 @@ private struct LaunchArgumentsModifier: ViewModifier {
                 if let requested = ElmLaunch.tab { tab = requested }
                 screen = ElmLaunch.screen
                 if ElmLaunch.staffOpen { staff.workspacePresented = true }
+                // `-elmSummaryPlay 1` بلا شاشة: يشغّل موجز الرئيسية ليظهر الشريط المصغّر العالمي في اللقطات.
+                if ElmLaunch.summaryPlay, ElmLaunch.screen == nil { SummaryAudioStore.shared.toggle(.home) }
                 if ElmLaunch.podcastPlay, ElmLaunch.screen == nil,
                    let entry = try? await APIClient.fetchPodcasts().shows.first, let episode = entry.episodes.first {
                     PodcastPlayerStore.shared.play(episode, from: entry.show)

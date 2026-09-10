@@ -28,7 +28,7 @@ struct StaffMembersScreen: View {
                 }
                 if let notice { StaffInlineNotice(message: notice, symbol: "checkmark.circle") }
                 if let error, members.isEmpty { StaffErrorView(error: error) { Task { await load() } } }
-                else if let error { StaffInlineError(message: error.message) }
+                else if let error { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                 VStack(spacing: 0) {
                     ForEach(members) { member in
                         Button { selected = member } label: {
@@ -117,13 +117,20 @@ struct StaffMemberSheet: View {
                                     HStack(spacing: 6) { Text(roles.first { $0.id == role }?.label ?? role); Image(systemName: "chevron.down").font(.system(size: 10, weight: .semibold)) }
                                         .font(ElmFonts.text(.footnote, weight: .medium)).foregroundStyle(ElmTheme.navyInk).frame(minHeight: 36)
                                 }
+                                .disabled(isMe)
+                                .opacity(isMe ? 0.5 : 1)
+                                .accessibilityLabel("الدور")
                             }
+                            // الخادم يرفض تغيير دور الحساب نفسه (`admin.ts`)؛ كلمة المرور تُغيَّر من «ملفي وأمان الحساب».
+                            if isMe { Text("لا يمكنك تغيير دور حسابك الحالي؛ كلمة مرورك تُغيَّر من «ملفي وأمان الحساب».").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3) }
                             StaffPrimaryButton(title: "حفظ التعديلات", symbol: "checkmark", busy: busy) { Task { await save() } }
                         }
-                        StaffCard {
-                            StaffField(label: "كلمة مرور جديدة (10 محارف على الأقل)", text: $password, ltr: true)
-                            StaffSecondaryButton(title: "إعادة تعيين كلمة المرور", symbol: "key") { Task { await resetPassword() } }
-                                .disabled(password.count < 10 || busy)
+                        if !isMe {
+                            StaffCard {
+                                StaffField(label: "كلمة مرور جديدة (10 محارف على الأقل)", text: $password, ltr: true)
+                                StaffSecondaryButton(title: "إعادة تعيين كلمة المرور", symbol: "key") { Task { await resetPassword() } }
+                                    .disabled(password.count < 10 || busy)
+                            }
                         }
                     }
                     if staff.can("users.suspend"), member.id != staff.actor?.userId {
@@ -145,6 +152,8 @@ struct StaffMemberSheet: View {
         }
     }
 
+    private var isMe: Bool { member.id == staff.actor?.userId }
+
     private func run(_ success: String, _ work: () async throws -> Void) async {
         busy = true
         error = nil
@@ -152,7 +161,7 @@ struct StaffMemberSheet: View {
         do { try await work(); onDone(success); dismiss() } catch { self.error = staff.handle(error).message }
     }
 
-    private func save() async { await run("حُدّثت بيانات \(displayName).") { try await StaffAPI.updateMember(id: member.id, displayName: displayName, email: email, role: role) } }
+    private func save() async { await run("حُدّثت بيانات \(displayName).") { try await StaffAPI.updateMember(id: member.id, displayName: displayName, email: email, role: isMe ? nil : role) } }
     private func resetPassword() async { await run("أُعيد تعيين كلمة مرور \(member.displayName).") { try await StaffAPI.resetMemberPassword(id: member.id, password: password) } }
     private func setStatus(_ status: String) async { await run(status == "suspended" ? "عُلّقت العضوية." : "استُؤنفت العضوية.") { try await StaffAPI.setMemberStatus(id: member.id, status: status, reason: reason) } }
 }
@@ -223,7 +232,7 @@ struct StaffRolesScreen: View {
         StaffScreen(title: "الأدوار والصلاحيات", showBack: showBack, onRefresh: { await load() }) {
             VStack(alignment: .leading, spacing: 14) {
                 Text("الأدوار والصلاحيات").font(ElmFonts.display(.title2, weight: .heavy)).foregroundStyle(ElmTheme.ink)
-                if let error { StaffInlineError(message: error.message) }
+                if let error { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
                 if let payload {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 7) {
@@ -321,8 +330,10 @@ struct StaffProfileScreen: View {
                 if let error { StaffInlineError(message: error) }
                 if let status = uploader.status { StaffInlineNotice(message: status) }
                 StaffCard {
-                    StaffField(label: "الاسم المعروض", text: $name)
-                    StaffPrimaryButton(title: "حفظ الاسم", symbol: "checkmark", busy: busy) { Task { await saveName() } }.disabled(name.trimmingCharacters(in: .whitespaces).count < 2)
+                    StaffField(label: "الاسم المعروض", text: $name, hint: "\(ElmFormat.latinDigits(String(name.count)))/80 · حرفان على الأقل")
+                        .onChange(of: name) { _, value in if value.count > 80 { name = String(value.prefix(80)) } }
+                    StaffPrimaryButton(title: "حفظ الاسم", symbol: "checkmark", busy: busy) { Task { await saveName() } }
+                        .disabled(name.trimmingCharacters(in: .whitespaces).count < 2 || name.trimmingCharacters(in: .whitespaces).count > 80)
                 }
                 StaffCard {
                     Text("تغيير كلمة المرور").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)

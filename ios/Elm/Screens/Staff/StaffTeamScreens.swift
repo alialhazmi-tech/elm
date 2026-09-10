@@ -28,7 +28,7 @@ struct StaffTeamScreen: View {
                 } else {
                     ProgressView().frame(maxWidth: .infinity).padding(30)
                 }
-                if let error, payload != nil { StaffInlineError(message: error.message) }
+                if let error, payload != nil { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
@@ -55,7 +55,8 @@ struct StaffTeamScreen: View {
             if dueEnabled {
                 DatePicker("التسليم", selection: $dueDate, in: Date()..., displayedComponents: [.date, .hourAndMinute])
                     .font(ElmFonts.text(.footnote))
-                    .environment(\.timeZone, TimeZone(identifier: "Asia/Riyadh")!)
+                    .riyadhPicker()
+                Text("التسليم \(StaffFormat.dateTime(StaffFormat.iso(dueDate))) بتوقيت الرياض").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
             }
             StaffPrimaryButton(title: "حفظ الإسناد", symbol: "person.badge.plus", busy: busy) { Task { await assign() } }
         }
@@ -77,7 +78,7 @@ struct StaffTeamScreen: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text(note.authorName ?? "").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink)
-                            if note.kind == "return" { Text("إعادة للتعديل").font(ElmFonts.text(.caption2, weight: .semibold)).foregroundStyle(ElmTheme.hex("b8760a")) }
+                            if note.kind == "return" { Text("إعادة للتعديل").font(ElmFonts.text(.caption2, weight: .semibold)).foregroundStyle(ElmTheme.warn) }
                             Spacer()
                             Text(StaffFormat.smart(note.createdAt)).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
                         }
@@ -174,7 +175,7 @@ struct StaffTimelineScreen: View {
     private func tone(_ value: String?) -> Color {
         switch value {
         case "ok": ElmTheme.tealInk
-        case "warn": ElmTheme.hex("b8760a")
+        case "warn": ElmTheme.warn
         case "block": ElmTheme.danger
         default: ElmTheme.navyInk
         }
@@ -208,6 +209,8 @@ struct StaffHistoryScreen: View {
     @State private var expanded: String?
     @State private var texts: [String: StaffVersionText] = [:]
     @State private var notice: String?
+    @State private var restoredId: String?
+    @State private var restoring: String?
 
     var body: some View {
         StaffScreen(title: "سجل النسخ", showBack: true, onRefresh: { await load() }) {
@@ -226,17 +229,20 @@ struct StaffHistoryScreen: View {
                             Text(text.text ?? "").font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2).lineSpacing(3).textSelection(.enabled)
                         }
                         if !isRevision, ["published", "scheduled"].contains(status) {
-                            StaffSecondaryButton(title: "استعادة كمسودة", symbol: "arrow.uturn.backward") { Task { await restore(version) } }
+                            StaffSecondaryButton(title: restoring == version.id ? "جارٍ إنشاء المسودة…" : "استعادة كمسودة للمراجعة", symbol: "arrow.uturn.backward") { Task { await restore(version) } }
+                                .disabled(restoring != nil)
                         }
                     }
                 }
                 if loading { ProgressView().frame(maxWidth: .infinity) }
-                if let error, !versions.isEmpty { StaffInlineError(message: error.message) }
+                if let error, !versions.isEmpty { StaffInlineError(message: error.message, retry: { Task { await load() } }) }
             }
             .padding(.horizontal, 18)
             .padding(.top, 8)
         }
         .task { if versions.isEmpty { await load() } }
+        // كما `history-restore.tsx`: الاستعادة تنتقل إلى مسودة الاستعادة الجديدة.
+        .navigationDestination(item: $restoredId) { id in StaffStoryScreen(id: id) }
     }
 
     private func load() async {
@@ -259,9 +265,13 @@ struct StaffHistoryScreen: View {
     }
 
     private func restore(_ version: StaffVersion) async {
+        restoring = version.id
+        error = nil
+        defer { restoring = nil }
         do {
-            try await StaffAPI.restoreVersion(id: storyId, versionId: version.id, expectedVersion: currentVersion)
+            let result = try await StaffAPI.restoreVersion(id: storyId, versionId: version.id, expectedVersion: currentVersion)
             notice = "أُنشئت مسودة من النسخة \(ElmFormat.latinDigits(String(version.version)))."
+            restoredId = result.id
         } catch {
             self.error = staff.handle(error)
         }

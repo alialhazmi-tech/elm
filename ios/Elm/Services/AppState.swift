@@ -61,10 +61,13 @@ final class ConnectivityStore {
     }
 }
 
+/// جولة الترحيب للزائر مرة واحدة على الجهاز؛ أما العضو فتهيئته بحسب حسابه: ملف بلا اهتمامات
+/// (`InterestStore.needsOnboarding`) يعيد عرض الشاشة كما يحوّل الويب إلى `/welcome`.
 @MainActor
 @Observable
 final class OnboardingStore {
     private let completionKey = "elm.onboarding.v2"
+    @ObservationIgnored private var memberObserver: NSObjectProtocol?
 
     var isPresented: Bool {
         didSet {
@@ -76,6 +79,13 @@ final class OnboardingStore {
 
     init() {
         isPresented = !UserDefaults.standard.bool(forKey: completionKey)
+        memberObserver = NotificationCenter.default.addObserver(forName: .elmMemberNeedsOnboarding, object: nil, queue: .main) { [weak self] _ in
+            // مهلة قصيرة حتى تكتمل إزاحة ورقة الدخول قبل عرض الغطاء الكامل.
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(450))
+                self?.present()
+            }
+        }
     }
 
     func complete() {

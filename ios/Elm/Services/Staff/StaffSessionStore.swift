@@ -34,6 +34,9 @@ final class StaffSessionStore {
     }
     /// بيانات الدخول المؤقتة بين طلب كلمة المرور وطلب رمز التحقق — في الذاكرة فقط.
     @ObservationIgnored private var pendingCredentials: (username: String, password: String)?
+    #if DEBUG
+    @ObservationIgnored private var debugAutoSignedIn = false
+    #endif
 
     /// مساحة التحرير مفتوحة فوق تبويبات القارئ.
     var workspacePresented: Bool {
@@ -43,6 +46,13 @@ final class StaffSessionStore {
     init() {
         lastUsername = UserDefaults.standard.string(forKey: usernameKey) ?? ""
         workspacePresented = UserDefaults.standard.bool(forKey: workspaceKey)
+        #if DEBUG
+        // `-elmMarkupSelfTest 1`: فحص جولة HTML ↔ بلوكات المحرر ويطبع PASS/FAIL في السجل.
+        let args = ProcessInfo.processInfo.arguments
+        if let index = args.firstIndex(of: "-elmMarkupSelfTest"), index + 1 < args.count, args[index + 1] == "1" {
+            EditorMarkup.selfTest()
+        }
+        #endif
     }
 
     var isActive: Bool { phase == .active && actor != nil }
@@ -62,6 +72,13 @@ final class StaffSessionStore {
             apply(payload)
         } catch let error as ElmAPIError {
             if error.isUnauthorized {
+                #if DEBUG
+                // إقلاع آلي بلا كوكي: `-elmStaffUser/-elmStaffPass` يدخلان قبل قرار عرض اللوحة (للقطات المحاكي فقط).
+                if !debugAutoSignedIn, actor == nil, let user = ElmLaunch.staffUser, let password = ElmLaunch.staffPassword {
+                    debugAutoSignedIn = true
+                    if await signIn(username: user, password: password) { workspacePresented = true; return }
+                }
+                #endif
                 // كانت الجلسة فعّالة ثم رُفضت (خروج من جهاز آخر، تغيير كلمة مرور، تعليق) → تنبيه فوق الدخول.
                 if actor != nil { expire() }
                 actor = nil
@@ -102,13 +119,14 @@ final class StaffSessionStore {
             await restore()
             return phase != .signedOut
         } catch let error as ElmAPIError {
-            if case .unauthorized(let text) = error, phase != .needsCode, text.contains("رمز") {
+            // الخادم يعلن طلب الرمز بالعلم `mfaRequired` لا بنص الرسالة (كما يقرأه `login-form.tsx`).
+            if error.needsMFACode, code == nil {
                 pendingCredentials = (cleanUser, password)
                 phase = .needsCode
                 errorMessage = nil
                 return false
             }
-            if case .unauthorized(let text) = error, phase == .needsCode {
+            if case .unauthorized(let text, _) = error, phase == .needsCode {
                 errorMessage = text.isEmpty ? "رمز التحقق غير صحيح." : text
                 return false
             }

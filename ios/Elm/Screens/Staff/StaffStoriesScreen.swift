@@ -21,7 +21,8 @@ struct StaffStoriesScreen: View {
     @State private var newStoryId: String?
     @State private var debugStoryId: String?
 
-    private let filters: [(String?, String)] = [(nil, "النشطة"), ("draft", "مسودات"), ("review", "للاعتماد"), ("scheduled", "مجدولة"), ("published", "منشورة"), ("archived", "الأرشيف")]
+    /// ترتيب التبويبات كما في `stories/page.tsx`: الكل، منشورة، للاعتماد، مجدولة، مسودات، الأرشيف.
+    private let filters: [(String?, String)] = [(nil, "الكل"), ("published", "منشورة"), ("review", "للاعتماد"), ("scheduled", "مجدولة"), ("draft", "مسودات"), ("archived", "الأرشيف")]
 
     var body: some View {
         StaffScreen(title: "المواد", showBack: showBack, onRefresh: { await load(page: page) }) {
@@ -60,8 +61,9 @@ struct StaffStoriesScreen: View {
         #endif
     }
 
+    /// الخادم يضيف مفتاح `active` جاهزًا؛ وإلا فمجموع الحالات النشطة (بلا `archived` ولا `active` نفسه).
     private var activeTotal: Int {
-        counts.filter { $0.key != "archived" }.values.reduce(0, +)
+        counts["active"] ?? counts.filter { $0.key != "archived" && $0.key != "active" }.values.reduce(0, +)
     }
 
     private var header: some View {
@@ -134,7 +136,7 @@ struct StaffStoriesScreen: View {
             .padding(.horizontal, 14)
             .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
-            if let error { StaffInlineError(message: error.message) }
+            if let error { StaffInlineError(message: error.message, retry: { Task { await load(page: page) } }) }
             if loading { ProgressView().frame(maxWidth: .infinity).padding(12) }
             pagination
         }

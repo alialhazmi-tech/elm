@@ -100,7 +100,7 @@ struct StatusPill: View {
     private var tint: Color {
         switch status {
         case .draft: ElmTheme.ink2
-        case .review: ElmTheme.hex("b8760a")
+        case .review: ElmTheme.warn
         case .scheduled: ElmTheme.focus
         case .published: ElmTheme.tealInk
         case .archived: ElmTheme.ink3
@@ -125,7 +125,7 @@ struct GuardChipView: View {
     private var tint: Color {
         switch chip.tone {
         case "block": ElmTheme.danger
-        case "warn": ElmTheme.hex("b8760a")
+        case "warn": ElmTheme.warn
         default: ElmTheme.tealInk
         }
     }
@@ -249,14 +249,24 @@ struct StaffEmptyView: View {
 /// لافتة خطأ مضمّنة (لا تحجب المحتوى).
 struct StaffInlineError: View {
     let message: String
+    /// إعادة المحاولة عند توفرها — كل خطأ تحميل في اللوحة يعرض هذا الزر.
+    var retry: (() -> Void)? = nil
     var body: some View {
-        Label(message, systemImage: "exclamationmark.circle.fill")
-            .font(ElmFonts.text(.footnote, weight: .medium))
-            .foregroundStyle(ElmTheme.danger)
-            .padding(12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(ElmTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .accessibilityLabel("خطأ: \(message)")
+        VStack(alignment: .leading, spacing: 8) {
+            Label(message, systemImage: "exclamationmark.circle.fill")
+                .font(ElmFonts.text(.footnote, weight: .medium))
+                .foregroundStyle(ElmTheme.danger)
+                .accessibilityLabel("خطأ: \(message)")
+            if let retry {
+                Button("إعادة المحاولة", action: retry)
+                    .font(ElmFonts.text(.footnote, weight: .semibold))
+                    .foregroundStyle(ElmTheme.navyInk)
+                    .frame(minHeight: 36)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(ElmTheme.danger.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
 
@@ -291,6 +301,8 @@ struct StaffStatTile: View {
     let value: String
     let label: String
     var tint: Color = ElmTheme.navyInk
+    /// سطر تفسيري صغير تحت التسمية (مثل «3 فيها مخالفة قاطعة»).
+    var hint: String? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(ElmFormat.latinDigits(value))
@@ -298,6 +310,7 @@ struct StaffStatTile: View {
                 .foregroundStyle(tint)
                 .monospacedDigit()
             Text(label).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2).lineLimit(2)
+            if let hint { Text(hint).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).lineLimit(2) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
@@ -383,12 +396,16 @@ struct StaffSecureField: View {
     let label: String
     @Binding var text: String
     var contentType: UITextContentType = .password
+    var submitLabel: SubmitLabel = .done
+    var onSubmit: (() -> Void)? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(label).font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink)
             SecureField("", text: $text)
                 .font(ElmFonts.text(.callout))
                 .textContentType(contentType)
+                .submitLabel(submitLabel)
+                .onSubmit { onSubmit?() }
                 .padding(12)
                 .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 11, style: .continuous).stroke(ElmTheme.line2, lineWidth: 1))
@@ -444,5 +461,62 @@ struct StaffScreen<Content: View>: View {
                 .frame(maxWidth: 760)
                 .frame(maxWidth: .infinity)
         }
+    }
+}
+
+extension View {
+    /// منتقي التاريخ بتوقيت الرياض والتقويم الميلادي وأرقام لاتينية — كما يُعرض نص التأكيد.
+    func riyadhPicker() -> some View {
+        environment(\.timeZone, TimeZone(identifier: "Asia/Riyadh")!)
+            .environment(\.calendar, Calendar(identifier: .gregorian))
+            .environment(\.locale, Locale(identifier: "ar-SA@calendar=gregorian;numbers=latn"))
+    }
+}
+
+/// ورقة سبب (الأرشفة/الإعادة للتعديل): رقائق أسباب جاهزة اختيارية، حقل حر، وحد أدنى/أقصى يعطّل الزر قبل الإرسال.
+struct StaffReasonSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let title: String
+    let message: String
+    var placeholder: String
+    var chips: [String] = []
+    var minLength = 8
+    var maxLength = 4000
+    var confirmTitle: String
+    var destructive = false
+    @Binding var reason: String
+    let onConfirm: () -> Void
+
+    private var collapsed: String { reason.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression).trimmingCharacters(in: .whitespaces) }
+    private var valid: Bool { collapsed.count >= minLength && collapsed.count <= maxLength }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(title).font(ElmFonts.display(.title3, weight: .heavy)).foregroundStyle(ElmTheme.ink)
+                    Text(message).font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink2).lineSpacing(3)
+                    if !chips.isEmpty {
+                        ElmFlow(spacing: 6) {
+                            ForEach(chips, id: \.self) { chip in
+                                ElmChip(label: chip, selected: collapsed == chip) { reason = chip }
+                            }
+                        }
+                    }
+                    StaffField(label: "السبب", placeholder: placeholder, text: $reason, axis: .vertical,
+                               hint: "\(ElmFormat.latinDigits(String(collapsed.count))) حرفًا · \(ElmFormat.latinDigits(String(minLength))) أحرف على الأقل\(maxLength < 100_000 ? " و\(ElmFormat.latinDigits(String(maxLength))) على الأكثر" : "")")
+                    StaffPrimaryButton(title: confirmTitle, symbol: destructive ? "archivebox" : "arrow.uturn.right", tint: destructive ? ElmTheme.danger : ElmTheme.navy) {
+                        dismiss()
+                        onConfirm()
+                    }
+                    .disabled(!valid)
+                    .opacity(valid ? 1 : 0.55)
+                }
+                .padding(22)
+            }
+            .background(ElmTheme.bg.ignoresSafeArea())
+            .toolbar { ToolbarItem(placement: .topBarLeading) { Button("إلغاء") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
     }
 }

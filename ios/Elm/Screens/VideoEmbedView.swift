@@ -35,7 +35,7 @@ struct VideoEmbedView: View {
                 .overlay {
                     if failed {
                         VStack(spacing: 10) {
-                            Image(systemName: "play.slash").font(.system(size: 28, weight: .light))
+                            Image(systemName: "play.slash").font(.system(.largeTitle, weight: .light))
                             Text("تعذر تحميل المشغّل هنا.").font(ElmFonts.text(.footnote))
                         }
                         .foregroundStyle(.white.opacity(0.85))
