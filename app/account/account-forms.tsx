@@ -1,13 +1,11 @@
 "use client";
 import { useActionState, useEffect, useState, type ReactNode } from "react";
-import { Check, Eye, EyeOff, LoaderCircle, MailCheck } from "lucide-react";
+import { Check, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { MEMBER_INTERESTS } from "@/lib/membership/interests";
 import {
   changeMemberPassword,
   saveAccountInterests,
-  sendMemberVerification,
   updateMemberDetails,
-  verifyMemberEmail,
   type AccountFormState,
 } from "./actions";
 
@@ -40,7 +38,7 @@ export function AccountAction({
     </form>
   );
 }
-function FormFeedback({ state }: { state: AccountFormState }) {
+export function FormFeedback({ state }: { state: AccountFormState }) {
   return (
     <>
       {state.error && (
@@ -101,68 +99,6 @@ export function DetailsForm({
         </button>
       </form>
     </>
-  );
-}
-export function EmailVerificationNotice({ email }: { email: string }) {
-  const [sent, send, sending] = useActionState(sendMemberVerification, {});
-  const [verified, verify, verifying] = useActionState(
-    async (state: AccountFormState, form: FormData) => {
-      const result = await verifyMemberEmail(state, form);
-      if (result.success)
-        window.dispatchEvent(new Event("alelm:profile-updated"));
-      return result;
-    },
-    {},
-  );
-  if (verified.success) return <FormFeedback state={verified} />;
-  return (
-    <section className="ac-verify" aria-labelledby="ac-verify-title">
-      <div className="ac-verify-intro">
-        <MailCheck size={28} aria-hidden="true" />
-        <div>
-          <h2 id="ac-verify-title">وثّق بريدك الإلكتروني</h2>
-          <p>أكمل توثيق حسابك برمز نرسله إلى بريدك الإلكتروني.</p>
-          <bdi className="ac-verify-email" dir="ltr">
-            {email}
-          </bdi>
-        </div>
-      </div>
-      <form action={send} className="ac-action-form">
-        <button
-          className="ac-button ac-button-primary"
-          disabled={sending || verifying}
-        >
-          {sending
-            ? "جارٍ الإرسال…"
-            : sent.success
-              ? "إعادة إرسال الرمز"
-              : "إرسال رمز التحقق"}
-        </button>
-        <FormFeedback state={sent} />
-      </form>
-      {sent.success && (
-        <form action={verify} className="ac-edit-form ac-verify-code">
-          <label>
-            رمز التحقق
-            <input
-              name="otp"
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              minLength={6}
-              maxLength={6}
-              dir="ltr"
-              required
-            />
-          </label>
-          <button className="ac-button ac-button-primary" disabled={verifying}>
-            {verifying ? "جارٍ التحقق…" : "توثيق البريد"}
-          </button>
-          <FormFeedback state={verified} />
-        </form>
-      )}
-    </section>
   );
 }
 function SecretField({
