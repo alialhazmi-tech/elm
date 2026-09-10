@@ -479,7 +479,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
           <RichBody ref={richRef} initial={initial?.body ?? ""} onChange={(html) => onBody(html)} />
         </Card>
 
-        <Card dir="rtl" className="gap-0 overflow-hidden bg-(--t-panel) py-0 text-right xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
+        <Card dir="rtl" data-tahrir-panel className="gap-0 overflow-hidden bg-(--t-panel) py-0 text-right xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
           <Tabs dir="rtl" value={inspectorTab} onValueChange={(value) => setInspectorTab(value as InspectorTab)}>
             <div className="border-b bg-background p-1.5">
               <TabsList className="grid w-full grid-cols-4 bg-transparent">
