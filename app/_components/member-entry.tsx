@@ -18,7 +18,7 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
   const [signOutState, signOut, signingOut] = useActionState(async () => {
     const result = await endMemberSession();
     if (result.success) {
-      memberSessionStore.update(false);
+      memberSessionStore.update(Boolean(liveViewer.editor));
       setViewer((current) => ({ ...current, member: undefined }));
       router.push("/");
       router.refresh();
@@ -67,7 +67,7 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
         .then((response) => (response.ok ? response.json() : {}))
         .then((data: { member?: MemberIdentity; editor?: Identity }) => {
           if (request.signal.aborted) return;
-          memberSessionStore.update(Boolean(data.member));
+          memberSessionStore.update(Boolean(data.member || data.editor));
           setViewer(data);
           setLoaded(true);
         })

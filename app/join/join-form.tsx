@@ -255,7 +255,7 @@ export function JoinForm({
   }, [authenticated, router]);
   if (authenticated) {
     const href = next ? `/join?next=${encodeURIComponent(next)}` : "/join";
-    return <div className="member-auth-card"><p role="status">أنت مسجّل الدخول. جارٍ الانتقال إلى حسابك…</p><a className="member-text-button" href={href}>المتابعة إلى حسابك</a></div>;
+    return <div className="member-auth-card"><p role="status">أنت مسجّل الدخول. جارٍ المتابعة…</p><a className="member-text-button" href={href}>متابعة</a></div>;
   }
   return (
     <div className="member-auth-card">
