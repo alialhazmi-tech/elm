@@ -68,6 +68,8 @@ export interface DraftInput {
   expectedVersion?: number;
   returnToDraft?: boolean;
   autosave?: boolean;
+  updateScheduled?: boolean;
+  rescheduleAt?: string;
   title: string;
   excerpt: string;
   body: string;
@@ -123,6 +125,23 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
     seriesSlug: input.seriesSlug, image: input.image, updatedAt: now, readingMinutes,
     ...privileged, ...seo,
   };
+  if (input.updateScheduled) {
+    if (!actor.can("story.schedule")) throw new StoryWriteError("تحديث المجدول من صلاحية المعتمدين فقط.", 403);
+    if (!existing || existing.status !== "scheduled" || !existing.scheduledAt || input.autosave || input.returnToDraft) {
+      throw new StoryWriteError("تغيّرت حالة المادة؛ أعد تحميلها قبل تحديث المجدول.");
+    }
+    if (input.rescheduleAt !== undefined && (!Number.isFinite(Date.parse(input.rescheduleAt)) || Date.parse(input.rescheduleAt) <= Date.now())) {
+      throw new StoryWriteError("اختر موعدًا مستقبليًا صحيحًا.", 400);
+    }
+    const scheduledAt = input.rescheduleAt === undefined ? existing.scheduledAt : new Date(input.rescheduleAt).toISOString();
+    await db.batch([
+      lockStory(existing),
+      snapshotQuery(existing.id, actor.username),
+      db.update(stories).set({ ...content, scheduledAt, version: existing.version + 1 }).where(eq(stories.id, existing.id)),
+      auditQuery(actor.username, "scheduled:update", existing.id, input.rescheduleAt ? "تعديل المحتوى وموعد النشر" : "حفظ التعديلات مع إبقاء موعد النشر", { before: existing, after: { ...content, scheduledAt }, saveMode: "manual" }),
+    ]);
+    return { id: existing.id, ...identity, version: existing.version + 1, status: "scheduled", revisionOf: existing.revisionOf, scheduledAt };
+  }
   if (!existing || fork) {
     const insert = db.insert(stories).values({
       ...(existing ?? {}), ...content, id, status: "draft", scheduledAt: null,

@@ -43,6 +43,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
         canSubmit={actor.can("story.submit")}
         historyHref={story ? `/tahrir/history/${story.revisionOf ?? story.id}` : null}
         canApprove={actor?.can("story.publish") ?? false}
+        canSchedule={actor.can("story.schedule")}
         guardControls={settings.governance}
         recentMedia={recentMedia}
         series={taxonomy.series.map(({ slug, name, color }) => ({ slug, name, color }))}
@@ -64,6 +65,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 pinned: story.pinned === 1,
                 breakingUntil: story.breakingUntil,
                 status: story.status,
+                scheduledAt: story.scheduledAt,
                 publishedAt: story.publishedAt,
                 updatedAt: story.updatedAt,
                 seoTitle: story.seoTitle ?? "",

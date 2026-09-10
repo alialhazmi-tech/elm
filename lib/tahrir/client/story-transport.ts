@@ -19,6 +19,7 @@ export type TransportFailure = {
 export type TransportResult<T> = { ok: true; data: T } | TransportFailure;
 
 export interface SavedStory {
+  scheduledAt?: string;
   id: string;
   version: number;
   status: string;

@@ -7,6 +7,11 @@ import { canEditStory, requireActor } from "@/lib/tahrir/access";
 import { appStoryList } from "@/lib/tahrir/app-read";
 import { deleteDraft, getStory, saveDraft } from "@/lib/tahrir/service";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
+import { loadAiSettings } from "@/lib/ai/settings";
+import { runConfiguredPolicyGuard } from "@/lib/policy";
+import { blockingFindings } from "@/lib/policy/report";
+import { buildGuardDraft, loadGuardContext } from "@/lib/tahrir/guard-draft";
+import { guardMediaFor } from "@/lib/tahrir/service";
 
 /** قائمة المواد للتطبيق — منطق شاشة «المواد» نفسه (30/صفحة، الفلاتر، قصّ رقم الصفحة). */
 export async function GET(request: Request) {
@@ -35,6 +40,8 @@ async function saveStory(request: Request) {
     expectedVersion?: number;
     autosave?: boolean;
     returnToDraft?: boolean;
+    updateScheduled?: boolean;
+    rescheduleAt?: string;
     title?: string;
     excerpt?: string;
     body?: string;
@@ -53,6 +60,13 @@ async function saveStory(request: Request) {
 
   const automatic = input?.autosave === true;
   const returnToDraft = input?.returnToDraft === true;
+  const updateScheduled = input?.updateScheduled === true;
+  if (updateScheduled && !session.can("story.schedule")) {
+    return NextResponse.json({ error: "تحديث المجدول من صلاحية المعتمدين فقط." }, { status: 403 });
+  }
+  if (input?.rescheduleAt !== undefined && (!updateScheduled || typeof input.rescheduleAt !== "string")) {
+    return NextResponse.json({ error: "مدخل موعد النشر غير صالح." }, { status: 400 });
+  }
   if (returnToDraft && !session.can("story.publish")) {
     return NextResponse.json({ error: "التحويل إلى مسودة من صلاحية المعتمدين فقط." }, { status: 403 });
   }
@@ -102,12 +116,31 @@ async function saveStory(request: Request) {
     : undefined;
   const slug = input.slug?.trim() ?? "";
 
+  if (updateScheduled) {
+    const settingsPromise = loadAiSettings();
+    const [settings, media, context] = await Promise.all([
+      settingsPromise, guardMediaFor(input.image?.trim() || null), loadGuardContext(settingsPromise, session.userId),
+    ]);
+    const report = runConfiguredPolicyGuard(buildGuardDraft({
+      id, title: input.title.trim(), body, format: isJak ? "jakalelm" : (input.format?.trim() || existing?.format || "news"),
+      image: input.image?.trim() || null,
+      breakingUntil: session.can("story.publish") && input.breakingUntil !== undefined ? input.breakingUntil : existing?.breakingUntil,
+      media,
+    }), settings.governance, context);
+    if (!report.canRequestApproval) return NextResponse.json({
+      error: "تعذر تحديث المجدول: عالج مخالفات الحارس أولًا.",
+      blocking: report.audit.blockingRuleIds, findings: blockingFindings(report),
+    }, { status: 422 });
+  }
+
   const saved = await saveDraft(
     {
       id,
       expectedVersion: input.expectedVersion,
       autosave: automatic,
       returnToDraft,
+      updateScheduled,
+      rescheduleAt: input.rescheduleAt,
       title: input.title.trim(),
       excerpt: input.excerpt?.trim() ?? "",
       body,

@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { formatRiyadhDateTime, formatRiyadhTime, riyadhDayStartIso, riyadhWallTimeToIso } from "../lib/tahrir/riyadh-time.ts";
+import { formatRiyadhDateTime, formatRiyadhTime, isoToRiyadhWallTime, riyadhDayStartIso, riyadhWallTimeToIso } from "../lib/tahrir/riyadh-time.ts";
 import { describeRecoveryDiff, recoveryDiffLabel } from "../lib/tahrir/editor/recovery-diff.ts";
+
+test("الموعد المحفوظ يملأ حقل المحرر بالرياض ويعبر منتصف الليل دون إزاحة إضافية", () => {
+  assert.equal(isoToRiyadhWallTime("2026-09-10T11:30:00.000Z"), "2026-09-10T14:30");
+  assert.equal(isoToRiyadhWallTime("2025-12-31T22:30:00Z"), "2026-01-01T01:30");
+  assert.equal(isoToRiyadhWallTime("2026-09-10T14:30:00+03:00"), "2026-09-10T14:30");
+  assert.equal(riyadhWallTimeToIso(isoToRiyadhWallTime("2026-09-10T11:30:00.000Z")), "2026-09-10T11:30:00.000Z");
+  for (const value of [null, undefined, "", "invalid"]) assert.equal(isoToRiyadhWallTime(value), "");
+});
 
 test("وقت الحائط المدخل يُعامل كتوقيت الرياض (+03:00) لا كتوقيت المتصفح", () => {
   assert.equal(riyadhWallTimeToIso("2026-09-09T14:30"), "2026-09-09T11:30:00.000Z");

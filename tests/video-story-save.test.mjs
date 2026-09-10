@@ -11,7 +11,7 @@ test('manual save and autosave pass normalized X, YouTube, and Instagram links t
       plugins:[{name:'isolate-writes',setup(b){
         const fixtures={
           '@/lib/tahrir/access':'export const requireActor=async()=>({ok:true,actor:{can:()=>false}});export const canEditStory=()=>true;',
-          '@/lib/tahrir/service':'export const getStory=async()=>null;export const deleteDraft=async()=>{};export const saveDraft=async input=>globalThis.__videoSave(input);',
+          '@/lib/tahrir/service':'export const getStory=async()=>null;export const deleteDraft=async()=>{};export const guardMediaFor=async()=>{throw new Error("Draft saves must not load scheduled-story guard media")};export const saveDraft=async input=>globalThis.__videoSave(input);',
         };
         b.onResolve({filter:/^@\/lib\/tahrir\/(access|service)$/},args=>({path:args.path,namespace:'fixture'}));
         b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:fixtures[args.path],loader:'js'}));
