@@ -46,6 +46,7 @@ const actions: Record<string, [string, AuditGroup, AuditTone?]> = {
   "members:suspend": ["تعليق عضوية", "accounts", "warning"],
   "members:reactivate": ["تفعيل عضوية", "accounts", "success"],
   "users:reset-password": ["إعادة تعيين كلمة المرور", "security", "warning"],
+  "users:recover-password": ["استعادة كلمة المرور عبر البريد", "security", "warning"],
   "users:change-password": ["تغيير كلمة المرور", "security"],
   "users:overrides": ["تعديل استثناءات الصلاحيات", "permissions", "warning"],
   "roles:create": ["إنشاء دور", "permissions"],

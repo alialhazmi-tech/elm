@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { LogInIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export function LoginForm() {
         <LogInIcon data-icon="inline-start" className="rtl:-scale-x-100" />
         {busy ? "جارٍ الدخول…" : "دخول"}
       </Button>
+      <Link href="/tahrir/recover" className="justify-self-start text-sm underline">نسيت كلمة المرور؟</Link>
       <div role="alert" className="min-h-4 text-xs text-(--t-block)">
         {error}
       </div>

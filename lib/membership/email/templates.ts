@@ -1,6 +1,7 @@
 export const EMAIL_ORIGIN = "https://alelm.net";
 export type AccountEmailKind =
   | "reset-link"
+  | "staff-reset-link"
   | "verify-otp"
   | "verify-link"
   | "reset-otp"
@@ -68,9 +69,10 @@ export function renderAccountEmail(
   const duration = timed ? emailValidity(input.issuedAt, input.expiresAt) : "";
   switch (kind) {
     case "reset-link":
-      subject = "إعادة تعيين كلمة المرور لحسابك في العلم";
+    case "staff-reset-link":
+      subject = kind === "staff-reset-link" ? "استعادة كلمة المرور لحسابك في تحرير العلم" : "إعادة تعيين كلمة المرور لحسابك في العلم";
       paragraphs = [
-        "تلقّينا طلبًا لإعادة تعيين كلمة المرور لحسابك في العلم. اضغط الزر التالي لاختيار كلمة مرور جديدة.",
+        kind === "staff-reset-link" ? "تلقّينا طلبًا لاستعادة كلمة المرور لحساب الإدارة والتحرير. اضغط الزر لاختيار كلمة جديدة. سيبقى التحقق الثنائي مفعّلًا إذا كان مفعّلًا لحسابك." : "تلقّينا طلبًا لإعادة تعيين كلمة المرور لحسابك في العلم. اضغط الزر التالي لاختيار كلمة مرور جديدة.",
         `تنتهي صلاحية هذا الرابط خلال ${duration}.`,
         "إذا لم تطلب ذلك، يمكنك تجاهل هذه الرسالة. لن تتغير كلمة مرورك دون إتمام الخطوات.",
       ];

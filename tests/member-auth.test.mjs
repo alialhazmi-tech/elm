@@ -10,7 +10,7 @@ test("رابط استعادة كلمة المرور لا يحمّل متتبعً
   const assignment = layout.match(/const tagManagerInit = `[^`]+`;/)?.[0];
   assert.ok(assignment);
   const script = runInNewContext(`${assignment}; tagManagerInit`);
-  for (const pathname of ["/join/reset", "/join/reset/"]) {
+  for (const pathname of ["/join/reset", "/join/reset/", "/tahrir/recover", "/tahrir/recover/"]) {
     runInNewContext(script, {
       window: { location: { pathname } },
       document: { createElement() { throw new Error("Tracker must not load on reset page"); } },
