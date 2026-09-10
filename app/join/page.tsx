@@ -23,7 +23,7 @@ export default async function JoinPage({
 }: {
   searchParams: Promise<{ next?: string; mode?: string }>;
 }) {
-  const { next: nextRaw, mode } = await searchParams;
+  const { next: nextRaw } = await searchParams;
   const next = safeInternalPath(nextRaw);
   if (memberAuthConfigured) {
     const { data, suspended } = await getMemberSession();
@@ -120,13 +120,6 @@ export default async function JoinPage({
             <JoinForm
               next={next}
               available={memberAuthConfigured}
-              initialMode={
-                mode === "forgot"
-                  ? "forgot"
-                  : mode === "signin"
-                    ? "signin"
-                    : "signup"
-              }
             />
           </section>
         </div>

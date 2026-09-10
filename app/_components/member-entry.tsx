@@ -92,7 +92,7 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
     );
   if (!viewer.member && !viewer.editor)
     return (
-      <Link className="member-entry" href="/join">
+      <Link className="member-entry" href="/join?mode=signin">
         دخول <span aria-hidden="true">↪</span>
       </Link>
     );
