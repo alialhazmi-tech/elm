@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { loadEditorialTaxonomy } from "@/lib/content/taxonomy-settings";
 import { redirect } from "next/navigation";
 import { canEditStory, loadActor } from "@/lib/tahrir/access";
@@ -36,13 +35,13 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
 
   return (
     <main>
-      {story && <Link className="mx-5 my-2 inline-block text-sm underline" href={`/tahrir/history/${story.revisionOf ?? story.id}`}>سجل النسخ واستعادتها</Link>}
       <EditorClient
         // A saved new draft updates its URL through history.replaceState; opening
         // "new" again must still get a fresh editor, even when this segment was new.
         key={id === "new" ? crypto.randomUUID() : id}
         actorId={actor.userId}
         canSubmit={actor.can("story.submit")}
+        historyHref={story ? `/tahrir/history/${story.revisionOf ?? story.id}` : null}
         canApprove={actor?.can("story.publish") ?? false}
         guardControls={settings.governance}
         recentMedia={recentMedia}

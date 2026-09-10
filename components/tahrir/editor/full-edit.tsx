@@ -41,8 +41,8 @@ const STEPS: Array<[keyof FullEditProgress, string]> = [
 /** شريط الدعوة إلى التحرير الشامل — يظهر حين لا يعمل التحليل. */
 export function FullEditBar({ onStart, disabled, children }: { onStart: () => void; disabled?: boolean; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 border-y bg-muted/30 px-5 py-2.5">
-      <SparklesIcon className="size-4 shrink-0 text-primary" />
+    <div className="flex flex-wrap items-center gap-3 border-y border-(--t-ai-line) bg-(--t-ai) px-5 py-2.5">
+      <SparklesIcon className="size-4 shrink-0 text-(--t-warn)" />
       <span className="grid min-w-0 flex-1 leading-tight">
         <b className="text-[12.5px]">توليد ذكي شامل</b>
         <span className="text-[11px] text-muted-foreground">

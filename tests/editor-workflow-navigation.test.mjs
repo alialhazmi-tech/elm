@@ -26,7 +26,7 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
     react: 'export const {useState,useRef,useCallback,useEffect}=globalThis.__editorWorkflow',
     'next/navigation': 'export const useRouter=()=>globalThis.__editorWorkflow.router',
     'next/link': 'export default "a"',
-    'lucide-react': 'export const ExternalLinkIcon="svg",FilePenLineIcon="svg",RefreshCwIcon="svg",SaveIcon="svg",SendIcon="svg",ShieldCheckIcon="svg"',
+    'lucide-react': 'export const ExternalLinkIcon="svg",FilePenLineIcon="svg",HistoryIcon="svg",RefreshCwIcon="svg",SaveIcon="svg",SendIcon="svg",ShieldCheckIcon="svg"',
     sonner: 'export const toast={error(){},success(){}}',
     '@/components/tahrir/use-draft-recovery': 'export const useDraftRecovery=()=>globalThis.__editorWorkflow.recovery; export const useDraftTabToken=()=>"tab-token"',
     '@/components/tahrir/use-draft-autosave': 'export const useDraftAutosave=options=>globalThis.__editorWorkflow.autosave(options)',

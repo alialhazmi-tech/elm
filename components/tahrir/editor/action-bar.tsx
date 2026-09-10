@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLinkIcon, FilePenLineIcon, RefreshCwIcon, SaveIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
+import { ExternalLinkIcon, FilePenLineIcon, HistoryIcon, RefreshCwIcon, SaveIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
 
 import { StatusPill } from "@/components/tahrir/badges";
 import { StoryTimeline } from "@/components/tahrir/story-timeline";
@@ -29,6 +29,7 @@ export interface ActionBarProps {
   status: string;
   canApprove: boolean;
   canSubmit: boolean;
+  historyHref?: string | null;
   busy: boolean;
   workflowBusy: boolean;
   navigating: boolean;
@@ -79,7 +80,7 @@ export function ActionBar(props: ActionBarProps) {
   const gateHint = props.guardError ? "تعذر الاتصال بالحارس — أعد الفحص قبل الاعتماد" : "البوابة مغلقة حتى يكتمل الحارس بلا مخالفة قاطعة";
 
   return (
-    <Card className="gap-0 py-0 shadow-md">
+    <Card className="gap-0 bg-(--t-navy-bg) py-0 shadow-md">
       <div className="flex flex-wrap items-center gap-2 px-3 py-2">
         <span className="text-[11px] text-muted-foreground">{props.isNew ? "مادة جديدة" : "تحرير المادة"}</span>
         <StatusPill status={props.status} label={STATUS_LABELS[props.status] ?? props.status} />
@@ -98,6 +99,14 @@ export function ActionBar(props: ActionBarProps) {
         </span>
         <div className="ms-auto flex flex-wrap items-center gap-1.5">
           <StoryTimeline id={props.id || null} />
+          {props.historyHref ? (
+            <Button asChild size="sm" variant="ghost">
+              <Link href={props.historyHref}>
+                <HistoryIcon data-icon="inline-start" />
+                <span className="hidden sm:inline">سجل النسخ</span>
+              </Link>
+            </Button>
+          ) : null}
           <ArticlePreview getDraft={props.getPreview} />
           {props.publicHref ? (
             <Button asChild size="sm" variant="ghost">

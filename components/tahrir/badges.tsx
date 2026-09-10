@@ -30,7 +30,7 @@ export function StatusPill({ status, label, className }: { status: string; label
     published: "bg-(--t-ok-bg) text-(--t-ok)",
     review: "bg-(--t-warn-bg) text-(--t-warn)",
     scheduled: "bg-(--t-sug-bg) text-(--t-sug)",
-    draft: "border border-border bg-muted text-muted-foreground",
+    draft: "bg-(--t-draft-bg) text-(--t-draft)",
     archived: "border border-border bg-muted text-muted-foreground line-through decoration-muted-foreground/60",
   };
   return (

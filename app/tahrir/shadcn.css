@@ -87,6 +87,8 @@
 
 /* ===== رموز اللوحة الدلالية (كانت في tahrir.css) — تقرؤها الشارات وحالات الحارس في كل اللوحات ===== */
 .th {
+  /* طبقات المحرر الهادئة: لوحة الأدوات، شريط الذكاء، الكحلي الدلالي، ومسودة ذهبية باهتة */
+  --t-panel: #f3f6fa; --t-ai: #fbf5e6; --t-ai-line: #ebd9a8; --t-navy: #1a4282; --t-navy-bg: #e7eef8; --t-draft: #8a6d1f; --t-draft-bg: #f8efd6;
   --t-block: #b42318; --t-block-bg: #fdf1ef;
   --t-warn: #92610a; --t-warn-bg: #fdf6e7;
   --t-sug: #2b5c9e; --t-sug-bg: #eef4fc;
@@ -97,6 +99,7 @@
   color: var(--foreground);
 }
 :root[data-theme="dark"] .th {
+  --t-panel: #0e1930; --t-ai: #1c1a10; --t-ai-line: #3a3218; --t-navy: #8fb0e6; --t-navy-bg: #16284a; --t-draft: #e2c06a; --t-draft-bg: #2e2610;
   --t-block: #f08a7d; --t-block-bg: #33161a;
   --t-warn: #e5b567; --t-warn-bg: #31250e;
   --t-sug: #8fb4e8; --t-sug-bg: #152740;
@@ -104,6 +107,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .th {
+    --t-panel: #0e1930; --t-ai: #1c1a10; --t-ai-line: #3a3218; --t-navy: #8fb0e6; --t-navy-bg: #16284a; --t-draft: #e2c06a; --t-draft-bg: #2e2610;
     --t-block: #f08a7d; --t-block-bg: #33161a;
     --t-warn: #e5b567; --t-warn-bg: #31250e;
     --t-sug: #8fb4e8; --t-sug-bg: #152740;

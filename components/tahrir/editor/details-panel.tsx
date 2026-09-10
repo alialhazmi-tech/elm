@@ -66,7 +66,7 @@ function hoursAhead(hours: number): string {
 function Section({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
     <div className={cn("grid gap-2 border-t p-3 first:border-t-0", className)}>
-      <div className="text-[11px] font-semibold text-muted-foreground">{title}</div>
+      <div className="text-[11px] font-semibold text-(--t-navy)">{title}</div>
       {children}
     </div>
   );
