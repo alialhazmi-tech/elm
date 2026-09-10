@@ -127,13 +127,13 @@ export function ActionBar(props: ActionBarProps) {
             <SaveIcon data-icon="inline-start" />
             {props.busy ? "يحفظ…" : props.status === "published" ? props.canApprove ? "تحديث المادة" : "حفظ مسودة التعديل" : props.status === "scheduled" ? props.canSchedule ? "حفظ التعديلات" : "حفظ مسودة التعديل" : "حفظ المسودة"}
           </Button>
-          {props.canSubmit && props.status !== "published" && props.status !== "archived" ? (
+          {props.canSubmit && props.status !== "scheduled" && props.status !== "published" && props.status !== "archived" ? (
             <Button size="sm" variant="secondary" className="editor-action-submit" onClick={props.onSubmit} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : gateHint}>
               <SendIcon data-icon="inline-start" className="rtl:-scale-x-100" />
               إرسال للاعتماد
             </Button>
           ) : null}
-          {props.canApprove && props.status !== "published" && props.status !== "archived" ? (
+          {props.canApprove && props.status !== "scheduled" && props.status !== "published" && props.status !== "archived" ? (
             <Button size="sm" className="editor-action-publish font-display font-bold" onClick={props.onPublish} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : props.guardError ? gateHint : "النشر يعلّق حتى تُحل المخالفات القاطعة"}>
               اعتماد ونشر
             </Button>

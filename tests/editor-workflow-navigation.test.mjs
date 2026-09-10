@@ -75,6 +75,8 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
       render(); await new Promise(resolve => setTimeout(resolve, 10)); render();
     }
     await reset('scheduled');
+    assert.equal(button('اعتماد ونشر'), undefined);
+    assert.equal(button('إرسال للاعتماد'), undefined);
     assert.equal(nodes(render()).find(node => node.type === 'DetailsPanel').props.scheduleAt, '2030-01-02T01:30');
     await button('حفظ التعديلات').props.onClick();
     assert.equal(requests.length, 1);
@@ -92,6 +94,8 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
     assert.equal(requests[0].input.rescheduleAt, '2030-01-03T11:00:00.000Z');
     assert.equal(requests[0].input.updateScheduled, true);
     await reset('scheduled', false);
+    assert.equal(button('اعتماد ونشر'), undefined);
+    assert.equal(button('إرسال للاعتماد'), undefined);
     assert.ok(button('حفظ مسودة التعديل'));
     await button('حفظ مسودة التعديل').props.onClick();
     assert.equal(requests[0].input.updateScheduled, false);
@@ -124,6 +128,7 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
 
     await reset('draft');
     assert.equal(button('تحويل إلى مسودة'), undefined);
+    assert.ok(button('إرسال للاعتماد'));
     await button('اعتماد ونشر').props.onClick();
     assert.deepEqual(routes, ['/tahrir/stories']);
 
@@ -131,6 +136,10 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
     await button('حفظ المسودة').props.onClick(); assert.deepEqual(routes, []);
     await reset('draft');
     await autosaveOptions.onSave(); assert.deepEqual(routes, []); assert.equal(requests[0].input.autosave, true);
+
+    await reset('review');
+    assert.ok(button('اعتماد ونشر'));
+    assert.ok(button('إرسال للاعتماد'));
 
     await reset('published', false);
     assert.equal(button('تحويل إلى مسودة'), undefined);
