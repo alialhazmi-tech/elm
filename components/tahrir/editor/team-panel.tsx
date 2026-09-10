@@ -53,7 +53,7 @@ export function TeamPanel({ id, status, locked, dirty, getVersion, onVersion, on
     } catch (error) { setError(error instanceof Error && error.name !== "TimeoutError" ? error.message : "انتهت مهلة الاتصال. أغلق القسم وافتحه للتحقق من النتيجة قبل إعادة الإجراء."); }
     finally { actionLock.current = false; setPending(false); }
   }
-  return <section className="rounded-xl border bg-(--t-panel)" data-tour="team">
+  return <section className="editor-team rounded-xl border bg-(--t-panel)" data-tour="team">
     <button type="button" className="flex w-full items-center justify-between p-4 text-start font-semibold" aria-expanded={open} onClick={() => setOpen(!open)}>الإسناد وملاحظات المراجعة <span className="text-muted-foreground">{open ? "−" : "+"}</span></button>
     {open && <div className="space-y-4 border-t p-4">
       {!id ? <p className="text-sm text-muted-foreground">احفظ المسودة أولًا لتتمكن من إسنادها ومشاركة الملاحظات.</p> : <>

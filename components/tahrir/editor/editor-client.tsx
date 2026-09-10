@@ -40,8 +40,8 @@ import { useFullEditStream, type EditorMessage } from "./use-full-edit-stream";
 import { useLiveGuard } from "./use-live-guard";
 import { useStoryWorkflow, type StorySnapshot } from "./use-story-workflow";
 
-/** تبويب المفتّش: الفعّال ورقة بيضاء بنص كحلي فوق أرض العمل. */
-const INSPECTOR_TAB = "data-[state=active]:bg-card data-[state=active]:text-(--t-navy) data-[state=active]:shadow-none";
+/** تبويب المفتّش: خلفية مداد واضحة للحالة النشطة في الوضعين. */
+const INSPECTOR_TAB = "editor-inspector-tab data-[state=active]:shadow-none";
 
 interface EditorInitial {
   version: number;
@@ -347,7 +347,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
   const fullEditLoss = full.fullEdit ? formattingLoss(body, full.fullEdit.body.text) : null;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="tahrir-editor flex flex-col gap-3">
       <EditorPresence key={`presence:${id}`} id={id || null} />
       {recovery.recovery ? (
         <Alert variant={recovery.recoveryMeta?.stale ? "destructive" : "default"}>
@@ -422,10 +422,10 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
 
       <div className="grid items-start gap-3 xl:grid-cols-[minmax(0,1fr)_340px]">
         {/* clip يحافظ على الزوايا دون إنشاء حاوية تمرير تعطل تثبيت أدوات التنسيق. */}
-        <Card className="min-w-0 gap-0 overflow-clip border-t-[3px] border-t-(--t-navy) py-0" data-tour="paper">
-          <div className="grid gap-2 px-5 pt-5 pb-4">
+        <Card className="editor-paper min-w-0 gap-0 overflow-clip py-0" data-tour="paper">
+          <div className="editor-writing-field grid gap-2 px-5 pt-5 pb-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="story-title" className="text-xs font-semibold text-(--t-navy)">العنوان</label>
+              <label htmlFor="story-title" className="text-xs font-semibold text-foreground">العنوان</label>
               <span className={cn("text-[10.5px] tabular-nums", titleWords > 10 ? "text-(--t-block)" : "text-muted-foreground")}>{titleWords} من 10 كلمات</span>
             </div>
             <Textarea
@@ -436,13 +436,13 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
               onChange={(event) => onTitle(event.target.value)}
               onInput={autoGrow}
               ref={autoGrowOnMount}
-              className="min-h-20 resize-none overflow-hidden rounded-lg border-input bg-background px-3.5 py-3 font-display text-[22px] leading-relaxed font-bold text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground/55 focus-visible:bg-card focus-visible:ring-2 md:text-[22px]"
+              className="min-h-20 resize-none overflow-hidden rounded-lg border-input bg-background px-3.5 py-3 font-display text-[22px] leading-relaxed font-bold text-foreground shadow-none placeholder:font-normal placeholder:text-muted-foreground focus-visible:bg-card focus-visible:ring-2 md:text-[22px]"
             />
             <FieldGenerator tool="headlines" getDraft={getDraft} onApply={onTitle} disabled={full.fullBusy || busy} />
           </div>
-          <div className="grid gap-2 border-t px-5 py-4">
+          <div className="editor-writing-field grid gap-2 border-t px-5 py-4">
             <div className="flex items-center justify-between">
-              <label htmlFor="story-excerpt" className="text-xs font-semibold text-(--t-navy)">الموجز — قبل القراءة</label>
+              <label htmlFor="story-excerpt" className="text-xs font-semibold text-foreground">الموجز — قبل القراءة</label>
               <span className={cn("text-[10.5px] tabular-nums", excerptLength(excerpt) > EXCERPT_MAX_CHARS ? "text-(--t-block)" : "text-muted-foreground")}>{excerptLength(excerpt)} من {EXCERPT_MAX_CHARS} حرفًا</span>
             </div>
             <Textarea
@@ -455,7 +455,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
                 markDraftChanged();
                 setExcerpt(event.target.value);
               }}
-              className="min-h-22 resize-none rounded-lg border-input bg-background px-3.5 py-3 text-[14px] leading-relaxed text-foreground shadow-none placeholder:text-muted-foreground/55 focus-visible:bg-card focus-visible:ring-2"
+              className="min-h-22 resize-none rounded-lg border-input bg-background px-3.5 py-3 text-[14px] leading-relaxed text-foreground shadow-none placeholder:text-muted-foreground focus-visible:bg-card focus-visible:ring-2"
             />
             <FieldGenerator tool="excerpt" getDraft={getDraft} onApply={(text) => { markDraftChanged(); setExcerpt(text); }} disabled={full.fullBusy || busy} />
           </div>
@@ -479,9 +479,9 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
           <RichBody ref={richRef} initial={initial?.body ?? ""} onChange={(html) => onBody(html)} />
         </Card>
 
-        <Card dir="rtl" data-tahrir-panel className="gap-0 overflow-hidden bg-(--t-panel) py-0 text-right xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
-          <Tabs dir="rtl" value={inspectorTab} onValueChange={(value) => setInspectorTab(value as InspectorTab)}>
-            <div className="border-b bg-background p-1.5">
+        <Card dir="rtl" data-tahrir-panel className="editor-inspector gap-0 overflow-hidden bg-(--t-panel) py-0 text-start xl:sticky xl:top-[calc(var(--header-height)+3.75rem)]">
+          <Tabs value={inspectorTab} onValueChange={(value) => setInspectorTab(value as InspectorTab)}>
+            <div className="editor-inspector-tabs border-b p-1.5">
               <TabsList className="grid w-full grid-cols-4 bg-transparent">
                 <TabsTrigger value="details" className={INSPECTOR_TAB}>التفاصيل</TabsTrigger>
                 <TabsTrigger value="seo" className={INSPECTOR_TAB}>SEO</TabsTrigger>

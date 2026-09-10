@@ -18,7 +18,7 @@ export function ArticleLinks({ identity, editorId, published, dirty }: {
     try { await navigator.clipboard.writeText(url); setNotice({ text: "نُسخ الرابط.", url }); }
     catch { setNotice({ text: "تعذّر النسخ؛ حدّد الرابط وانسخه يدويًا.", url }); }
   }
-  return <div className="grid gap-3 border-b bg-(--t-panel) px-5 py-3" aria-label="روابط المادة">
+  return <div className="editor-links grid gap-3 border-b bg-(--t-panel) px-5 py-3" aria-label="روابط المادة">
     <div className="text-xs font-semibold">معاينة الرابط ومشاركته</div>
     <div className="grid gap-1">
       <label className="text-[11px] text-muted-foreground" htmlFor="article-public-link">رابط المادة</label>

@@ -263,7 +263,7 @@ function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
     <div
       role="toolbar"
       aria-label="أدوات تنسيق المتن"
-      className="sticky top-(--header-height) z-20 flex flex-wrap items-center gap-0.5 border-b bg-card px-2 py-1.5 shadow-sm"
+      className="editor-format-toolbar sticky top-(--header-height) z-20 flex flex-wrap items-center gap-0.5 border-b bg-card px-2 py-1.5 shadow-sm"
     >
       {tool("فقرة", state.paragraph && !state.quote, PilcrowIcon, () => chain().setParagraph().run())}
       {tool("عنوان فرعي كبير", state.h2, Heading2Icon, () => chain().toggleHeading({ level: 2 }).run())}

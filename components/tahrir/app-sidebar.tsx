@@ -66,6 +66,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
     <>
       <Sidebar
         side="right"
+        className="tahrir-navigation"
         collapsible={theme.sidebarCollapsible as SidebarCollapsible}
         variant={theme.sidebarVariant as SidebarVariant}
       >
@@ -113,7 +114,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
         <SidebarContent>
           {groups.map((group) => (
             <SidebarGroup key={group.title}>
-              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+              <SidebarGroupLabel className="font-semibold text-sidebar-foreground/80">{group.title}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {group.items.map((item) => {
@@ -138,7 +139,7 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
                             asChild
                             isActive={active}
                             tooltip={item.experimental ? `${item.title} — تجريبية` : item.title}
-                            className="data-active:shadow-[inset_-2px_0_0_0_var(--sidebar-primary)]"
+                            className="tahrir-nav-link"
                           >
                             <Link data-tour-link={item.href} href={item.href} onClick={closeMobile}>
                               <item.icon />

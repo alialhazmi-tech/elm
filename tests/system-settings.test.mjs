@@ -79,7 +79,9 @@ test("مفتش المحرر وتبويباته ومحتواها تُفرض عل�
   ]);
 
   assert.match(editor, /<Card dir="rtl"/);
-  assert.match(editor, /<Tabs dir="rtl"/);
+  // Radix يرث الجهة من المزوّد المشترك؛ الغلاف ومحتوى اللوحة يحتفظان بجهتهما.
+  const layout = await readFile(new URL("../app/tahrir/layout.tsx", import.meta.url), "utf8");
+  assert.match(layout, /<DirectionProvider dir="rtl">/);
   for (const panel of [details, seo, guard, ai]) assert.match(panel, /dir="rtl"/);
   assert.match(details, /<Select dir="rtl"/);
   assert.match(details, /<Input dir="ltr" placeholder="\/uploads/);

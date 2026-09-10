@@ -16,6 +16,7 @@
 /* هوية العلم ولوحة الكِت المحايدة، ثم لوحات الكِت الثماني والألوان الـ17 والزوايا والمقياس. */
 @import "./presets.css";
 @import "./themes.css";
+@import "./editor-colors.css";
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -115,12 +116,6 @@
   }
 }
 .th :is(button, a, input, textarea, select):focus-visible { outline-offset: 2px; }
-
-/* لوحة الأدوات (المفتّش): عناصر التحكم بيضاء فوق اللوحة المائلة للرمادي — الأزرار المحدّدة تحمل bg-background
-   (أرض العمل) والحقول شفافة، فتختفي على اللوحة. التبويب الفعّال ورقة بيضاء بنص كحلي. */
-.th [data-tahrir-panel] :is([data-slot="button"][data-variant="outline"], [data-slot="input"], [data-slot="textarea"], [data-slot="select-trigger"], [data-slot="toggle-group-item"]) { background-color: var(--card); }
-.th [data-tahrir-panel] [data-slot="tabs-list"] { background-color: var(--background); }
-.th [data-tahrir-panel] [data-slot="tabs-trigger"][data-state="active"] { background-color: var(--card); color: var(--t-navy); box-shadow: none; }
 
 /* ===== متن المحرر (Tiptap) — طباعة تحريرية تطابق ما يراه القارئ ===== */
 .tahrir-body {
