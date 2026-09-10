@@ -71,7 +71,7 @@ try {
           builder.onResolve(
             {
               filter:
-                /^(?:@\/lib\/db|next\/cache|next\/navigation|@\/lib\/membership\/auth|@\/lib\/membership\/email\/notifications)$/,
+                /^(?:@\/lib\/db|next\/cache|next\/headers|next\/navigation|@\/lib\/membership\/auth|@\/lib\/membership\/email\/notifications)$/,
             },
             (args) => ({ path: args.path, namespace: "fixture" }),
           );
@@ -82,6 +82,8 @@ try {
                 "export function getDb(){return globalThis.__memberAccountDb.getStore()}",
               "next/cache":
                 "export const unstable_cache=load=>load; export function revalidateTag(){} export function revalidatePath(){}",
+              "next/headers":
+                "export const cookies=async()=>({delete:name=>globalThis.__memberAccountCalls.push({method:'deleteCookie',name})});",
               "next/navigation":
                 'export function redirect(url){throw new Error("REDIRECT:"+url)}',
               "@/lib/membership/email/notifications":
@@ -385,7 +387,7 @@ try {
       ).success,
     );
     assert.equal(
-      globalThis.__memberAccountCalls.at(-1).body.email,
+      globalThis.__memberAccountCalls.findLast(call=>call.method==='verifyEmail').body.email,
       "account-a@example.invalid",
     );
     assert.equal(globalThis.__memberEmailNotifications.length, 1);

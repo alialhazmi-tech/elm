@@ -2,6 +2,8 @@
 import { getMemberSession } from "@/lib/membership/session";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { NEON_AUTH_SESSION_DATA_COOKIE_NAME } from "@neondatabase/auth/server";
 import { memberAuth, memberAuthConfigured } from "@/lib/membership/auth";
 import { saveMemberInterests } from "@/lib/membership/profile";
 import { MEMBER_INTEREST_IDS } from "@/lib/membership/interests";
@@ -212,6 +214,9 @@ export async function verifyMemberEmail(
     });
     if (result.error)
       return { error: "الرمز غير صحيح أو انتهت صلاحيته. اطلب رمزًا جديدًا." };
+    // نجاح OTP لا يجدّد كوكي بيانات الجلسة دائمًا؛ لا نترك حالة التوثيق القديمة.
+    (await cookies()).delete(NEON_AUTH_SESSION_DATA_COOKIE_NAME);
+    revalidatePath("/account/verify-email");
     notifyAccountChange({
       kind: "welcome",
       email: user.email,
