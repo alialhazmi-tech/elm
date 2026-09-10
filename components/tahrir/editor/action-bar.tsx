@@ -80,8 +80,8 @@ export function ActionBar(props: ActionBarProps) {
   const gateHint = props.guardError ? "تعذر الاتصال بالحارس — أعد الفحص قبل الاعتماد" : "البوابة مغلقة حتى يكتمل الحارس بلا مخالفة قاطعة";
 
   return (
-    <Card className="gap-0 bg-(--t-navy-bg) py-0 shadow-md">
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+    <Card className="editor-actions gap-0 bg-card py-0 shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-3">
         <span className="text-[11px] text-muted-foreground">{props.isNew ? "مادة جديدة" : "تحرير المادة"}</span>
         <StatusPill status={props.status} label={STATUS_LABELS[props.status] ?? props.status} />
         <span data-tour="save-status" role="status" aria-live="polite" className={cn("text-[11px]", autosave.state === "error" ? "text-destructive" : "text-muted-foreground")}>
@@ -122,18 +122,18 @@ export function ActionBar(props: ActionBarProps) {
               تحويل إلى مسودة
             </Button>
           ) : null}
-          <Button size="sm" variant="outline" onClick={props.onSave} disabled={props.busy || props.workflowBusy || (props.status === "published" && props.canApprove && !props.gateOpen)}>
+          <Button size="sm" variant="outline" className="editor-action-save" onClick={props.onSave} disabled={props.busy || props.workflowBusy || (props.status === "published" && props.canApprove && !props.gateOpen)}>
             <SaveIcon data-icon="inline-start" />
             {props.busy ? "يحفظ…" : props.status === "published" ? props.canApprove ? "تحديث المادة" : "حفظ مسودة التعديل" : "حفظ المسودة"}
           </Button>
           {props.canSubmit && props.status !== "published" && props.status !== "archived" ? (
-            <Button size="sm" variant="secondary" onClick={props.onSubmit} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : gateHint}>
+            <Button size="sm" variant="secondary" className="editor-action-submit" onClick={props.onSubmit} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : gateHint}>
               <SendIcon data-icon="inline-start" className="rtl:-scale-x-100" />
               إرسال للاعتماد
             </Button>
           ) : null}
           {props.canApprove && props.status !== "published" && props.status !== "archived" ? (
-            <Button size="sm" className="font-display font-bold" onClick={props.onPublish} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : props.guardError ? gateHint : "النشر يعلّق حتى تُحل المخالفات القاطعة"}>
+            <Button size="sm" className="editor-action-publish font-display font-bold" onClick={props.onPublish} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : props.guardError ? gateHint : "النشر يعلّق حتى تُحل المخالفات القاطعة"}>
               اعتماد ونشر
             </Button>
           ) : null}

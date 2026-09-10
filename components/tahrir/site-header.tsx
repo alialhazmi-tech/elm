@@ -31,7 +31,7 @@ export function SiteHeader({ today, user, actorId, permissions }: { today: strin
   const title = pageTitleFor(pathname, status);
 
   return (
-    <header className="sticky top-0 z-40 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border/80 bg-background/90 backdrop-blur-md md:rounded-t-xl">
+    <header className="tahrir-site-header sticky top-0 z-40 flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border/80 bg-card/95 backdrop-blur-md md:rounded-t-xl">
       <div className="flex w-full items-center gap-1 px-3 sm:px-4 lg:gap-2">
         <Button
           onClick={toggleSidebar}
@@ -43,7 +43,7 @@ export function SiteHeader({ today, user, actorId, permissions }: { today: strin
           {open ? <PanelRightCloseIcon /> : <PanelRightOpenIcon />}
         </Button>
         <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-4" />
-        <Breadcrumb className="hidden min-w-0 sm:block">
+        <Breadcrumb className="tahrir-header-context hidden min-w-0 sm:block">
           <BreadcrumbList className="flex-nowrap">
             <BreadcrumbItem className="hidden sm:block">
               <BreadcrumbLink asChild>
@@ -56,8 +56,8 @@ export function SiteHeader({ today, user, actorId, permissions }: { today: strin
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <Separator orientation="vertical" className="mx-1 hidden data-[orientation=vertical]:h-4 md:block" />
-        <span className="hidden text-xs text-muted-foreground md:inline">{today}</span>
+        <Separator orientation="vertical" className="tahrir-header-context mx-1 hidden data-[orientation=vertical]:h-4 md:block" />
+        <span className="tahrir-header-context hidden text-xs text-muted-foreground md:inline">{today}</span>
 
         <div className="ms-auto flex shrink-0 items-center gap-1">
           <HelpTour actorId={actorId} permissions={permissions} />

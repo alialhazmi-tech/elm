@@ -65,10 +65,10 @@ function hoursAhead(hours: number): string {
 
 function Section({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("grid gap-2 border-t p-3 first:border-t-0", className)}>
-      <div className="text-[11px] font-semibold text-(--t-navy)">{title}</div>
+    <section className={cn("editor-detail-section grid gap-2 p-3", className)}>
+      <h3 className="editor-detail-heading text-xs font-semibold">{title}</h3>
       {children}
-    </div>
+    </section>
   );
 }
 
@@ -79,7 +79,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
   const scheduleIso = props.scheduleAt ? riyadhWallTimeToIso(props.scheduleAt) : null;
 
   return (
-    <div className="grid text-right" dir="rtl">
+    <div className="grid gap-2.5 p-2.5 text-start" dir="rtl">
       {props.canApprove ? (
         <>
           {props.status !== "archived" ? (
