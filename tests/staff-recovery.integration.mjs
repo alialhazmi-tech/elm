@@ -58,7 +58,8 @@ try {
   if (previous === undefined) delete process.env.AUTH_SECRET; else process.env.AUTH_SECRET = previous;
   delete globalThis.__staffRecoveryDb;
   await pool?.end();
-  await admin.query(`drop database if exists "${name}" with (force)`);
+  // Pool shutdown can resolve before sockets close; let PostgreSQL wait instead of terminating them.
+  await admin.query(`drop database if exists "${name}"`);
   await admin.end();
   await rm(directory, { recursive: true, force: true });
 }
