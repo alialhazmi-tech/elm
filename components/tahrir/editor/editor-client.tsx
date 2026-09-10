@@ -18,7 +18,7 @@ import type { Finding } from "@/lib/policy/types";
 import type { GuardControls } from "@/lib/policy";
 import { applyTextPreservingFormatting, formattingLoss } from "@/lib/tahrir/editor/preserve-formatting";
 import { describeRecoveryDiff, recoveryDiffLabel } from "@/lib/tahrir/editor/recovery-diff";
-import { riyadhWallTimeToIso } from "@/lib/tahrir/riyadh-time";
+import { isoToRiyadhWallTime, riyadhWallTimeToIso } from "@/lib/tahrir/riyadh-time";
 import { cn } from "@/lib/utils";
 import { uploadStoryImageFile } from "@/lib/story-image-upload";
 
@@ -58,6 +58,7 @@ interface EditorInitial {
   pinned: boolean;
   breakingUntil: string | null;
   status: string;
+  scheduledAt?: string | null;
   publishedAt?: string | null;
   updatedAt?: string | null;
   seoTitle: string;
@@ -73,6 +74,7 @@ interface Props {
   actorId: string;
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
+  canSchedule?: boolean;
   canSubmit?: boolean;
   /** رابط سجل النسخ واستعادتها — يظهر في شريط الإجراءات بجانب السجل الزمني. */
   historyHref?: string | null;
@@ -110,7 +112,7 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * use-story-workflow (الحفظ وسير الاعتماد)، use-live-guard (الحارس الحي)، use-full-edit-stream (التحرير الشامل).
  * الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ actorId, canApprove, canSubmit = true, historyHref = null, guardControls, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ actorId, canApprove, canSchedule = false, canSubmit = true, historyHref = null, guardControls, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [revisionOf, setRevisionOf] = useState(initial?.revisionOf ?? null);
   const [id, setId] = useState(initial?.id ?? "");
@@ -125,7 +127,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
   const [format, setFormat] = useState(initial?.format ?? "news");
   const [pinned, setPinned] = useState(initial?.pinned ?? false);
   const [breakingUntil, setBreakingUntil] = useState<string | null>(initial?.breakingUntil ?? null);
-  const [scheduleAt, setScheduleAt] = useState("");
+  const [scheduleAt, setScheduleAt] = useState(() => isoToRiyadhWallTime(initial?.scheduledAt));
   const [status, setStatus] = useState(initial?.status ?? "draft");
   const [archiveEvent, setArchiveEvent] = useState(initial?.archiveEvent ?? null);
   const [seoTitle, setSeoTitle] = useState(initial?.seoTitle ?? "");
@@ -152,6 +154,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
   const tabToken = useDraftTabToken();
 
   const workflow = useStoryWorkflow({
+    canSchedule,
     router,
     initialId: initial?.id ?? "",
     initialVersion: initial?.version ?? 0,
@@ -175,6 +178,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
       setSavedIdentity({ id: data.revisionOf ?? data.id, section: data.section, slug: data.slug });
       setRevisionOf(data.revisionOf);
       setStatus(data.status);
+      if (data.scheduledAt) setScheduleAt(isoToRiyadhWallTime(data.scheduledAt));
       setId(data.id);
       setBody(current => current === recoverySnapshot.body ? saved.body : current);
       setSlug(current => current === saved.slug ? data.slug : current);
@@ -381,6 +385,7 @@ export function EditorClient({ actorId, canApprove, canSubmit = true, historyHre
         id={id}
         status={status}
         canApprove={canApprove}
+        canSchedule={canSchedule}
         canSubmit={canSubmit}
         historyHref={historyHref}
         busy={busy}

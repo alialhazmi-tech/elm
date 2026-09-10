@@ -12,7 +12,7 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
   const routes = []; const requests = []; const confirmed = [];
   let autosaveOptions;
   globalThis.__editorWorkflow = {
-    useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = initial; return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }]; },
+    useState(initial) { const i = cursor++; if (!(i in slots)) slots[i] = typeof initial === 'function' ? initial() : initial; return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }]; },
     useRef(initial) { const i = cursor++; return slots[i] ??= { current: initial }; },
     useCallback(fn) { return fn; },
     useEffect(fn) { const i = cursor++; if (!(i in slots)) { slots[i] = true; effects.push(fn); } },
@@ -64,15 +64,37 @@ test('editor publishes updates, withdraws to draft and navigates only after conf
       if (url.endsWith('/publish')) return publishFailure ? Response.json({ error: 'رفض النشر' }, { status: 422 }) : Response.json({ id: 'original', version: 5 });
       if (holdSave) await new Promise(resolve => { finishSave = resolve; });
       if (saveFailure) return Response.json({ error: 'تعارض الحفظ' }, { status: 409 });
+      if (input.updateScheduled) return Response.json({ id: 'original', version: 5, status: 'scheduled', revisionOf: null, section: 'news', slug: 'article', scheduledAt: input.rescheduleAt ?? '2030-01-01T22:30:00.000Z' });
       return Response.json({ id: input.returnToDraft ? 'original' : 'revision', version: input.returnToDraft ? 5 : 1, status: 'draft', revisionOf: input.returnToDraft ? null : 'original', section: 'news', slug: 'article' });
     };
     async function reset(status = 'published', canApprove = true) {
       for (const cleanup of cleanups.splice(0)) cleanup?.();
       slots.length = 0; routes.length = 0; requests.length = 0; confirmed.length = 0;
       saveFailure = false; publishFailure = false; holdSave = false;
-      props = { actorId: 'editor', canApprove, guardControls: { editorialGuard: false, requireImageRights: false }, series: [], sections: [], recentMedia: [], initial: { ...initial, status } };
+      props = { actorId: 'editor', canApprove, canSchedule: canApprove, guardControls: { editorialGuard: false, requireImageRights: false }, series: [], sections: [], recentMedia: [], initial: { ...initial, status, scheduledAt: status === 'scheduled' ? '2030-01-01T22:30:00.000Z' : null } };
       render(); await new Promise(resolve => setTimeout(resolve, 10)); render();
     }
+    await reset('scheduled');
+    assert.equal(nodes(render()).find(node => node.type === 'DetailsPanel').props.scheduleAt, '2030-01-02T01:30');
+    await button('حفظ التعديلات').props.onClick();
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].input.updateScheduled, true);
+    assert.equal(requests[0].input.rescheduleAt, undefined);
+    assert.equal(requests[0].input.id, 'original');
+    assert.deepEqual(routes, []);
+    assert.equal(nodes(render()).find(node => node.type === 'DetailsPanel').props.scheduleAt, '2030-01-02T01:30');
+    assert.ok(button('حفظ التعديلات'));
+    await reset('scheduled');
+    const details = nodes(render()).find(node => node.type === 'DetailsPanel');
+    details.props.onScheduleAt('2030-01-03T14:00');
+    await nodes(render()).find(node => node.type === 'DetailsPanel').props.onSchedule();
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].input.rescheduleAt, '2030-01-03T11:00:00.000Z');
+    assert.equal(requests[0].input.updateScheduled, true);
+    await reset('scheduled', false);
+    assert.ok(button('حفظ مسودة التعديل'));
+    await button('حفظ مسودة التعديل').props.onClick();
+    assert.equal(requests[0].input.updateScheduled, false);
     await reset();
     assert.equal(nodes(render()).find(node=>node.type==='StoryTimeline').props.id,'original');
     assert.equal(button('تحديث المادة').props.disabled, false);

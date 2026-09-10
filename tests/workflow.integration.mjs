@@ -426,6 +426,37 @@ try {
   assert.equal((await admin.query("select count(*)::int n from story_versions where story_id='autosave-draft'")).rows[0].n,2);
   delete globalThis.__revalidatedPaths;delete globalThis.__corpusInvalidations;
   checks++;
+  // Scheduled edits update one original atomically, preserving its exact deadline unless explicitly changed.
+  const scheduledInput = {id:'scheduled-edit-fixture',expectedVersion:1,title:'Updated scheduled title',body:'Scheduled body',updateScheduled:true,autosave:false,slug:'must-not-change',section:'world'};
+  const originalDeadline = '2030-01-01T22:30:45.123Z';
+  await admin.query("insert into stories(id,slug,title,section,status,scheduled_at,author_id,author_name,version) values ('scheduled-edit-fixture','scheduled-original','Original scheduled title','news','scheduled',$1,'login-fixture','Original author',1)",[originalDeadline]);
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest(scheduledInput)))).status,403);
+  await admin.query("insert into user_permissions(user_id,permission_key,effect) values('login-fixture','story.schedule','allow')");
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...scheduledInput,autosave:true})))).status,409);
+  const scheduledResponse=await withDb(()=>subject.storySaveApi(autoRequest(scheduledInput)));
+  assert.equal(scheduledResponse.status,200);const savedScheduled=await scheduledResponse.json();
+  assert.equal(savedScheduled.id,scheduledInput.id);assert.equal(savedScheduled.status,'scheduled');assert.equal(savedScheduled.revisionOf,null);assert.equal(savedScheduled.version,2);assert.equal(savedScheduled.scheduledAt,originalDeadline);
+  let persistedScheduled=await withDb(()=>subject.getStory(scheduledInput.id));
+  assert.equal(persistedScheduled.title,scheduledInput.title);assert.equal(persistedScheduled.scheduledAt,originalDeadline);
+  assert.equal(persistedScheduled.slug,'scheduled-original');assert.equal(persistedScheduled.section,'news');assert.equal(persistedScheduled.authorName,'Original author');
+  assert.equal((await admin.query("select count(*)::int n from stories where revision_of='scheduled-edit-fixture'")).rows[0].n,0);
+  assert.equal((await admin.query("select count(*)::int n from story_versions where story_id='scheduled-edit-fixture'")).rows[0].n,1);
+  assert.equal((await admin.query("select count(*)::int n from audit_log where story_id='scheduled-edit-fixture' and action='scheduled:update'")).rows[0].n,1);
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest(scheduledInput)))).status,409);
+  for(const invalid of ['', 'bad', '2000-01-01T00:00:00Z']) assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...scheduledInput,expectedVersion:2,rescheduleAt:invalid})))).status,400);
+  const rescheduled=await withDb(()=>subject.storySaveApi(autoRequest({...scheduledInput,expectedVersion:2,rescheduleAt:'2030-02-01T15:00:00+03:00'})));
+  assert.equal(rescheduled.status,200);assert.equal((await rescheduled.json()).scheduledAt,'2030-02-01T12:00:00.000Z');
+  const competingScheduled=await Promise.all([1,2].map(i=>withDb(()=>subject.storySaveApi(autoRequest({...scheduledInput,expectedVersion:3,title:`Scheduled contender ${i}`})))));
+  assert.deepEqual(competingScheduled.map(response=>response.status).sort(),[200,409]);
+  persistedScheduled=await withDb(()=>subject.getStory(scheduledInput.id));assert.equal(persistedScheduled.version,4);assert.equal(persistedScheduled.status,'scheduled');assert.equal(persistedScheduled.scheduledAt,'2030-02-01T12:00:00.000Z');
+  const priorSettings=(await admin.query("select data from ai_settings where id='main'")).rows[0].data;
+  await admin.query("update ai_settings set data=$1 where id='main'",[JSON.stringify({governance:{editorialGuard:true,requireImageRights:true}})]);subject.invalidateAiSettingsCache();
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...scheduledInput,expectedVersion:4,body:''})))).status,422);
+  assert.equal((await withDb(()=>subject.getStory(scheduledInput.id))).version,4);
+  await admin.query("update ai_settings set data=$1 where id='main'",[JSON.stringify(priorSettings)]);subject.invalidateAiSettingsCache();
+  await admin.query("update stories set status='published',version=5,scheduled_at=null where id='scheduled-edit-fixture'");
+  assert.equal((await withDb(()=>subject.storySaveApi(autoRequest({...scheduledInput,expectedVersion:5})))).status,409);
+  checks++;
   globalThis.__alelmSession = priorSession; checks++;
   // Editorial collaboration uses real transactions, live assignment permissions and private notices.
   await admin.query(`insert into roles(id,label,description,created_at,updated_at) values ('team_editor','محرر اختبار','test',now()::text,now()::text) on conflict do nothing`);

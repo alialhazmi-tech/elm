@@ -28,6 +28,7 @@ export interface ActionBarProps {
   id: string;
   status: string;
   canApprove: boolean;
+  canSchedule: boolean;
   canSubmit: boolean;
   historyHref?: string | null;
   busy: boolean;
@@ -122,9 +123,9 @@ export function ActionBar(props: ActionBarProps) {
               تحويل إلى مسودة
             </Button>
           ) : null}
-          <Button size="sm" variant="outline" className="editor-action-save" onClick={props.onSave} disabled={props.busy || props.workflowBusy || (props.status === "published" && props.canApprove && !props.gateOpen)}>
+          <Button size="sm" variant="outline" className="editor-action-save" onClick={props.onSave} disabled={props.busy || props.workflowBusy || ((props.status === "published" && props.canApprove || props.status === "scheduled" && props.canSchedule) && !props.gateOpen)}>
             <SaveIcon data-icon="inline-start" />
-            {props.busy ? "يحفظ…" : props.status === "published" ? props.canApprove ? "تحديث المادة" : "حفظ مسودة التعديل" : "حفظ المسودة"}
+            {props.busy ? "يحفظ…" : props.status === "published" ? props.canApprove ? "تحديث المادة" : "حفظ مسودة التعديل" : props.status === "scheduled" ? props.canSchedule ? "حفظ التعديلات" : "حفظ مسودة التعديل" : "حفظ المسودة"}
           </Button>
           {props.canSubmit && props.status !== "published" && props.status !== "archived" ? (
             <Button size="sm" variant="secondary" className="editor-action-submit" onClick={props.onSubmit} disabled={!props.gateOpen || props.busy || props.workflowBusy} title={props.gateOpen ? undefined : gateHint}>

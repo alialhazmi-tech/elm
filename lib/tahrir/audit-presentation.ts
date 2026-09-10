@@ -24,6 +24,7 @@ const actions: Record<string, [string, AuditGroup, AuditTone?]> = {
   "status:draft": ["إعادة إلى المسودة", "content"],
   "status:review": ["رفع للاعتماد", "content"],
   "status:scheduled": ["جدولة النشر", "content"],
+  "scheduled:update": ["تحديث مادة مجدولة", "content", "success"],
   "status:published": ["نشر مادة", "content", "success"],
   "status:archived": ["أرشفة مادة", "content", "warning"],
   "story:assign": ["إسناد مادة", "content"],

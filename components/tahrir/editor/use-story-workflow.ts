@@ -32,6 +32,7 @@ interface Options {
   initialVersion: number;
   status: string;
   canApprove: boolean;
+  canSchedule: boolean;
   setMessage: (message: EditorMessage) => void;
   /** اللقطة الحالية بمتن المحرر الغني. */
   getSnapshot: () => StorySnapshot;
@@ -75,7 +76,7 @@ export function useStoryWorkflow(options: Options) {
     router.refresh();
   }
 
-  async function save(automatic = false, returnToDraft = false): Promise<string | null> {
+  async function save(automatic = false, returnToDraft = false, updateScheduled = false, rescheduleAt?: string): Promise<string | null> {
     if (saveLock.current || (automatic && workflowBusy)) return null;
     const invalid = options.validate();
     if (invalid) {
@@ -95,10 +96,13 @@ export function useStoryWorkflow(options: Options) {
         expectedVersion: versionRef.current,
         autosave: automatic,
         returnToDraft,
+        updateScheduled,
+        rescheduleAt,
         image: savedSnapshot.image || null,
         videoUrl: savedSnapshot.videoUrl.trim() || null,
       });
       if (!result.ok) {
+        if (updateScheduled && result.status === 422) await options.onGuardRejected();
         options.onSaveFailed();
         setMessage({ kind: "err", text: result.timedOut ? SAVE_TIMEOUT_MESSAGE : result.error });
         return null;
@@ -108,7 +112,7 @@ export function useStoryWorkflow(options: Options) {
       saveId.current = data.id;
       options.onSaved(data, savedSnapshot);
       window.history.replaceState(null, "", `/tahrir/editor/${data.id}`);
-      setMessage(automatic ? null : { kind: "ok", text: data.revisionOf ? "حُفظت مسودة التعديل؛ النسخة المعتمدة باقية حتى النشر." : "حُفظت المسودة." });
+      setMessage(automatic ? null : { kind: "ok", text: data.status === "scheduled" ? rescheduleAt ? "حُفظت التعديلات وعُدّل موعد النشر." : "حُفظت التعديلات مع الإبقاء على موعد النشر." : data.revisionOf ? "حُفظت مسودة التعديل؛ النسخة المعتمدة باقية حتى النشر." : "حُفظت المسودة." });
       return data.id;
     } finally { saveLock.current = false; setBusy(false); }
   }
@@ -119,7 +123,7 @@ export function useStoryWorkflow(options: Options) {
     const updatingPublishedStory = status === "published";
     setWorkflowBusy(true);
     try {
-      if (await save() && updatingPublishedStory) returnToStories();
+      if (await save(false, false, status === "scheduled" && options.canSchedule) && updatingPublishedStory) returnToStories();
     } finally { if (!navigating.current) setWorkflowBusy(false); }
   }
 
@@ -162,6 +166,10 @@ export function useStoryWorkflow(options: Options) {
       const scheduledAt = options.getScheduleAt();
       if (!scheduledAt) {
         setMessage({ kind: "err", text: "اختر موعد الجدولة أولًا." });
+        return;
+      }
+      if (status === "scheduled" && options.canSchedule) {
+        await save(false, false, true, scheduledAt);
         return;
       }
       const savedId = await save();

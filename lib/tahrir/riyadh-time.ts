@@ -8,6 +8,13 @@ import { riyadhDayBounds } from "./time.ts";
 const RIYADH_OFFSET = "+03:00";
 const WALL_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
+/** يملأ datetime-local من الموعد المحفوظ بتوقيت الرياض، مستقلًا عن توقيت الجهاز. */
+export function isoToRiyadhWallTime(value?: string | null): string {
+  if (!value) return "";
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? "" : new Date(timestamp + 3 * 60 * 60 * 1000).toISOString().slice(0, 16);
+}
+
 /** يحوّل قيمة datetime-local (بلا منطقة) إلى ISO بافتراض أن المدخل بتوقيت الرياض؛ null للمدخل غير الصالح. */
 export function riyadhWallTimeToIso(value: string): string | null {
   const match = WALL_TIME.exec(value.trim());
