@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { stories } from "../db/schema.ts";
 
 import { LEGACY_REDIRECTS, TAG_TO_SERIES } from "../lib/content/redirects.ts";
 
@@ -69,7 +70,9 @@ test("المزود لا يحمّل الأرشيف كله: نافذة حديثة 
   assert.match(provider, /pageBySection/u, "لا ترقيم SQL للأقسام");
   assert.match(provider, /pageBySeries/u, "لا ترقيم SQL للسلاسل");
   assert.match(provider, /storiesTable\.searchText/u, "البحث لا يستخدم النص المفهرس");
-  assert.match(await read("db/schema.ts"), /generatedAlwaysAs\(sql`translate\(lower\(/u, "النص المفهرس بلا تطبيع SQL تلقائي");
+  // تحقق من مخطط التشغيل؛ دقة التطبيع وتحديث الصفوف تختبران سلوكيًا في public-search.integration.
+  assert.equal(stories.searchText.generated?.mode, "stored", "نص البحث يجب أن يُخزن بعد توليده");
+  assert.equal(stories.searchText.generated?.type, "always", "نص البحث يجب أن يتحدث تلقائيًا عند الحفظ");
   assert.doesNotMatch(
     provider,
     /db\s*\n?\s*\.select\(\)\s*\n?\s*\.from\(storiesTable\)\s*\n?\s*\.where\(eq\(storiesTable\.status, "published"\)\)\s*\n?\s*\.orderBy\(desc\(storiesTable\.publishedAt\), asc\(storiesTable\.id\)\);/u,

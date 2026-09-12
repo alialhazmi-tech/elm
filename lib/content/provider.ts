@@ -27,7 +27,7 @@ import type {
   Story,
 } from "./types";
 import { storyHref } from "./types";
-import { normalizeArabic } from "@/lib/policy/normalize";
+import { normalizeSearchText } from "./search-normalize";
 import { storyKeywords } from "./keywords";
 import { cachedPublicQuery, invalidatePublicContent } from "./cache";
 
@@ -508,7 +508,7 @@ export async function listByFormat(format: string, limit = 40): Promise<Story[]>
 
 /** يجزئ الاستعلام إلى كلمات مطبّعة وينزع «الـ» وأخواتها من البداية لرفع الاستدعاء. */
 export function searchTokens(query: string): string[] {
-  return normalizeArabic(query)
+  return normalizeSearchText(query)
     .toLowerCase()
     .replace(/[%_\\]/g, " ")
     .split(/\s+/)
@@ -534,7 +534,7 @@ async function searchFromDb(db: Db, tokens: string[]): Promise<Story[]> {
 function searchSeed(tokens: string[]): Story[] {
   return seedAll
     .filter((story) => {
-      const haystack = normalizeArabic(
+      const haystack = normalizeSearchText(
         `${story.title} ${story.excerpt} ${story.eyebrow} ${(story.keywords ?? []).join(" ")}`,
       ).toLowerCase();
       return tokens.every((token) => haystack.includes(token));
@@ -902,7 +902,7 @@ export const seedContentProvider: ContentProvider = {
     const tokens = searchTokens(query);
     if (tokens.length === 0) return [];
     return dbOrSeed(
-      `search:${tokens.join("|")}`,
+      `search:v2:${tokens.join("|")}`,
       DB_CACHE_MS,
       (db) => searchFromDb(db, tokens),
       () => searchSeed(tokens),

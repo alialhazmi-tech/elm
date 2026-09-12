@@ -42,4 +42,11 @@ select 'public.stories_editor_search_trgm_idx' where not exists (
   where indexrelid=to_regclass('public.stories_editor_search_trgm_idx')
     and indrelid=to_regclass('public.stories') and indisvalid and indisready
 )
+union all
+select 'public.stories.search_text.normalization' where not exists (
+  select 1 from pg_attrdef d
+  join pg_attribute a on a.attrelid=d.adrelid and a.attnum=d.adnum
+  where d.adrelid=to_regclass('public.stories') and a.attname='search_text'
+    and pg_get_expr(d.adbin,d.adrelid) like '%alelm_editor_search_normalize%'
+)
 order by missing`;

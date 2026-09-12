@@ -1,12 +1,14 @@
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
 import { build } from 'esbuild';
 import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { normalizeArabic, toLatinDigits } from '../lib/policy/normalize.ts';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 
 const source = process.env.TEST_DATABASE_URL;
 if (!source || !/^alelm_test/.test(new URL(source).pathname.slice(1))) throw new Error('Isolated TEST_DATABASE_URL named alelm_test* required');
+if (!['localhost','127.0.0.1'].includes(new URL(source).hostname)) throw new Error('Local database required');
 const database = 'alelm_test_search_' + process.pid;
 const url = new URL(source); url.pathname = '/' + database;
 const admin = new pg.Client({ connectionString: source }); await admin.connect();
@@ -31,18 +33,42 @@ try {
     { title: 'تاريخ', keywords: ['آثار', 'مسؤوليّة', 'إنتاج'] },
     { title: 'Numbers %_ 2030', keywords: { legacy: 'بحث' } },
     { title: 'الذكاء الاصطناعي', status: 'draft' },
+    { title: 'دواء شائع للسكري قد يبطئ الشيخوخة' },
+    { title: 'مادة أخرى', excerpt: 'أبحاث الشَّيخوخة', status:'draft' },
+    { title: 'مادة صحية', excerpt: 'أبحاث الشَّيخوخة' },
+    { title: 'تقرير', keywords:['الشيخوخة'] },
+    { title: 'تنبيه', eyebrow:'الشيخوخة' },
+    { title: 'مادة مؤرشفة', excerpt:'الشيخوخة',status:'archived' },
+    { title: 'رُؤية ٢٠٣٠' },
   ];
   for (let i = 0; i < fixtures.length; i++) await globalThis.__searchDb.insert(stories).values({ id: 'fixture-' + i, slug: 'fixture-' + i, section: 'health', publishedAt: '2026-09-01T00:00:00Z', ...fixtures[i] });
+  // Reproduce the previous schema on populated rows, then exercise the real repair migration.
+  await client.query("alter table stories alter column search_text set expression as (translate(lower(title || ' ' || excerpt || ' ' || eyebrow || ' ' || coalesce(keywords::text,'')), 'أإآٱىةؤئًٌٍَُِّْٰـ', 'اايهوي'))");
+  assert.equal((await seedContentProvider.search('الشيخوخة')).length,0);
+  assert.ok((await client.query(DATABASE_READINESS_SQL)).rows.some(row=>row.missing==='public.stories.search_text.normalization'));
+  const migration=await readFile('drizzle/0017_public_search_normalization.sql','utf8');
+  const applyRepair=async()=>{await client.query('begin');try {await client.query(migration);await client.query('commit');}catch(error){await client.query('rollback');throw error;}};
+  await applyRepair();
+  const storage=(await client.query("select relfilenode from pg_class where oid='stories'::regclass")).rows[0].relfilenode;
+  await applyRepair();
+  assert.equal((await client.query("select relfilenode from pg_class where oid='stories'::regclass")).rows[0].relfilenode,storage,'Replaying the repair must not rewrite the table again');
   await client.query("insert into stories(id,slug,section,title,published_at) select 'bulk-'||n,'bulk-'||n,'health','أخبار متنوعة '||n,'2026-08-01' from generate_series(1,30000) n");
-  const old = "translate(lower(concat_ws(' ',title,excerpt,eyebrow,coalesce(keywords::text,''))),'أإآٱىةؤئًٌٍَُِّْٰـ','اايهوي')";
+  // Known expectations catch the old SQL letter mapping bug independently of the index expression.
+  assert.deepEqual(searchTokens('الشيخوخة'), ['شيخوخه']);
+  const agingIds=(await seedContentProvider.search('الشيخوخة')).map(row=>row.id);
+  assert.deepEqual(agingIds,['fixture-10','fixture-6','fixture-8','fixture-9']);
+  assert.deepEqual((await seedContentProvider.search('الشيخوخه')).map(row=>row.id), agingIds);
+  const normalize=value=>normalizeArabic(toLatinDigits(value)).toLowerCase();
   const checkParity = async () => {
-    assert.equal((await client.query('select count(*)::int as n from stories where search_text is distinct from ' + old)).rows[0].n, 0);
-    for (const query of ['الذكاء الاصطناعي', 'الذكاء', 'السُّعودية', 'التنجستن', 'الرياض', 'مسؤولية', 'إنتاج', 'بحث', 'في', '%_', 'no-match', '2030', 'متنوعة']) {
-      const tokens = searchTokens(query);
-      const expected = tokens.length ? (await client.query("select id from stories where status='published' and " + tokens.map((_, i) => old + ' like $' + (i + 1)).join(' and ') + ' order by published_at desc,id asc limit 200', tokens.map(t => '%' + t + '%'))).rows.map(r => r.id) : [];
-      const actual = await seedContentProvider.search(query);
-      assert.deepEqual(actual.map(r => r.id), expected, query);
-      assert.ok(actual.every(r => !Object.hasOwn(r, 'searchText')));
+    const sourceRows=(await client.query('select id,title,excerpt,eyebrow,keywords::text as keyword_text,status,published_at,search_text from stories order by published_at desc,id asc')).rows;
+    const textFor=row=>normalize(`${row.title} ${row.excerpt} ${row.eyebrow} ${row.keyword_text??''}`);
+    for (const row of sourceRows) assert.equal(row.search_text,textFor(row),row.id);
+    for (const query of ['الشيخوخة','الشَّيخوخة','الشيخوخه','الذكاء الاصطناعي','الذكاء','السُّعودية','التنجستن','الرياض','مسؤولية','إنتاج','بحث','في','%_','no-match','2030','متنوعة','رؤية 2030','رؤيه ۲۰۳۰']) {
+      const tokens=searchTokens(query);
+      const expected=tokens.length?sourceRows.filter(row=>row.status==='published' && tokens.every(token=>textFor(row).includes(token))).slice(0,200).map(row=>row.id):[];
+      const actual=await seedContentProvider.search(query);
+      assert.deepEqual(actual.map(row=>row.id),expected,query);
+      assert.ok(actual.every(row=>!Object.hasOwn(row,'searchText') && !Object.hasOwn(row,'editorSearchText')));
     }
   };
   await checkParity();
@@ -62,7 +88,7 @@ try {
   await client.query('drop index stories_search_text_trgm_idx');
   assert.ok((await client.query(DATABASE_READINESS_SQL)).rows.some(r => r.missing === 'public.stories_search_text_trgm_idx'));
   await client.query('rollback');
-  console.log('Public search passed: 39 result-parity checks, generated-text consistency, insert/update/publication/archive and index eligibility.');
+  console.log('Public search passed: known aging results, 54 independently normalized result checks, digits, generated-text consistency, insert/update/publication/archive and index eligibility.');
 } finally {
   await client?.end();
   await admin.query('drop database if exists "' + database + '"');

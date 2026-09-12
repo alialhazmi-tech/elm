@@ -57,7 +57,7 @@ export const stories = pgTable("stories", {
   /** كلمات مفتاحية: مصفوفة نصوص jsonb — تتولد بالذكاء وتُحرر يدويًا. */
   keywords: jsonb("keywords"),
   /** نفس تطبيع البحث العام؛ PostgreSQL يحدّثه تلقائيًا لكل حفظ واستيراد. */
-  searchText: text("search_text").generatedAlwaysAs(sql`translate(lower("title" || ' ' || "excerpt" || ' ' || "eyebrow" || ' ' || coalesce("keywords"::text, '')), 'أإآٱىةؤئًٌٍَُِّْٰـ', 'اايهوي')`),
+  searchText: text("search_text").generatedAlwaysAs(sql`alelm_editor_search_normalize("title" || ' ' || "excerpt" || ' ' || "eyebrow" || ' ' || coalesce("keywords"::text, ''))`),
   /** نص بحث المحرر محسوب عند الحفظ، حتى لا يُعاد تطبيع المتون أثناء كل بحث قصير. */
   editorSearchText: text("editor_search_text").generatedAlwaysAs(sql`alelm_editor_search_normalize("title" || ' ' || "excerpt" || ' ' || coalesce("keywords"::text, '') || ' ' || "body")`),
   /** رابط يوتيوب لمواد شكل «فيديو» (رابط المشاهدة القياسي بلا قائمة تشغيل) — يُسحب من alelm-api ويُحرر من اللوحة. */
