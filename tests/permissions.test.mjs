@@ -31,6 +31,7 @@ test("الكتالوج: مفاتيح فريدة، وكل افتراض لدور �
   assert.ok(chief.defaults.includes("story.publish") && chief.defaults.includes("users.view"));
   // المحرر لا ينشر ولا يعتمد.
   const editor = SYSTEM_ROLES.find((role) => role.id === "editor");
+  for (const key of ["story.pin", "story.schedule"]) assert.ok(editor.defaults.includes(key), key);
   for (const key of ["story.publish", "story.approve", "story.archive", "users.view"]) assert.ok(!editor.defaults.includes(key), key);
   assert.equal(LEGACY_ROLE_MAP.approver, "managing_editor");
 });

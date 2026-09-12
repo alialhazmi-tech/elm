@@ -75,6 +75,7 @@ interface Props {
   /** يملك الاعتماد والنشر (story.publish) — يُحلّ على الخادم. */
   canApprove: boolean;
   canSchedule?: boolean;
+  canPin?: boolean;
   canSubmit?: boolean;
   /** رابط سجل النسخ واستعادتها — يظهر في شريط الإجراءات بجانب السجل الزمني. */
   historyHref?: string | null;
@@ -112,7 +113,7 @@ function autoGrowOnMount(element: HTMLTextAreaElement | null) {
  * use-story-workflow (الحفظ وسير الاعتماد)، use-live-guard (الحارس الحي)، use-full-edit-stream (التحرير الشامل).
  * الواجهة على shadcn: شريط إجراءات لاصق، متن Tiptap، ومفتّش جانبي بأربعة تبويبات.
  */
-export function EditorClient({ actorId, canApprove, canSchedule = false, canSubmit = true, historyHref = null, guardControls, series, sections, recentMedia, initial }: Props) {
+export function EditorClient({ actorId, canApprove, canSchedule = false, canPin = canApprove, canSubmit = true, historyHref = null, guardControls, series, sections, recentMedia, initial }: Props) {
   const router = useRouter();
   const [revisionOf, setRevisionOf] = useState(initial?.revisionOf ?? null);
   const [id, setId] = useState(initial?.id ?? "");
@@ -509,6 +510,8 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canSubm
                   title={title}
                   status={status}
                   canApprove={canApprove}
+                  canPin={canPin}
+                  canSchedule={canSchedule}
                   gateOpen={gateOpen}
                   busy={busy || workflowBusy}
                   formats={FORMATS}

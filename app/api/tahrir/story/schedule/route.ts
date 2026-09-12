@@ -9,12 +9,12 @@ import { buildGuardDraft, loadGuardContext } from "@/lib/tahrir/guard-draft";
 import { revalidatePublicStory } from "@/lib/tahrir/revalidatePublic";
 import { getStory, guardMediaFor, scheduleStory } from "@/lib/tahrir/service";
 
-/** جدولة النشر — للمعتمدين؛ الحارس يفحص عند الجدولة وسيفحص ثانية لحظة الموعد. */
+/** جدولة النشر — لحامل صلاحية الجدولة؛ الحارس يفحص هنا وثانية لحظة الموعد. */
 export async function POST(request: Request) {
   try { return await transition(request); } catch (error) { return writeError(error); }
 }
 async function transition(request: Request) {
-  const gate = await requirePermission("story.schedule", "الجدولة من صلاحية المعتمدين.");
+  const gate = await requirePermission("story.schedule", "لا تملك صلاحية جدولة النشر.");
   if (!gate.ok) return gate.response;
   const session = gate.actor;
 

@@ -83,7 +83,7 @@ export interface DraftInput {
   keywords?: string[];
   /** رابط يوتيوب أو تغريدة X لمواد الفيديو — null يمسحه. */
   videoUrl?: string | null;
-  /** undefined = لا تغيير — التثبيت والعاجل من صلاحية المعتمدين فقط. */
+  /** undefined = لا تغيير — مسار الحفظ يفحص صلاحية التثبيت والعاجل كلًا على حدة. */
   pinned?: boolean;
   breakingUntil?: string | null;
 }
@@ -126,7 +126,7 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
     ...privileged, ...seo,
   };
   if (input.updateScheduled) {
-    if (!actor.can("story.schedule")) throw new StoryWriteError("تحديث المجدول من صلاحية المعتمدين فقط.", 403);
+    if (!actor.can("story.schedule")) throw new StoryWriteError("لا تملك صلاحية تحديث المادة المجدولة.", 403);
     if (!existing || existing.status !== "scheduled" || !existing.scheduledAt || input.autosave || input.returnToDraft) {
       throw new StoryWriteError("تغيّرت حالة المادة؛ أعد تحميلها قبل تحديث المجدول.");
     }

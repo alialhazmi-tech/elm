@@ -29,6 +29,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { key: "story.submit", label: "الرفع للاعتماد", description: "إرسال المادة إلى قائمة الاعتماد." },
       { key: "story.approve", label: "الاعتماد", description: "الموافقة على المواد المرفوعة." },
       { key: "story.publish", label: "النشر", description: "نشر المادة على الموقع وتثبيتها وتعليمها عاجلًا." },
+      { key: "story.pin", label: "التثبيت", description: "تحديد تثبيت المادة في صدارة الرئيسية عند حفظها." },
       { key: "story.schedule", label: "الجدولة", description: "جدولة النشر لموعد لاحق." },
       { key: "story.archive", label: "الأرشفة", description: "إخفاء مادة منشورة مع تدوين السبب." },
       { key: "story.restore", label: "الاستعادة", description: "إعادة مادة من الأرشيف." },
@@ -140,11 +141,13 @@ export const SYSTEM_ROLES: SystemRole[] = [
   {
     id: "editor",
     label: "محرر",
-    description: "الكتابة والرفع للاعتماد وأدوات الذكاء.",
+    description: "الكتابة والرفع للاعتماد والتثبيت والجدولة وأدوات الذكاء.",
     defaults: [
       "story.create",
       "story.edit.own",
       "story.submit",
+      "story.pin",
+      "story.schedule",
       "jak.manage",
       "series.propose",
       "media.upload",

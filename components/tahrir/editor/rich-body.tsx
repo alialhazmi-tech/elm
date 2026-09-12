@@ -103,7 +103,7 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
         code: false,
         codeBlock: false,
         horizontalRule: false,
-        link: { openOnClick: false, autolink: true, defaultProtocol: "https" },
+        link: { openOnClick: true, autolink: true, defaultProtocol: "https" },
       }),
       // اليمين افتراض RTL فلا يُكتب في HTML؛ الوسط والضبط يمرّان على المنقّي كسمة style.
       TextAlign.configure({
