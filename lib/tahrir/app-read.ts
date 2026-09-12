@@ -30,6 +30,7 @@ import {
   listSeriesRows,
   nextScheduledAt,
   pageWhere,
+  storyListOrder,
   publishedPerDay,
   publishedTodayCount,
   readingTimeDistribution,
@@ -160,7 +161,7 @@ async function pageRows(status: StoryStatus | undefined, page: number, perPage: 
     .select({ ...ROW_COLUMNS, body: stories.body })
     .from(stories)
     .where(pageWhere(status, filters))
-    .orderBy(recencyOrder, desc(stories.id))
+    .orderBy(...storyListOrder(filters))
     .limit(perPage)
     .offset(Math.max(0, page - 1) * perPage);
 }

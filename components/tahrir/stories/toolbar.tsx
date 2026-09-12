@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { ARCHIVED_SERIES, SERIES } from "@/lib/content/series";
 
-/** بحث بالعنوان (مؤجل 350ms) وتصفية بالسلسلة — كلاهما في الاستعلام حتى تبقى الروابط قابلة للمشاركة. */
+/** بحث في العنوان والمحتوى (مؤجل 350ms) وتصفية بالسلسلة — كلاهما في الاستعلام حتى تبقى الروابط قابلة للمشاركة. */
 export function StoriesToolbar({ q, series }: { q: string; series: string }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +53,7 @@ export function StoriesToolbar({ q, series }: { q: string; series: string }) {
           type="search"
           value={value}
           onChange={(event) => setValue(event.target.value)}
-          placeholder="ابحث بالعنوان…"
+          placeholder="ابحث في العنوان والمحتوى…"
           aria-label="بحث في المواد"
           className="h-8 w-52 bg-card ps-8 pe-7 text-xs sm:w-60"
         />

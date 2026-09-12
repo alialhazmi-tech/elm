@@ -15,6 +15,7 @@ import { textClient as client } from "./text-client";
 import { reserveTextCents } from "./pricing";
 import { missingTextKeyMessage } from "./provider-config";
 import { EditorialOutputError } from "./output-error";
+import { EXCERPT_MAX_CHARS } from "../content/excerpt";
 import { excerptInstructions, validateExcerpt } from "./summary-editorial";
 import { classificationInstructions, visibleTaxonomy, type EditorialTaxonomy } from "../content/taxonomy";
 
@@ -154,7 +155,7 @@ const FULL_EDIT_PACK_PROMPT = ({ title, body, taxonomy = visibleTaxonomy() }: { 
     "من المادة التالية ولّد الحقول المساعدة فقط. أعد JSON واحدًا:",
     excerptInstructions,
     classificationInstructions(taxonomy),
-    '{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة خبرية مكتملة حتى 280 حرفًا","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"معرف سلسلة متاحة أو null","section":"معرف قسم متاح","format":"news|infographics|videos|reports|podcasts"}',
+    `{"title":"حتى 10 كلمات بلا تهويل","excerpt":"خلاصة شاملة حتى ${EXCERPT_MAX_CHARS} حرفًا","seoTitle":"حتى 60 حرفًا","seoDescription":"حتى 155 حرفًا","keywords":["5-8 كلمات"],"seriesSlug":"معرف سلسلة متاحة أو null","section":"معرف قسم متاح","format":"news|infographics|videos|reports|podcasts"}`,
     "",
     `العنوان الحالي: ${title}`,
     "",
@@ -246,7 +247,7 @@ function modelFor(tool: AiTool, settings: AiSettingsData): string {
 }
 
 function excerptRepairPrompt(input: { title: string; body: string }): string {
-  return `المحاولة السابقة للموجز لم تستوفِ معيار الوضوح والطول. أعد صياغة موجز جديد أقصر من حقائق المصدر، بجملة مكتملة دون اقتطاع ودون حشو. ${TOOL_PROMPTS.excerpt(input)}`;
+  return `المحاولة السابقة للموجز لم تستوفِ معيار الوضوح والطول. أعد صياغته من حقائق المتن: غطّ أهم محاوره بدل تكرار العنوان أو وصف الموضوع. اختصر التفاصيل الثانوية عند تجاوز السقف، واحفظ النتيجة والأثر والقيد الأساسي بجمل مكتملة دون اقتطاع أو حشو. ${TOOL_PROMPTS.excerpt(input)}`;
 }
 
 /** نصلح الموجز وحده مرة واحدة، مع احتساب الطلبين وحفظ بقية الملحقات. */

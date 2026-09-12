@@ -33,7 +33,7 @@ export function snapshotQuery(id: string, actor: string) {
   return workflowDb().execute(sql`
     insert into story_versions (id, story_id, version, data, actor, created_at)
     select ${crypto.randomUUID()}, s.id, s.version,
-      jsonb_build_object('story', to_jsonb(s), 'slides',
+      jsonb_build_object('story', to_jsonb(s) - 'editor_search_text', 'slides',
         coalesce((select jsonb_agg(to_jsonb(sl) order by sl.position) from story_slides sl where sl.story_id=s.id), '[]'::jsonb),
         'source', (select source from jak_sources where story_id=s.id)),
       ${actor}, ${new Date().toISOString()} from stories s where s.id=${id}
@@ -75,8 +75,8 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
     throw new StoryWriteError("تغيّرت النسخة الأصلية أو أُرشفت؛ راجع أحدث نسخة قبل الاعتماد.");
   }
   // Generated search text must be recomputed by PostgreSQL, never copied in UPDATE.
-  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, ...content } = story;
-  void _id; void _revisionOf; void _baseVersion; void _searchText;
+  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, editorSearchText: _editorSearchText, ...content } = story;
+  void _id; void _revisionOf; void _baseVersion; void _searchText; void _editorSearchText;
   await db.batch([
     lockStory(original), lockStory(story), snapshotQuery(original.id, actor),
     db.update(stories).set({ ...content, authorId: original.authorId, authorName: original.authorName,
@@ -103,7 +103,7 @@ export async function restoreStoryVersion(story: WorkflowStory, versionId: strin
   const snapshot = version.data as { story: Record<string, unknown>; slides: unknown[]; source: string | null };
   const previous = Object.fromEntries(Object.entries(getTableColumns(stories))
     .filter(([, column]) => !column.generated)
-    .map(([key, column]) => [key, snapshot.story[column.name]])) as Omit<WorkflowStory, "searchText">;
+    .map(([key, column]) => [key, snapshot.story[column.name]])) as Omit<WorkflowStory, "searchText" | "editorSearchText">;
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   await db.batch([
