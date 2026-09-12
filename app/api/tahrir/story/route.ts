@@ -62,7 +62,7 @@ async function saveStory(request: Request) {
   const returnToDraft = input?.returnToDraft === true;
   const updateScheduled = input?.updateScheduled === true;
   if (updateScheduled && !session.can("story.schedule")) {
-    return NextResponse.json({ error: "تحديث المجدول من صلاحية المعتمدين فقط." }, { status: 403 });
+    return NextResponse.json({ error: "لا تملك صلاحية تحديث المادة المجدولة." }, { status: 403 });
   }
   if (input?.rescheduleAt !== undefined && (!updateScheduled || typeof input.rescheduleAt !== "string")) {
     return NextResponse.json({ error: "مدخل موعد النشر غير صالح." }, { status: 400 });
@@ -154,9 +154,8 @@ async function saveStory(request: Request) {
       keywords,
       // رابط الفيديو يقبل يوتيوب وتغريدات X ومنشورات إنستقرام العامة ويُخزَّن بصيغته القياسية؛ أي قيمة أخرى تُمسح.
       ...(input.videoUrl !== undefined ? { videoUrl } : {}),
-      ...(session.can("story.publish")
-        ? { pinned: input.pinned, breakingUntil: input.breakingUntil }
-        : {}),
+      ...(session.can("story.pin") || session.can("story.publish") ? { pinned: input.pinned } : {}),
+      ...(session.can("story.publish") ? { breakingUntil: input.breakingUntil } : {}),
     },
     session,
   );

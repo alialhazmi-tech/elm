@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { AsyncLocalStorage } from "node:async_hooks";
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, readFile, rm } from "node:fs/promises";
 import { build } from "esbuild";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
@@ -46,6 +46,7 @@ try {
       export { POST as mfaApi } from './app/api/tahrir/account/mfa/route';
       export { POST as publishApi } from './app/api/tahrir/story/publish/route';
       export { POST as scheduleApi } from './app/api/tahrir/story/schedule/route';
+      export { POST as saveApi } from './app/api/tahrir/story/route';
       export { POST as archiveApi } from './app/api/tahrir/story/archive/route';
       export { POST as restoreApi } from './app/api/tahrir/story/restore/route';
       export { GET as membersGet, POST as membersPost } from './app/api/tahrir/admin/members/route';
@@ -95,6 +96,18 @@ try {
     await admin.query("insert into users(id,username,display_name,password_hash,role,mfa_secret,created_at) values($1,$1,$1,$2,$3,$4,$5)", [id, passwordHash, role, mfa, at]);
   }
   await admin.query("insert into user_permissions(user_id,permission_key,effect) values('ops-u','users.manage','allow'),('ops-u','users.suspend','allow'),('ops-u','roles.manage','allow')");
+  await admin.query("insert into users(id,username,display_name,password_hash,role,created_at) values('restricted-u','restricted-u','محرر مقيّد',$1,'editor',$2)", [passwordHash, at]);
+  await admin.query("insert into user_permissions(user_id,permission_key,effect) values('restricted-u','story.pin','deny'),('restricted-u','story.schedule','deny')");
+  const rolesBefore = (await admin.query("select * from role_permissions order by role_id,permission_key")).rows;
+  const overridesBefore = (await admin.query("select * from user_permissions order by user_id,permission_key")).rows;
+  // A previously seeded editor gains only these two permissions; replay is harmless.
+  await admin.query("delete from role_permissions where role_id='editor' and permission_key in ('story.pin','story.schedule')");
+  const migration = await readFile('drizzle/0015_editor_pin_schedule.sql', 'utf8');
+  await admin.query(migration);
+  await admin.query(migration);
+  assert.deepEqual((await admin.query("select * from role_permissions order by role_id,permission_key")).rows, rolesBefore);
+  assert.deepEqual((await admin.query("select * from user_permissions order by user_id,permission_key")).rows, overridesBefore);
+  subject.invalidateRoleCache();
   // متن يتجاوز حد الـ300 كلمة كي لا تعترض قاعدة الطول؛ المخالِف يضيف جملة من قاموس المحاذير (قاعدة قطعية حتمية).
   const sentences = ["تشير الدراسات الحديثة إلى أهمية النوم الكافي في تحسين الصحة العامة والتركيز الذهني لدى البالغين.", "ينصح الأطباء بممارسة المشي نصف ساعة يوميًا للحفاظ على صحة القلب وتنظيم ضغط الدم.", "يساعد شرب الماء بانتظام على تحسين وظائف الكلى وترطيب الجسم خلال أشهر الصيف الحارة.", "تؤكد منظمة الصحة العالمية أن التغذية المتوازنة تقلل مخاطر الإصابة بالأمراض المزمنة على المدى الطويل.", "يوصي المختصون بتقليل السكريات المضافة في النظام الغذائي اليومي للأطفال والكبار على حد سواء."];
   const cleanBody = `<p>${Array.from({ length: 30 }, (_, i) => sentences[i % sentences.length]).join(" ")}</p>`;
@@ -110,7 +123,7 @@ try {
   // المصفوفة: [المسار، الاستدعاء، الصلاحية، دور بلا الصلاحية، دور يحملها]
   const matrix = [
     ["story/publish POST", () => subject.publishApi(json("POST", { id: "missing" })), "story.publish", "editor-u", "me-u"],
-    ["story/schedule POST", () => subject.scheduleApi(json("POST", { id: "missing", scheduledAt: future })), "story.schedule", "editor-u", "me-u"],
+    ["story/schedule POST", () => subject.scheduleApi(json("POST", { id: "missing", scheduledAt: future })), "story.schedule", "restricted-u", "editor-u"],
     ["story/archive POST", () => subject.archiveApi(json("POST", { id: "missing", reason: "سبب كافٍ للأرشفة" })), "story.archive", "editor-u", "me-u"],
     ["story/restore POST", () => subject.restoreApi(json("POST", { id: "missing" })), "story.restore", "me-u", "chief-u"],
     ["admin/members GET", () => subject.membersGet(), "users.view", "editor-u", "chief-u"],
@@ -137,6 +150,34 @@ try {
   }
   checks++;
   // لا مسار API لسجل التدقيق — الشاشة تُحرس في الخادم عبر requireScreen("audit.view") فقط.
+
+  // Editor pinning persists, without granting breaking-news or immediate publishing.
+  const draftInput = { title: 'دراسة جديدة توضح أثر النوم على صحة القلب', body: cleanBody, section: 'health', pinned: true, breakingUntil: future };
+  const saved = await call('editor-u', () => subject.saveApi(json('POST', draftInput)));
+  assert.equal(saved.status, 200);
+  const editorDraft = await saved.json();
+  const pinState = async id => (await admin.query('select pinned,breaking_until,status,scheduled_at from stories where id=$1', [id])).rows[0];
+  assert.equal((await pinState(editorDraft.id)).pinned, 1);
+  assert.equal((await pinState(editorDraft.id)).breaking_until, null);
+  assert.equal((await call('editor-u', () => subject.publishApi(json('POST', { id: editorDraft.id, expectedVersion: editorDraft.version })))).status, 403);
+  const scheduled = await call('editor-u', () => subject.scheduleApi(json('POST', { id: editorDraft.id, expectedVersion: editorDraft.version, scheduledAt: future })));
+  assert.equal(scheduled.status, 200, await scheduled.clone().text());
+  assert.equal((await pinState(editorDraft.id)).status, 'scheduled');
+  assert.equal((await pinState(editorDraft.id)).scheduled_at, future);
+  const scheduledVersion = (await scheduled.json()).version;
+  const updated = await call('editor-u', () => subject.saveApi(json('POST', { ...draftInput, id: editorDraft.id, expectedVersion: scheduledVersion, pinned: false, updateScheduled: true })));
+  assert.equal(updated.status, 200, await updated.clone().text());
+  assert.equal((await pinState(editorDraft.id)).pinned, 0);
+  assert.equal((await pinState(editorDraft.id)).scheduled_at, future);
+  const deniedPin = await call('restricted-u', () => subject.saveApi(json('POST', draftInput)));
+  assert.equal(deniedPin.status, 200);
+  const restrictedDraft = await deniedPin.json();
+  assert.equal((await pinState(restrictedDraft.id)).pinned, 0);
+  assert.equal((await pinState(restrictedDraft.id)).breaking_until, null);
+  assert.equal((await call('restricted-u', () => subject.scheduleApi(json('POST', { id: restrictedDraft.id, expectedVersion: restrictedDraft.version, scheduledAt: future })))).status, 403);
+  assert.equal((await call('editor-u', () => subject.scheduleApi(json('POST', { id: 'blocked-story', expectedVersion: 1, scheduledAt: future })))).status, 422);
+  assert.equal((await pinState('blocked-story')).status, 'review');
+  checks++;
 
   // بوابة الحارس: مخالفة قاطعة تعيد 422 وتبقي الحالة كما هي بلا أثر نشر في سجل التدقيق.
   const blocked = await call("me-u", () => subject.publishApi(json("POST", { id: "blocked-story", expectedVersion: 1 })));

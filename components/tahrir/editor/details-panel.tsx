@@ -23,6 +23,8 @@ export interface DetailsPanelProps {
   title: string;
   status: string;
   canApprove: boolean;
+  canPin?: boolean;
+  canSchedule?: boolean;
   gateOpen: boolean;
   busy: boolean;
   formats: Array<[string, string]>;
@@ -75,21 +77,23 @@ function Section({ title, children, className }: { title: string; children: Reac
 /** تبويب التفاصيل: التصنيف والصورة والرابط، ولأصحاب الصلاحية أدوات الإبراز والجدولة والأرشفة. */
 export function DetailsPanel(props: DetailsPanelProps) {
   const [action, setAction] = useState<StoryAction | null>(null);
+  const canPin = props.canPin ?? props.canApprove;
+  const canSchedule = props.canSchedule ?? props.canApprove;
   const editable = props.status !== "published" && props.status !== "archived";
   const scheduleIso = props.scheduleAt ? riyadhWallTimeToIso(props.scheduleAt) : null;
 
   return (
     <div className="grid gap-2.5 p-2.5 text-start" dir="rtl">
-      {props.canApprove ? (
+      {props.canApprove || canPin || canSchedule ? (
         <>
-          {props.status !== "archived" ? (
+          {(canPin || props.canApprove) && props.status !== "archived" ? (
             <Section title="إبراز المادة">
-              <label className="flex items-center gap-2 text-xs">
+              {canPin ? <label className="flex items-center gap-2 text-xs">
                 <Switch checked={props.pinned} onCheckedChange={props.onPinned} aria-label="تثبيت في صدارة الرئيسية" />
                 <PinIcon className="size-3.5 text-muted-foreground" />
                 {props.pinned ? "مثبتة في صدارة الرئيسية" : "تثبيت في صدارة الرئيسية"}
-              </label>
-              {props.breakingUntil ? (
+              </label> : null}
+              {props.canApprove ? props.breakingUntil ? (
                 <div className="flex flex-wrap items-center gap-2">
                   <GuardChip tone="block" label={`عاجل حتى ${formatRiyadhTime(props.breakingUntil) || props.breakingUntil} (الرياض)`} />
                   <Button size="xs" variant="outline" onClick={() => props.onBreaking(null)}>
@@ -107,11 +111,11 @@ export function DetailsPanel(props: DetailsPanelProps) {
                     عاجل لست ساعات
                   </Button>
                 </div>
-              )}
+              ) : null}
             </Section>
           ) : null}
-          <Section title="النشر والجدولة">
-            {editable ? (
+          {props.canApprove || (canSchedule && editable) ? <Section title="النشر والجدولة">
+            {canSchedule && editable ? (
               <div className="grid gap-1.5">
                 <label htmlFor="story-schedule-at" className="text-[10.5px] text-muted-foreground">موعد النشر — بتوقيت الرياض</label>
                 <div className="flex gap-1.5">
@@ -134,7 +138,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
                 </div>
               </div>
             ) : null}
-            {props.id && props.status !== "draft" && props.status !== "archived" ? (
+            {props.canApprove && props.id && props.status !== "draft" && props.status !== "archived" ? (
               <Button
                 size="xs"
                 variant="outline"
@@ -148,7 +152,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
                 أرشفة المادة
               </Button>
             ) : null}
-            {props.id && props.status === "archived" ? (
+            {props.canApprove && props.id && props.status === "archived" ? (
               <Button
                 size="xs"
                 variant="outline"
@@ -159,7 +163,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
                 استعادة كمسودة
               </Button>
             ) : null}
-          </Section>
+          </Section> : null}
         </>
       ) : null}
 

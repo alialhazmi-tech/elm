@@ -44,6 +44,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
         historyHref={story ? `/tahrir/history/${story.revisionOf ?? story.id}` : null}
         canApprove={actor?.can("story.publish") ?? false}
         canSchedule={actor.can("story.schedule")}
+        canPin={actor.can("story.pin") || actor.can("story.publish")}
         guardControls={settings.governance}
         recentMedia={recentMedia}
         series={taxonomy.series.map(({ slug, name, color }) => ({ slug, name, color }))}
