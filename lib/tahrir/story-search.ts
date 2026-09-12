@@ -1,13 +1,6 @@
 import { and, like, sql, type SQL, type SQLWrapper } from "drizzle-orm";
-import { normalizeArabic, toLatinDigits } from "../policy/normalize.ts";
-
-/** نفس تطبيع دالة SQL؛ لا نغيّر المحتوى المحفوظ أو نحذف كلمات من استعلام المحرر. */
-export function normalizeStorySearch(value: string): string {
-  return normalizeArabic(toLatinDigits(value
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&(?:#\d+|#x[\da-f]+|[a-z]+);/gi, " ")
-  )).toLowerCase();
-}
+import { normalizeSearchText as normalizeStorySearch } from "../content/search-normalize.ts";
+export { normalizeStorySearch };
 
 export function storySearchTerms(query: string): string[] {
   return [...new Set(normalizeStorySearch(query.trim().slice(0, 80))
