@@ -7,6 +7,7 @@ import "./soft.css";
 import "./header.css";
 import { PodcastDockProvider } from "@/app/_components/podcast-dock";
 import { PerformanceMetrics } from "@/app/_components/performance-metrics";
+import { GooglePageviews } from "@/app/_components/google-pageviews";
 import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 
 // العناوين بـ Alexandria، والنصوص بـ IBM Plex Sans Arabic،
@@ -98,6 +99,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: themeInit }} />
         <PodcastDockProvider>{children}</PodcastDockProvider>
         <Suspense fallback={null}><PerformanceMetrics /></Suspense>
+        <Suspense fallback={null}><GooglePageviews /></Suspense>
       </body>
     </html>
   );
