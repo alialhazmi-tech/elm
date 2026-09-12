@@ -20,7 +20,8 @@ where not exists (
 union all
 select signature from (values
   ('public.alelm_assert_story_version(text,integer,text)'),
-  ('public.alelm_reserve_ai(text,integer,integer,integer)')
+  ('public.alelm_reserve_ai(text,integer,integer,integer)'),
+  ('public.alelm_editor_search_normalize(text)')
 ) as required(signature) where to_regprocedure(signature) is null
 union all
 select 'public.users_username_normalized_uidx' where not exists (
@@ -33,6 +34,12 @@ union all
 select 'public.stories_search_text_trgm_idx' where not exists (
   select 1 from pg_index
   where indexrelid=to_regclass('public.stories_search_text_trgm_idx')
+    and indrelid=to_regclass('public.stories') and indisvalid and indisready
+)
+union all
+select 'public.stories_editor_search_trgm_idx' where not exists (
+  select 1 from pg_index
+  where indexrelid=to_regclass('public.stories_editor_search_trgm_idx')
     and indrelid=to_regclass('public.stories') and indisvalid and indisready
 )
 order by missing`;

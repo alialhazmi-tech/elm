@@ -31,7 +31,7 @@ const pack={title:'المباني تخفض استهلاك الطاقة خلال 
 
 test('summary validation rejects duplicate headlines, teasers and overflow without cutting valid copy',()=>{
   assert.equal(validateExcerpt(excerpt,input.title),excerpt);
-  for(const value of [input.title+'!', 'تعرف على أبرز نتائج الدراسة.', 'ك'.repeat(281),null]) assert.throws(()=>validateExcerpt(value,input.title),{name:'EditorialOutputError'});
+  for(const value of [input.title+'!', 'تعرف على أبرز نتائج الدراسة.', 'ك'.repeat(501),null]) assert.throws(()=>validateExcerpt(value,input.title),{name:'EditorialOutputError'});
 });
 test('all editorial summary entry points preserve end-of-source facts and reject unusable summaries',async()=>{
   for(const tool of ['excerpt','metadata','full_edit']){
@@ -43,8 +43,18 @@ test('all editorial summary entry points preserve end-of-source facts and reject
     assert.ok(request.messages[0].content.endsWith(input.body));
     assert.equal(request.model, settings.models.editorial, "كل موجز يستخدم نموذج التحرير الأقوى");
     if(tool==='full_edit') assert.ok(state.requests.every(p=>p.messages[0].content.endsWith(input.body)));
-    state.text=JSON.stringify(tool==='excerpt'?{suggestions:['ك'.repeat(281)]}:{...pack,excerpt:'ك'.repeat(281)});
+    state.text=JSON.stringify(tool==='excerpt'?{suggestions:['ك'.repeat(501)]}:{...pack,excerpt:'ك'.repeat(501)});
     await assert.rejects(runEditorialTool(tool,input,settings),{name:'EditorialOutputError'});
+  }
+});
+test('all three generation paths preserve a multi-sentence excerpt above the old limit without truncation',async()=>{
+  const comprehensive='أظهرت دراسة شملت 120 مبنى خلال 6 أشهر انخفاض استهلاك الكهرباء بنسبة 12% مع نظام التبريد الآلي مقارنة بالنظام المعتاد، مقابل ارتفاع تكاليف الصيانة 4%. اقتصرت التجربة على مبانٍ مكتبية ولم تشمل المنازل، ويعتزم الفريق متابعتها عامًا إضافيًا. وأكد الباحثون أن النتائج لا تثبت استمرار التوفير بعد انتهاء التجربة ولا تسمح بتعميمه على أنواع المباني الأخرى.';
+  assert.ok(Array.from(comprehensive).length > 280 && Array.from(comprehensive).length <= 500);
+  for (const tool of ['excerpt','metadata','full_edit']) {
+    state.requests=[];state.text=JSON.stringify(tool==='excerpt'?{suggestions:[comprehensive]}:{...pack,excerpt:comprehensive});
+    const result=await runEditorialTool(tool,input,settings);
+    assert.equal(tool==='excerpt'?result.suggestions[0].text:tool==='metadata'?result.metadata.excerpt.text:result.fullEdit.excerpt.text,comprehensive);
+    assert.equal(state.requests.length,tool==='full_edit'?2:1);
   }
 });
 test('reader summary uses complete body beyond the old cutoff and never substitutes an old excerpt',async()=>{
@@ -87,15 +97,15 @@ test('member AI endpoint returns the three validated points and preserves text f
   const invalid=await readerPost(request());assert.equal(invalid.status,502);assert.match((await invalid.json()).error,/ثلاث نقاط/);
 });
 
-test('summaries allow up to 280 characters, normalize whitespace and accept shorter text',()=>{
-  for (const length of [180,181,250,280]) assert.equal(validateExcerpt('ك'.repeat(length),input.title).length,length);
+test('summaries allow up to 500 characters, normalize whitespace and accept shorter text',()=>{
+  for (const length of [180,181,250,280,350,500]) assert.equal(validateExcerpt('ك'.repeat(length),input.title).length,length);
   assert.equal(validateExcerpt('  نتيجة   الدراسة.  ',input.title),'نتيجة الدراسة.');
 });
 test('one excerpt-only repair preserves the metadata and accounts for every completed call',async()=>{
   try {
     for (const tool of ['excerpt','metadata','full_edit']) {
       state.requests=[]; state.stopReason='end_turn';
-      state.text=JSON.stringify(tool==='excerpt'?{suggestions:['ك'.repeat(281)]}:{...pack,excerpt:'ك'.repeat(281)});
+      state.text=JSON.stringify(tool==='excerpt'?{suggestions:['ك'.repeat(501)]}:{...pack,excerpt:'ك'.repeat(501)});
       state.repairText=JSON.stringify({suggestions:[excerpt]});
       const usages=[];
       const result=await runEditorialTool(tool,input,settings,{onUsage:u=>usages.push(u)});
@@ -107,8 +117,8 @@ test('one excerpt-only repair preserves the metadata and accounts for every comp
       assert.equal(state.requests.at(-1).model,settings.models.editorial);
       if(tool==='metadata') assert.equal(result.metadata.seo.seoTitle,pack.seoTitle);
     }
-    state.requests=[];state.text=JSON.stringify({suggestions:['ك'.repeat(281)]});state.repairText=state.text;
-    await assert.rejects(runEditorialTool('excerpt',input,settings),/280/);
+    state.requests=[];state.text=JSON.stringify({suggestions:['ك'.repeat(501)]});state.repairText=state.text;
+    await assert.rejects(runEditorialTool('excerpt',input,settings),/500/);
     assert.equal(state.requests.length,2);
   } finally { state.repairText=null; }
 });

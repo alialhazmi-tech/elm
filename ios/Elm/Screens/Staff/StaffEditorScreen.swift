@@ -45,7 +45,7 @@ struct StaffEditorScreen: View {
     @State private var debugActionDone = false
     @FocusState private var focusedBlock: UUID?
 
-    static let excerptLimit = 280
+    static let excerptLimit = 500
     static let seoTitleLimit = 90
     static let seoTitleTarget = 60
     static let seoDescriptionLimit = 200

@@ -1,5 +1,6 @@
 /** طبقة بيانات «تحرير العلم»: استعلامات اللوحة، حفظ المسودات، سير الاعتماد، وسجل التدقيق. */
 
+import { storySearchRank, storySearchWhere } from "./story-search";
 import { cache } from "react";
 import { and, asc, desc, eq, ilike, inArray, ne, sql, type SQL } from "drizzle-orm";
 
@@ -554,7 +555,7 @@ export const statusCounts = cache((): Promise<Record<string, number>> => cachedS
   return Object.fromEntries(rows.map((row) => [row.status, Number(row.count)]));
 }));
 
-/** مرشّحات قائمة المواد فوق الحالة: بحث في العنوان وسلسلة بعينها. */
+/** مرشّحات قائمة المواد فوق الحالة: بحث في المحتوى وسلسلة بعينها. */
 export interface StoryFilters {
   q?: string;
   seriesSlug?: string;
@@ -569,9 +570,14 @@ function titlePattern(q: string): string {
 /** شرط قائمة المواد (الحالة + البحث + السلسلة) — مشترك مع واجهات القراءة للتطبيق. */
 export function pageWhere(status: StoryStatus | undefined, filters: StoryFilters): SQL {
   const clauses: SQL[] = [status ? eq(stories.status, status) : ne(stories.status, "archived")];
-  if (filters.q?.trim()) clauses.push(ilike(stories.title, titlePattern(filters.q)));
+  if (filters.q?.trim()) clauses.push(storySearchWhere(stories, filters.q));
   if (filters.seriesSlug) clauses.push(eq(stories.seriesSlug, filters.seriesSlug));
   return and(...clauses)!;
+}
+
+/** ترتيب موحّد لقائمة الويب والتطبيق؛ الأقرب للبحث ثم الأحدث. */
+export function storyListOrder(filters: StoryFilters): SQL[] {
+  return [...(filters.q?.trim() ? [storySearchRank(stories, filters.q)] : []), recencyOrder, desc(stories.id)];
 }
 
 /** صفحة واحدة من المواد — أعمدة خفيفة فقط. */
@@ -586,7 +592,7 @@ export async function listPage(
     .select(LITE_COLUMNS)
     .from(stories)
     .where(pageWhere(status, filters))
-    .orderBy(recencyOrder, desc(stories.id))
+    .orderBy(...storyListOrder(filters))
     .limit(perPage)
     .offset(Math.max(0, page - 1) * perPage);
 }
@@ -600,7 +606,7 @@ export async function listPageForReview(
 ): Promise<Array<StoryLite & { body: string }>> {
   const db = requireDb();
   return db.select({ ...LITE_COLUMNS, body: stories.body }).from(stories)
-    .where(pageWhere(status, filters)).orderBy(recencyOrder, desc(stories.id))
+    .where(pageWhere(status, filters)).orderBy(...storyListOrder(filters))
     .limit(perPage).offset(Math.max(0, page - 1) * perPage);
 }
 
