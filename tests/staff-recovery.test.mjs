@@ -72,9 +72,9 @@ test("طلب استعادة الإدارة عام ولا يكشف الحساب �
     assert.match((await request({}, input)).error, /طلبات كثيرة/);
     assert.equal(state.tasks.length, 0);
     state.allowed = true;
-    assert.match((await complete({}, form({ token: "fixture", password: "valid-password", confirmPassword: "different" }))).error, /غير متطابقتين/);
+    assert.match((await complete({}, form({ token: "fixture", password: "valid-password-unique", confirmPassword: "different" }))).error, /غير متطابقتين/);
     assert.equal(state.redeemed, 0);
-    assert.ok((await complete({}, form({ token: "fixture", password: "valid-password", confirmPassword: "valid-password" }))).success);
+    assert.ok((await complete({}, form({ token: "fixture", password: "valid-password-unique", confirmPassword: "valid-password-unique" }))).success);
     assert.equal(state.redeemed, 1);
     state.configured = false;
     assert.match((await request({}, input)).error, /غير متاحة/);

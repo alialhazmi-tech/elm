@@ -1,5 +1,7 @@
 "use server";
 
+import { staffPasswordError } from "@/lib/tahrir/password-policy";
+
 import { headers } from "next/headers";
 import { after } from "next/server";
 import { accountEmailConfigured, deliverAccountEmail } from "@/lib/membership/email/delivery";
@@ -52,7 +54,8 @@ export async function completeStaffPasswordReset(_state: RecoveryState, form: Fo
   const token = String(form.get("token") ?? "");
   const password = String(form.get("password") ?? "");
   if (!token || token.length > 2048) return { error: "رابط الاستعادة غير صالح. اطلب رابطًا جديدًا." };
-  if (password.length < 10 || password.length > 512) return { error: "كلمة المرور يجب أن تكون من 10 إلى 512 محرفًا." };
+  const passwordError = staffPasswordError(password);
+  if (passwordError) return { error: passwordError };
   if (password !== form.get("confirmPassword")) return { error: "كلمتا المرور غير متطابقتين." };
   try {
     if (!await allowRecovery("staff-recovery-redeem", token, 10)) return { error: "محاولات كثيرة. حاول بعد 15 دقيقة أو اطلب رابطًا جديدًا." };

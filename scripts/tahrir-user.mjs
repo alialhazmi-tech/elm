@@ -5,6 +5,8 @@
  * الحساب المزروع من الطرفية فعّال بكلمة مرور نهائية (لا مؤقتة) — للمسؤول الأول ولحالات الطوارئ.
  */
 
+import { staffPasswordError } from "../lib/tahrir/password-policy.ts";
+
 import { neon } from "@neondatabase/serverless";
 
 import { hashPassword } from "../lib/tahrir/crypto.ts";
@@ -21,8 +23,9 @@ if (!ROLE_IDS.includes(role)) {
   console.error(`الدور يجب أن يكون أحد: ${ROLE_IDS.join(" | ")}`);
   process.exit(2);
 }
-if (password.length < 10) {
-  console.error("كلمة المرور 10 محارف على الأقل.");
+const passwordError = staffPasswordError(password);
+if (passwordError) {
+  console.error(passwordError);
   process.exit(2);
 }
 

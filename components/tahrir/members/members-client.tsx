@@ -37,6 +37,7 @@ import { formatRiyadhDateTime } from "@/lib/format";
 import type { MemberSummary } from "@/lib/tahrir/admin";
 import { apiCall } from "@/lib/tahrir/client-api";
 import { ADMIN_ROLE, type OverrideEffect, type PermissionGroup } from "@/lib/tahrir/permissions";
+import { generateStaffTemporaryPassword as temporaryPassword } from "@/lib/tahrir/password-policy";
 import { cn } from "@/lib/utils";
 
 type RoleOption = { id: string; label: string; isSystem: boolean };
@@ -61,13 +62,6 @@ const when = (iso: string | null) => formatRiyadhDateTime(iso, { style: "short" 
 
 /** أزرار الصف: 36px على الجوال (هدف لمس) و24px على المكتبي. */
 const ROW_ICON_BUTTON = "size-9 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:size-6";
-
-/** كلمة مؤقتة قابلة للقراءة بلا محارف ملتبسة — تُولَّد في المتصفح وتُرسل مرة واحدة. */
-function temporaryPassword(): string {
-  const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(14));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-}
 
 /** غلاف رقيق فوق النقل الموحّد: fallback هو نص الشاشة عند فشل بلا رسالة من الخادم. */
 async function call(url: string, method: string, body: unknown, fallback: string) {
@@ -468,7 +462,7 @@ function MemberForm({
         <div className="grid gap-1.5">
           <Label htmlFor="m-password">كلمة المرور المؤقتة</Label>
           <div className="flex gap-1.5">
-            <Input id="m-password" value={password} onChange={(event) => setPassword(event.target.value)} dir="ltr" className="font-mono" minLength={10} required />
+            <Input id="m-password" value={password} onChange={(event) => setPassword(event.target.value)} dir="ltr" className="font-mono" minLength={15} required />
             <Button type="button" size="icon" variant="outline" aria-label="توليد كلمة جديدة" onClick={() => setPassword(temporaryPassword())}>
               <RefreshCwIcon />
             </Button>
@@ -517,7 +511,7 @@ function PasswordForm({
       <div className="grid gap-1.5">
         <Label htmlFor="p-password">الكلمة المؤقتة</Label>
         <div className="flex gap-1.5">
-          <Input id="p-password" value={password} onChange={(event) => setPassword(event.target.value)} dir="ltr" className="font-mono" minLength={10} required />
+          <Input id="p-password" value={password} onChange={(event) => setPassword(event.target.value)} dir="ltr" className="font-mono" minLength={15} required />
           <Button type="button" size="icon" variant="outline" aria-label="توليد كلمة جديدة" onClick={() => setPassword(temporaryPassword())}>
             <RefreshCwIcon />
           </Button>
