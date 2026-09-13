@@ -380,9 +380,10 @@ body { background: var(--bg); color: var(--ink); }
 }
 .hub-hero .eyebrow { font-size: 13px; font-weight: 700; color: color-mix(in srgb, var(--sc, var(--navy)) 78%, var(--ink)); }
 .hub-hero .eyebrow::before { display: none; }
-.hub-hero h1 { font-family: var(--font-display); font-size: clamp(36px, 4.5vw, 56px); font-weight: 800; line-height: 1.15; color: var(--ink); margin: 6px 0 0; }
-.hub-hero .hub-tagline, .hub-hero .hub-desc { margin: 8px 0 0; font-size: 16px; color: var(--ink-2); }
-.hub-count { margin: 0; padding: 0; border: 0; font-size: 13px; color: var(--ink-3); white-space: nowrap; }
+/* ارتفاع السطر يحتفظ بنقاط الحروف العربية داخل العنوان بعيدًا عن الوصف. */
+.hub-hero h1 { font-family: var(--font-display); font-size: clamp(36px, 4.5vw, 56px); font-weight: 800; line-height: 1.5; color: var(--ink); margin: 6px 0 0; }
+.hub-hero .hub-tagline, .hub-hero .hub-desc { margin: 12px 0 0; font-size: 16px; color: var(--ink-2); }
+.hub-count { max-width: min(100%, 300px); margin: 0; padding: 0; border: 0; font-size: 13px; color: var(--ink-3); white-space: normal; }
 
 @media (max-width: 1040px) {
   .sx-hero { grid-template-columns: minmax(0, 1fr); padding: 18px; }
