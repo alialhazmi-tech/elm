@@ -38,9 +38,9 @@ test('join redirects active editors on reload and preserves member onboarding, n
 test('returning from an admin tab makes the real header hide join form and refresh its server guard',async()=>{
   await mkdir('tmp',{recursive:true});const dir=await mkdtemp(`${process.cwd()}/tmp/join-focus-`);
   const original={fetch:globalThis.fetch,window:globalThis.window,document:globalThis.document};
-  const effects=[],states=[],refs=[];let stateCursor=0,refCursor=0;let viewer={};let refreshes=0;
+  const effects=[],states=[],refs=[];let stateCursor=0,refCursor=0;let viewer={member:null,editor:null};let refreshes=0;
   const fixture={useState:v=>{const i=stateCursor++;if(!(i in states))states[i]=v;return[states[i],v=>states[i]=typeof v==='function'?v(states[i]):v]},useRef:v=>{const i=refCursor++;return refs[i]??={current:v}},useEffect:f=>effects.push(f),useActionState:()=>[{},()=>{},false],useSyncExternalStore:(subscribe,get)=>get(),router:{refresh:()=>refreshes++,push:()=>{}},params:new URLSearchParams()};
-  globalThis.__joinFocus=fixture;globalThis.window=new EventTarget();globalThis.document=new EventTarget();globalThis.fetch=async()=>Response.json(viewer);
+  globalThis.__joinFocus=fixture;globalThis.window=Object.assign(new EventTarget(),{setInterval,clearInterval});globalThis.document=new EventTarget();globalThis.fetch=async()=>Response.json(viewer);
   try{
     await build({stdin:{contents:"export {MemberEntry} from './app/_components/member-entry';export {JoinForm} from './app/join/join-form';export {memberSessionStore} from './lib/membership/client-session';",resolveDir:process.cwd(),loader:'ts'},outfile:`${dir}/subject.mjs`,bundle:true,platform:'node',format:'esm',packages:'external',jsx:'automatic',plugins:[{name:'browser-fixture',setup(b){
       const mocks={react:'export const {useState,useRef,useEffect,useActionState,useSyncExternalStore}=globalThis.__joinFocus;',
@@ -54,10 +54,10 @@ test('returning from an admin tab makes the real header hide join form and refre
     }}]});
     const {MemberEntry,JoinForm,memberSessionStore}=await import(`${dir}/subject.mjs`);
     MemberEntry({});const cleanups=effects.splice(0).map(f=>f());await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),false);
-    viewer={editor:{name:'الإدارة'}};window.dispatchEvent(new Event('focus'));await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),true);
+    viewer={member:null,editor:{name:'الإدارة'}};window.dispatchEvent(new Event('focus'));await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),true);
     const content=JoinForm({available:true});assert.match(JSON.stringify(content),/أنت مسجّل الدخول/);assert.doesNotMatch(JSON.stringify(content),/member-form-head/);effects.splice(0).forEach(f=>f());assert.equal(refreshes,1);
-    viewer={};window.dispatchEvent(new Event('focus'));await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),false);
-    viewer={member:{name:'قارئ',emailVerified:true}};window.dispatchEvent(new Event('focus'));await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),true);
+    viewer={member:null,editor:null};window.dispatchEvent(new Event('focus'));await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),false);
+    viewer={member:{name:'قارئ',emailVerified:true},editor:null};window.dispatchEvent(new Event('focus'));await new Promise(r=>setTimeout(r,0));assert.equal(memberSessionStore.getSnapshot(),true);
     cleanups.forEach(f=>f?.());
   }finally{Object.assign(globalThis,original);delete globalThis.__joinFocus;await rm(dir,{recursive:true,force:true});}
 });

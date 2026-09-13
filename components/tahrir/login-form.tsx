@@ -8,6 +8,7 @@ import { LogInIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { invalidateViewerSession } from "@/lib/membership/client-session";
 
 export function LoginForm() {
   const router = useRouter();
@@ -27,6 +28,7 @@ export function LoginForm() {
     }).catch(() => null);
     const data = await response?.json().catch(() => null);
     if (response?.ok) {
+      invalidateViewerSession();
       router.replace(data?.mustChangePassword ? "/tahrir/password" : "/tahrir");
       router.refresh();
       return;

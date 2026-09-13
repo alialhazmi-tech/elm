@@ -60,5 +60,18 @@ test('successful OTP clears stale Neon session data; account and viewer read ver
     suspended=false;
     const fresh=await new SignJWT({user:{...user},session}).setProtectedHeader({alg:'HS256'}).setIssuedAt().setExpirationTime('5m').sign(new TextEncoder().encode(secret));jar.set(NEON_AUTH_SESSION_DATA_COOKIE_NAME,fresh);
     const reads=calls.length;assert.equal((await subject.getMemberSession()).data.user.emailVerified,true);assert.equal(calls.length,reads,'verified cache retains its fast path');
+    const getSession = auth.getSession;
+    try {
+      auth.getSession = async () => ({data:null,error:{status:503,message:'provider unavailable'}});
+      assert.equal((await subject.viewer()).status,503,'provider errors are not successful anonymous responses');
+      auth.getSession = async () => { throw new Error('network unavailable'); };
+      assert.equal((await subject.viewer()).status,503);
+      assert.equal((await subject.getMemberSession()).data,null,'other guards retain their fail-closed behavior');
+      let sessionCalls=0;
+      auth.getSession = async () => ++sessionCalls === 1 ? {data:{user:{...user,emailVerified:false},session},error:null} : {data:null,error:{status:502}};
+      assert.equal((await subject.viewer()).status,503,'fresh verification lookup failure remains unavailable');
+      auth.getSession = async () => ({data:null,error:null});
+      const anonymous=await subject.viewer();assert.equal(anonymous.status,200);assert.deepEqual(await anonymous.json(),{member:null,editor:null});
+    } finally { auth.getSession=getSession; }
   } finally {globalThis.fetch=originalFetch;delete globalThis.__verificationFixture;await rm(dir,{recursive:true,force:true});}
 });

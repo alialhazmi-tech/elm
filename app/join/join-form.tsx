@@ -2,7 +2,7 @@
 import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { memberSessionStore } from "@/lib/membership/client-session";
+import { memberSessionStore, refreshViewerAfter } from "@/lib/membership/client-session";
 import {
   ArrowLeft,
   Eye,
@@ -106,7 +106,7 @@ function SignUpForm({
   available: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
-    signUpMember,
+    (state: AuthFormState, form: FormData) => refreshViewerAfter(() => signUpMember(state, form)),
     initialState,
   );
   const [confirmation, setConfirmation] = useState({ passwordLength: 0, hasValue: false, mismatched: false });
@@ -184,7 +184,7 @@ function SignInForm({
   onForgot: () => void;
 }) {
   const [state, formAction, pending] = useActionState(
-    signInMember,
+    (state: AuthFormState, form: FormData) => refreshViewerAfter(() => signInMember(state, form)),
     initialState,
   );
   return (
