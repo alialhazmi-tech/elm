@@ -1,3 +1,4 @@
+import { contentSecurityPolicy } from "../lib/security/csp.ts";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -80,7 +81,7 @@ test("المحرر وصفحة المادة يستخدمان نفس المشغّ�
     read("app/[section]/[id]/[slug]/page.tsx"),
     read("app/soft.css"),
     read("lib/content/provider.ts"),
-    read("next.config.ts"),
+    Promise.resolve(contentSecurityPolicy(false)),
     read("app/api/tahrir/story/route.ts"),
     read("scripts/wp-migrate.mjs"),
     read("db/schema.ts"),
@@ -100,8 +101,8 @@ test("المحرر وصفحة المادة يستخدمان نفس المشغّ�
   assert.match(styles, /\.sa-video iframe \{[^}]*width: 100%;[^}]*aspect-ratio: 16 \/ 9;/);
   assert.match(provider, /section === "videos"[\s\S]*or\(eq\(storiesTable\.section, section\), eq\(storiesTable\.format, "videos"\)\)/);
   assert.match(provider, /section === "videos" \? isVideo\(story\) : story\.section === section/);
-  assert.match(config, /["`]frame-src [^"`]*https:\/\/www\.youtube-nocookie\.com/);
-  assert.match(config, /["`]frame-src [^"`]*https:\/\/www\.instagram\.com/);
+  assert.match(config, /frame-src [^;]*https:\/\/www\.youtube-nocookie\.com/);
+  assert.match(config, /frame-src [^;]*https:\/\/www\.instagram\.com/);
   assert.doesNotMatch(config, /frame-src[^"]*youtube\.com[^-]/);
   // الحفظ يقبل يوتيوب وتغريدات X، والهجرة تسحب الرابط من واجهة الموقع القديم الخاصة.
   assert.match(route, /const videoUrl = normalizeVideoUrl\(input\.videoUrl\)/);

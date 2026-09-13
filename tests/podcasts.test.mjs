@@ -1,3 +1,4 @@
+import { contentSecurityPolicy } from "../lib/security/csp.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -70,7 +71,7 @@ test("قالب المقال يشغّل الحلقات بمشغل «الطبعة 
     readFile(new URL("../app/[section]/[id]/[slug]/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/_components/podcast-player.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/_components/podcast-dock.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
+    Promise.resolve(contentSecurityPolicy(false)),
   ]);
   assert.match(page, /story\.format === "podcasts"/u);
   assert.match(page, /<PodcastPlayer/u, "مكون المشغل غير مستخدم في القالب");

@@ -1,3 +1,4 @@
+import { tagManagerInit } from "../lib/security/browser-scripts.ts";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -6,10 +7,7 @@ import { runInNewContext } from "node:vm";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("رابط استعادة كلمة المرور لا يحمّل متتبعًا يقرأ رمز الاستعادة", async () => {
-  const layout = await read("app/layout.tsx");
-  const assignment = layout.match(/const tagManagerInit = `[^`]+`;/)?.[0];
-  assert.ok(assignment);
-  const script = runInNewContext(`${assignment}; tagManagerInit`);
+  const script = tagManagerInit;
   for (const pathname of ["/join/reset", "/join/reset/", "/tahrir/recover", "/tahrir/recover/"]) {
     runInNewContext(script, {
       window: { location: { pathname } },
