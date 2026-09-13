@@ -23,9 +23,11 @@ export function assertExpectedVersion(actual: number, expected: unknown) {
   if (actual !== expected) throw new StoryWriteError("تغيّرت المادة منذ فتحها. أعد تحميلها قبل الحفظ؛ بقيت تعديلاتك في المحرر.");
 }
 
-export function stableIdentity(existing: { slug: string; section: string } | null, input: { slug?: string; section?: string }, id: string) {
+export function stableIdentity(existing: { slug: string; section: string } | null, input: { slug?: string; section?: string; title?: string }, id: string) {
   if (existing) return { slug: existing.slug, section: existing.section };
-  const slug = (input.slug ?? "").normalize("NFC").trim().toLowerCase()
+  const requested = input.slug?.trim();
+  const source = !requested || requested === `story-${id.slice(0, 8)}` ? input.title || requested || "" : requested;
+  const slug = source.normalize("NFC").trim().toLowerCase()
     .replace(/[^\p{L}\p{N}-]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 200);
   return { slug: slug || `story-${id.slice(0, 8)}`, section: input.section || "news" };
 }

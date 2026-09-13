@@ -13,6 +13,8 @@ import { readAssistResponse } from "@/lib/ai/read-assist-response";
 import { cn } from "@/lib/utils";
 
 interface Props {
+  title: string;
+  excerpt: string;
   seoTitle: string;
   seoDescription: string;
   keywords: string[];
@@ -28,7 +30,7 @@ interface Props {
 
 function Counter({ length, max }: { length: number; max: number }) {
   return (
-    <span className={cn("text-[10.5px] tabular-nums", length > max ? "text-(--t-block)" : "text-muted-foreground")}>
+    <span className={cn("text-[10.5px] tabular-nums", length > max ? "text-(--t-warn)" : "text-muted-foreground")}>
       {length}/{max}
     </span>
   );
@@ -70,6 +72,8 @@ export function SeoPanel(props: Props) {
     setProposal(null); setError("");
   }
 
+  const previewTitle = `${props.seoTitle.trim() || props.title} | العلم`;
+  const previewDescription = props.seoDescription.trim() || props.excerpt;
   const blocking = proposal?.seo.guard.findings.find((finding) => finding.severity === "blocking");
 
   return (
@@ -104,6 +108,12 @@ export function SeoPanel(props: Props) {
           </Button>
         </div>
       ) : null}
+      <div className="rounded-lg border bg-card p-3" aria-label="معاينة تقريبية لنتيجة البحث">
+        <p className="text-xs text-muted-foreground">معاينة تقريبية لنتيجة البحث</p>
+        <p className="mt-2 font-medium">{previewTitle}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{previewDescription || "أضف وصفًا يوضح قيمة المادة للقارئ."}</p>
+        <p className="mt-2 text-xs text-muted-foreground">العنوان مع اسم الموقع: {previewTitle.length} محرفًا. الأعداد إرشادية؛ قد تختار محركات البحث نصًا مختلفًا بحسب الاستعلام وعرض الشاشة. لا يُقص النص تلقائيًا.</p>
+      </div>
       <div className="grid gap-1.5">
         <div className="flex items-center justify-between">
           <Label htmlFor="seo-title">عنوان البحث</Label>

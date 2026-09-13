@@ -582,6 +582,8 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
               </TabsContent>
               <TabsContent value="seo">
                 <SeoPanel
+                  title={title}
+                  excerpt={excerpt}
                   seoTitle={seoTitle}
                   seoDescription={seoDescription}
                   keywords={keywords}
