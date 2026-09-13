@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { ThemeProvider } from "next-themes";
 
 import "./shadcn.css";
@@ -22,10 +22,11 @@ export const metadata: Metadata = {
  */
 export default async function TahrirLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const store = await cookies();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   const theme = readThemeFromCookies((name) => store.get(name)?.value);
 
   return (
-    <ThemeProvider attribute="data-theme" storageKey="alelm-theme" enableSystem disableTransitionOnChange>
+    <ThemeProvider nonce={nonce} attribute="data-theme" storageKey="alelm-theme" enableSystem disableTransitionOnChange>
       <ActiveThemeProvider initialTheme={theme}>
         <DirectionProvider dir="rtl">
           <TooltipProvider>
