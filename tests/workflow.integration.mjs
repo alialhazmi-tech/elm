@@ -479,6 +479,15 @@ try {
   assert.equal((await withDb(()=>subject.myNotifications(assignee))).length,1);
   assert.equal((await withDb(()=>subject.myNotifications(outsider))).length,0);
   await assert.rejects(withDb(()=>subject.changeTeam(teamDraft.id,manager,assignment)),error=>error.status===409);
+  // Assignment changes an internal workflow version, not the public lastmod.
+  const publicModified = '2026-08-01T12:00:00.000Z';
+  const assignmentPublicId = 'assignment-public';
+  await withDb(()=>subject.saveDraft({...teamDraft,id:assignmentPublicId},owner));
+  await admin.query("update stories set status='published',published_at=$2,updated_at=$2 where id=$1", [assignmentPublicId, publicModified]);
+  const assignedPublished = await withDb(()=>subject.changeTeam(assignmentPublicId,manager,{...assignment,expectedVersion:1,assignedTo:null}));
+  assert.equal(assignedPublished.version,2);
+  assert.equal((await admin.query('select updated_at from stories where id=$1',[assignmentPublicId])).rows[0].updated_at,publicModified);
+
   // The assigned editor can save without acquiring access to other authors' stories.
   await withDb(()=>subject.saveDraft({...teamDraft,expectedVersion:2,body:'تعديل المحرر المسند'},assignee));
   await withDb(()=>subject.saveDraft({...teamDraft,id:'team-private'},owner));

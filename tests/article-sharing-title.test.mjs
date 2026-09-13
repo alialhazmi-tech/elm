@@ -51,6 +51,7 @@ test("share button sends the reader title as title and text, with a URL-only cli
   };
   const { ArticleToolbar } = await loadComponent("../app/_components/article-experience.tsx", {
     "react/jsx-runtime": jsx,
+    "@/app/_components/use-article-state": { useArticleState: () => [{ signedIn: false }] },
     react: { useState: initial => [initial, () => {}], useEffect: () => {} },
   }, { navigator, document: { title: "عنوان SEO مختلف | العلم" } });
   const props = {

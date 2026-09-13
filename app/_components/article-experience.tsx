@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useArticleState } from "@/app/_components/use-article-state";
+
 import { SummaryListen } from "@/app/_components/summary-listen";
 import { EndingPoll } from "@/app/_components/poll";
 import { toLatinDigits } from "@/lib/format";
@@ -43,51 +45,18 @@ function postJson(url: string, body: unknown, keepalive = false) {
   });
 }
 
-type ArticleState = {
-  memberId: string | null; signedIn: boolean; saved: boolean;
-  saveOwnerId: string | null; saveLoginHref: string | null;
-  status: "loading" | "ready" | "error";
-};
-
-function fetchArticleState(storyId: string): Promise<ArticleState | null> {
-  return fetch(`/api/me/article-state?storyId=${encodeURIComponent(storyId)}`, { credentials: "same-origin", cache: "no-store" })
-    .then(response => response.ok ? response.json() : null)
-    .then(data => data ? { memberId: typeof data.memberId === "string" ? data.memberId : null, signedIn: Boolean(data.signedIn), saved: Boolean(data.saved), saveOwnerId: typeof data.saveOwnerId === "string" ? data.saveOwnerId : null, saveLoginHref: typeof data.saveLoginHref === "string" ? data.saveLoginHref : null, status: "ready" as const } : null)
-    .catch(() => null);
-}
-
-/** لا نخزّن جلسة عضو في كاش مواد عام؛ نحدّثها عند الرجوع للتبويب. */
-function useArticleState(storyId: string) {
-  const [state, setState] = useState<ArticleState>({ memberId: null, signedIn: false, saved: false, saveOwnerId: null, saveLoginHref: null, status: "loading" });
-  useEffect(() => {
-    let live = true;
-    let sequence = 0;
-    const refresh = () => {
-      const request = ++sequence;
-      void fetchArticleState(storyId).then(data => { if (live && request === sequence) setState(current => data ?? { ...current, status: "error" }); });
-    };
-    refresh();
-    window.addEventListener("focus", refresh);
-    window.addEventListener("alelm-saved-change", refresh);
-    return () => { live = false; window.removeEventListener("focus", refresh); window.removeEventListener("alelm-saved-change", refresh); };
-  }, [storyId]);
-  return [state, setState] as const;
-}
-
 /**
  * «احفظ المادة» في صف البايلاين — نفس مكتبة العضو خلف الواجهة
  * (`/api/me/saved`)، فالمحفوظ هنا هو المحفوظ في صفحة «لك».
  */
 export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; joinHref: string }) {
-  const [state, setState] = useArticleState(storyId);
+  const [state, setState, refreshState] = useArticleState(storyId);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
 
   if (state.status !== "ready") {
     const retry = async () => {
-      setState(current => ({ ...current, status: "loading" }));
-      const latest = await fetchArticleState(storyId);
-      setState(current => latest ?? { ...current, status: "error" });
+      await refreshState();
     };
     return <button type="button" className="sa-save" disabled={state.status === "loading"} onClick={() => void retry()}>
       {state.status === "loading" ? "جارٍ التحقق من الحساب…" : "إعادة التحقق للحفظ"}
@@ -112,13 +81,12 @@ export function ArticleSaveButton({ storyId, joinHref }: { storyId: string; join
       if (!response.ok) throw new Error("save");
       const data = (await response.json()) as { saved?: boolean };
       const saved = Boolean(data.saved);
-      setState((current) => ({ ...current, saved }));
+      setState((current) => current.saveOwnerId === state.saveOwnerId ? { ...current, saved } : current);
       window.dispatchEvent(new Event("alelm-saved-change"));
     } catch {
-      setState((current) => ({ ...current, saved: !next }));
+      setState((current) => current.saveOwnerId === state.saveOwnerId ? { ...current, saved: !next } : current);
       setSaveError("تعذر الحفظ. تحقق من الحساب والاتصال ثم أعد المحاولة.");
-      const latest = await fetchArticleState(storyId);
-      if (latest) setState(latest);
+      await refreshState();
     } finally { setSaving(false); }
   };
 
@@ -315,7 +283,9 @@ export function ArticleToolbar({
 }
 
 export function ArticleTracker({ storyId }: { storyId: string }) {
+  const [readerState] = useArticleState(storyId);
   const signedIn = useRef(false);
+  const trackedMember = useRef<string | null>(null);
   const activeMs = useRef(0);
   const lastTick = useRef(0);
   const maxProgress = useRef(0);
@@ -353,14 +323,21 @@ export function ArticleTracker({ storyId }: { storyId: string }) {
   }, [storyId]);
 
   useEffect(() => {
-    void fetchArticleState(storyId).then((data) => {
-      signedIn.current = Boolean(data?.signedIn);
-      if (signedIn.current && !opened.current) {
-        opened.current = true;
-        void postJson("/api/me/events", { events: [{ type: "article_open", storyId }] });
-      }
-    });
+    signedIn.current = readerState.status === "ready" && readerState.signedIn;
+    if (readerState.status === "ready" && trackedMember.current !== readerState.memberId) {
+      trackedMember.current = readerState.memberId;
+      activeMs.current = 0;
+      maxProgress.current = 0;
+      sentMarks.current.clear();
+      opened.current = false;
+    }
+    if (signedIn.current && !opened.current) {
+      opened.current = true;
+      void postJson("/api/me/events", { events: [{ type: "article_open", storyId }] });
+    }
+  }, [readerState.memberId, readerState.signedIn, readerState.status, storyId]);
 
+  useEffect(() => {
     lastTick.current = Date.now();
     const interval = window.setInterval(() => {
       const now = Date.now();

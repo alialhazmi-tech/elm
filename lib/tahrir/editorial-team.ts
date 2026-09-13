@@ -57,7 +57,7 @@ export async function changeTeam(id: string, actor: WriteActor, input: Record<st
     if (assignedTo === undefined || (assignedTo && !assignee)) throw new StoryWriteError("اختر محررًا فعّالًا من القائمة.", 400);
     const dueAt = input.dueAt === null || input.dueAt === "" ? null : typeof input.dueAt === "string" && Number.isFinite(Date.parse(input.dueAt)) ? new Date(input.dueAt).toISOString() : undefined;
     if (dueAt === undefined) throw new StoryWriteError("موعد التسليم غير صحيح.", 400);
-    await db.batch([lockStory(story), db.update(stories).set({ assignedTo, dueAt, version: story.version + 1, updatedAt: now }).where(eq(stories.id, id)),
+    await db.batch([lockStory(story), db.update(stories).set({ assignedTo, dueAt, version: story.version + 1, ...(story.status === "published" ? {} : { updatedAt: now }) }).where(eq(stories.id, id)),
       auditQuery(actor.username, "story:assign", id, assignedTo ? `إسناد المادة إلى ${assignee?.name}` : "إلغاء الإسناد", { before: story, after: { assignedTo, dueAt } }),
       notify(actor, id, [assignedTo], `أسند ${actor.displayName} إليك مادة: ${story.title}`)]);
     return { version: story.version + 1, assignment: { assignedTo, assigneeName: assignee?.name ?? null, dueAt } };
