@@ -14,7 +14,7 @@ async function withServer(enforced, configuredSecret, check) {
   const port = socket.address().port;
   await new Promise(resolve => socket.close(resolve));
   const origin = `http://127.0.0.1:${port}`;
-  const server = spawn(process.execPath, [path.resolve("node_modules/next/dist/bin/next"), "start", "-p", String(port)], {
+  const server = spawn(process.execPath, [path.resolve("node_modules/next/dist/bin/next"), "start", "-p", String(port), "-H", "127.0.0.1"], {
     env: { ...process.env, DATABASE_URL: "", NEXT_DIST_DIR: process.env.NEXT_DIST_DIR || ".next-gate", ORIGIN_AUTH_ENFORCE: enforced, ORIGIN_AUTH_SECRET: configuredSecret, CRON_SECRET: cronSecret },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -24,7 +24,10 @@ async function withServer(enforced, configuredSecret, check) {
   try {
     let ready = false;
     for (let i = 0; i < 100; i++) {
-      try { await fetch(origin, { redirect: "manual" }); ready = true; break; } catch { /* starting */ }
+      if (server.exitCode !== null) break;
+      if (output.includes("Ready in")) {
+        try { await fetch(origin, { redirect: "manual", signal: AbortSignal.timeout(2000) }); ready = true; break; } catch { /* starting */ }
+      }
       await new Promise(resolve => setTimeout(resolve, 100));
     }
     assert.ok(ready, output);
