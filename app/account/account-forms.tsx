@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useState, type ReactNode } from "react";
 import { Check, Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { MEMBER_INTERESTS } from "@/lib/membership/interests";
+import { refreshViewerAfter } from "@/lib/membership/client-session";
 import {
   changeMemberPassword,
   saveAccountInterests,
@@ -26,7 +27,9 @@ export function AccountAction({
   className?: string;
   pendingLabel?: string;
 }) {
-  const [state, submit, pending] = useActionState(action, {});
+  const [state, submit, pending] = useActionState(
+    (state: AccountFormState, form: FormData) => refreshViewerAfter(() => action(state, form)), {},
+  );
   return (
     <form action={submit} className="ac-action-form">
       {children}

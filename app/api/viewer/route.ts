@@ -4,7 +4,7 @@ import { privateJson } from "@/lib/personalization/session";
 export async function GET() {
   try {
     const [membership, editor] = await Promise.all([
-      getMemberSession(),
+      getMemberSession({ strict: true }),
       loadActor(),
     ]);
     return privateJson({

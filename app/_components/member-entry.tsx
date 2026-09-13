@@ -1,32 +1,26 @@
 "use client";
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { endMemberSession } from "@/app/account/actions";
-import { memberSessionStore } from "@/lib/membership/client-session";
-type Identity = { name: string; image?: string | null };
-export type MemberIdentity = Identity & { emailVerified: boolean };
+import { viewerSessionStore } from "@/lib/membership/client-session";
+import type { MemberIdentity } from "@/lib/membership/viewer-store";
+export type { MemberIdentity } from "@/lib/membership/viewer-store";
 export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
   const router = useRouter();
-  const [liveViewer, setViewer] = useState<{
-    member?: MemberIdentity;
-    editor?: Identity;
-  }>({});
-  const [liveLoaded, setLoaded] = useState(false);
+  const snapshot = useSyncExternalStore(viewerSessionStore.subscribe, viewerSessionStore.getSnapshot, viewerSessionStore.getServerSnapshot);
   const [signOutState, signOut, signingOut] = useActionState(async () => {
     const result = await endMemberSession();
     if (result.success) {
-      memberSessionStore.update(Boolean(liveViewer.editor));
-      setViewer((current) => ({ ...current, member: undefined }));
+      viewerSessionStore.removeIdentity("member");
       router.push("/");
       router.refresh();
     }
     return result;
   }, {});
-  const viewer = preview ? { member: preview, editor: undefined } : liveViewer;
-  const loaded = Boolean(preview) || liveLoaded;
+  const viewer = preview ? { member: preview, editor: null } : snapshot.viewer;
   const pathname = usePathname();
   const menu = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
@@ -54,37 +48,22 @@ export function MemberEntry({ preview }: { preview?: MemberIdentity }) {
   }, [pathname]);
   useEffect(() => {
     if (preview) return;
-    let controller: AbortController | undefined;
-    const refresh = () => {
-      controller?.abort();
-      const request = new AbortController();
-      controller = request;
-      return fetch("/api/viewer", {
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: request.signal,
-      })
-        .then((response) => (response.ok ? response.json() : {}))
-        .then((data: { member?: MemberIdentity; editor?: Identity }) => {
-          if (request.signal.aborted) return;
-          memberSessionStore.update(Boolean(data.member || data.editor));
-          setViewer(data);
-          setLoaded(true);
-        })
-        .catch(() => {
-          if (!request.signal.aborted) setLoaded(true);
-        });
-    };
-    void refresh();
+    const refresh = () => { void viewerSessionStore.refresh(true); };
+    void viewerSessionStore.refresh();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void viewerSessionStore.refresh();
+    }, 60_000);
     window.addEventListener("focus", refresh);
     window.addEventListener("alelm:profile-updated", refresh);
     return () => {
-      controller?.abort();
+      window.clearInterval(timer);
       window.removeEventListener("focus", refresh);
       window.removeEventListener("alelm:profile-updated", refresh);
     };
-  }, [pathname, preview]);
-  if (!loaded)
+  }, [preview]);
+  if (!viewer && snapshot.error)
+    return <button type="button" className="member-entry" onClick={() => void viewerSessionStore.refresh(true)} aria-label="تعذر تحميل الحساب، أعد المحاولة">إعادة المحاولة</button>;
+  if (!viewer)
     return (
       <span className="member-entry" aria-busy="true" aria-label="تحميل الحساب">
         …

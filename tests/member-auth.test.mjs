@@ -63,8 +63,8 @@ test("زر العضوية ظاهر في الهيدر ومسار التسجيل �
   assert.match(account, /getMemberSession/);
   assert.match(account, /redirect\("\/join"\)/);
   assert.match(signup, /JoinForm/);
-  assert.match(form, /useActionState\(\s*signUpMember,\s*initialState,?\s*\)/);
-  assert.match(form, /useActionState\(\s*signInMember,\s*initialState,?\s*\)/);
+  assert.match(form, /useActionState\([\s\S]*?refreshViewerAfter\(\(\) => signUpMember\(state, form\)\),\s*initialState/);
+  assert.match(form, /useActionState\([\s\S]*?refreshViewerAfter\(\(\) => signInMember\(state, form\)\),\s*initialState/);
   assert.doesNotMatch(form, /const action = mode ===/);
 });
 
@@ -78,6 +78,6 @@ test("نجاح التسجيل يبدأ الترحيب والاهتمامات ث�
   assert.match(ready, /جهّزنا العلم لك/);
   assert.match(feed, /صباح المعرفة/);
   assert.match(account, /getMemberAccountData/);
-  assert.match(header, /\/api\/viewer/);
+  assert.match(await read("lib/membership/viewer-store.ts"), /\/api\/viewer/);
   assert.match(header, /الملف الشخصي/);
 });
