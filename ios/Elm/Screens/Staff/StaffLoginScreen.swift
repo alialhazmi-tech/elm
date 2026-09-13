@@ -102,7 +102,7 @@ struct StaffLoginScreen: View {
                 .focused($focused, equals: .next)
             StaffSecureField(label: "تأكيد كلمة المرور", text: $confirm, contentType: .newPassword, submitLabel: .go, onSubmit: submitPasswordChange)
                 .focused($focused, equals: .confirm)
-            Text("عشرة محارف على الأقل وتختلف عن المؤقتة. تُنهي كل الجلسات الأخرى.")
+            Text("15 محرفًا على الأقل وتختلف عن المؤقتة. تُنهي كل الجلسات الأخرى.")
                 .font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).frame(maxWidth: .infinity, alignment: .leading)
             StaffPrimaryButton(title: staff.loading ? "جارٍ الحفظ…" : "حفظ والمتابعة", symbol: "key", busy: staff.loading, action: submitPasswordChange)
             StaffSecondaryButton(title: "الخروج", symbol: "rectangle.portrait.and.arrow.right", destructive: true) { Task { await staff.signOut() } }
@@ -120,7 +120,7 @@ struct StaffLoginScreen: View {
 
     private func submitPasswordChange() {
         guard next == confirm else { staff.errorMessage = "كلمتا المرور غير متطابقتين."; return }
-        guard next.count >= 10 else { staff.errorMessage = "كلمة المرور 10 محارف على الأقل."; return }
+        guard next.unicodeScalars.count >= 15 else { staff.errorMessage = "كلمة المرور 15 محرفًا على الأقل."; return }
         Task { _ = await staff.changePassword(current: current, next: next) }
     }
 

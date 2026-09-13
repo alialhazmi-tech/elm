@@ -127,9 +127,9 @@ struct StaffMemberSheet: View {
                         }
                         if !isMe {
                             StaffCard {
-                                StaffField(label: "كلمة مرور جديدة (10 محارف على الأقل)", text: $password, ltr: true)
+                                StaffField(label: "كلمة مرور جديدة (15 محرفًا على الأقل)", text: $password, ltr: true)
                                 StaffSecondaryButton(title: "إعادة تعيين كلمة المرور", symbol: "key") { Task { await resetPassword() } }
-                                    .disabled(password.count < 10 || busy)
+                                    .disabled(password.unicodeScalars.count < 15 || busy)
                             }
                         }
                     }
@@ -196,9 +196,9 @@ struct StaffCreateMemberSheet: View {
                                 .font(ElmFonts.text(.footnote, weight: .medium)).foregroundStyle(ElmTheme.navyInk).frame(minHeight: 36)
                         }
                     }
-                    StaffField(label: "كلمة مرور مؤقتة (10 محارف على الأقل)", text: $password, ltr: true, hint: "يُطلب من العضو تغييرها عند أول دخول.")
+                    StaffField(label: "كلمة مرور مؤقتة (15 محرفًا على الأقل)", text: $password, ltr: true, hint: "يُطلب من العضو تغييرها عند أول دخول.")
                     StaffPrimaryButton(title: "إنشاء الحساب", symbol: "person.badge.plus", busy: busy) { Task { await create() } }
-                        .disabled(username.isEmpty || displayName.isEmpty || password.count < 10)
+                        .disabled(username.isEmpty || displayName.isEmpty || password.unicodeScalars.count < 15)
                 }
                 .padding(20)
             }
@@ -338,11 +338,11 @@ struct StaffProfileScreen: View {
                 StaffCard {
                     Text("تغيير كلمة المرور").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)
                     StaffSecureField(label: "الحالية", text: $current)
-                    StaffSecureField(label: "الجديدة (10 محارف على الأقل)", text: $next, contentType: .newPassword)
+                    StaffSecureField(label: "الجديدة (15 محرفًا على الأقل)", text: $next, contentType: .newPassword)
                     StaffSecureField(label: "تأكيد الجديدة", text: $confirm, contentType: .newPassword)
                     Text("تغيير كلمة المرور يُنهي كل الجلسات الأخرى.").font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
                     StaffSecondaryButton(title: "تغيير كلمة المرور", symbol: "key") { Task { await changePassword() } }
-                        .disabled(current.isEmpty || next.count < 10 || next != confirm || busy)
+                        .disabled(current.isEmpty || next.unicodeScalars.count < 15 || next != confirm || busy)
                 }
                 StaffMFASetupView()
             }

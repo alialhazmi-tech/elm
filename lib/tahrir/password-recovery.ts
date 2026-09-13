@@ -1,3 +1,4 @@
+import { staffPasswordError } from "./password-policy";
 import { eq, sql } from "drizzle-orm";
 import { users } from "@/db/schema";
 import { getDb } from "@/lib/db";
@@ -6,7 +7,7 @@ import { readRecoveryToken, recoveryAccountState } from "./password-recovery-tok
 
 /** التحديث والتدقيق ذريّان، ونسخة الجلسة تمنع إعادة الاستخدام ولو وصل طلبان معًا. */
 export async function redeemStaffRecovery(token: string, password: string): Promise<boolean> {
-  if (password.length < 10 || password.length > 512) return false;
+  if (staffPasswordError(password)) return false;
   const claims = readRecoveryToken(token, process.env.AUTH_SECRET ?? "");
   const db = getDb();
   if (!claims || !db) return false;

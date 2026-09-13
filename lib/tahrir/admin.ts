@@ -1,3 +1,4 @@
+import { staffPasswordError } from "./password-policy";
 /** إدارة الأعضاء والأدوار — كل كتابة تُدوَّن في سجل التدقيق وتُسقط كاش الأدوار. */
 
 import { and, asc, count, eq, ne, sql } from "drizzle-orm";
@@ -150,8 +151,8 @@ async function otherActiveAdmins(exceptUserId: string): Promise<number> {
 }
 
 export function validatePassword(password: string) {
-  if (typeof password !== "string" || password.length > 512) throw new AdminError("كلمة المرور لا تتجاوز 512 محرفًا.");
-  if (password.length < 10) throw new AdminError("كلمة المرور 10 محارف على الأقل.");
+  const error = staffPasswordError(password);
+  if (error) throw new AdminError(error);
 }
 
 export async function createMember(

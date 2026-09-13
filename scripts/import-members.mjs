@@ -6,6 +6,7 @@
  * يطبع لكل عضو كلمته المؤقتة مرة واحدة — انسخها من الطرفية ولا تُخزَّن في أي مكان آخر.
  */
 
+import { generateStaffTemporaryPassword as tempPassword } from "../lib/tahrir/password-policy.ts";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -104,11 +105,7 @@ for (const member of members) {
 console.log(`${members.length} عضوًا في الملف.`);
 for (const problem of problems) console.warn(`تنبيه — ${problem}`);
 
-const tempPassword = () => {
-  const alphabet = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(14));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-};
+
 
 if (dryRun) {
   for (const member of members) console.log(`  ${member.role.padEnd(16)} ${member.displayName} <${member.username}>`);
