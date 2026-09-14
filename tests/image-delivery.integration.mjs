@@ -39,10 +39,11 @@ try {
   await write('next.config.mjs', `export default { experimental: {cpus:2}, images: {
     loader:'custom', loaderFile:'./lib/image-variant-loader.ts', deviceSizes:[360,640,1080,1600], imageSizes:[168]
   } };`);
-  for (const file of ['app/image-variants/route.ts', 'app/share/[id]/[version]/page.tsx', 'app/share-images/[filename]/route.ts', 'lib/image-source.ts', 'lib/image-variant-loader.ts', 'lib/image-variants.ts', 'lib/sharing-image.ts', 'lib/sharing.ts', 'lib/sharing-contract.ts']) {
+  for (const file of ['app/image-variants/route.ts', 'app/share/[id]/[version]/route.ts', 'app/share-images/[filename]/route.ts', 'lib/image-source.ts', 'lib/image-variant-loader.ts', 'lib/image-variants.ts', 'lib/sharing-image.ts', 'lib/sharing.ts', 'lib/sharing-contract.ts']) {
     await write(file, await readFile(file, 'utf8'));
   }
   await write('lib/content/provider.ts', `export const seedContentProvider={getStory:async(id:string)=>id==='published'?{id,section:'politics',slug:'news',title:'Public story',excerpt:'Public description',image:'/uploads/621a297f-10bd-40a5-87ee-67e0a54b5c28.webp'}:null};`);
+  await write('lib/content/types.ts', `export function storyHref(story:{section:string;id:string;slug:string}){return '/'+story.section+'/'+story.id+'/'+story.slug}`);
   await write('lib/brand-sharing-image.ts', `export async function brandSharingImage():Promise<Buffer>{throw new Error('Unexpected brand fallback')}`);
   await write('app/[section]/[id]/[slug]/page.jsx', `import {sharingMetadata} from '@/lib/sharing';
     export async function generateMetadata({params}) { const p=await params; const path='/'+p.section+'/'+p.id+'/'+p.slug;
@@ -82,26 +83,29 @@ try {
   }
   assert.ok(ready, output);
   const origin = `http://127.0.0.1:${port}`;
-  const sharePath='/share/published/'+SHARING_VERSION;
-  const shared=await fetch(origin+sharePath,{headers:{'User-Agent':'Twitterbot/1.0'},redirect:'manual'});
-  assert.equal(shared.status,200,'share card must not redirect to a stale article URL');
-  assert.equal(shared.headers.get('location'),null);
-  const sharedHtml=await shared.text();
-  assert.match(sharedHtml,/<h1>politics:published:news<\/h1>/);
-  assert.match(sharedHtml,/rel="canonical" href="https:\/\/alelm.net\/politics\/published\/news"/);
-  const headHtml=sharedHtml.split('</head>')[0];
-  assert.match(headHtml,/name="robots" content="noindex, follow"/);
+  const articlePath='/politics/published/news';
+  const article=await fetch(origin+articlePath,{headers:{'User-Agent':'Twitterbot/1.0'},redirect:'manual'});
+  assert.equal(article.status,200);
+  const articleHtml=await article.text();
+  assert.match(articleHtml,/<h1>politics:published:news<\/h1>/);
+  const headHtml=articleHtml.split('</head>')[0];
+  assert.match(headHtml,/rel="canonical" href="https:\/\/alelm.net\/politics\/published\/news"/);
   assert.match(headHtml,/name="twitter:card" content="summary_large_image"/);
-  assert.ok(headHtml.includes('property="og:url" content="https://alelm.net'+sharePath+'"'));
+  assert.ok(headHtml.includes('property="og:url" content="https://alelm.net'+articlePath+'"'),'og:url must be the canonical article URL');
   const sharedImage=new URL(headHtml.match(/property="og:image" content="([^"]+)"/)[1]);
   assert.equal(sharedImage.search,'');
   assert.ok(sharedImage.pathname.includes('.v'+SHARING_VERSION+'-cover-'));
   assert.equal((await fetch(origin+sharedImage.pathname)).status,200);
-  assert.equal((await response(port,sharePath,'HEAD')).statusCode,200);
+  // روابط /share/ القديمة تحوَّل نهائيًا إلى الرابط القانوني مع حفظ معاملات التتبع.
+  const legacyShare='/share/published/'+SHARING_VERSION+'?utm_source=x';
+  const shared=await fetch(origin+legacyShare,{headers:{'User-Agent':'Twitterbot/1.0'},redirect:'manual'});
+  assert.equal(shared.status,308);
+  assert.equal(shared.headers.get('location'),articlePath+'?utm_source=x');
+  assert.equal((await response(port,legacyShare,'HEAD')).statusCode,308);
   for(const route of ['/share/draft/'+SHARING_VERSION,'/share/published/invalid']) {
     assert.equal((await fetch(origin+route,{headers:{'User-Agent':'Twitterbot/1.0'},redirect:'manual'})).status,404);
   }
-  console.log('Share pages: direct public article content, head metadata, original canonical, noindex, versioned image, HEAD and invalid/unpublished rejection passed.');
+  console.log('Share links: canonical og:url, versioned image, legacy /share/ 308 with tracking, HEAD and invalid/unpublished rejection passed.');
   await write('source-reads.txt','');
   const home = await (await fetch(origin)).text();
   assert.match(home, /srcSet="[^"]*image-variants/);

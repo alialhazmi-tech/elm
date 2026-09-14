@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { refreshedShareUrl, sharingImageFit, SHARING_VERSION } from "./sharing-contract.ts";
+import { publicShareUrl, sharingImageFit, SHARING_VERSION } from "./sharing-contract.ts";
 
 export const SITE_TITLE = "العلم | المعرفة وراء الخبر";
 export const SITE_DESCRIPTION = "منصة إعلام ومعرفة سعودية تشرح ما وراء الخبر عبر السلاسل والبيانات والفيديو والبودكاست.";
@@ -57,7 +57,7 @@ export function sharingMetadata(input: ShareInput, env: SharingEnvironment = pro
       siteName: "العلم",
       title: input.title,
       description: input.description,
-      url: input.storyId ? refreshedShareUrl(input.path, origin) : new URL(input.path, origin).href,
+      url: publicShareUrl(input.path, origin),
       images: [image],
       ...(input.type === "article" && input.publishedTime ? { publishedTime: input.publishedTime } : {}),
     },

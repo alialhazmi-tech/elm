@@ -13,7 +13,7 @@ import {
 import { SERIES } from "@/lib/content/series";
 import { loadPublicTaxonomy } from "@/lib/content/taxonomy-settings";
 import { LIST_PAGE_SIZE, paginate } from "@/lib/content/pagination";
-import { refreshedShareUrl } from "@/lib/sharing-contract";
+import { publicShareUrl } from "@/lib/sharing-contract";
 import { sharingOrigin } from "@/lib/sharing";
 import { storyHref } from "@/lib/content/types";
 import { stripHtmlToText } from "@/lib/content/html";
@@ -101,7 +101,7 @@ export type MobileStoryPayload = {
     links: Array<{ href: string; label: string }>;
     updatedAt: string | null;
     seoDescription: string | null;
-    /** رابط المشاركة بإصدار البطاقة كما يشاركه الويب (`refreshedShareUrl`). */
+    /** رابط المشاركة = الرابط القانوني الكامل كما يشاركه الويب (`publicShareUrl`). */
     shareUrl: string;
   };
   series: MobileSeriesChip | null;
@@ -189,7 +189,7 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
       ...toMobileCard(story, origin, MEDIA_WIDTH.full),
       body: stripHtmlToText(story.body ?? story.excerpt),
       factCheck: story.factCheck ?? null,
-      shareUrl: refreshedShareUrl(storyHref(story), sharingOrigin()),
+      shareUrl: publicShareUrl(storyHref(story), sharingOrigin()),
       bodyHtml: body.bodyHtml,
       blocks: body.blocks,
       ...storyVideo(story),
