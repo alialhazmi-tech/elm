@@ -56,3 +56,5 @@ migration-audit/wp-migrate.checkpoint.json
 
 # كِت shadcn المرجعي — نستنسخ منه ولا نستورده
 shadcn-ui-kit-dashboard-main/
+
+migration-audit/slug-backfill-*.json

@@ -312,8 +312,13 @@ export function DetailsPanel(props: DetailsPanelProps) {
         </div>
       </Section>
 
-      <Section title="الرابط (لاتيني)">
-        <Input dir="ltr" placeholder="my-story-slug" readOnly={props.identityLocked} value={props.slug} onChange={(event) => props.onSlug(event.target.value)} />
+      <Section title="رابط المادة">
+        <Input dir="auto" placeholder="يُشتق من العنوان تلقائيًا" readOnly={props.identityLocked} value={props.slug} onChange={(event) => props.onSlug(event.target.value)} />
+        <div className="text-[10px] text-muted-foreground">
+          {props.identityLocked
+            ? "ثبت الرابط عند النشر ولا يتغير."
+            : "اتركه فارغًا ليُشتق من العنوان عند الحفظ (عربي أو لاتيني)، أو اكتب رابطًا مخصصًا. يثبت بعد النشر."}
+        </div>
       </Section>
 
       <ArchiveDialog
