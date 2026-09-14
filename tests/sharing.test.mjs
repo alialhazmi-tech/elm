@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { sharingMetadata, sharingOrigin } from "../lib/sharing.ts";
-import { refreshedShareUrl, sharingImageFit, SHARING_VERSION } from "../lib/sharing-contract.ts";
+import { publicShareUrl, sharingImageFit, SHARING_VERSION } from "../lib/sharing-contract.ts";
 
 const env = { RAILWAY_PUBLIC_DOMAIN: "elm-preview.up.railway.app", NEXT_PUBLIC_SITE_URL: "https://alelm.net" };
 
@@ -58,19 +58,20 @@ test("article images have a JPEG sharing endpoint, dimensions and a source-speci
   assert.equal(new URL(meta.openGraph.images[0].url).search, "", "image identity must survive removal of query parameters");
   assert.notEqual(new URL(sharingMetadata({ ...input, image: "/uploads/updated.webp" }, env).openGraph.images[0].url).pathname, new URL(meta.openGraph.images[0].url).pathname);
   assert.notEqual(sharingMetadata({ ...input, format: "infographics" }, env).openGraph.images[0].url, meta.openGraph.images[0].url);
-  assert.equal(meta.openGraph.url, refreshedShareUrl(input.path, "https://alelm.net"));
+  assert.equal(meta.openGraph.url, "https://alelm.net/health/264648/news", "og:url is the canonical article URL");
   assert.equal(sharingMetadata({ ...input, image: undefined }, env).openGraph.images[0].url, "https://alelm.net/brand/share.jpg?v=20260905-light");
 });
 
-test("sharing paths bypass stale article redirects, retain tracking, and remain stable", () => {
-  const url = refreshedShareUrl("/politics/id/عنوان?utm_source=x&xcard=old#section", "https://alelm.net");
+test("share links are the canonical article URL: one link per story, tracking kept, xcard and hash dropped", () => {
+  const url = publicShareUrl("/politics/id/عنوان?utm_source=x&xcard=old#section", "https://alelm.net");
   const parsed = new URL(url);
+  assert.equal(parsed.origin, "https://alelm.net");
+  assert.equal(parsed.pathname, `/politics/id/${encodeURIComponent("عنوان")}`);
   assert.equal(parsed.searchParams.get("utm_source"), "x");
   assert.equal(parsed.searchParams.has("xcard"), false);
   assert.equal(parsed.hash, "");
-  assert.equal(parsed.pathname, `/share/id/${SHARING_VERSION}`);
-  assert.equal(refreshedShareUrl(url), url);
-  assert.equal(refreshedShareUrl(`/share/id/20260906-1`, 'https://alelm.net'), `https://alelm.net/share/id/${SHARING_VERSION}`);
+  assert.equal(publicShareUrl(url), url);
+  assert.equal(publicShareUrl("/politics/id/news", "https://alelm.net"), "https://alelm.net/politics/id/news");
 });
 
 test("photo cards fill the canvas while infographic and slide cards preserve all content", () => {

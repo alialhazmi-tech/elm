@@ -6,7 +6,7 @@ import { transform } from "esbuild";
 import * as jsx from "react/jsx-runtime";
 import * as sharing from "../lib/sharing.ts";
 import { storyHref } from "../lib/content/types.ts";
-import { refreshedShareUrl } from "../lib/sharing-contract.ts";
+import { publicShareUrl } from "../lib/sharing-contract.ts";
 
 async function loadComponent(path, imports, globals = {}) {
   const source = await readFile(new URL(path, import.meta.url), "utf8");
@@ -56,7 +56,7 @@ test("share button sends the reader title as title and text, with a URL-only cli
   }, { navigator, document: { title: "عنوان SEO مختلف | العلم" } });
   const props = {
     storyId: "123", title: "عنوان الخبر الظاهر للقارئ", excerpt: "موجز",
-    joinHref: "/join", shareUrl: refreshedShareUrl("/sciences/123/news", "https://alelm.net"),
+    joinHref: "/join", shareUrl: publicShareUrl("/sciences/123/news", "https://alelm.net"),
   };
   const nodes = node => !node || typeof node !== "object" ? []
     : [node, ...[node.props?.children].flat(Infinity).flatMap(nodes)];
