@@ -27,7 +27,8 @@ export function stableIdentity(existing: { slug: string; section: string } | nul
   if (existing) return { slug: existing.slug, section: existing.section };
   const requested = input.slug?.trim();
   const source = !requested || requested === `story-${id.slice(0, 8)}` ? input.title || requested || "" : requested;
-  const slug = source.normalize("NFC").trim().toLowerCase()
+  // التشكيل والتنوين علامات لا حروف؛ تُسقط كي لا تكسر الكلمة («خلافًا» → «خلافا» لا «خلاف-ا»).
+  const slug = source.normalize("NFC").replace(/\p{M}+/gu, "").trim().toLowerCase()
     .replace(/[^\p{L}\p{N}-]+/gu, "-").replace(/^-+|-+$/g, "").slice(0, 200);
   return { slug: slug || `story-${id.slice(0, 8)}`, section: input.section || "news" };
 }
