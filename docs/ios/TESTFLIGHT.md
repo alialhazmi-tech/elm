@@ -9,7 +9,7 @@
 |---|---|
 | Bundle ID | `net.alelm.app` |
 | الفريق | `CBU7MJEC5R` (Sabq eBusiness Est.) |
-| الإصدار / البناء | `MARKETING_VERSION = 1.0.0` · `CURRENT_PROJECT_VERSION = 1` |
+| الإصدار / البناء | `MARKETING_VERSION = 1.0.0` · `CURRENT_PROJECT_VERSION = 2` (البناء 1 رُفع سابقًا؛ App Store Connect يرفض تكرار الرقم، فارفع الرقم قبل كل رفع أو مرّر `BUILD_NUMBER`) |
 | الحد الأدنى | iOS 17.0، iPhone وiPad |
 | الفئة | Magazines & Newspapers |
 | التشفير | `ITSAppUsesNonExemptEncryption = NO` (HTTPS فقط) |
