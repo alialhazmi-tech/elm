@@ -162,6 +162,47 @@ try {
     const html = await (await fetch(`http://127.0.0.1:${port}/${section}`)).text();
     assert.match(html.replace(/<!--.*?-->/g, ''), new RegExp('section:'+section));
   }
+  // أشكال ووردبريس التي كانت ترد 404 في Search Console: الأرشيف والترقيم والخلاصات والذيول.
+  for (const [route, target] of [
+    ['/category/ksa', '/ksa'],
+    ['/category/ksa/page/24', '/ksa?p=24'],
+    ['/ksa/page/24', '/ksa?p=24'],
+    ['/ksa/feed', '/ksa'],
+    ['/page/26', '/'],
+    ['/jakalelm', '/jak'],
+    ['/wp-content/uploads/2021/11/report.pdf', 'https://dash.alelm.net/wp-content/uploads/2021/11/report.pdf'],
+  ]) {
+    const result = await response(port, route);
+    assert.equal(result.statusCode, 308, 'legacy shape ' + route);
+    assert.equal(result.headers.location, target, 'legacy shape ' + route);
+  }
+  // الشرطة الأخيرة تُزال أولًا بـ308 قياسية، ثم تعمل قاعدة البحث على الرابط النظيف.
+  const wpSlash = await response(port, '/page/26/?s=%D8%BA%D8%B2%D8%A9');
+  assert.equal(wpSlash.statusCode, 308);
+  assert.equal(wpSlash.headers.location, '/page/26?s=%D8%BA%D8%B2%D8%A9');
+  const wpSearch = await response(port, wpSlash.headers.location);
+  assert.equal(wpSearch.statusCode, 308);
+  // Next يمرر معامل `s` الأصلي أيضًا؛ صفحة البحث تقرأ `q` وهي noindex فلا أثر للزائد.
+  assert.match(wpSearch.headers.location, /^\/search\?/u, 'بحث ووردبريس لا يصل صفحة البحث');
+  assert.match(wpSearch.headers.location, /q=%D8%BA%D8%B2%D8%A9/u, 'كلمة البحث ضاعت في التحويل');
+  const rootSearch = await response(port, '/?s=%D8%BA%D8%B2%D8%A9');
+  assert.equal(rootSearch.statusCode, 308);
+  assert.match(rootSearch.headers.location, /^\/search\?/u);
+  assert.match(rootSearch.headers.location, /q=%D8%BA%D8%B2%D8%A9/u);
+  assert.equal((await response(port, '/?p=264631')).statusCode, 301, 'قاعدة البحث ابتلعت روابط ?p=');
+  for (const tail of ['/264631/old-title/feed', '/264631/feed', '/264631/old-title/contact', '/264631/old-title/print']) {
+    const result = await response(port, tail);
+    assert.equal(result.statusCode, 301, 'tail ' + tail);
+    assert.equal(result.headers.location, canonical, 'tail ' + tail);
+  }
+  // خلاصات RSS الجذرية بلا تحويل عمدًا (قرار docs/seo/search-console-2026-09-08.md):
+  // في الإنتاج ترد 404 لأن feed ليس قسمًا؛ هنا يكفي إثبات غياب أي تحويل.
+  for (const feed of ['/feed', '/comments/feed']) {
+    const result = await response(port, feed);
+    assert.equal(result.headers.location, undefined, 'خلاصة جذرية محوَّلة: ' + feed);
+    assert.ok(result.statusCode < 300 || result.statusCode >= 400, feed);
+  }
+  console.log('Legacy WordPress archives, pagination, search, media and article tails resolve without 404; root feeds stay 404.');
   console.log('Indexed numeric links: direct GET/HEAD 301 to canonical, preserved queries, section isolation, missing IDs and trailing slash passed.');
 } finally {
   if (server && server.exitCode === null) { server.kill('SIGTERM'); await once(server, 'exit'); }

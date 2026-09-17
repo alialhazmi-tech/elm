@@ -31,7 +31,9 @@ export async function GET(
     TAG_TO_SERIES[decoded.replace(/-/gu, "_")] ??
     TAG_TO_SERIES[decoded.replace(/_/gu, "-")];
   if (series) return redirect(`/series/${series}`);
-  // وسوم حرة من الإرث — وجهتها البحث حتى لا يضيع زائر قادم من رابط قديم.
-  const query = decoded.replace(/[-_]/gu, " ");
-  return redirect(`/search?q=${encodeURIComponent(query)}`);
+  // وسوم حرة من الإرث — وجهتها أرشيف الكلمة المفتاحية: صفحة قابلة للفهرسة حين
+  // توجد مواد، وفيها رابط البحث حين لا توجد. البحث نفسه noindex فلا يصلح وجهة 301.
+  const keyword = decoded.replace(/[-_]/gu, " ").trim();
+  if (!keyword) return redirect("/");
+  return redirect(`/keywords/${encodeURIComponent(keyword)}`);
 }

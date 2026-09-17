@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { stories } from "../db/schema.ts";
 
-import { LEGACY_REDIRECTS, TAG_TO_SERIES } from "../lib/content/redirects.ts";
+import { LEGACY_REDIRECTS, LEGACY_SECTION_SLUGS, LEGACY_STORY_REWRITES, TAG_TO_SERIES } from "../lib/content/redirects.ts";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
@@ -21,7 +21,11 @@ test("طبقة التحويلات تغطي وسوم السلاسل الثلاث 
   for (const rule of LEGACY_REDIRECTS) {
     assert.equal(rule.permanent, true, `تحويل غير دائم: ${rule.source}`);
     assert.ok(rule.source.startsWith("/"), `مصدر غير مطلق: ${rule.source}`);
-    assert.ok(rule.destination.startsWith("/"), `وجهة غير مطلقة: ${rule.destination}`);
+    // الوجهة داخلية دائمًا، عدا أرشيف الوسائط الباقي على مضيف ووردبريس القديم.
+    assert.ok(
+      rule.destination.startsWith("/") || rule.destination.startsWith("https://dash.alelm.net/"),
+      `وجهة غير مطلقة: ${rule.destination}`,
+    );
   }
   // «غير مصنف» بنسختيه يقاس على منوعات.
   assert.ok(LEGACY_REDIRECTS.some((rule) => rule.source === "/uncategorized" && rule.destination === "/varieties"));
@@ -80,12 +84,13 @@ test("المزود لا يحمّل الأرشيف كله: نافذة حديثة 
   );
 });
 
-test("مسار /tag ينفذ 301: وسم السلسلة إلى صفحتها وأي وسم آخر إلى البحث", async () => {
+test("مسار /tag ينفذ 301: وسم السلسلة إلى صفحتها وأي وسم آخر إلى أرشيف الكلمة", async () => {
   const route = await read("app/tag/[tag]/route.ts");
   assert.match(route, /TAG_TO_SERIES/u);
   assert.match(route, /status: 301/u);
   assert.match(route, /\/series\/\$\{series\}/u);
-  assert.match(route, /search\?q=/u, "الوسوم الحرة بلا وجهة بحث");
+  assert.match(route, /\/keywords\//u, "الوسوم الحرة بلا وجهة أرشيف");
+  assert.doesNotMatch(route, /search\?q=/u, "البحث noindex فلا يصلح وجهة 301 دائمة");
 });
 
 test("ترويسة تحويل المقال ASCII — الرابط العربي يُرمّز قبل Location", async () => {
@@ -142,4 +147,63 @@ test("أرشيف البودكاست الإرثي /podcasts حي ويقود إل�
   assert.match(page, /youtube\.com\/c\/alelmmedia/u, "لا رابط لقناة الحلقات");
   assert.match(sitemap, /\/podcasts/u, "خريطة الموقع بلا أرشيف البودكاست");
   assert.match(provider, /listByFormat/u);
+});
+
+/* أشكال روابط ووردبريس التي كانت ترد 404 في تقرير Search Console (2026-09-16):
+ * أرشيف /category، وترقيم /page/N، والخلاصات، وذيول المادة، وأرشيف الوسائط.
+ */
+
+test("أقسام طبقة التحويلات مطابقة لأقسام الموقع", async () => {
+  const sections = await read("lib/content/sections.ts");
+  const declared = [...sections.matchAll(/^\s*slug: "([a-z-]+)",$/gmu)].map((match) => match[1]);
+  assert.deepEqual([...LEGACY_SECTION_SLUGS].sort(), [...new Set(declared)].sort());
+});
+
+test("أرشيفات ووردبريس القديمة: /category وترقيم /page/N تتحول دائمًا", () => {
+  // بلا شرط استعلام: مصدر `/page/N` مكرر، نسخته الأولى للبحث `?s=`.
+  const rule = (source) => LEGACY_REDIRECTS.find((item) => item.source === source && !item.has);
+  for (const slug of LEGACY_SECTION_SLUGS) {
+    assert.equal(rule(`/category/${slug}`)?.destination, `/${slug}`);
+    assert.equal(rule(`/category/${slug}/page/:page(\\d+)`)?.destination, `/${slug}?p=:page`);
+    assert.equal(rule(`/${slug}/page/:page(\\d+)`)?.destination, `/${slug}?p=:page`);
+    assert.equal(rule(`/${slug}/feed`)?.destination, `/${slug}`);
+  }
+  assert.equal(rule("/category/uncategorized")?.destination, "/varieties");
+  assert.equal(rule("/page/:page(\\d+)")?.destination, "/");
+  // خلاصات RSS الجذرية تبقى 404 بقرار موثق — لا تحويل إلى الرئيسية.
+  assert.equal(rule("/feed"), undefined);
+  assert.equal(rule("/comments/feed"), undefined);
+  assert.equal(rule("/jakalelm")?.destination, "/jak");
+});
+
+test("بحث ووردبريس \u200E?s=\u200E يتحول إلى صفحة البحث قبل قاعدة الترقيم العامة", () => {
+  const search = LEGACY_REDIRECTS.filter((rule) => rule.destination.startsWith("/search?q="));
+  assert.equal(search.length, 2, "الجذر وصفحات النتائج معًا");
+  for (const rule of search) {
+    assert.deepEqual(rule.has, [{ type: "query", key: "s", value: "(?<term>.+)" }]);
+  }
+  // القاعدة المشروطة بالاستعلام تسبق القاعدة العامة لكل مصدر مكرر، وإلا ابتلعتها.
+  for (const source of ["/", "/page/:page(\\d+)"]) {
+    const conditional = LEGACY_REDIRECTS.findIndex((rule) => rule.source === source && rule.has);
+    const general = LEGACY_REDIRECTS.findIndex((rule) => rule.source === source && !rule.has);
+    assert.ok(conditional >= 0, `لا قاعدة بحث للمصدر ${source}`);
+    if (general >= 0) assert.ok(conditional < general, `قاعدة عامة تسبق البحث في ${source}`);
+  }
+});
+
+test("أرشيف الوسائط الإرثي يبقى حيًا على مضيف ووردبريس", () => {
+  const media = LEGACY_REDIRECTS.find((rule) => rule.source === "/wp-content/uploads/:path*");
+  assert.equal(media?.destination, "https://dash.alelm.net/wp-content/uploads/:path*");
+});
+
+test("ذيول مسار المادة الرقمية تعود إلى محلل المعرّف بدل 404", () => {
+  const sources = LEGACY_STORY_REWRITES.map((rule) => rule.source);
+  assert.ok(sources.includes("/:id(\\d+)/feed"));
+  assert.ok(sources.includes("/:id(\\d+)/:slug/:tail*"), "feed وcontact وprint بلا وجهة");
+  for (const rule of LEGACY_STORY_REWRITES) {
+    assert.ok(
+      rule.destination === "/legacy/:id" || rule.destination === "/tag/:tag",
+      `وجهة إعادة كتابة غير متوقعة: ${rule.destination}`,
+    );
+  }
 });
