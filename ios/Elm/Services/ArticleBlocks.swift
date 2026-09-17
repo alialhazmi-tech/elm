@@ -268,7 +268,7 @@ struct ArticleBodyView: View {
         default:
             Text(attributed(block.runs ?? [], base: ElmFonts.text(size: fontSize, relativeTo: .body)))
                 .foregroundStyle(ElmTheme.ink)
-                .lineSpacing(5)
+                .lineSpacing(7)
                 .multilineTextAlignment(block.align == "center" ? .center : (block.align == "justify" ? .leading : .leading))
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)

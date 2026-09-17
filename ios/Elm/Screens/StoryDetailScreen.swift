@@ -15,8 +15,11 @@ struct StoryDetailScreen: View {
     @Environment(ChromeState.self) private var chrome
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @AppStorage("elm.reader.fontSize") private var fontSize = 17.0
     @State private var preferencesPresented = false
+    /// الموجز التحريري مطويّ على ثلاثة أسطر افتراضيًا؛ النقر يعرضه كاملًا.
+    @State private var dekExpanded = false
     @State private var readerID = UUID()
 
     @State private var detail: StoryDetailPayload?
@@ -115,7 +118,7 @@ struct StoryDetailScreen: View {
                             }
 
                             if let factCheck {
-                                factBlock(factCheck).padding(.top, 18)
+                                factBlock(factCheck).padding(.top, 22)
                             }
 
                             if let loadError {
@@ -150,42 +153,41 @@ struct StoryDetailScreen: View {
                                         .font(ElmFonts.text(.body, weight: .semibold)).frame(minHeight: 48)
                                 }.buttonStyle(.plain).padding(.top, 16)
                             }
-                            if outline.count >= 2 { outlineBlock(proxy).padding(.top, 18).id("reader-outline") }
-                            body(of: story).padding(.top, 18).id("reader-body")
-                            if detail != nil { readerTools.padding(.top, 22).id("reader-tools") }
+                            if outline.count >= 2 { outlineBlock(proxy).padding(.top, 22).id("reader-outline") }
+                            body(of: story).padding(.top, 22).id("reader-body")
+                            if detail != nil { readerTools.padding(.top, 32).id("reader-tools") }
                             if let insights {
-                                insightsCard(insights).padding(.top, 18).id("reader-insights")
+                                insightsCard(insights).padding(.top, 28).id("reader-insights")
                             }
                             if let keywords = story.keywords, !keywords.isEmpty {
-                                keywordChips(keywords).padding(.top, 18).id("reader-keywords")
+                                keywordChips(keywords).padding(.top, 28).id("reader-keywords")
                             }
                             if let links = story.links, !links.isEmpty {
-                                linksBlock(links).padding(.top, 18)
+                                linksBlock(links).padding(.top, 28)
                             }
                             PublicPageLink(path: story.path) {
-                                Label("المادة الأصلية ومصادرها", systemImage: "safari")
-                                    .font(ElmFonts.text(.footnote)).frame(minHeight: 44)
-                            }.padding(.top, 12)
-
+                                Label("المادة الأصلية ومصادرها على الموقع", systemImage: "safari")
+                                    .font(ElmFonts.text(.footnote, weight: .medium)).foregroundStyle(ElmTheme.navyInk).frame(minHeight: 44)
+                            }.padding(.top, 8)
 
                             // مادة البودكاست: بلا استفتاء/إعجاب كما على الويب.
                             if !story.isPodcast {
                                 ArticleInteractionView(storyId: story.apiId)
-                                    .id("\(story.apiId):\(member.user?.id ?? "guest")").padding(.top, 22)
+                                    .id("\(story.apiId):\(member.user?.id ?? "guest")").padding(.top, 28)
                                     .id("reader-end")
                             }
 
                             if !sameSeries.isEmpty {
-                                readAlso(sameSeries).padding(.top, 22)
+                                readAlso(sameSeries).padding(.top, 28)
                             }
                             let picks = recommendedCards
                             if !picks.isEmpty {
-                                recommendedBlock(picks).padding(.top, 22).id("reader-recommended")
+                                recommendedBlock(picks).padding(.top, 28).id("reader-recommended")
                             }
                             }
                         }
                         .frame(maxWidth: 640, alignment: .leading)
-                        .padding(.horizontal, 24).padding(.top, 24).padding(.bottom, 28)
+                        .padding(.horizontal, 22).padding(.top, 20).padding(.bottom, 40)
                         .frame(maxWidth: .infinity)
                         .reportsScroll()
                     }
@@ -202,11 +204,16 @@ struct StoryDetailScreen: View {
                 }
                 .background(ElmTheme.bg.ignoresSafeArea())
                 .safeAreaInset(edge: .bottom, spacing: 0) {
+                    // لا شريط دائم أسفل القارئ: شريط الموجز الصوتي يظهر أثناء التجهيز/التشغيل فقط، وشريط البودكاست في مادته.
                     if !notFound {
                         VStack(spacing: 0) {
                             if showsPodcastBar { PodcastMiniBar() }
-                            readerDock
+                            if SummaryAudioStore.shared.isActive(summaryKind) {
+                                ReaderAudioBar(kind: summaryKind)
+                                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                            }
                         }
+                        .animation(.easeInOut(duration: 0.25), value: SummaryAudioStore.shared.isActive(summaryKind))
                     }
                 }
                 .toolbar(.hidden, for: .navigationBar)
@@ -284,9 +291,22 @@ struct StoryDetailScreen: View {
             ShareLink(item: story.shareURL) {
                 Image(systemName: "square.and.arrow.up").frame(width: 44, height: 44)
             }.accessibilityLabel("مشاركة المادة").disabled(notFound)
+            Menu {
+                Button { preferencesPresented = true } label: { Label("حجم خط القراءة", systemImage: "textformat.size") }
+                Divider()
+                Button(action: toggleNarration) {
+                    Label(isNarrating ? "إيقاف قراءة النص الكامل" : "قراءة النص الكامل بصوت الجهاز", systemImage: isNarrating ? "pause.fill" : "text.bubble")
+                }
+                if narration.storyId == story.apiId, narration.state != .idle {
+                    Button { narration.stop() } label: { Label("إيقاف القراءة", systemImage: "stop.fill") }
+                }
+            } label: {
+                Image(systemName: "ellipsis").frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("خيارات القراءة").disabled(notFound)
         }
         .font(.system(.body, weight: .regular)).foregroundStyle(ElmTheme.ink2)
-        .buttonStyle(.plain).padding(.horizontal, 12).padding(.vertical, 4)
+        .buttonStyle(.plain).padding(.horizontal, 8).padding(.vertical, 4)
         .background(ElmTheme.bg)
         .overlay {
             Image("OfficialLogo").resizable().scaledToFit().frame(width: 60, height: 32)
@@ -295,72 +315,133 @@ struct StoryDetailScreen: View {
     }
 
     private var articleOpening: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // مسار التصفح كما على الويب: القسم رابط يفتح أرشيفه، والسلسلة رابط لتغذيتها.
-            HStack(spacing: 10) {
-                if let series {
-                    NavigationLink { SeriesFeedScreen(chip: series) } label: {
-                        HStack(spacing: 6) {
-                            Circle().fill(accent).frame(width: 6, height: 6)
-                            Text(series.name).fixedSize()
-                        }.font(ElmFonts.text(.subheadline, weight: .semibold)).foregroundStyle(ElmTheme.navyInk)
-                    }.accessibilityLabel("سلسلة \(series.name)")
-                    Text("·").font(ElmFonts.text(.subheadline)).foregroundStyle(ElmTheme.ink3).accessibilityHidden(true)
-                }
-                NavigationLink { BrowseFeedScreen(slug: story.section, title: ElmFormat.sectionName(story.section)) } label: {
-                    Text(ElmFormat.sectionName(story.section)).font(ElmFonts.text(.subheadline)).foregroundStyle(ElmTheme.ink2).fixedSize()
-                }.accessibilityLabel("قسم \(ElmFormat.sectionName(story.section))")
-            }.frame(minHeight: 28)
+        VStack(alignment: .leading, spacing: 14) {
+            kickerRow
             Text(story.title)
-                .font(ElmFonts.display(size: 25, weight: .semibold, relativeTo: .title2))
-                .foregroundStyle(ElmTheme.ink).lineSpacing(5)
+                .font(ElmFonts.display(size: 25, weight: .bold, relativeTo: .title2))
+                .foregroundStyle(ElmTheme.ink).lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true).accessibilityAddTraits(.isHeader)
-            // الموجز التحريري (dek) تحت العنوان كاملًا كما على الويب.
-            if !story.excerpt.isEmpty {
-                Text(story.excerpt)
-                    .font(ElmFonts.text(size: 17, weight: .medium, relativeTo: .body))
-                    .foregroundStyle(ElmTheme.ink2).lineSpacing(5)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            ViewThatFits(in: .horizontal) {
-                HStack { author; Spacer(); readingMeta }
-                VStack(alignment: .leading, spacing: 8) { author; readingMeta }
-            }
-            if let stamps = timestampsLine {
-                Text(stamps).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).elmLatin()
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            dekBlock
+            Rectangle().fill(ElmTheme.line).frame(height: 1).padding(.top, 2).accessibilityHidden(true)
+            metaRow
             if story.isInfographic, story.imageURL != nil {
                 // الإنفوجرافيك: الصورة هي المادة — كاملة بعرض الشاشة، والنقر يكبّرها.
-                InfographicFigure(url: story.imageURL, title: story.title).padding(.top, 4).id("reader-figure")
+                InfographicFigure(url: story.imageURL, title: story.title).padding(.top, 6).id("reader-figure")
             } else if story.imageURL != nil, !showsVideoEmbed {
-                Color.clear.aspectRatio(1.95, contentMode: .fit)
+                Color.clear.aspectRatio(16 / 9, contentMode: .fit)
                     .overlay { RemoteImage(url: story.imageURL) }
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .padding(.top, 4)
+                    .clipShape(RoundedRectangle(cornerRadius: ElmTheme.radiusUI, style: .continuous))
+                    .padding(.top, 6)
+                    .accessibilityHidden(true)
             }
             if loading && detail == nil { ProgressView("جارٍ تحميل المادة").font(ElmFonts.text(.caption)) }
-        }.padding(.bottom, 8)
+        }
     }
 
-    private var author: some View {
+    /// مسار التصفح كما على الويب: شرطة السلسلة بلونها ثم القسم خافتًا؛ كلاهما رابط.
+    private var kickerRow: some View {
         HStack(spacing: 8) {
-            Image("OfficialLogo").resizable().scaledToFit().frame(width: 24, height: 18)
-                .padding(8).background(ElmTheme.surface2, in: Circle()).accessibilityHidden(true)
-            Text("فريق العلم").font(ElmFonts.text(.caption, weight: .medium))
-        }.foregroundStyle(ElmTheme.ink2)
+            if let series {
+                NavigationLink { SeriesFeedScreen(chip: series) } label: {
+                    HStack(spacing: 7) {
+                        RoundedRectangle(cornerRadius: 1, style: .continuous).fill(accent).frame(width: 14, height: 3)
+                            .accessibilityHidden(true)
+                        Text(series.name).font(ElmFonts.text(size: 12, weight: .bold, relativeTo: .caption)).foregroundStyle(accent).fixedSize()
+                    }
+                }.accessibilityLabel("سلسلة \(series.name)")
+                Text("·").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).accessibilityHidden(true)
+            }
+            NavigationLink { BrowseFeedScreen(slug: story.section, title: ElmFormat.sectionName(story.section)) } label: {
+                Text(ElmFormat.sectionName(story.section))
+                    .font(ElmFonts.text(size: 12, weight: series == nil ? .bold : .medium, relativeTo: .caption))
+                    .foregroundStyle(series == nil ? ElmTheme.navyInk : ElmTheme.ink3).fixedSize()
+            }.accessibilityLabel("قسم \(ElmFormat.sectionName(story.section))")
+            Spacer(minLength: 0)
+        }.frame(minHeight: 28)
     }
 
-    /// «النشر: … · آخر تحديث: … · بتوقيت الرياض» — التحديث فقط حين يتأخر فعلًا عن النشر.
-    private var timestampsLine: String? {
-        guard let published = ElmReaderFormat.articleTimestamp(story.publishedAt) else { return nil }
-        var parts = ["النشر: \(published)"]
+    /// الموجز التحريري (dek): نص أخف من المتن وبثلاثة أسطر افتراضيًا؛ «المزيد» يعرضه كاملًا كما على الويب.
+    @ViewBuilder
+    private var dekBlock: some View {
+        let dek = ElmReaderFormat.articleDek(story.excerpt)
+        if !dek.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(dek)
+                    .font(ElmFonts.text(size: 15.5, relativeTo: .subheadline))
+                    .foregroundStyle(ElmTheme.ink2).lineSpacing(5)
+                    .lineLimit(dekExpanded ? nil : 3)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel("الموجز: \(dek)")
+                if dek.count > 150 {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { dekExpanded.toggle() }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(dekExpanded ? "طيّ الموجز" : "الموجز كاملًا")
+                            Image(systemName: dekExpanded ? "chevron.up" : "chevron.down").font(.system(size: 10, weight: .bold))
+                        }
+                        .font(ElmFonts.text(.caption, weight: .semibold)).foregroundStyle(ElmTheme.navyInk)
+                        .frame(minHeight: 32)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(dekExpanded ? "طيّ الموجز" : "عرض الموجز كاملًا")
+                }
+            }
+        }
+    }
+
+    /// سطر البيانات: الكاتب والتاريخ ووقت القراءة على اليمين، وزر «استمع للموجز» المضغوط على اليسار.
+    private var metaRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            metaRowContent
+            // خطأ الموجز الصوتي يظهر هنا لأن الشريط السفلي لا يُعرض إلا أثناء التجهيز/التشغيل.
+            if SummaryAudioStore.shared.kind == summaryKind, let error = SummaryAudioStore.shared.errorMessage {
+                Text(error).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var metaRowContent: some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 12) {
+                byline
+                SummaryListenView(kind: summaryKind, compact: true).disabled(loading && detail == nil)
+            }
+        } else {
+            // الزر يحتفظ بعرضه، وسطر التاريخ يلتف عند الحاجة بدل أن يدفع الزر إلى سطر مستقل.
+            HStack(alignment: .center, spacing: 12) {
+                byline.frame(maxWidth: .infinity, alignment: .leading)
+                SummaryListenView(kind: summaryKind, compact: true).disabled(loading && detail == nil).layoutPriority(1)
+            }
+        }
+    }
+
+    private var byline: some View {
+        HStack(spacing: 10) {
+            Text("ع").font(ElmFonts.display(size: 14, weight: .heavy, relativeTo: .caption)).foregroundStyle(.white)
+                .frame(width: 32, height: 32).background(ElmTheme.navy, in: Circle()).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("فريق العلم").font(ElmFonts.text(.footnote, weight: .semibold)).foregroundStyle(ElmTheme.ink)
+                Text(metaLine).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).elmLatin()
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    /// «17 سبتمبر 2026، 03:30 بتوقيت الرياض · 4 دقائق قراءة» وسطر التحديث حين يتأخر فعلًا عن النشر.
+    private var metaLine: String {
+        var parts: [String] = []
+        if let published = ElmReaderFormat.articleTimestamp(story.publishedAt) { parts.append("\(published) بتوقيت الرياض") }
+        parts.append(ElmFormat.readingLabel(story.readingMinutes))
+        var line = parts.joined(separator: " · ")
         if let updatedAt = ElmDates.parse(story.updatedAt), let publishedAt = ElmDates.parse(story.publishedAt),
            updatedAt > publishedAt, let updated = ElmReaderFormat.articleTimestamp(story.updatedAt) {
-            parts.append("آخر تحديث: \(updated)")
+            line += "\nآخر تحديث: \(updated)"
         }
-        parts.append("بتوقيت الرياض")
-        return parts.joined(separator: " · ")
+        return line
     }
 
     /// المادة لم تعد متاحة (404) — لا عنوان من البذرة كأنه مادة حية.
@@ -410,10 +491,7 @@ struct StoryDetailScreen: View {
         let avg = ready ? ins.avgMinutes : Double(story.readingMinutes)
         let avgText = avg.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(avg)) : String(format: "%.1f", avg)
         return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 6) {
-                Text("✦").foregroundStyle(ElmTheme.gold)
-                Text("مؤشرات المادة").font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
-            }.accessibilityAddTraits(.isHeader)
+            sectionHeading("مؤشرات المادة")
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
                 insightTile(value: ElmFormat.latinDigits(String(ins.readers)), label: "قارئ")
                 insightTile(value: ready ? "\(ElmFormat.latinDigits(String(ins.completion)))%" : "—", label: ready ? "إكمال القراءة" : "الإكمال بعد 20 قارئًا")
@@ -423,10 +501,7 @@ struct StoryDetailScreen: View {
             Text("\(ElmFormat.latinDigits(String(ins.readers))) متصفح ضمن قياس القراءة\(ready ? "" : " · تظهر النسب بعد 20 قارئًا") · تتحدث كل دقيقة")
                 .font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
     }
 
     private func insightTile(value: String, label: String) -> some View {
@@ -441,48 +516,28 @@ struct StoryDetailScreen: View {
         .accessibilityLabel("\(value) \(label)")
     }
 
-    private var readingMeta: some View {
-        Label(ElmFormat.readingLabel(story.readingMinutes), systemImage: "clock")
-            .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
-    }
-
     private var summaryKind: SummaryAudioKind { .story(id: story.apiId, title: story.title) }
 
-    /// الشريط السفلي: «استمع للموجز» (صوت الخادم للموجز نفسه كما على الويب)، حجم الخط، التقدم،
-    /// وقائمة فيها القراءة المحلية للنص الكامل بصوت الجهاز — خيار مستقل باسمه الصريح.
-    private var readerDock: some View {
-        HStack(spacing: 12) {
-            SummaryListenView(kind: summaryKind, compact: true)
-                .disabled(loading && detail == nil)
-            Menu {
-                Button(action: toggleNarration) {
-                    Label(isNarrating ? "إيقاف قراءة النص الكامل" : "قراءة النص الكامل بصوت الجهاز", systemImage: isNarrating ? "pause.fill" : "text.bubble")
+    /// عنوان قسم بالطبعة التحريرية: خط بنية أعلى، نجمة ذهبية، عنوان عرض.
+    private func sectionHeading(_ title: String, subtitle: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Rectangle().fill(ElmTheme.line2).frame(height: 1).accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text("✦").font(.system(size: 12)).foregroundStyle(ElmTheme.gold).accessibilityHidden(true)
+                    Text(title).font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
                 }
-                if narration.storyId == story.apiId, narration.state != .idle {
-                    Button { narration.stop() } label: { Label("إيقاف القراءة", systemImage: "stop.fill") }
-                }
-                Button { preferencesPresented = true } label: { Label("حجم خط القراءة", systemImage: "textformat.size.ar") }
-            } label: {
-                Image(systemName: "ellipsis.circle").font(.system(.title2)).frame(width: 44, height: 48)
+                if let subtitle { Text(subtitle).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3) }
             }
-            .accessibilityLabel("خيارات القراءة")
-            Text("\(Int(progress * 100))٪")
-                .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
-                .accessibilityLabel("قرأت \(Int(progress * 100)) بالمئة")
-                .frame(minWidth: 34)
-        }.buttonStyle(.plain).foregroundStyle(ElmTheme.ink)
-            .padding(.horizontal, 18).padding(.vertical, 10)
-            .background { ElmTheme.bg.ignoresSafeArea(edges: .bottom).shadow(color: .black.opacity(0.04), radius: 12, y: -4) }
+            .accessibilityElement(children: .combine).accessibilityAddTraits(.isHeader)
+        }
     }
 
-    /// «أدوات القارئ» كما على الويب: الموجز الصوتي بشريطه، «لخّص لي» للأعضاء، المشاركة ونسخ الرابط.
+    /// «أدوات القارئ» كما على الويب: «لخّص لي» للأعضاء، المشاركة ونسخ الرابط.
+    /// الموجز الصوتي له زره في رأس المادة وشريطه أسفل الشاشة أثناء التشغيل.
     private var readerTools: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 6) {
-                Text("✦").foregroundStyle(ElmTheme.gold)
-                Text("أدوات القارئ").font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
-            }
-            SummaryListenView(kind: summaryKind)
+            sectionHeading("أدوات القارئ")
             ReaderAISummaryView(storyId: story.apiId)
             HStack(spacing: 10) {
                 ShareLink(item: story.shareURL) {
@@ -498,10 +553,7 @@ struct StoryDetailScreen: View {
             }
             .foregroundStyle(ElmTheme.navyInk)
         }
-        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
     }
 
     private var readerPreferences: some View {
@@ -581,8 +633,8 @@ struct StoryDetailScreen: View {
     }
 
     private func keywordChips(_ keywords: [StoryKeyword]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("كلمات مفتاحية").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)
+        VStack(alignment: .leading, spacing: 12) {
+            sectionHeading("كلمات مفتاحية")
             ElmFlow(spacing: 8) {
                 ForEach(keywords) { item in
                     NavigationLink { KeywordScreen(keyword: item.keyword) } label: {
@@ -602,7 +654,7 @@ struct StoryDetailScreen: View {
 
     private func linksBlock(_ links: [StoryLink]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("روابط وردت في المادة").font(ElmFonts.text(.caption, weight: .bold)).foregroundStyle(ElmTheme.ink3)
+            sectionHeading("روابط وردت في المادة")
             ForEach(links) { link in
                 if let url = link.url {
                     Button {
@@ -672,10 +724,8 @@ struct StoryDetailScreen: View {
     }
 
     private func readAlso(_ related: [StoryCard]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(series.map { "اقرأ أيضًا في «\($0.name)»" } ?? "اقرأ أيضًا")
-                .font(ElmFonts.display(.headline, weight: .heavy))
-                .foregroundStyle(ElmTheme.ink)
+        VStack(alignment: .leading, spacing: 4) {
+            sectionHeading(series.map { "اقرأ أيضًا في «\($0.name)»" } ?? "اقرأ أيضًا")
             ForEach(Array(related.prefix(3).enumerated()), id: \.element.id) { index, item in
                 MiniStoryRow(story: item, first: index == 0)
             }
@@ -693,11 +743,8 @@ struct StoryDetailScreen: View {
     }
 
     private func recommendedBlock(_ items: [(card: StoryCard, reason: String?)]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text("نرشّح لك").font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
-                Text(personalized ? "مختارة لك بحسب قراءاتك" : "مواد أخرى قد تهمك").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3)
-            }.accessibilityElement(children: .combine).accessibilityAddTraits(.isHeader)
+        VStack(alignment: .leading, spacing: 4) {
+            sectionHeading("نرشّح لك", subtitle: personalized ? "مختارة لك بحسب قراءاتك" : "مواد أخرى قد تهمك")
             ForEach(Array(items.prefix(3).enumerated()), id: \.element.card.id) { index, item in
                 VStack(alignment: .leading, spacing: 0) {
                     MiniStoryRow(story: item.card, first: index == 0)

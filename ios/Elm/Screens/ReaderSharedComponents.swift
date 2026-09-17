@@ -164,6 +164,14 @@ enum ElmReaderFormat {
         return ElmFormat.latinDigits(formatter.string(from: date))
     }
 
+    /// الموجز التحريري كما في `formatArticleDek` على الويب: مسافات مطوية وبلا نقاط ختامية.
+    static func articleDek(_ excerpt: String) -> String {
+        let collapsed = excerpt.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        var scalars = Array(collapsed.unicodeScalars)
+        while let last = scalars.last, last == "." || last == "…" || CharacterSet.whitespaces.contains(last) { scalars.removeLast() }
+        return String(String.UnicodeScalarView(scalars)).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// الموجز مقصوص عند 200 حرف على حدود الكلمات كما في `trimExcerpt` على الويب.
     static func trimExcerpt(_ text: String, limit: Int = 200) -> String {
         let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
