@@ -14,6 +14,8 @@ struct AccountScreen: View {
     @Environment(StaffSessionStore.self) private var staff
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var account = AccountStore()
+    /// حجم خط القارئ — نفس مفتاح ورقة «حجم خط القراءة» داخل المادة.
+    @AppStorage("elm.reader.fontSize") private var readerFontSize = 17.0
     @State private var avatarPick: PhotosPickerItem?
     @State private var avatarBusy = false
     @State private var avatarMessage: String?
@@ -32,16 +34,14 @@ struct AccountScreen: View {
                     if let avatarMessage {
                         Text(avatarMessage).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2).padding(.top, 8)
                     }
-                    membershipRow.padding(.top, 14)
-                    if member.isSignedIn { statsTiles.padding(.top, 14) }
+                    membershipRow.padding(.top, 18)
+                    if member.isSignedIn { statsTiles.padding(.top, 22) }
                 }
 
                 group("القراءة") {
-                    menuRow(label: "الوضع اللوني", color: SeriesPalette.color(for: "shakhsiat"))
-                    Divider().overlay(ElmTheme.line)
-                    valueRow(label: "حجم الخط", value: "يتبع النظام", color: ElmTheme.teal)
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "التنزيل التلقائي", value: reading.autoDownload ? "مُفعّل" : "مُعطّل", color: ElmTheme.focus) {
+                    menuRow(label: "الوضع اللوني", icon: "circle.lefthalf.filled")
+                    fontSizeRow
+                    linkRow(label: "التنزيل التلقائي", value: reading.autoDownload ? "مُفعّل" : "مُعطّل", icon: "arrow.down.circle") {
                         SavedScreen()
                     }
                 }
@@ -49,35 +49,30 @@ struct AccountScreen: View {
                 group("المحتوى") {
                     if member.isSignedIn {
                         // من الحساب حتى 12 اهتمامًا كما على الويب؛ التهيئة (3–7) للزائر وللحساب الجديد.
-                        linkRow(label: "اهتماماتي", value: ElmFormat.latinDigits(String(interests.selected.count)), color: ElmTheme.hex("eda313")) {
+                        linkRow(label: "اهتماماتي", value: ElmFormat.latinDigits(String(interests.selected.count)), icon: "sparkles") {
                             OnboardingScreen(mode: .account)
                         }
                     } else {
                         Button { onboarding.present() } label: {
-                            rowBody(label: "اهتماماتي", value: ElmFormat.latinDigits(String(interests.selected.count)), color: ElmTheme.hex("eda313"), chevron: true)
+                            rowBody(label: "اهتماماتي", value: ElmFormat.latinDigits(String(interests.selected.count)), icon: "sparkles", chevron: true)
                         }
                         .buttonStyle(.plain)
                     }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "المحفوظات والتنزيلات", value: library.items.isEmpty ? "" : ElmFormat.latinDigits(String(library.items.count)), color: SeriesPalette.color(for: "limatha")) {
+                    linkRow(label: "المحفوظات", value: library.items.isEmpty ? "" : ElmFormat.latinDigits(String(library.items.count)), icon: "bookmark") {
                         SavedScreen()
                     }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "الإعجابات", value: account.overview?.stats.map { ElmFormat.latinDigits(String($0.likedCount)) } ?? "", color: ElmTheme.danger) {
+                    linkRow(label: "الإعجابات", value: account.overview?.stats.map { ElmFormat.latinDigits(String($0.likedCount)) } ?? "", icon: "heart") {
                         AccountLikedScreen()
                     }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "سجل القراءة", value: account.overview?.stats.map { ElmFormat.latinDigits(String($0.articlesRead)) } ?? "", color: ElmTheme.tealInk) {
+                    linkRow(label: "سجل القراءة", value: account.overview?.stats.map { ElmFormat.latinDigits(String($0.articlesRead)) } ?? "", icon: "clock.arrow.circlepath") {
                         AccountHistoryScreen()
                     }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "آخر المستجدات", value: "", color: ElmTheme.focus) {
+                    linkRow(label: "آخر المستجدات", value: "", icon: "bell") {
                         NotificationsScreen()
                     }
-                    Divider().overlay(ElmTheme.line)
                     toggleRow(
                         label: "تخصيص «لك أنت»",
-                        color: SeriesPalette.color(for: "absat"),
+                        icon: "wand.and.stars",
                         isOn: appearance.personalizationEnabled
                     ) {
                         Task { await interests.setPersonalization(!appearance.personalizationEnabled, appearance: appearance) }
@@ -103,21 +98,18 @@ struct AccountScreen: View {
                 if let error = interests.syncError { Text(error).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink2).padding(.top, 12) }
 
                 group("العضوية") {
-                    linkRow(label: "العضوية", value: member.isSignedIn ? "عضوية مجانية" : "زائر", color: SeriesPalette.color(for: "bel-tarikh")) {
+                    linkRow(label: "العضوية", value: member.isSignedIn ? "عضوية مجانية" : "زائر", icon: "person.text.rectangle") {
                         MembershipScreen()
                     }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "إعدادات الحساب", value: member.isSignedIn ? (account.emailVerified == false ? "البريد غير موثّق" : "") : "للأعضاء", color: ElmTheme.gold) {
+                    linkRow(label: "إعدادات الحساب", value: member.isSignedIn ? (account.emailVerified == false ? "البريد غير موثّق" : "") : "للأعضاء", icon: "gearshape") {
                         AccountSettingsScreen()
                     }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "الخصوصية", value: "", color: ElmTheme.ink3) {
+                    linkRow(label: "الخصوصية", value: "", icon: "lock") {
                         PrivacyScreen()
                     }
                     if member.isSignedIn {
-                        Divider().overlay(ElmTheme.line)
-                        Button { Task { await member.signOut() } } label: {
-                            rowBody(label: member.loading ? "لحظة…" : "تسجيل الخروج", value: "", color: ElmTheme.hex("8494ab"), chevron: false)
+                            Button { Task { await member.signOut() } } label: {
+                            rowBody(label: member.loading ? "لحظة…" : "تسجيل الخروج", value: "", icon: "rectangle.portrait.and.arrow.right", chevron: false, tint: ElmTheme.danger)
                         }
                         .buttonStyle(.plain)
                         .disabled(member.loading)
@@ -129,7 +121,7 @@ struct AccountScreen: View {
                         rowBody(
                             label: staff.isActive ? "لوحة التحرير" : "الدخول إلى لوحة التحرير",
                             value: staff.isActive ? (staff.actor?.roleLabel ?? staff.actor?.displayName ?? "") : "للفريق التحريري",
-                            color: ElmTheme.gold,
+                            icon: "square.and.pencil",
                             chevron: true
                         )
                     }
@@ -138,11 +130,9 @@ struct AccountScreen: View {
                 }
 
                 group("عن العلم") {
-                    PublicPageLink(path: "/about") { rowBody(label: "من نحن", value: "", color: ElmTheme.navyInk, chevron: true) }
-                    Divider().overlay(ElmTheme.line)
-                    PublicPageLink(path: "/contact") { rowBody(label: "تواصل معنا", value: "", color: ElmTheme.navyInk, chevron: true) }
-                    Divider().overlay(ElmTheme.line)
-                    linkRow(label: "نشرة ما وراء العناوين", value: account.overview?.newsletterSubscribed == true ? "مشترك" : "", color: ElmTheme.navyInk) {
+                    PublicPageLink(path: "/about") { rowBody(label: "من نحن", value: "", icon: "info.circle", chevron: true) }
+                    PublicPageLink(path: "/contact") { rowBody(label: "تواصل معنا", value: "", icon: "envelope", chevron: true) }
+                    linkRow(label: "نشرة ما وراء العناوين", value: account.overview?.newsletterSubscribed == true ? "مشترك" : "", icon: "newspaper") {
                         AccountSettingsScreen()
                     }
                 }
@@ -153,10 +143,10 @@ struct AccountScreen: View {
                     .multilineTextAlignment(.center)
                     .lineSpacing(4)
                     .frame(maxWidth: .infinity)
-                    .padding(.top, 20)
+                    .padding(.top, 32)
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
+            .padding(.horizontal, 22)
+            .padding(.top, 12)
             .frame(maxWidth: sizeClass == .regular ? 720 : .infinity)
             .frame(maxWidth: .infinity)
         }
@@ -197,7 +187,7 @@ struct AccountScreen: View {
     @ViewBuilder
     private var statsTiles: some View {
         if let stats = account.overview?.stats {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: 4), spacing: 0) {
                 statTile(String(stats.articlesRead), label: "مادة مقروءة")
                 statTile(String(stats.activeMinutes), label: "دقيقة قراءة")
                 statTile(String(stats.savedCount), label: "محفوظة")
@@ -214,16 +204,15 @@ struct AccountScreen: View {
     }
 
     private func statTile(_ value: String, label: String) -> some View {
-        VStack(spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(ElmFormat.latinDigits(value))
-                .font(ElmFonts.display(.title3, weight: .heavy)).foregroundStyle(ElmTheme.ink).elmLatin()
+                .font(ElmFonts.display(size: 24, weight: .heavy, relativeTo: .title2)).foregroundStyle(ElmTheme.ink).elmLatin()
                 .lineLimit(1).minimumScaleFactor(0.7)
-            Text(label).font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3).lineLimit(1).minimumScaleFactor(0.8)
+            Text(label).font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).lineLimit(1).minimumScaleFactor(0.8)
         }
-        .frame(maxWidth: .infinity, minHeight: 60)
-        .padding(.vertical, 8)
-        .background(ElmTheme.surface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 12)
+        .overlay(alignment: .top) { Rectangle().fill(ElmTheme.line2).frame(height: 1) }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(ElmFormat.latinDigits(value)) \(label)")
     }
@@ -231,7 +220,7 @@ struct AccountScreen: View {
     // MARK: الهوية والصورة الشخصية
 
     private var identity: some View {
-        HStack(spacing: 13) {
+        HStack(spacing: 14) {
             if member.isSignedIn {
                 Menu {
                     PhotosPicker(selection: $avatarPick, matching: .images, photoLibrary: .shared()) {
@@ -253,13 +242,13 @@ struct AccountScreen: View {
             } else {
                 avatar
             }
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(member.isSignedIn ? member.user?.name ?? "قارئ العلم" : "أهلًا بك في العلم")
-                    .font(ElmFonts.display(.title3, weight: .heavy))
+                    .font(ElmFonts.display(size: 24, weight: .heavy, relativeTo: .title2))
                     .foregroundStyle(ElmTheme.ink)
                 Text(subtitle)
-                    .font(ElmFonts.text(.caption))
-                    .foregroundStyle(ElmTheme.ink3)
+                    .font(ElmFonts.text(.subheadline))
+                    .foregroundStyle(ElmTheme.ink2)
                     .lineLimit(2)
                     .elmLatin()
             }
@@ -273,17 +262,17 @@ struct AccountScreen: View {
         ZStack {
             if let url = account.avatarURL {
                 RemoteImage(url: url, maxPixel: 400)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 64, height: 64)
                     .clipShape(Circle())
             } else {
                 Text(initial)
                     .font(ElmFonts.display(.title2, weight: .heavy))
                     .foregroundStyle(ElmTheme.gold)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 64, height: 64)
                     .background(ElmTheme.navyDeep, in: Circle())
             }
             if avatarBusy {
-                Circle().fill(.black.opacity(0.35)).frame(width: 56, height: 56)
+                Circle().fill(.black.opacity(0.35)).frame(width: 64, height: 64)
                 ProgressView().tint(.white)
             }
         }
@@ -365,111 +354,116 @@ struct AccountScreen: View {
         }
     }
 
+    @ViewBuilder
     private var membershipRowBody: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(member.isSignedIn ? "عضوية مجانية" : "انضم إلى العلم")
-                    .font(ElmFonts.text(.footnote, weight: .bold))
-                    .foregroundStyle(ElmTheme.ink)
-                Text(member.isSignedIn ? "إعداداتك وإعجاباتك وسجلك — كلها هنا" : "قراءاتك، اختياراتك، وما تودّ العودة إليه — بعضوية مجانية")
-                    .font(ElmFonts.text(.caption2))
-                    .foregroundStyle(ElmTheme.ink3)
-                    .multilineTextAlignment(.leading)
+        if member.isSignedIn {
+            HStack(spacing: 10) {
+                Image(systemName: "checkmark.seal").font(.system(size: 16, weight: .semibold)).foregroundStyle(ElmTheme.gold)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("عضوية مجانية").font(ElmFonts.text(.body, weight: .semibold)).foregroundStyle(ElmTheme.ink)
+                    Text("إعداداتك وإعجاباتك وسجلك — كلها هنا").font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink3)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold)).foregroundStyle(ElmTheme.ink3)
             }
-            Spacer(minLength: 0)
-            Image(systemName: "arrow.left")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(ElmTheme.ink3)
+            .padding(.vertical, 14)
+            .overlay(alignment: .top) { Rectangle().fill(ElmTheme.line2).frame(height: 1) }
+            .overlay(alignment: .bottom) { Rectangle().fill(ElmTheme.line).frame(height: 1) }
+            .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
+        } else {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Text("انضم إلى العلم").font(ElmFonts.text(.body, weight: .bold))
+                    Spacer(minLength: 0)
+                    Image(systemName: "arrow.left").font(.system(size: 14, weight: .bold))
+                }
+                .foregroundStyle(.white)
+                .padding(.horizontal, 18).frame(maxWidth: .infinity, minHeight: 52)
+                .background(ElmTheme.navy, in: RoundedRectangle(cornerRadius: ElmTheme.radiusUI, style: .continuous))
+                Text("قراءاتك، اختياراتك، وما تودّ العودة إليه — بعضوية مجانية.")
+                    .font(ElmFonts.text(.footnote)).foregroundStyle(ElmTheme.ink3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .contentShape(Rectangle())
+            .accessibilityElement(children: .combine)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 13)
-        .background(
-            LinearGradient(
-                colors: [ElmTheme.gold.opacity(0.22), ElmTheme.surface],
-                startPoint: .topTrailing,
-                endPoint: .bottomLeading
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .combine)
     }
 
     // MARK: المجموعات
 
+    /// مجموعة بالطبعة التحريرية: عنوان عرض فوق خط بنية، وصفوف تفصل بينها خطوط تفاصيل — بلا بطاقات.
     @ViewBuilder
     private func group<Content: View>(_ title: String, @ViewBuilder rows: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(title)
-                .font(ElmFonts.text(.caption2, weight: .bold))
-                .foregroundStyle(ElmTheme.ink3)
-                .padding(.leading, 4)
+            HStack(spacing: 6) {
+                Text("✦").font(.system(size: 11)).foregroundStyle(ElmTheme.gold).accessibilityHidden(true)
+                Text(title).font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
+            }
+            .accessibilityAddTraits(.isHeader)
+            .padding(.bottom, 10)
+            Rectangle().fill(ElmTheme.line2).frame(height: 1).accessibilityHidden(true)
             VStack(spacing: 0) { rows() }
-                .background(ElmTheme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
-                .padding(.top, 8)
         }
-        .padding(.top, 18)
+        .padding(.top, 30)
     }
 
-    private func rowBody(label: String, value: String, color: Color, chevron: Bool) -> some View {
-        HStack(spacing: 11) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(color)
-                .frame(width: 9, height: 9)
+    /// صف واحد: أيقونة أحادية اللون، تسمية بحجم المتن، قيمة خافتة، وسهم؛ خط تفاصيل أسفله.
+    private func rowBody(label: String, value: String, icon: String, chevron: Bool, tint: Color = ElmTheme.ink) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon)
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(tint == ElmTheme.ink ? ElmTheme.navyInk : tint)
+                .frame(width: 26)
+                .accessibilityHidden(true)
             Text(label)
-                .font(ElmFonts.text(.footnote))
-                .foregroundStyle(ElmTheme.ink)
-            Spacer(minLength: 6)
+                .font(ElmFonts.text(.body, weight: .medium))
+                .foregroundStyle(tint)
+            Spacer(minLength: 8)
             if !value.isEmpty {
                 Text(value)
-                    .font(ElmFonts.text(.caption))
+                    .font(ElmFonts.text(.subheadline))
                     .foregroundStyle(ElmTheme.ink3)
+                    .elmLatin()
+                    .lineLimit(1)
             }
             if chevron {
-                Image(systemName: "arrow.left")
-                    .font(.system(size: 11, weight: .semibold))
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(ElmTheme.ink3)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 13)
+        .frame(minHeight: 54)
+        .overlay(alignment: .bottom) { Rectangle().fill(ElmTheme.line).frame(height: 1) }
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }
 
     private func linkRow<Destination: View>(
-        label: String, value: String, color: Color,
+        label: String, value: String, icon: String,
         @ViewBuilder destination: () -> Destination
     ) -> some View {
         NavigationLink(destination: destination()) {
-            rowBody(label: label, value: value, color: color, chevron: true)
+            rowBody(label: label, value: value, icon: icon, chevron: true)
         }
         .buttonStyle(.plain)
     }
 
-    private func valueRow(label: String, value: String, color: Color) -> some View {
-        rowBody(label: label, value: value, color: color, chevron: false)
-    }
-
-    private func toggleRow(label: String, color: Color, isOn: Bool, action: @escaping () -> Void) -> some View {
-        HStack(spacing: 11) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                .fill(color)
-                .frame(width: 9, height: 9)
+    private func toggleRow(label: String, icon: String, isOn: Bool, action: @escaping () -> Void) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.system(size: 17, weight: .medium)).foregroundStyle(ElmTheme.navyInk).frame(width: 26)
+                .accessibilityHidden(true)
             Text(label)
-                .font(ElmFonts.text(.footnote))
+                .font(ElmFonts.text(.body, weight: .medium))
                 .foregroundStyle(ElmTheme.ink)
-            Spacer(minLength: 6)
+            Spacer(minLength: 8)
             ElmToggle(isOn: isOn, action: action).accessibilityLabel(label)
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 10)
+        .frame(minHeight: 54)
+        .overlay(alignment: .bottom) { Rectangle().fill(ElmTheme.line).frame(height: 1) }
     }
 
-    private func menuRow(label: String, color: Color) -> some View {
+    private func menuRow(label: String, icon: String) -> some View {
         Menu {
             ForEach(AppearanceMode.allCases) { mode in
                 Button {
@@ -483,7 +477,28 @@ struct AccountScreen: View {
                 }
             }
         } label: {
-            rowBody(label: label, value: appearance.mode.label, color: color, chevron: true)
+            rowBody(label: label, value: appearance.mode.label, icon: icon, chevron: true)
+        }
+    }
+
+    /// حجم خط القارئ — نفس الخيارات الثلاثة في ورقة المادة، ويحترم Dynamic Type فوقها.
+    private var fontSizeRow: some View {
+        Menu {
+            ForEach([(17.0, "عادي"), (20.0, "كبير"), (23.0, "أكبر")], id: \.0) { size, name in
+                Button { readerFontSize = size } label: {
+                    if readerFontSize == size { Label(name, systemImage: "checkmark") } else { Text(name) }
+                }
+            }
+        } label: {
+            rowBody(label: "حجم خط القراءة", value: fontSizeLabel, icon: "textformat.size", chevron: true)
+        }
+    }
+
+    private var fontSizeLabel: String {
+        switch readerFontSize {
+        case 20: return "كبير"
+        case 23: return "أكبر"
+        default: return "عادي"
         }
     }
 
