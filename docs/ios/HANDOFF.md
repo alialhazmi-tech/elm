@@ -23,7 +23,7 @@
 SwiftUI (iOS 17+)
  ├─ ElmTheme / ElmFonts / SeriesPalette     ← M0 رموز مشتقة من CSS
  ├─ TabView (1a الرئيسية · 1b السلاسل · 1f لك · 1e بحث · 1g حسابي)
- ├─ Network: GET https://elm-production-ea24.up.railway.app/api/mobile/v1/*
+ ├─ Network: GET https://alelm.net/api/mobile/v1/*
  ├─ SwiftData                              ← كاش بلا اتصال (M1)
  ├─ WidgetKit                              ← ودجت الرئيسية (M4)
  └─ StoreKit 2                             ← عضوية اختيارية لاحقًا (M6)
