@@ -1,7 +1,7 @@
 import Foundation
 
 enum URLConstants {
-    static let productionAPI = URL(string: "https://elm-production-ea24.up.railway.app")!
+    static let productionAPI = URL(string: "https://alelm.net")!
     // Canonical public links; API origin retains existing authenticated sessions.
     static let publicSite = URL(string: "https://alelm.net")!
 

@@ -21,6 +21,8 @@ enum ElmLinks {
     static func isElmHost(_ host: String?) -> Bool {
         guard let host = host?.lowercased() else { return false }
         if host == "alelm.net" || host == "www.alelm.net" { return true }
+        // الأصل القديم قبل نقل النطاق: روابط مشاركة سابقة ما زالت تُفتح أصليًا.
+        if host == "elm-production-ea24.up.railway.app" { return true }
         if host == URLConstants.productionAPI.host?.lowercased() { return true }
         if host == URLConstants.contentAPI.host?.lowercased() { return true }
         return false
