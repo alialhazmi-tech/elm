@@ -39,49 +39,50 @@ final class SeriesIndexStore {
 struct SeriesScreen: View {
     var showBack = false
     @State private var store = SeriesIndexStore()
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
         ElmScreen(title: "السلاسل", showBack: showBack, onRefresh: { await store.load() }) {
             VStack(alignment: .leading, spacing: 0) {
                 Text("سلاسل العلم")
-                    .font(ElmFonts.display(.title, weight: .heavy))
+                    .font(ElmFonts.display(size: 28, weight: .heavy, relativeTo: .largeTitle))
                     .foregroundStyle(ElmTheme.ink)
+                    .accessibilityAddTraits(.isHeader)
                 Text("زوايا مختلفة لفهم العالم. اختر السلسلة التي تثير فضولك.")
-                    .font(ElmFonts.text(.footnote))
+                    .font(ElmFonts.text(.subheadline))
                     .foregroundStyle(ElmTheme.ink2)
                     .lineSpacing(4)
                     .padding(.top, 6)
-
-                SpectrumBar().padding(.top, 14)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if let error = store.errorMessage {
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
                         Text(error)
-                            .font(ElmFonts.text(.caption2))
+                            .font(ElmFonts.text(.caption))
                             .foregroundStyle(ElmTheme.ink3)
                         Spacer(minLength: 0)
                         Button("إعادة المحاولة") { Task { await store.load() } }
-                            .font(ElmFonts.text(.caption2, weight: .bold))
+                            .font(ElmFonts.text(.caption, weight: .bold))
                             .foregroundStyle(ElmTheme.navyInk)
                             .frame(minHeight: 44)
                     }
                     .padding(.top, 6)
                 }
 
-                LazyVGrid(columns: columns, spacing: 10) {
+                // قائمة تحريرية بعمود واحد: خط بنية أعلاها وخطوط تفاصيل بين السلاسل — بلا بطاقات فارغة.
+                VStack(spacing: 0) {
+                    Rectangle().fill(ElmTheme.line2).frame(height: 1).accessibilityHidden(true)
                     ForEach(store.active) { entry in
-                        card(entry)
+                        row(entry)
                     }
                 }
-                .padding(.top, 16)
+                .padding(.top, 20)
 
                 if !store.archived.isEmpty {
-                    archiveBox.padding(.top, 18)
+                    archiveBox.padding(.top, 32)
                 }
             }
-            .padding(.horizontal, 18)
-            .padding(.top, 16)
+            .padding(.horizontal, 22)
+            .padding(.top, 12)
         }
         .task { await store.load() }
         .overlay {
@@ -91,82 +92,88 @@ struct SeriesScreen: View {
         }
     }
 
-    private var columns: [GridItem] {
-        dynamicTypeSize.isAccessibilitySize
-            ? [GridItem(.flexible(), spacing: 10)]
-            : [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
-    }
-
-    private func card(_ entry: SeriesEntry) -> some View {
+    /// صف سلسلة: شرطة بلونها، الاسم بخط العرض، الوصف، وعدد المواد؛ آخر مادة سطرًا خافتًا إن وصلت.
+    private func row(_ entry: SeriesEntry) -> some View {
         let color = ElmTheme.hex(entry.color)
+        let blurb = entry.description.isEmpty ? SeriesPalette.blurb(for: entry.slug) : entry.description
         return NavigationLink {
             SeriesFeedScreen(chip: entry.asChip, archived: entry.archived)
         } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                Circle().fill(color).frame(width: 12, height: 12).accessibilityHidden(true)
-                Text(entry.name)
-                    .font(ElmFonts.display(.headline, weight: .heavy))
-                    .foregroundStyle(ElmTheme.ink)
-                    .padding(.top, 3)
-                Text(entry.description.isEmpty ? SeriesPalette.blurb(for: entry.slug) : entry.description)
-                    .font(ElmFonts.text(.caption2))
+            HStack(alignment: .center, spacing: 14) {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 1, style: .continuous).fill(color).frame(width: 16, height: 3)
+                            .accessibilityHidden(true)
+                        Text(entry.name)
+                            .font(ElmFonts.display(size: 20, weight: .heavy, relativeTo: .title3))
+                            .foregroundStyle(ElmTheme.ink)
+                    }
+                    Text(blurb)
+                        .font(ElmFonts.text(.subheadline))
+                        .foregroundStyle(ElmTheme.ink2)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 6) {
+                        Text(entry.count > 0 ? ElmFormat.materialLabel(entry.count) : "تصفّح السلسلة")
+                            .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).elmLatin()
+                        if let latest = entry.latest, !latest.title.isEmpty {
+                            Text("·").font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).accessibilityHidden(true)
+                            Text("آخرها: \(latest.title)")
+                                .font(ElmFonts.text(.caption)).foregroundStyle(ElmTheme.ink3).lineLimit(1)
+                        }
+                    }
+                    .padding(.top, 2)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(ElmTheme.ink3)
-                    .multilineTextAlignment(.leading)
-                    .lineSpacing(2)
-                    .padding(.top, 4)
-                Text(entry.count > 0 ? ElmFormat.materialLabel(entry.count) : "تصفّح السلسلة")
-                    .font(ElmFonts.text(.caption2))
-                    .foregroundStyle(ElmTheme.ink3)
-                    .padding(.top, 9)
+                    .accessibilityHidden(true)
             }
+            .padding(.vertical, 16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 0 : 132, alignment: .topLeading)
-            .padding(14)
-            .background(ElmTheme.surface)
-            .overlay(alignment: .top) {
-                Rectangle().fill(color).frame(height: 3)
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
-
+            .overlay(alignment: .bottom) { Rectangle().fill(ElmTheme.line).frame(height: 1) }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(entry.name)، \(entry.description)")
+        .accessibilityLabel("\(entry.name)، \(blurb)، \(entry.count > 0 ? ElmFormat.materialLabel(entry.count) : "")")
     }
 
     private var archiveBox: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("أرشيف حي")
-                .font(ElmFonts.text(.caption2, weight: .bold))
-                .foregroundStyle(ElmTheme.ink3)
+            HStack(spacing: 6) {
+                Text("✦").font(.system(size: 11)).foregroundStyle(ElmTheme.gold).accessibilityHidden(true)
+                Text("أرشيف حي").font(ElmFonts.display(.headline, weight: .heavy)).foregroundStyle(ElmTheme.ink)
+            }
+            .accessibilityAddTraits(.isHeader)
+            .padding(.bottom, 10)
+            Rectangle().fill(ElmTheme.line2).frame(height: 1).accessibilityHidden(true)
             Text("سلاسل متقاعدة صفحاتها تعمل ومَوادها محفوظة، خارج حزام الاستكشاف.")
-                .font(ElmFonts.text(.footnote))
+                .font(ElmFonts.text(.subheadline))
                 .foregroundStyle(ElmTheme.ink2)
                 .lineSpacing(3)
-                .padding(.top, 5)
+                .padding(.top, 12)
+                .fixedSize(horizontal: false, vertical: true)
 
-            ElmFlow(spacing: 7) {
+            ElmFlow(spacing: 8) {
                 ForEach(store.archived) { entry in
                     NavigationLink {
                         SeriesFeedScreen(chip: entry.asChip, archived: true)
                     } label: {
                         Text(entry.name)
-                            .font(ElmFonts.text(.footnote))
-                            .foregroundStyle(ElmTheme.ink2)
-                            .padding(.horizontal, 11)
-                            .padding(.vertical, 5)
-                            .background(ElmTheme.surface, in: Capsule())
+                            .font(ElmFonts.text(.subheadline, weight: .medium))
+                            .foregroundStyle(ElmTheme.ink)
+                            .padding(.horizontal, 14)
+                            .frame(minHeight: 38)
+                            .background(ElmTheme.surface2, in: Capsule())
                             .overlay(Capsule().stroke(ElmTheme.line, lineWidth: 1))
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.top, 10)
+            .padding(.top, 12)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(ElmTheme.surface2, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(ElmTheme.line, lineWidth: 1))
     }
 }
 
