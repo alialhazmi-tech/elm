@@ -184,7 +184,7 @@ struct ElmToggle: View {
     var body: some View {
         Button(action: action) {
             Capsule()
-                .fill(isOn ? ElmTheme.teal : ElmTheme.line2)
+                .fill(isOn ? ElmTheme.navy : ElmTheme.line2)
                 .frame(width: 46, height: 28)
                 // في RTL تعني `.trailing` اليسار — والمقبض يسارًا عند التفعيل كما في iOS.
                 .overlay(alignment: isOn ? .trailing : .leading) {
