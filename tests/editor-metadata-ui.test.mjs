@@ -21,7 +21,7 @@ test('metadata requires approval, rejects stale results and copies saved links a
     const nodes=n=>!n||typeof n!=='object'?[]:[n,...[n.props?.children].flat(Infinity).flatMap(nodes)];
     let component=()=>MetadataGenerator(props);const render=()=>{cursor=0;return component()};
     const button=name=>nodes(render()).find(n=>n.type==='button'&&[n.props.children].flat(Infinity).includes(name));
-    globalThis.fetch=async(_url,opts)=>{calls++;assert.equal(JSON.parse(opts.body).tool,'metadata');return Response.json({metadata:data})};
+    globalThis.fetch=async(_url,opts)=>{calls++;assert.equal(JSON.parse(opts.body).tool,'metadata');assert.equal(opts.headers.Accept,'application/x-ndjson');return Response.json({metadata:data})};
     await button('توليد الملحقات').props.onClick();assert.equal(calls,1);assert.equal(applied.length,0);assert.match(JSON.stringify(render()),/العلوم/);assert.match(JSON.stringify(render()),/لماذا/);
     revision++;button('اعتماد الملحقات').props.onClick();assert.equal(applied.length,0);assert.match(JSON.stringify(render()),/تغيّرت المسودة/);
     await button('إعادة توليد الملحقات').props.onClick();button('اعتماد الملحقات').props.onClick();assert.equal(applied.length,1);assert.equal(applied[0].body,undefined);assert.equal(applied[0].title,undefined);
@@ -46,6 +46,11 @@ test('metadata requires approval, rejects stale results and copies saved links a
     }
     globalThis.fetch=async()=>Response.json({metadata:data});
     await button('إعادة توليد الملحقات').props.onClick();assert.ok(button('اعتماد الملحقات'));assert.equal(applied.length,1);
+    // البث المنبوض: نبضة وحشو ثم النتيجة، ثم بث ينقطع قبل النتيجة.
+    globalThis.fetch=async()=>new Response(JSON.stringify({type:'heartbeat',padding:' '.repeat(1100)})+'\n'+JSON.stringify({type:'result',data:{ok:true,metadata:data}})+'\n',{headers:{'Content-Type':'application/x-ndjson'}});
+    await button('إعادة توليد الملحقات').props.onClick();assert.ok(button('اعتماد الملحقات'));assert.match(JSON.stringify(render()),/عنوان بحث/);
+    globalThis.fetch=async()=>new Response(JSON.stringify({type:'heartbeat'})+'\n',{headers:{'Content-Type':'application/x-ndjson'}});
+    await button('إعادة توليد الملحقات').props.onClick();assert.equal(button('اعتماد الملحقات'),undefined);assert.match(JSON.stringify(render()),/انقطع الاتصال قبل وصول النتيجة/);
     slots=[];const copied=[];globalThis.window={location:{origin:'https://alelm.net'}};
     Object.defineProperty(globalThis,'navigator',{configurable:true,value:{clipboard:{writeText:async text=>copied.push(text)}}});
     const links={editorId:'revision-id',identity:{id:'original-id',section:'sciences',slug:'عنوان-المادة'},published:false,dirty:false};component=()=>ArticleLinks(links);

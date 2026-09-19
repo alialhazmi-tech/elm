@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { FullEditProgressStage } from "@/lib/ai/editorial";
+import { ASSIST_STREAM_ACCEPT, readAssistStream } from "@/lib/ai/read-assist-stream";
 
 import type { FullEditData, FullEditProgress } from "./full-edit";
 
@@ -85,47 +86,19 @@ export function useFullEditStream({ setMessage }: { setMessage: (message: Editor
       const response = await fetch("/api/tahrir/ai/assist", {
         method: "POST",
         headers: {
-          Accept: "application/x-ndjson",
+          Accept: ASSIST_STREAM_ACCEPT,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ tool: "full_edit", storyId: draft.storyId, title: draft.title, body: draftBody }),
         signal: controller.signal,
       });
 
-      if (!response.ok || !response.body) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.error ?? "تعذر التحرير الشامل.");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        buffer += decoder.decode(value, { stream: !done });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? "";
-
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const event = JSON.parse(line) as {
-            type?: string;
-            stage?: FullEditProgressStage;
-            error?: string;
-            data?: { fullEdit?: FullEditData };
-          };
-          if (event.type === "progress" && event.stage) {
-            setFullProgress((current) => advanceFullProgress(current, event.stage!));
-          } else if (event.type === "result" && event.data) {
-            streamedResult = event.data;
-          } else if (event.type === "error") {
-            throw new Error(event.error ?? "تعذر التحرير الشامل.");
-          }
+      // القارئ المشترك يتولى النبضات وأخطاء الوسيط؛ هنا نتابع مراحل التقدم فقط.
+      streamedResult = await readAssistStream(response, (event) => {
+        if (event.type === "progress" && event.stage) {
+          setFullProgress((current) => advanceFullProgress(current, event.stage as FullEditProgressStage));
         }
-
-        if (done) break;
-      }
+      }) as { fullEdit?: FullEditData };
     } catch (error) {
       if (controller.signal.aborted) {
         setMessage({ kind: "ok", text: "أُوقف التحرير الذكي ولم يُطبّق أي تغيير." });

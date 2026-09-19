@@ -5,13 +5,14 @@ import test from "node:test";
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
 test("التحرير الشامل يبث مراحله الفعلية ويحمي تعديلات المسودة", async () => {
-  const [editorial, route, editor, stream, fullEdit, css] = await Promise.all([
+  const [editorial, route, editor, stream, fullEdit, css, reader] = await Promise.all([
     read("lib/ai/editorial.ts"),
     read("app/api/tahrir/ai/assist/route.ts"),
     read("components/tahrir/editor/editor-client.tsx"),
     read("components/tahrir/editor/use-full-edit-stream.ts"),
     read("components/tahrir/editor/full-edit.tsx"),
     read("app/tahrir/shadcn.css"),
+    read("lib/ai/read-assist-stream.ts"),
   ]);
 
   assert.match(editorial, /onFullEditProgress\?\.\("body_started"\)/);
@@ -25,8 +26,10 @@ test("التحرير الشامل يبث مراحله الفعلية ويحمي 
   assert.match(route, /padding: " "\.repeat\(1100\)/);
   assert.match(route, /signal: request\.signal/);
 
-  // منطق البث انتقل إلى use-full-edit-stream؛ المحرر يستهلكه ويقفل التطبيق حين تتغير المسودة.
-  assert.match(stream, /response\.body\.getReader\(\)/);
+  // قراءة البث في القارئ المشترك (lib/ai/read-assist-stream)؛ الهوك يتابع المراحل ويقفل التطبيق حين تتغير المسودة.
+  assert.match(reader, /getReader\(\)/);
+  assert.match(stream, /readAssistStream\(response/);
+  assert.match(stream, /ASSIST_STREAM_ACCEPT/);
   assert.match(stream, /fullEditStale/);
   assert.match(editor, /full\.fullEditStale/);
   assert.match(fullEdit, /التطبيق متوقف لحماية تعديلاتك/);
