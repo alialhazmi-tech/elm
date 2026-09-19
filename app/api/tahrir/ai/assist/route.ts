@@ -89,7 +89,12 @@ async function generate(tool: AiTool, input: EditorialInput, settings: AiSetting
   return result;
 }
 
-function streamFullEdit(
+/**
+ * بثّ NDJSON لأي أداة: نبضة كل 10 ثوانٍ تبقي اتصال الوسيط حيًا أثناء استدعاءات النموذج الطويلة،
+ * فلا يعيد الوسيط 502 قبل اكتمال التوليد. أحداث التقدم خاصة بالتحرير الشامل.
+ */
+function streamTool(
+  tool: AiTool,
   request: Request,
   input: EditorialInput,
   settings: AiSettingsData,
@@ -117,7 +122,7 @@ function streamFullEdit(
 
       const heartbeat = setInterval(() => send({ type: "heartbeat" }), 10_000);
       try {
-        const result = await generate("full_edit", input, settings, actor, reservationId, {
+        const result = await generate(tool, input, settings, actor, reservationId, {
           signal,
           onFullEditProgress: (stage: FullEditProgressStage) => send({ type: "progress", stage }),
         });
@@ -206,8 +211,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: gate.reason }, { status: 429 });
   }
 
-  if (tool === "full_edit" && request.headers.get("accept")?.includes("application/x-ndjson")) {
-    return streamFullEdit(request, normalizedInput, settings, session.username, gate.reservationId);
+  if (request.headers.get("accept")?.includes("application/x-ndjson")) {
+    return streamTool(tool, request, normalizedInput, settings, session.username, gate.reservationId);
   }
 
   try {

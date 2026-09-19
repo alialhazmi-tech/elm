@@ -21,7 +21,8 @@ const output = await build({ stdin: { contents: "export {POST} from './app/api/t
   } }] });
 const compiled = { exports: {} };
 new Function('require', 'module', 'exports', output.outputFiles[0].text)(createRequire(import.meta.url), compiled, compiled.exports);
-const post = (tool='metadata', body='نص المصدر') => compiled.exports.POST(new Request('http://localhost/api/tahrir/ai/assist', { method:'POST',headers:{'Content-Type':'application/json',Accept:'application/x-ndjson'},body:JSON.stringify({tool,body,title:'المصدر'}) }));
+const post = (tool='metadata', body='نص المصدر', accept='application/json') => compiled.exports.POST(new Request('http://localhost/api/tahrir/ai/assist', { method:'POST',headers:{'Content-Type':'application/json',Accept:accept},body:JSON.stringify({tool,body,title:'المصدر'}) }));
+const NDJSON='application/x-ndjson';
 const usage = { model:'fast',inputTokens:2,outputTokens:3 };
 async function isolated(fn) {
   globalThis.__aiTest={settings,key:true,reservations:[],entries:[],audits:[],run:async()=>({suggestions:[],usage})};
@@ -74,7 +75,7 @@ test('full-edit response sends heartbeat while working then settles and returns 
     await new Promise(resolve=>{finish=resolve;});options.onUsage(usage);throw new Error('تعذر إكمال الملحقات');
   };
   try {
-    const r=await post('full_edit');assert.match(r.headers.get('Content-Type'),/ndjson/);
+    const r=await post('full_edit','نص المصدر',NDJSON);assert.match(r.headers.get('Content-Type'),/ndjson/);
     const reader=r.body.getReader(),decoder=new TextDecoder();
     const first=decoder.decode((await reader.read()).value);assert.match(first,/accepted/);
     heartbeat();assert.match(decoder.decode((await reader.read()).value),/heartbeat/);
@@ -82,6 +83,26 @@ test('full-edit response sends heartbeat while working then settles and returns 
     assert.equal((await reader.read()).done,true);assert.equal(cleared,true);
     assert.equal(state.entries.length,1);assert.equal(state.entries[0].costCents,5);
   }finally{globalThis.setInterval=set;globalThis.clearInterval=clear;}
+}));
+
+test('metadata streams heartbeats then the result when the client accepts ndjson, and settles once',()=>isolated(async state=>{
+  let heartbeat, finish;
+  const set=globalThis.setInterval, clear=globalThis.clearInterval;
+  globalThis.setInterval=fn=>{heartbeat=fn;return 7;};globalThis.clearInterval=()=>{};
+  const metadata={excerpt:{text:'موجز'},seo:{seoTitle:'ع'},classify:{section:'news'}};
+  state.run=async(tool,_input,_settings,options)=>{assert.equal(tool,'metadata');await new Promise(resolve=>{finish=resolve;});options.onUsage(usage);return {suggestions:[],usage,metadata};};
+  try {
+    const r=await post('metadata','نص المصدر',NDJSON);assert.equal(r.status,200);assert.match(r.headers.get('Content-Type'),/ndjson/);
+    const reader=r.body.getReader(),decoder=new TextDecoder();
+    heartbeat();const first=decoder.decode((await reader.read()).value);assert.match(first,/heartbeat/);assert.ok(first.length>1100);
+    finish();const last=decoder.decode((await reader.read()).value);
+    const event=JSON.parse(last.trim());assert.equal(event.type,'result');assert.equal(event.data.ok,true);assert.deepEqual(event.data.metadata,metadata);
+    assert.equal((await reader.read()).done,true);
+    assert.equal(state.entries.length,1);assert.equal(state.entries[0].tool,'metadata');assert.equal(state.entries[0].costCents,5);
+  }finally{globalThis.setInterval=set;globalThis.clearInterval=clear;}
+  // بلا ترويسة القبول يبقى الرد JSON عاديًا.
+  state.run=async()=>({suggestions:[],usage,metadata});
+  const plain=await post();assert.match(plain.headers.get('Content-Type'),/application\/json/);assert.equal((await plain.json()).metadata.excerpt.text,'موجز');
 }));
 
 test('story-linked AI events require live story access and use the authenticated actor',()=>isolated(async state=>{

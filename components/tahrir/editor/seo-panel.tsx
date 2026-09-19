@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { SeoResult } from "@/lib/ai/editorial";
-import { readAssistResponse } from "@/lib/ai/read-assist-response";
+import { ASSIST_STREAM_ACCEPT, readAssistStream } from "@/lib/ai/read-assist-stream";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -51,10 +51,10 @@ export function SeoPanel(props: Props) {
     inFlight.current = true; setBusy(true); setError(""); setProposal(null);
     try {
       const response = await fetch("/api/tahrir/ai/assist", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", Accept: ASSIST_STREAM_ACCEPT },
         body: JSON.stringify({ tool: "seo", storyId: draft.storyId, title: draft.title, body: draft.body }),
       });
-      const data = await readAssistResponse(response);
+      const data = await readAssistStream(response);
       const seo = data.seo;
       if (!seo || typeof seo.seoTitle !== "string" || !Array.isArray(seo.keywords) || !seo.guard) throw new Error("لم يعد المساعد بحزمة SEO صالحة. أعد التوليد.");
       setProposal({ seo, revision: draft.revision });

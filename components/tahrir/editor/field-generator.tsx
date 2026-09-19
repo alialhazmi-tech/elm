@@ -6,7 +6,7 @@ import { useRef, useState } from "react";
 import { SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { AiSuggestion } from "@/lib/ai/editorial";
-import { readAssistResponse } from "@/lib/ai/read-assist-response";
+import { ASSIST_STREAM_ACCEPT, readAssistStream } from "@/lib/ai/read-assist-stream";
 
 interface Props {
   tool: "headlines" | "excerpt";
@@ -30,10 +30,10 @@ export function FieldGenerator({ tool, getDraft, onApply, disabled }: Props) {
     inFlight.current = true; setBusy(true); setError(""); setProposal(null);
     try {
       const response = await fetch("/api/tahrir/ai/assist", {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json", Accept: ASSIST_STREAM_ACCEPT },
         body: JSON.stringify({ tool, storyId: draft.storyId, title: draft.title, body: draft.body }),
       });
-      const data = await readAssistResponse(response);
+      const data = await readAssistStream(response);
       const suggestions: AiSuggestion[] = Array.isArray(data.suggestions) ? data.suggestions.filter((s: AiSuggestion) => typeof s?.text === "string" && s.text.trim() && s.guard && Array.isArray(s.guard.findings)) : [];
       if (!suggestions.length) throw new Error("لم يعد المساعد باقتراح صالح. أعد التوليد.");
       setProposal({ revision: draft.revision, suggestions });
