@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-08-29T15:22:23.210Z",
+  "dryRun": false,
+  "items": [
+    {
+      "id": 1741,
+      "storyId": "jak-1741",
+      "title": "تيك توك.. أرشيف يهدد التاريخ",
+      "mode": "structured",
+      "sections": 10,
+      "slides": 27,
+      "types": [
+        "hero",
+        "text",
+        "text",
+        "stat",
+        "stat",
+        "stat",
+        "stat",
+        "comparison",
+        "text",
+        "fact",
+        "fact",
+        "text",
+        "fact",
+        "stat",
+        "stat",
+        "stat",
+        "text",
+        "text",
+        "fact",
+        "fact",
+        "stat",
+        "fact",
+        "text",
+        "stat",
+        "stat",
+        "stat",
+        "end"
+      ],
+      "images": 27,
+      "words": 318
+    },
+    {
+      "id": 40,
+      "storyId": "jak-40",
+      "title": "تايوان.. جزيرة قد تدمر كوكبًا",
+      "mode": "heuristic",
+      "sections": 13,
+      "slides": 9,
+      "types": [
+        "hero",
+        "text",
+        "timeline",
+        "text",
+        "text",
+        "text",
+        "text",
+        "text",
+        "end"
+      ],
+      "images": 9,
+      "words": 247
+    }
+  ]
+}

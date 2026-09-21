@@ -1,0 +1,103 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+
+import { Panel } from "@/components/tahrir/overview/panel";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { apiCall } from "@/lib/tahrir/client-api";
+
+interface SettingsShape {
+  tools: Record<string, boolean>;
+  models: { editorial: string; light: string; image: string; fast: string };
+  caps: { dailyUsd: number; monthlyUsd: number };
+  tone: string;
+}
+
+const TOOL_META: Array<[string, string, string, "editorial" | "light" | "fast" | "image"]> = [
+  ["headlines", "اقتراح العناوين", "3 بدائل تُفحص بالحارس قبل العرض", "editorial"],
+  ["excerpt", "توليد «قبل القراءة»", "خلاصة سطر واحد من المتن", "editorial"],
+  ["improve", "تحسين الفقرات", "بفرق ظاهر — الاعتماد بنقرة منك", "editorial"],
+  ["proofread", "التدقيق اللغوي", "تصحيح بلا إعادة صياغة", "editorial"],
+  ["classify", "التصنيف الآلي", "سلسلة/قسم/شكل — اقتراح يطبَّق بنقرة", "light"],
+  ["seo", "توليد SEO والكلمات المفتاحية", "عنوان ووصف بحث + كلمات مفتاحية من المتن", "editorial"],
+  ["full_edit", "التوليد الذكي الشامل", "تحرير المتن وتوليد العنوان وSEO والتصنيف بالتوازي", "fast"],
+  ["metadata", "توليد الملحقات", "الموجز وSEO والكلمات المفتاحية والتصنيف والسلسلة", "light"],
+  ["jak", "جاك العلم", "تحليل التقرير إلى خطة شرائح + عمليات الشريحة الواحدة — بمدقق أرقام صارم", "editorial"],
+  ["images", "توليد الصور", "الأنماط الثلاثة: حقيقي/توضيحي/رسومي", "image"],
+];
+
+function Row({ name, desc, model, children }: { name: string; desc: string; model?: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b px-4 py-2.5 last:border-0 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <div className="min-w-0">
+        <div className="text-[12.5px] font-semibold">{name}</div>
+        <div className="text-[11px] text-muted-foreground">{desc}</div>
+      </div>
+      {model ? (
+        <code className="hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[10.5px] text-muted-foreground sm:inline" dir="ltr">
+          {model}
+        </code>
+      ) : (
+        <span className="hidden sm:inline" />
+      )}
+      {children}
+    </div>
+  );
+}
+
+export function AiSettingsClient({ initial, isChief }: { initial: SettingsShape; isChief: boolean }) {
+  const router = useRouter();
+  const [settings, setSettings] = useState(initial);
+
+  async function patch(partial: Partial<SettingsShape>) {
+    if (!isChief) {
+      toast.error("التعديل قرار رئيس التحرير.");
+      return;
+    }
+    const result = await apiCall<{ settings: SettingsShape }>("/api/tahrir/ai/settings", { method: "PATCH", body: partial }, { fallback: "تعذر الحفظ." });
+    if (result.ok) {
+      setSettings(result.data.settings);
+      toast.success("حُفظت.");
+      router.refresh();
+    } else {
+      toast.error(result.error);
+    }
+  }
+
+  return (
+    <>
+      <Panel title="الأدوات — تفعيل كل أداة على حدة">
+        {TOOL_META.map(([key, name, desc, modelKey]) => (
+          <Row key={key} name={name} desc={desc} model={settings.models[modelKey]}>
+            <Switch
+              checked={Boolean(settings.tools[key])}
+              aria-label={name}
+              disabled={!isChief}
+              onCheckedChange={(checked) => patch({ tools: { ...settings.tools, [key]: checked } })}
+            />
+          </Row>
+        ))}
+      </Panel>
+      <Panel title="نبرة العلم — تُضاف فوق الدستور في كل استدعاء">
+        <div className="grid gap-2 p-4">
+          <Textarea
+            rows={4}
+            value={settings.tone}
+            readOnly={!isChief}
+            aria-label="نبرة العلم"
+            onChange={(event) => setSettings({ ...settings, tone: event.target.value })}
+          />
+          {isChief ? (
+            <Button size="sm" className="justify-self-start" onClick={() => patch({ tone: settings.tone })}>
+              احفظ النبرة
+            </Button>
+          ) : null}
+        </div>
+      </Panel>
+    </>
+  );
+}

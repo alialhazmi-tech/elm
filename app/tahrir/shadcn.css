@@ -1,0 +1,163 @@
+/*
+  «تحرير العلم» فوق shadcn — جذر Tailwind مستقل عن الموقع العام.
+  يمسح app/tahrir وcomponents وhooks فقط، فلا تدخل أدواته حزمة الرئيسية ولا تمس ميزانيتها.
+  الرموز تُعرَّف تحت سمة اللوحة [data-theme-preset] (على الغلاف #tahrir-root وعلى <html> بعد الترطيب
+  لتصل إلى بوابات Radix) — و«هوية العلم» هي اللوحة الافتراضية، ولوحات الكِت في themes.css.
+*/
+@import "tailwindcss" source(none);
+@source "./";
+@source "../../components";
+@source "../../hooks";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@import "tw-animate-css";
+@import "./shadcn-base.css";
+/* هوية العلم ولوحة الكِت المحايدة، ثم لوحات الكِت الثماني والألوان الـ17 والزوايا والمقياس. */
+@import "./presets.css";
+@import "./themes.css";
+@import "./editor-colors.css";
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  /* خطوط العلم لا خطوط الكِت: Alexandria للعناوين وIBM Plex Sans Arabic للنصوص. */
+  --font-sans: var(--f-text), "SF Arabic", "Segoe UI", Tahoma, sans-serif;
+  --font-display: var(--f-display), var(--f-text), "SF Arabic", sans-serif;
+}
+
+@layer base {
+  [data-theme-preset] *,
+  .th * {
+    @apply border-border outline-ring/50;
+  }
+
+  .font-display {
+    font-weight: 700;
+  }
+
+  [data-slot="button"],
+  [data-slot="dialog-trigger"],
+  [data-slot="dropdown-menu-item"],
+  [data-slot="command-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="dropdown-menu-trigger"],
+  [data-slot="popover-trigger"],
+  [data-slot="tooltip-trigger"],
+  [data-slot="sheet-trigger"],
+  [data-slot="tabs-trigger"],
+  [data-slot="collapsible-trigger"] {
+    @apply cursor-pointer!;
+  }
+}
+
+/* ===== رموز اللوحة الدلالية (كانت في tahrir.css) — تقرؤها الشارات وحالات الحارس في كل اللوحات ===== */
+.th {
+  /* طبقات المحرر الهادئة: لوحة الأدوات، شريط الذكاء، الكحلي الدلالي، ومسودة ذهبية باهتة */
+  --t-panel: #eef2f8; --t-ai: #fbf5e6; --t-ai-line: #ebd9a8; --t-navy: #1a4282; --t-navy-bg: #e7eef8; --t-draft: #8a6d1f; --t-draft-bg: #f8efd6;
+  --t-block: #b42318; --t-block-bg: #fdf1ef;
+  --t-warn: #92610a; --t-warn-bg: #fdf6e7;
+  --t-sug: #2b5c9e; --t-sug-bg: #eef4fc;
+  --t-ok: #0e7a5f; --t-ok-bg: #ecf8f3;
+  font-family: var(--f-text), "SF Arabic", sans-serif;
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+:root[data-theme="dark"] .th {
+  --t-panel: #0e1930; --t-ai: #1c1a10; --t-ai-line: #3a3218; --t-navy: #8fb0e6; --t-navy-bg: #16284a; --t-draft: #e2c06a; --t-draft-bg: #2e2610;
+  --t-block: #f08a7d; --t-block-bg: #33161a;
+  --t-warn: #e5b567; --t-warn-bg: #31250e;
+  --t-sug: #8fb4e8; --t-sug-bg: #152740;
+  --t-ok: #5ec9a8; --t-ok-bg: #132b22;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .th {
+    --t-panel: #0e1930; --t-ai: #1c1a10; --t-ai-line: #3a3218; --t-navy: #8fb0e6; --t-navy-bg: #16284a; --t-draft: #e2c06a; --t-draft-bg: #2e2610;
+    --t-block: #f08a7d; --t-block-bg: #33161a;
+    --t-warn: #e5b567; --t-warn-bg: #31250e;
+    --t-sug: #8fb4e8; --t-sug-bg: #152740;
+    --t-ok: #5ec9a8; --t-ok-bg: #132b22;
+  }
+}
+.th :is(button, a, input, textarea, select):focus-visible { outline-offset: 2px; }
+
+/* ===== متن المحرر (Tiptap) — طباعة تحريرية تطابق ما يراه القارئ ===== */
+.tahrir-body {
+  min-height: 320px;
+  font-size: 15px;
+  line-height: 2;
+  color: var(--foreground);
+}
+.tahrir-body h2 { font-family: var(--f-display); font-size: 18px; font-weight: 800; margin: 18px 0 6px; }
+.tahrir-body h3 { font-family: var(--f-display); font-size: 15.5px; font-weight: 700; margin: 14px 0 4px; }
+.tahrir-body p { margin: 0 0 12px; }
+.tahrir-body blockquote { margin: 12px 0; padding: 8px 14px; border-inline-start: 3px solid var(--primary); background: var(--muted); border-radius: 8px; }
+.tahrir-body ul, .tahrir-body ol { margin: 0 0 12px; padding-inline-start: 22px; }
+.tahrir-body ul { list-style: disc; }
+.tahrir-body ol { list-style: decimal; }
+.tahrir-body li p { margin: 0; }
+.tahrir-body a { color: var(--t-sug); text-decoration: underline; }
+.tahrir-body p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted-foreground); float: right; height: 0; pointer-events: none; }
+.tahrir-body ::selection { background: color-mix(in srgb, var(--primary) 35%, transparent); }
+/* وميض التحليل الذكي — حفاظًا على عقد الحركة نفسه (th-ai-shimmer) مع احترام تقليل الحركة. */
+.th-ai-shimmer { background-image: linear-gradient(90deg, transparent 0%, color-mix(in srgb, var(--primary) 18%, transparent) 50%, transparent 100%); background-size: 200% 100%; animation: tahrir-shimmer 1.6s linear infinite; }
+@keyframes tahrir-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+.th-ai-orb { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 50%, transparent); animation: th-ai-orb 1.4s ease-out infinite; }
+@keyframes th-ai-orb { to { box-shadow: 0 0 0 10px transparent; } }
+@media (prefers-reduced-motion: reduce) { .th-ai-shimmer, .th-ai-orb { animation: none; } }
+
+/* تقليل الحركة: يُبطل مدد tw-animate-css وanimate-spin والانتقالات داخل اللوحة وفي بوابات Radix
+   (الحوارات والألواح والقوائم تُرسم خارج #tahrir-root) دون تغيير الحالة النهائية للعناصر. */
+@media (prefers-reduced-motion: reduce) {
+  .th,
+  .th *,
+  .th *::before,
+  .th *::after,
+  body:has(#tahrir-root) :is([data-slot$="-content"], [data-slot$="-overlay"], [data-radix-popper-content-wrapper] *) {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Context hint while the optional introduction is open. */
+.tahrir-tour-highlight { outline: 3px solid var(--primary); outline-offset: 3px; }

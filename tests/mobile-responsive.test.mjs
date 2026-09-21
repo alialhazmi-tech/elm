@@ -1,0 +1,86 @@
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import test from "node:test";
+
+const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
+
+test("مسطرة السلاسل وشريط الأخبار خارج الهيدر حتى تلتصق المسطرة وحدها", async () => {
+  const [chrome, css] = await Promise.all([
+    read("app/_components/site-chrome.tsx"),
+    read("app/header.css"),
+  ]);
+  const headerClose = chrome.indexOf("</header>");
+  const rail = chrome.indexOf("<SeriesRail");
+  const chips = chrome.indexOf("top-series-mobile");
+  const news = chrome.indexOf("<BreakingBar");
+  assert.ok(headerClose > 0 && rail > headerClose, "مسطرة السلاسل يجب أن تخرج من الهيدر");
+  assert.ok(chips > headerClose, "رقائق الجوال يجب أن تخرج من الهيدر");
+  assert.ok(news > headerClose, "شريط الأخبار يجب أن يخرج من الهيدر");
+  assert.match(css, /\.topbar\.has-rail\s*\{[^}]*position:\s*static/);
+  assert.match(css, /\.series-rail\s*\{[^}]*position:\s*sticky/);
+  assert.match(css, /\.breaking,\s*\.breaking\.is-fresh/);
+  const home = await read("app/page.tsx");
+  assert.match(home, /day-line/);
+});
+
+test("شريط الأخبار يتناوب بين أحدث المواد ويقدّم العاجل الساري", async () => {
+  const [provider, chrome, strip, route] = await Promise.all([
+    read("lib/content/provider.ts"),
+    read("app/_components/site-chrome.tsx"),
+    read("app/_components/news-strip.tsx"),
+    read("app/api/content/news-strip/route.ts"),
+  ]);
+  assert.match(provider, /export async function getNewsStrip/);
+  assert.match(provider, /Promise\.all\(\[getBreaking\(\), listRecent\(safeLimit \+ 1\)\]\)/);
+  assert.match(chrome, /getNewsStrip\(5\)/);
+  assert.match(strip, /current\.urgent \? "عاجل" : "الأحدث"/);
+  assert.match(strip, /window\.setInterval/);
+  assert.match(strip, /fetch\("\/api\/content\/news-strip"/);
+  assert.match(strip, /prefers-reduced-motion: reduce/);
+  assert.match(route, /getNewsStrip\(5\)/);
+  assert.match(route, /PUBLIC_CONTENT_CACHE_CONTROL/);
+  assert.doesNotMatch(`${chrome}\n${strip}`, /مستجد/u);
+});
+
+test("قائمة الهاتف تفصل الأقسام والسلاسل والصيغ وتضع العضوية بعد أدوات البحث والمظهر", async () => {
+  const chrome = await read("app/_components/site-chrome.tsx");
+  for (const label of ["الأقسام", "السلاسل", "مرئي وصوتي"]) {
+    assert.ok(chrome.includes(`className="site-drawer-section" aria-label="${label}"`));
+  }
+  assert.match(chrome, /label: "منوعات", href: "\/varieties"/);
+  const tools = chrome.slice(chrome.indexOf('className="top-tools"'));
+  assert.ok(tools.indexOf('<MobileNavigation>') < tools.indexOf('href="/search"'));
+  assert.ok(tools.indexOf('href="/search"') < tools.indexOf('<ThemeToggle />'));
+  assert.ok(tools.indexOf('<ThemeToggle />') < tools.search(/<MemberEntry\b/));
+});
+
+test("قوائم المواد على الهاتف بطاقات أفقية كثيفة", async () => {
+  const [css, pagination, search] = await Promise.all([
+    read("app/globals.css"), read("lib/content/pagination.ts"), read("app/search/page.tsx"),
+  ]);
+  assert.match(css, /\.grid-3 \.m-card[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) 112px/);
+  assert.match(css, /\.section-feed \.m-card:not\(\.section-lead\)/);
+  assert.match(css, /\.series-feed \.m-card:not\(\.series-lead\)/);
+  assert.match(css, /\.series-directory-card\s*\{\s*min-height:\s*0/);
+  assert.match(pagination, /LIST_PAGE_SIZE = 18/);
+  assert.match(search, /<Pagination basePath="\/search"/);
+});
+
+test("العضوية ولوحة التحرير لهما قواعد هاتف مستقلة", async () => {
+  const [join, welcome, feed, layout, editor, table] = await Promise.all([
+    read("app/join/member-auth.css"),
+    read("app/welcome/welcome.css"),
+    read("app/for-you/for-you.css"),
+    read("app/tahrir/layout.tsx"),
+    read("components/tahrir/editor/editor-client.tsx"),
+    read("components/tahrir/stories/stories-table.tsx"),
+  ]);
+  assert.match(join, /font-size:\s*16px/);
+  assert.match(welcome, /\.interest-grid label\s*\{\s*min-height:\s*98px/);
+  assert.match(feed, /grid-template-columns:\s*minmax\(0, 1fr\) 112px/);
+  // اللوحة على جذر Tailwind مستقل؛ الاستجابة بأصناف نقاط التوقف لا بملف CSS للهاتف.
+  assert.match(layout, /import "\.\/shadcn\.css"/);
+  assert.doesNotMatch(layout, /mobile\.css|tahrir\.css/);
+  assert.match(editor, /xl:grid-cols-\[minmax\(0,1fr\)_340px\]/);
+  assert.match(table, /md:hidden/);
+});

@@ -1,0 +1,191 @@
+/* طبقات العمل في المحرر. تستمد الألوان من اللوحة ورموز الحالات في الوضعين. */
+.tahrir-editor {
+  --editor-line: color-mix(in srgb, var(--foreground) 50%, var(--card));
+  --editor-divider: color-mix(in srgb, var(--foreground) 12%, var(--card));
+  --editor-surface: color-mix(in srgb, var(--card) 88%, var(--muted));
+  --editor-ink: #183b65;
+  --editor-on-ink: #ffffff;
+  --editor-focus: var(--t-navy);
+}
+
+.tahrir-editor :is(input:not([type="file"]), textarea, [data-slot="select-trigger"]) {
+  background: var(--card);
+  border-color: var(--editor-line);
+  color: var(--foreground);
+}
+.tahrir-editor :is(input, textarea)::placeholder {
+  color: var(--muted-foreground);
+  opacity: 1;
+}
+.tahrir-editor :is(input, textarea, [data-slot="select-trigger"]):focus-visible {
+  border-color: var(--editor-focus);
+  outline: 2px solid var(--editor-focus);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+.tahrir-editor :is(input, textarea, [data-slot="select-trigger"])[aria-invalid="true"] {
+  border-color: var(--destructive);
+  outline-color: var(--destructive);
+}
+.tahrir-editor :is(button, a):focus-visible {
+  outline: 2px solid var(--editor-focus);
+  outline-offset: 2px;
+}
+.tahrir-editor :is(input, textarea)[readonly],
+.tahrir-editor :is(input, textarea, [data-slot="select-trigger"]):disabled {
+  background: var(--muted);
+  border-color: var(--border);
+}
+.tahrir-editor [data-slot="button"][data-variant="outline"] {
+  background: var(--card);
+  border-color: color-mix(in srgb, var(--foreground) 24%, var(--card));
+}
+.tahrir-editor [data-slot="button"][data-variant="outline"]:hover:not(:disabled) {
+  background: var(--accent);
+}
+.tahrir-editor :is(.editor-actions, .editor-paper, .editor-team, .editor-inspector) {
+  border-color: var(--editor-divider);
+}
+.tahrir-editor .editor-actions [data-slot="button"] {
+  min-height: 34px;
+}
+.tahrir-editor .editor-action-save[data-slot="button"] {
+  background: var(--editor-ink);
+  border-color: var(--editor-ink);
+  color: var(--editor-on-ink);
+}
+.tahrir-editor .editor-action-save[data-slot="button"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--editor-ink) 88%, white);
+}
+.tahrir-editor .editor-action-submit[data-slot="button"] {
+  background: var(--t-sug-bg);
+  border-color: var(--editor-divider);
+  color: var(--t-sug);
+}
+.tahrir-editor .editor-action-submit[data-slot="button"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--t-sug) 15%, var(--t-sug-bg));
+}
+.tahrir-editor .editor-action-publish {
+  border-color: color-mix(in srgb, var(--primary-foreground) 28%, var(--primary));
+}
+.tahrir-editor .editor-team {
+  background: var(--card);
+}
+.tahrir-editor .editor-team > button {
+  color: var(--foreground);
+  border-radius: inherit;
+}
+.tahrir-editor .editor-team > button:hover {
+  background: var(--t-sug-bg);
+}
+.tahrir-editor .editor-writing-field {
+  background: var(--editor-surface);
+}
+.tahrir-editor .editor-writing-field > div:first-child label {
+  font-size: 13px;
+}
+.tahrir-editor .editor-writing-field [data-slot="button"][data-variant="outline"],
+.tahrir-editor .editor-ai-bar [data-slot="button"][data-variant="outline"] {
+  background: var(--t-ai);
+  color: var(--t-warn);
+  border-color: var(--editor-divider);
+}
+.tahrir-editor .editor-writing-field [data-slot="button"][data-variant="outline"]:hover:not(:disabled),
+.tahrir-editor .editor-ai-bar [data-slot="button"][data-variant="outline"]:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--t-warn) 12%, var(--t-ai));
+}
+.tahrir-editor .editor-links {
+  background: var(--editor-surface);
+}
+.tahrir-editor .editor-format-toolbar {
+  background: var(--editor-surface);
+  border-block: 1px solid var(--editor-divider);
+}
+.tahrir-editor .editor-format-toolbar [data-state="on"] {
+  background: var(--editor-ink);
+  color: var(--editor-on-ink);
+}
+.tahrir-editor .editor-inspector {
+  background: color-mix(in srgb, var(--card) 55%, var(--muted));
+}
+.tahrir-editor .editor-inspector-tabs {
+  background: var(--card);
+  border-block-end: 1px solid var(--editor-divider);
+}
+.tahrir-editor .editor-inspector-tab {
+  min-height: 34px;
+  color: var(--muted-foreground);
+}
+.tahrir-editor .editor-inspector-tab[data-state="active"] {
+  background: var(--editor-ink);
+  color: var(--editor-on-ink);
+}
+.tahrir-editor .editor-inspector [data-slot="tabs-content"] {
+  margin-block-start: 0;
+}
+.tahrir-editor .editor-detail-section {
+  background: var(--card);
+  border: 1px solid var(--editor-divider);
+  border-radius: var(--radius);
+}
+.tahrir-editor .editor-detail-heading {
+  color: var(--foreground);
+  background: var(--editor-surface);
+  margin: -12px -12px 2px;
+  padding: 9px 12px;
+  border-start-start-radius: var(--radius);
+  border-start-end-radius: var(--radius);
+}
+.tahrir-editor .editor-detail-section button[aria-pressed="false"] {
+  background: var(--card);
+  border-color: var(--editor-line);
+}
+.tahrir-editor .editor-detail-section button[aria-pressed="false"]:hover {
+  background: var(--accent);
+}
+.tahrir-editor [data-slot="switch"][data-state="unchecked"] {
+  background: var(--editor-line);
+}
+
+/* التنقل إطار ثابت؛ الدرجة الذهبية تميّز المكان الحالي فقط. */
+.tahrir-nav-link[data-active="true"] {
+  background: var(--sidebar-primary);
+  color: var(--sidebar-primary-foreground);
+  font-weight: 700;
+}
+.tahrir-nav-link[data-active="true"]:hover {
+  background: color-mix(in srgb, var(--sidebar-primary) 90%, var(--sidebar));
+  color: var(--sidebar-primary-foreground);
+}
+.tahrir-nav-link[data-active="true"] small {
+  color: inherit;
+}
+.tahrir-navigation [data-slot="sidebar-group"] + [data-slot="sidebar-group"] {
+  border-block-start: 1px solid var(--sidebar-border);
+}
+.tahrir-site-header [data-slot="button"][data-variant="outline"] {
+  background: var(--card);
+  border-color: var(--input);
+}
+.tahrir-site-header [data-slot="button"][data-variant="outline"]:hover {
+  background: var(--muted);
+}
+
+@media (max-width: 767px) {
+  .tahrir-editor .editor-actions [data-slot="button"] { min-height: 40px; }
+  .tahrir-editor .editor-inspector-tab { min-height: 40px; }
+}
+
+/* المساحة المتبقية بعد الشريط، وليس عرض الجهاز، تحدد تفاصيل الهيدر. */
+.th [data-slot="sidebar-inset"] { min-width: 0; }
+.tahrir-site-header { container: tahrir-header / inline-size; }
+@container tahrir-header (max-width: 680px) {
+  .tahrir-header-context { display: none; }
+}
+.tahrir-editor .editor-ai-bar > span {
+  flex-basis: 240px;
+}
+
+.tahrir-editor :is(.editor-writing-field, .editor-links, .editor-ai-bar) {
+  border-color: var(--editor-divider);
+}

@@ -1,0 +1,41 @@
+# بوابة الجودة على GitHub — نفس بوابة npm test المحلية:
+# lint + typecheck + بناء معزول + اختبارات العقد والحارس + ميزانية JS.
+# لا تحتاج أسرارًا: بلا DATABASE_URL يسقط المزود آمنًا إلى البذرة.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: alelm_test
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: alelm_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U alelm_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:integration
+        env:
+          TEST_DATABASE_URL: postgresql://alelm_test:test_only@localhost:5432/alelm_test

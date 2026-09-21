@@ -1,0 +1,9 @@
+xcuserdata/
+DerivedData/
+*.xcuserstate
+*.xccheckout
+*.moved-aside
+timeline.xctimeline
+playground.xcworkspace
+.build/
+build/

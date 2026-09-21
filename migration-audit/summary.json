@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-28T13:34:28.667Z",
+  "durationSeconds": 1196,
+  "readOnly": true,
+  "sources": {
+    "wordpress": "https://dash.alelm.net/wp-json/wp/v2",
+    "legacySite": "https://alelm.net",
+    "targetSite": "https://elm-production-ea24.up.railway.app",
+    "database": "Neon عبر DATABASE_URL (SELECT فقط)"
+  },
+  "options": {
+    "http": "sample",
+    "sampleSize": 160,
+    "concurrency": 6,
+    "limit": null
+  },
+  "wordpress": {
+    "reportedPosts": 29099,
+    "fetchedPosts": 29099,
+    "reportedPages": 291,
+    "fetchedPages": 291,
+    "complete": true,
+    "categories": 16,
+    "tags": 41,
+    "activeTags": 15
+  },
+  "target": {
+    "configured": true,
+    "error": null,
+    "totalRows": 29099,
+    "matchedWordPressRows": 29099,
+    "orphanRows": 0,
+    "publishedRows": 29099
+  },
+  "parity": {
+    "classifications": {
+      "EXACT_200": 28969,
+      "VALID_301": 129,
+      "LEGACY_DEAD_URL": 1
+    },
+    "missingTargetRows": 0,
+    "redirectsRequired": 144,
+    "conflictRows": 200
+  },
+  "http": {
+    "mode": "sample",
+    "targetProbes": 29099,
+    "legacyProbes": 160,
+    "specialTargetProbes": 36,
+    "specialLegacyProbes": 36,
+    "targetStatusCounts": {
+      "200": 28969,
+      "308": 129,
+      "502": 1
+    },
+    "legacyStatusCounts": {
+      "200": 122,
+      "301": 34,
+      "307": 4
+    }
+  },
+  "sitemaps": {
+    "childFiles": 33,
+    "fetchedFiles": 32,
+    "failedFiles": 1,
+    "failures": [
+      {
+        "url": "https://alelm.net/sitemap-videos.xml",
+        "error": "Error: 500 على https://alelm.net/sitemap-videos.xml"
+      }
+    ],
+    "totalLocations": 28672,
+    "validArticleUrls": 0,
+    "invalidUndefinedUrls": 28667,
+    "patterns": {
+      "/{section}/{id}/{slug}": 29099,
+      "INVALID_UNDEFINED": 28667,
+      "/{single}": 20,
+      "/tag/{slug}": 15,
+      "/": 1
+    }
+  },
+  "specialUrls": {
+    "total": 36,
+    "statuses": {
+      "EXACT_200": 19,
+      "VALID_301": 17
+    },
+    "kinds": {
+      "section_archive": 16,
+      "tag_archive": 15,
+      "page": 4,
+      "home": 1
+    },
+    "legacyStatusCounts": {
+      "200": 36
+    },
+    "targetStatusCounts": {
+      "200": 19,
+      "301": 15,
+      "308": 2
+    }
+  },
+  "media": {
+    "resolvedFeaturedMedia": 28792,
+    "riskRows": 173,
+    "riskTypes": {
+      "CONTENT_MEDIA_EXTERNAL_HOST": 146,
+      "NO_FEATURED_MEDIA": 24,
+      "CONTENT_MEDIA_NOT_HTTPS": 3,
+      "FEATURED_MEDIA_UNRESOLVED": 3
+    }
+  },
+  "project": {
+    "findings": [
+      {
+        "code": "ARTICLE_ROUTE_PRESENT",
+        "severity": "INFO",
+        "passed": true,
+        "detail": "مسار المادة الديناميكي يقرأ المادة بالمُعرّف."
+      },
+      {
+        "code": "ARTICLE_PARAM_CANONICAL_GUARD",
+        "severity": "BLOCKER",
+        "passed": true,
+        "detail": "يجب تحويل section/slug غير القانونيين دائمًا إلى رابط المادة المحفوظ."
+      },
+      {
+        "code": "SITEMAP_INCLUDES_STORIES",
+        "severity": "BLOCKER",
+        "passed": true,
+        "detail": "خريطة الموقع الجديدة يجب أن تضم كل المواد المنشورة، لا الأقسام والسلاسل فقط."
+      },
+      {
+        "code": "REDIRECT_LAYER_PRESENT",
+        "severity": "BLOCKER",
+        "passed": true,
+        "detail": "لا توجد طبقة 301 ظاهرة تحسم الاختلاف بالـ ID."
+      },
+      {
+        "code": "ARCHIVE_ID_TEXT_PRIMARY_KEY",
+        "severity": "BLOCKER",
+        "passed": true,
+        "detail": "stories.id مفتاح نصي أساسي وقادر على حفظ ID ووردبريس حرفيًا."
+      },
+      {
+        "code": "STORY_HREF_PRESERVES_TRIPLE",
+        "severity": "BLOCKER",
+        "passed": true,
+        "detail": "عقد الرابط الجديد section/id/slug."
+      }
+    ],
+    "supportedSections": [
+      "politics",
+      "economy",
+      "technology",
+      "sciences",
+      "health",
+      "sport",
+      "culture",
+      "world",
+      "business",
+      "varieties",
+      "current-events",
+      "ksa",
+      "art",
+      "infographics",
+      "videos"
+    ]
+  },
+  "decision": {
+    "status": "READY FOR M2",
+    "blockers": [],
+    "legacyNotes": [
+      {
+        "code": "LEGACY_DEAD_URLS",
+        "detail": "1 رابط مادة يرفضه المصدر القديم نفسه حيًا (4xx) فليس أرشيفًا قابلًا للحفظ — التفاصيل في url-parity.csv بتصنيف LEGACY_DEAD_URL."
+      },
+      {
+        "code": "LEGACY_SITEMAP_INVALID",
+        "detail": "28667 إدخالًا غير صالح في خرائط الموقع الحية، وأبرزها alElm.netundefined."
+      },
+      {
+        "code": "SITEMAP_FETCH_FAILED",
+        "detail": "تعذر جلب 1 ملف خريطة أثناء القياس: https://alelm.net/sitemap-videos.xml."
+      },
+      {
+        "code": "LEGACY_SITEMAP_COVERAGE",
+        "detail": "خرائط الموقع الحية قدمت 0 رابط مادة صالحًا مقابل 29099 مادة REST."
+      }
+    ]
+  }
+}

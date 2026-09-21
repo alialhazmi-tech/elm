@@ -1,0 +1,334 @@
+/* ==========================================================================
+   تنسيقات الإنفوجرافيك التفاعلي الذكي — منصة العلم
+   ========================================================================== */
+
+.info-container {
+  --font-arabic: var(--f-sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  font-family: var(--font-arabic);
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  background: var(--info-bg, #021224);
+  color: var(--info-text, #f0fdfa);
+  overflow-x: hidden;
+  direction: rtl;
+  text-align: right;
+  transition: background 0.6s ease;
+}
+
+/* فرض تباين النصوص العالي داخل البطاقات والأزرار لمنع تداخل ألوان لوحة التحكم */
+.info-container button {
+  color: #ffffff;
+}
+
+.info-glass h1,
+.info-glass h2,
+.info-glass h3,
+.info-glass h4 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+.info-glass p {
+  color: rgba(240, 253, 250, 0.85) !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* تأثير التوهج الزجاجي (Glassmorphism & Neon) */
+.info-glass {
+  background: var(--info-card-bg, rgba(3, 33, 58, 0.45));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--info-card-border, rgba(6, 182, 212, 0.25));
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.info-glass:hover {
+  border-color: var(--info-accent, #22d3ee);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.6), 0 0 24px 0 var(--info-glow, rgba(6, 182, 212, 0.35));
+}
+@media (hover: hover) and (pointer: fine) {
+  button.info-glass:hover {
+    transform: translateY(-6px);
+  }
+}
+
+/* الزوايا التقنية المتوهجة (Corner Brackets) */
+.info-tech-corners::before,
+.info-tech-corners::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--info-accent, #22d3ee);
+  pointer-events: none;
+  transition: border-color 0.3s ease;
+}
+.info-tech-corners::before {
+  top: 6px;
+  right: 6px;
+  border-top: 2px solid;
+  border-right: 2px solid;
+}
+.info-tech-corners::after {
+  bottom: 6px;
+  left: 6px;
+  border-bottom: 2px solid;
+  border-left: 2px solid;
+}
+
+/* ==========================================================================
+   معالجة العزل التام للصور والكائنات العائمة (Zero-Background Cutouts)
+   ========================================================================== */
+.info-cutout-container {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+  overflow: visible;
+}
+
+.info-cutout-glow {
+  position: absolute;
+  width: 130px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--info-accent, #22d3ee);
+  filter: blur(32px);
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .info-glass:hover .info-cutout-glow {
+    opacity: 0.65;
+    transform: scale(1.25);
+  }
+}
+
+/* دمج الصورة وعزل الخلفية بنمط screen + mask */
+.info-cutout-asset {
+  max-width: 88%;
+  max-height: 130px;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  filter: contrast(1.18) brightness(1.08) drop-shadow(0 12px 24px rgba(0, 0, 0, 0.9));
+  mask-image: radial-gradient(circle at center, black 65%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle at center, black 65%, transparent 100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .info-glass:hover .info-cutout-asset {
+    transform: scale(1.06) translateY(-4px);
+  }
+}
+
+/* حركات الطفو والنبض المائي للأسماك والعناصر */
+@keyframes info-float-bob {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(1.5deg);
+  }
+}
+
+@keyframes info-float-drift {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-10px) translateX(6px) rotate(-1deg);
+  }
+  66% {
+    transform: translateY(-18px) translateX(-6px) rotate(1.5deg);
+  }
+}
+
+@keyframes info-pulse-glow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes info-bubble-rise {
+  0% {
+    transform: translateY(100vh) scale(0.6);
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.4;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
+.info-anim-bob {
+  animation: info-float-bob 5s ease-in-out infinite;
+}
+
+.info-anim-drift {
+  animation: info-float-drift 7s ease-in-out infinite;
+}
+
+.info-anim-pulse {
+  animation: info-pulse-glow 3s ease-in-out infinite;
+}
+
+/* الفقاعات والجزيئات التفاعلية */
+.info-bubble {
+  position: absolute;
+  bottom: -40px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), var(--info-accent, rgba(6, 182, 212, 0.3)) 60%, transparent 80%);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: info-bubble-rise linear infinite;
+}
+
+/* مقياس العمق الجانبي السريع */
+.info-depth-gauge {
+  position: fixed;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  z-index: 40;
+}
+
+@media (max-width: 860px) {
+  .info-depth-gauge {
+    display: none;
+  }
+}
+
+.info-depth-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--info-accent, #22d3ee);
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  position: relative;
+}
+
+.info-depth-dot:hover,
+.info-depth-dot.active {
+  background: var(--info-accent, #22d3ee);
+  box-shadow: 0 0 12px var(--info-accent, #22d3ee);
+  transform: scale(1.4);
+}
+
+.info-depth-tooltip {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.info-depth-dot:hover .info-depth-tooltip {
+  opacity: 1;
+}
+
+/* شريط التقدم للرؤية 2030 */
+.info-vision-bar {
+  position: relative;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.info-vision-fill {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--info-accent, #22d3ee), #10b981);
+  box-shadow: 0 0 12px var(--info-accent, #22d3ee);
+  transition: width 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* نافذة التفاصيل: الخلفية تتلاشى واللوحة تنبثق من 0.97 — لا شيء يظهر من العدم */
+.info-modal-backdrop {
+  animation: info-fade-in 0.2s ease-out;
+}
+.info-modal-panel {
+  animation: info-pop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes info-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes info-pop-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* تقليل الحركة: نُطفئ الطفو والفقاعات والنبض ونُبقي التلاشي واللون */
+@media (prefers-reduced-motion: reduce) {
+  .info-anim-bob,
+  .info-anim-drift,
+  .info-anim-pulse {
+    animation: none;
+  }
+  .info-bubble {
+    display: none;
+  }
+  .info-container {
+    transition: none;
+  }
+  .info-glass,
+  .info-cutout-asset,
+  .info-cutout-glow,
+  .info-depth-dot {
+    transition-property: border-color, box-shadow, opacity, background;
+  }
+  button.info-glass:hover,
+  .info-glass:hover .info-cutout-asset,
+  .info-glass:hover .info-cutout-glow,
+  .info-depth-dot:hover,
+  .info-depth-dot.active {
+    transform: none;
+  }
+  .info-modal-panel {
+    animation-name: info-fade-in;
+  }
+  .info-vision-fill {
+    transition: none;
+  }
+}
