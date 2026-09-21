@@ -52,10 +52,18 @@ ios/**/xcuserdata/
 .cursor/
 .agents/
 
+# نسخة التسليم: برومبتات ووثائق داخلية ولقطات لا تُرفع
+/AGENTS.md
+/CLAUDE.md
+/docs/GPT_PROJECT_INSTRUCTIONS.md
+/docs/**
+!/docs/editorial-policy.md
+!/docs/ios/
+/docs/ios/**
+!/docs/ios/API_MOBILE_V1.md
+
 # مخرجات تشغيل محلية
 /migration-audit/
 
 # كِت shadcn المرجعي — نستنسخ منه ولا نستورده
 shadcn-ui-kit-dashboard-main/
-
-migration-audit/slug-backfill-*.json
