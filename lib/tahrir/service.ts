@@ -30,6 +30,7 @@ export const STATUS_LABELS: Record<StoryStatus, string> = {
 export const ACTIVE_STATUSES = ["published", "review", "scheduled", "draft"] as const satisfies StoryStatus[];
 export const ARCHIVE_ACTION = "story:archive";
 export const RESTORE_ACTION = "story:restore";
+export const PULSE_ACTION = "story:pulse";
 
 function requireDb() {
   const db = getDb();
@@ -257,6 +258,27 @@ export async function archiveStory(
     .where(eq(stories.id, id)), auditQuery(actor, ARCHIVE_ACTION, id, trimmed, { before: story, after: { status: "archived", scheduledAt: null, pinned: 0, breakingUntil: null } })]);
   invalidateStatusCounts();
   return "archived";
+}
+
+/**
+ * يرفع مادة منشورة إلى صدارة الرئيسية وقسمها وسلسلتها.
+ * تاريخ النشر الأصلي يبقى كما هو؛ الترتيب العام يقرأ boosted_at ثم published_at.
+ */
+export async function pulseStory(id: string, expectedVersion: number, actor: string) {
+  const db = requireDb();
+  const story = (await db.select().from(stories).where(eq(stories.id, id)).limit(1))[0];
+  if (!story) throw new StoryWriteError("المادة غير موجودة.", 404);
+  assertExpectedVersion(story.version, expectedVersion);
+  if (story.revisionOf) throw new StoryWriteError("النبض للنسخة المنشورة على الموقع. اعتمد مسودة التعديل أولًا.");
+  if (story.status !== "published") throw new StoryWriteError("النبض متاح للمادة المنشورة فقط.");
+
+  const now = new Date().toISOString();
+  await db.batch([
+    lockStory(story),
+    db.update(stories).set({ boostedAt: now, version: story.version + 1 }).where(eq(stories.id, id)),
+    auditQuery(actor, PULSE_ACTION, id, "رفع الظهور إلى صدارة الرئيسية والقسم والسلسلة", { before: story, after: { boostedAt: now } }),
+  ]);
+  return { id: story.id, slug: story.slug, section: story.section, version: story.version + 1, boostedAt: now };
 }
 
 /** إعادة المادة المؤرشفة إلى مسودة — لا تظهر على الموقع حتى يُعاد نشرها. */

@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLinkIcon, FilePenLineIcon, HistoryIcon, RefreshCwIcon, SaveIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
+import { useState } from "react";
+import { ActivityIcon, ExternalLinkIcon, FilePenLineIcon, HistoryIcon, RefreshCwIcon, SaveIcon, SendIcon, ShieldCheckIcon } from "lucide-react";
+
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 import { StatusPill } from "@/components/tahrir/badges";
 import { StoryTimeline } from "@/components/tahrir/story-timeline";
@@ -49,11 +52,16 @@ export interface ActionBarProps {
   onPublish: () => void;
   onReturnToDraft: () => void;
   onRetryGuard: () => void;
+  /** النبض للمادة المنشورة فقط، ولمن يملك النشر. */
+  canPulse?: boolean;
+  boostedAt?: string | null;
+  onPulse?: () => void;
 }
 
 /** شريط الإجراءات اللاصق: الحالة، مؤشر الحفظ، حالة الحارس، ثم أزرار الحفظ والإرسال والنشر. */
 export function ActionBar(props: ActionBarProps) {
   const { autosave, guardControls } = props;
+  const [pulseOpen, setPulseOpen] = useState(false);
   const allGatesDisabled = !guardControls.editorialGuard && !guardControls.requireImageRights;
   const rightsOnly = !guardControls.editorialGuard && guardControls.requireImageRights;
 
@@ -117,6 +125,12 @@ export function ActionBar(props: ActionBarProps) {
               </Link>
             </Button>
           ) : null}
+          {props.canPulse ? (
+            <Button size="sm" variant="secondary" onClick={() => setPulseOpen(true)} disabled={props.busy || props.workflowBusy} title={props.boostedAt ? `آخر نبض: ${riyadh(props.boostedAt, "short")} (الرياض)` : "يرفع المادة إلى صدارة الرئيسية والقسم والسلسلة دون تغيير تاريخ النشر"}>
+              <ActivityIcon data-icon="inline-start" />
+              نبض
+            </Button>
+          ) : null}
           {props.canApprove && props.status === "published" ? (
             <Button size="sm" variant="secondary" onClick={props.onReturnToDraft} disabled={props.busy || props.workflowBusy} title="حفظ التعديلات وإخفاء المادة عن الموقع حتى نشرها مجددًا">
               <FilePenLineIcon data-icon="inline-start" />
@@ -140,6 +154,22 @@ export function ActionBar(props: ActionBarProps) {
           ) : null}
         </div>
       </div>
+      <AlertDialog open={pulseOpen} onOpenChange={setPulseOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>نبض الظهور؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              تتصدر المادة الرئيسية ومقدمة قسمها وسلسلتها فورًا. تاريخ النشر الأصلي يبقى كما هو، والتعديلات غير المحفوظة لا تُنشر مع النبض.
+              إن كانت مادة أخرى مثبتة في الصدارة، تبقى هي في خانة التثبيت وتأتي هذه المادة بعدها.
+              {props.boostedAt ? ` آخر نبض: ${riyadh(props.boostedAt, "long")} بتوقيت الرياض.` : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setPulseOpen(false); props.onPulse?.(); }}>نبض الآن</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

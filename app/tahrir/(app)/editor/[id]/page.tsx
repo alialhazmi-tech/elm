@@ -78,6 +78,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
                 scheduledAt: story.scheduledAt,
                 publishedAt: story.publishedAt,
                 updatedAt: story.updatedAt,
+                boostedAt: story.boostedAt,
                 seoTitle: story.seoTitle ?? "",
                 seoDescription: story.seoDescription ?? "",
                 keywords: Array.isArray(story.keywords) ? (story.keywords as string[]) : [],

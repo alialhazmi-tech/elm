@@ -80,7 +80,7 @@ function changeValue(value: unknown, field: string, references: Record<string, s
   if (value === null || value === undefined || value === "") return "—";
   if (field === "pinned") return value ? "مثبتة" : "غير مثبتة";
   if (field === "status") return ({ draft: "مسودة", review: "بانتظار الاعتماد", scheduled: "مجدولة", published: "منشورة", archived: "مؤرشفة" })[String(value)] ?? String(value);
-  if (["scheduledAt", "dueAt", "publishedAt", "returnedAt", "breakingUntil"].includes(field) && typeof value === "string" && Number.isFinite(Date.parse(value))) return `${date(value)} (الرياض)`;
+  if (["scheduledAt", "dueAt", "publishedAt", "returnedAt", "breakingUntil", "boostedAt"].includes(field) && typeof value === "string" && Number.isFinite(Date.parse(value))) return `${date(value)} (الرياض)`;
   if (typeof value === "string") return references[value] ?? (field === "body" ? stripHtmlToText(value) || "تغيير في تنسيق المتن" : value);
   return Array.isArray(value) && value.every(item => typeof item === "string") ? value.join("، ") : typeof value === "object" ? JSON.stringify(value, null, 2) : String(value);
 }

@@ -194,6 +194,7 @@ struct StaffStory: Codable, Equatable, Sendable {
     var breakingUntil: String?
     var publishedAt: String?
     var updatedAt: String?
+    var boostedAt: String?
     var scheduledAt: String?
     var seoTitle: String
     var seoDescription: String
@@ -207,7 +208,7 @@ struct StaffStory: Codable, Equatable, Sendable {
 
     enum CodingKeys: String, CodingKey {
         case id, version, revisionOf, status, title, excerpt, body, section, slug, seriesSlug, image, format, pinned
-        case breakingUntil, publishedAt, updatedAt, scheduledAt, seoTitle, seoDescription, keywords, videoUrl
+        case breakingUntil, publishedAt, updatedAt, boostedAt, scheduledAt, seoTitle, seoDescription, keywords, videoUrl
         case authorName, authorId, assignedTo, dueAt, returnedAt
     }
 
@@ -233,6 +234,7 @@ struct StaffStory: Codable, Equatable, Sendable {
         breakingUntil = try c.decodeIfPresent(String.self, forKey: .breakingUntil)
         publishedAt = try c.decodeIfPresent(String.self, forKey: .publishedAt)
         updatedAt = try c.decodeIfPresent(String.self, forKey: .updatedAt)
+        boostedAt = try c.decodeIfPresent(String.self, forKey: .boostedAt)
         scheduledAt = try c.decodeIfPresent(String.self, forKey: .scheduledAt)
         seoTitle = try c.decodeIfPresent(String.self, forKey: .seoTitle) ?? ""
         seoDescription = try c.decodeIfPresent(String.self, forKey: .seoDescription) ?? ""
@@ -326,6 +328,7 @@ struct StaffVersionResult: Decodable {
     var ok: Bool?
     var id: String?
     var version: Int?
+    var boostedAt: String?
 }
 
 struct StaffTask: Codable, Identifiable, Equatable, Sendable {

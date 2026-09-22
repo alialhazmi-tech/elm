@@ -75,8 +75,8 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
     throw new StoryWriteError("تغيّرت النسخة الأصلية أو أُرشفت؛ راجع أحدث نسخة قبل الاعتماد.");
   }
   // Generated search text must be recomputed by PostgreSQL, never copied in UPDATE.
-  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, editorSearchText: _editorSearchText, ...content } = story;
-  void _id; void _revisionOf; void _baseVersion; void _searchText; void _editorSearchText;
+  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, editorSearchText: _editorSearchText, boostedAt: _boostedAt, ...content } = story;
+  void _id; void _revisionOf; void _baseVersion; void _searchText; void _editorSearchText; void _boostedAt;
   await db.batch([
     lockStory(original), lockStory(story), snapshotQuery(original.id, actor),
     db.update(stories).set({ ...content, authorId: original.authorId, authorName: original.authorName,

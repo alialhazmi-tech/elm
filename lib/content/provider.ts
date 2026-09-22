@@ -31,12 +31,13 @@ import { isCanonicalStoryAliasId } from "./canonical-stories.ts";
 import { normalizeSearchText } from "./search-normalize";
 import { storyKeywords } from "./keywords";
 import { cachedPublicQuery, invalidatePublicContent } from "./cache";
+import { publicRecencyIso } from "./recency";
 
 export { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
 import { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
 
 const byDateDesc = (a: Story, b: Story) =>
-  (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "");
+  publicRecencyIso(b).localeCompare(publicRecencyIso(a));
 
 /** بلوكات الشائعة/الحقيقة لبعض مواد «افهمها صح» — تُستبدل بحقل تحريري في «تحرير العلم». */
 const FACT_CHECKS: Array<{ match: string; factCheck: FactCheck }> = [
@@ -120,6 +121,7 @@ const CARD_COLUMNS = {
   seriesSlug: storiesTable.seriesSlug,
   image: storiesTable.image,
   publishedAt: storiesTable.publishedAt,
+  boostedAt: storiesTable.boostedAt,
   factCheck: storiesTable.factCheck,
   format: storiesTable.format,
   seoTitle: storiesTable.seoTitle,
@@ -141,6 +143,7 @@ type CardRow = {
   seriesSlug: string | null;
   image: string | null;
   publishedAt: string | null;
+  boostedAt: string | null;
   factCheck: unknown;
   format: string | null;
   seoTitle: string | null;
@@ -165,6 +168,7 @@ function mapRow(row: CardRow): Story {
     series: normalizeSeriesSlug(row.seriesSlug),
     image: row.image ?? undefined,
     publishedAt: row.publishedAt ?? undefined,
+    boostedAt: row.boostedAt ?? undefined,
     updatedAt: row.updatedAt ?? undefined,
     factCheck: (row.factCheck as Story["factCheck"]) ?? undefined,
     format: row.format ?? undefined,
@@ -179,7 +183,8 @@ function mapRow(row: CardRow): Story {
 }
 
 const PUBLISHED = eq(storiesTable.status, "published");
-const RECENT_ORDER = [desc(storiesTable.publishedAt), asc(storiesTable.id)] as const;
+/** النبض يتقدم على تاريخ النشر في الرئيسية والقسم والسلسلة. */
+const RECENT_ORDER = [desc(sql`coalesce(${storiesTable.boostedAt}, ${storiesTable.publishedAt})`), asc(storiesTable.id)] as const;
 
 /** نافذة الترشيح والرئيسية — أحدث المواد بلا متون. */
 const RECENT_LIMIT = 400;

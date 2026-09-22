@@ -43,6 +43,7 @@ interface Options {
   onSubmitted: (version: number) => void;
   onScheduled: (version: number) => void;
   onPublished: (data: { id: string; version: number }) => void;
+  onPulsed: (data: { version: number; boostedAt?: string }) => void;
   /** رفض الحارس (422) عند الإرسال: أعد الفحص وافتح تبويبه. */
   onGuardRejected: () => Promise<void>;
   /** موعد الجدولة ISO أو "" حين لم يُختر أو غير صالح. */
@@ -213,8 +214,23 @@ export function useStoryWorkflow(options: Options) {
     } finally { if (!navigating.current) setWorkflowBusy(false); }
   }
 
+  async function pulse() {
+    if (!canApprove || status !== "published" || busy || workflowBusy || saveLock.current || !saveId.current) return;
+    setWorkflowBusy(true);
+    try {
+      const result = await transitionStory("pulse", { id: saveId.current, expectedVersion: versionRef.current }, { fallback: "تعذر تنفيذ النبض. أعد المحاولة." });
+      if (!result.ok) {
+        setMessage({ kind: "err", text: result.error });
+        return;
+      }
+      setVersion(result.data.version);
+      options.onPulsed({ version: result.data.version, boostedAt: result.data.boostedAt });
+      setMessage({ kind: "ok", text: "رُفعت المادة إلى صدارة الرئيسية والقسم والسلسلة. تاريخ النشر الأصلي كما هو." });
+    } finally { setWorkflowBusy(false); }
+  }
+
   return {
     busy, workflowBusy, serverVersion, versionRef, saveId, navigating,
-    setVersion, save, saveManually, returnToDraft, submitForReview, schedule, publish, returnToStories,
+    setVersion, save, saveManually, returnToDraft, submitForReview, schedule, publish, pulse, returnToStories,
   };
 }

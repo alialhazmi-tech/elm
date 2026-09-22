@@ -40,6 +40,7 @@ struct StaffEditorScreen: View {
     @State private var heartbeatTask: Task<Void, Never>?
     @State private var coEditors: [StaffPresenceEditor] = []
     @State private var pendingAction: String?
+    @State private var showPulse = false
     @State private var scheduleSheet = false
     @State private var scheduleDate = Date().addingTimeInterval(3600)
     @State private var debugActionDone = false
@@ -158,6 +159,10 @@ struct StaffEditorScreen: View {
             }.elmRTL()
         }
         .sheet(isPresented: $scheduleSheet) { scheduleSheetView.elmRTL() }
+        .alert("نبض الظهور؟", isPresented: $showPulse) {
+            Button("نبض الآن") { Task { await pulsePublished() } }
+            Button("إلغاء", role: .cancel) {}
+        } message: { Text("تتصدر النسخة المنشورة الآن الرئيسية ومقدمة قسمها وسلسلتها. تاريخ النشر يبقى، والتعديلات غير المحفوظة لا تُنشر مع النبض.") }
         .alert("نسخة محلية أحدث", isPresented: $showRecovery) {
             Button("استعادة نسختي") { if let recovered { apply(recovered) }; clearRecovery() }
             Button("تجاهلها", role: .cancel) { clearRecovery() }
@@ -606,6 +611,12 @@ struct StaffEditorScreen: View {
                     .disabled(blockingCount > 0 || pendingAction != nil)
                     .opacity(blockingCount > 0 ? 0.55 : 1)
             }
+            if updatesPublished, draft.revisionOf == nil {
+                StaffSecondaryButton(title: "نبض", symbol: "waveform.path.ecg") { showPulse = true }
+                    .disabled(pendingAction != nil)
+                Text("يرفع النسخة المنشورة إلى الصدارة دون تغيير تاريخ النشر، ولا ينشر التعديلات غير المحفوظة.")
+                    .font(ElmFonts.text(.caption2)).foregroundStyle(ElmTheme.ink3)
+            }
             if capabilities.canSchedule, editable, draft.revisionOf == nil {
                 StaffSecondaryButton(title: "حفظ وجدولة", symbol: "calendar.badge.clock") { Task { await saveThen("schedule") } }
                     .disabled(blockingCount > 0 || pendingAction != nil)
@@ -765,6 +776,24 @@ struct StaffEditorScreen: View {
         if let section = result.section, !section.isEmpty { draft.section = section }
         if let status = result.status { draft.status = status }
         draft.revisionOf = result.revisionOf ?? draft.revisionOf
+    }
+
+    /// يرفع النسخة المنشورة الحالية دون حفظ التعديلات المفتوحة.
+    private func pulsePublished() async {
+        guard pendingAction == nil, updatesPublished, draft.revisionOf == nil else { return }
+        pendingAction = "pulse"
+        defer { pendingAction = nil }
+        do {
+            let result = try await StaffAPI.pulse(id: draft.id, expectedVersion: draft.version)
+            if let version = result.version { draft.version = version }
+            if let boostedAt = result.boostedAt { draft.boostedAt = boostedAt }
+            notice = "رُفعت المادة إلى صدارة الرئيسية والقسم والسلسلة."
+            onSaved?()
+        } catch {
+            let api = staff.handle(error)
+            if case .conflict = api { conflict = true }
+            self.error = api
+        }
     }
 
     /// «تحديث المادة» للمعتمد على مادة منشورة: حفظ (مسودة تعديل) ثم نشرها فورًا فتُحدَّث النسخة العامة (كما `saveManually` على الويب).

@@ -127,6 +127,13 @@
       "when": 1789240243281,
       "tag": "0017_public_search_normalization",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1789400000000,
+      "tag": "0018_story_pulse",
+      "breakpoints": true
     }
   ]
 }

@@ -31,9 +31,10 @@ export interface SavedStory {
 export interface TransitionResult {
   version: number;
   id?: string;
+  boostedAt?: string;
 }
 
-export type TransitionRoute = "submit" | "publish" | "schedule" | "archive" | "restore";
+export type TransitionRoute = "submit" | "publish" | "schedule" | "archive" | "restore" | "pulse";
 
 interface CallOptions {
   timeoutMs?: number;

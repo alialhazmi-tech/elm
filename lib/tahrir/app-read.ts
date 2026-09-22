@@ -290,6 +290,7 @@ export async function appStoryDetail(actor: Actor, id: string) {
       breakingUntil: story.breakingUntil,
       publishedAt: story.publishedAt,
       updatedAt: story.updatedAt,
+      boostedAt: story.boostedAt,
       scheduledAt: story.scheduledAt,
       seoTitle: story.seoTitle ?? "",
       seoDescription: story.seoDescription ?? "",

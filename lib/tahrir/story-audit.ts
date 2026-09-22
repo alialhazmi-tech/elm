@@ -3,7 +3,7 @@ export const STORY_FIELD_LABELS: Record<string, string> = {
   title: "العنوان", excerpt: "الموجز", body: "المتن", section: "القسم", slug: "الرابط", seriesSlug: "السلسلة",
   image: "صورة المادة", format: "شكل المادة", videoUrl: "رابط الفيديو", seoTitle: "عنوان SEO",
   seoDescription: "وصف SEO", keywords: "الكلمات المفتاحية", pinned: "التثبيت في الرئيسية", breakingUntil: "العاجل حتى",
-  status: "حالة المادة", scheduledAt: "موعد النشر", publishedAt: "تاريخ النشر", authorId: "الكاتب",
+  status: "حالة المادة", scheduledAt: "موعد النشر", publishedAt: "تاريخ النشر", boostedAt: "نبض الظهور", authorId: "الكاتب",
   authorName: "اسم الكاتب", assignedTo: "المحرر المسؤول", dueAt: "موعد التسليم", returnedAt: "الإعادة للتعديل",
   revisionOf: "المادة الأصلية", baseVersion: "نسخة الأصل", readingMinutes: "دقائق القراءة", eyebrow: "العنوان التمهيدي",
   factCheck: "التحقق من المعلومات", slides: "الشرائح", source: "النص المصدر",

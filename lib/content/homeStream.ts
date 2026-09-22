@@ -27,6 +27,15 @@ export interface HomeStream {
 }
 
 const DAY_MS = 86_400_000;
+
+/** آخر نشر فعلي في النافذة، لا أول عنصر بعد النبض — عبارة «آخرها» تبقى عن النشر. */
+function latestPublishedAt(stories: Story[]): string | null {
+  let latest: string | null = null;
+  for (const story of stories) {
+    if (story.publishedAt && (!latest || story.publishedAt > latest)) latest = story.publishedAt;
+  }
+  return latest;
+}
 const isInfographic = (story: Story) => story.section === "infographics" || story.format === "infographics";
 const isVideo = (story: Story) => story.section === "videos" || story.format === "videos";
 const isJak = (story: Story) => story.format === "jakalelm";
@@ -77,7 +86,7 @@ export async function homeStream(exclude: Set<string>): Promise<HomeStream> {
 
   return {
     river,
-    pulse: { todayCount: today.length, lastAt: recent[0]?.publishedAt ?? null, hours, nowMs: Date.now(), nowHour: (new Date().getUTCHours() + 3) % 24 },
+    pulse: { todayCount: today.length, lastAt: latestPublishedAt(recent), hours, nowMs: Date.now(), nowHour: (new Date().getUTCHours() + 3) % 24 },
     panels,
     infographics: infographics.filter((s) => s.image).slice(0, 9),
   };

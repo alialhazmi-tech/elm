@@ -27,6 +27,8 @@ export const stories = pgTable("stories", {
   image: text("image"),
   /** ISO 8601 كما في مصدر ووردبريس — يُحوَّل لكائن تاريخ عند العرض فقط. */
   publishedAt: text("published_at"),
+  /** نبض تحريري: يرفع المادة في ترتيب الرئيسية والقسم والسلسلة دون تغيير تاريخ النشر. */
+  boostedAt: text("boosted_at"),
   /** بلوك الشائعة/الحقيقة لقالب «افهمها صح»: { rumor, truth }. */
   factCheck: jsonb("fact_check"),
   /** سير عمل «تحرير العلم»: draft → review → scheduled → published → archived. البذرة القديمة كلها published. */
@@ -76,6 +78,9 @@ export const stories = pgTable("stories", {
   index("stories_format_recency_idx").on(table.format, sql`coalesce(${table.updatedAt}, ${table.publishedAt}) desc`, table.id.desc().nullsFirst()).where(sql`${table.status} <> 'archived'`),
   index("stories_revision_of_idx").on(table.revisionOf).where(sql`${table.revisionOf} IS NOT NULL`),
   index("stories_series_published_idx").on(table.seriesSlug, table.publishedAt.desc().nullsFirst()).where(sql`${table.status} = 'published'`),
+  index("stories_public_recency_idx").on(sql`coalesce(${table.boostedAt}, ${table.publishedAt}) desc nulls first`, table.id.asc()).where(sql`${table.status} = 'published'`),
+  index("stories_section_boost_idx").on(table.section, sql`coalesce(${table.boostedAt}, ${table.publishedAt}) desc nulls first`).where(sql`${table.status} = 'published'`),
+  index("stories_series_boost_idx").on(table.seriesSlug, sql`coalesce(${table.boostedAt}, ${table.publishedAt}) desc nulls first`).where(sql`${table.status} = 'published'`),
   index("stories_breaking_until_idx").on(table.breakingUntil).where(sql`${table.breakingUntil} IS NOT NULL`),
   index("stories_pinned_idx").on(table.pinned).where(sql`${table.pinned} = 1`),
 ]);

@@ -19,6 +19,7 @@ struct StaffStoryScreen: View {
     @State private var showDelete = false
     @State private var showReturn = false
     @State private var showReturnToDraft = false
+    @State private var showPulse = false
     @State private var returnReason = ""
     @State private var editorPresented = false
     @State private var readerPresented = false
@@ -112,6 +113,10 @@ struct StaffStoryScreen: View {
             Button("تحويل إلى مسودة", role: .destructive) { Task { await returnToDraft() } }
             Button("إلغاء", role: .cancel) {}
         } message: { Text("تُخفى المادة عن الموقع وتعود مسودة بنصها الحالي حتى نشرها مجددًا.") }
+        .alert("نبض الظهور؟", isPresented: $showPulse) {
+            Button("نبض الآن") { Task { await run("pulse") { _ = try await StaffAPI.pulse(id: id, expectedVersion: story?.version ?? 0) } } }
+            Button("إلغاء", role: .cancel) {}
+        } message: { Text("تتصدر المادة الرئيسية ومقدمة قسمها وسلسلتها. تاريخ النشر الأصلي يبقى كما هو. المادة المثبتة تبقى في خانة التثبيت.") }
         .sheet(isPresented: $showSchedule) { scheduleSheet.elmRTL() }
     }
 
@@ -178,6 +183,9 @@ struct StaffStoryScreen: View {
                 if status == .review, caps?.canReturn == true {
                     StaffSecondaryButton(title: "إعادة للتعديل", symbol: "arrow.uturn.right") { showReturn = true }
                 }
+                if status == .published, caps?.canApprove == true, story.revisionOf == nil {
+                    StaffSecondaryButton(title: "نبض", symbol: "waveform.path.ecg") { showPulse = true }
+                }
                 if status == .published, caps?.canApprove == true, !story.isJak {
                     StaffSecondaryButton(title: "تحويل إلى مسودة", symbol: "doc.badge.arrow.up") { showReturnToDraft = true }
                 }
@@ -210,6 +218,7 @@ struct StaffStoryScreen: View {
             if let due = story.dueAt { fact("موعد التسليم", StaffFormat.dateTime(due)) }
             if let scheduled = story.scheduledAt, story.storyStatus == .scheduled { fact("موعد النشر", StaffFormat.dateTime(scheduled)) }
             if let published = story.publishedAt { fact("نُشرت", StaffFormat.dateTime(published)) }
+            if let boosted = story.boostedAt { fact("آخر نبض", StaffFormat.dateTime(boosted)) }
             if let updated = story.updatedAt { fact("آخر تحديث", StaffFormat.dateTime(updated)) }
             fact("الإصدار", ElmFormat.latinDigits(String(story.version)))
             if !story.keywords.isEmpty { fact("الكلمات المفتاحية", story.keywords.joined(separator: "، ")) }
@@ -338,6 +347,7 @@ struct StaffStoryScreen: View {
         switch name {
         case "submit": "رُفعت المادة للاعتماد."
         case "publish": "نُشرت المادة."
+        case "pulse": "رُفعت المادة إلى صدارة الرئيسية والقسم والسلسلة."
         case "schedule": "جُدولت المادة."
         case "archive": "أُرشفت المادة."
         case "restore": "استُعيدت المادة كمسودة."

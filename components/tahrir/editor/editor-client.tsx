@@ -61,6 +61,7 @@ interface EditorInitial {
   scheduledAt?: string | null;
   publishedAt?: string | null;
   updatedAt?: string | null;
+  boostedAt?: string | null;
   seoTitle: string;
   seoDescription: string;
   keywords: string[];
@@ -136,6 +137,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
   const [keywords, setKeywords] = useState<string[]>(initial?.keywords ?? []);
   const [videoUrl, setVideoUrl] = useState(initial?.videoUrl ?? "");
   const [lastUpdatedAt, setLastUpdatedAt] = useState(initial?.updatedAt ?? null);
+  const [boostedAt, setBoostedAt] = useState(initial?.boostedAt ?? null);
   const [metadataBusy, setMetadataBusy] = useState(false);
   const [imageUploadBusy, setImageUploadBusy] = useState(false);
   const [imageUploadMessage, setImageUploadMessage] = useState("");
@@ -194,6 +196,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
       setRevisionOf(null);
       setStatus("published");
     },
+    onPulsed: (data) => { if (data.boostedAt) setBoostedAt(data.boostedAt); },
     onGuardRejected: async () => {
       await guard.retryGuard({ body: bodyHtml() });
       setInspectorTab("guard");
@@ -407,6 +410,9 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
         onPublish={workflow.publish}
         onReturnToDraft={workflow.returnToDraft}
         onRetryGuard={() => void guard.retryGuard({ body: bodyHtml() })}
+        canPulse={canApprove && status === "published" && !revisionOf}
+        boostedAt={boostedAt}
+        onPulse={workflow.pulse}
       />
 
       <TeamPanel key={`team:${id}`} id={id || null} status={status} locked={busy || workflowBusy || status === "archived"} dirty={autosave.dirty} getVersion={() => workflow.versionRef.current} onVersion={workflow.setVersion} onReturn={workflow.returnToStories} />

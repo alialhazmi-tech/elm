@@ -132,6 +132,10 @@ enum StaffAPI {
         try await ElmHTTP.send(url("story/publish"), json: ["id": id, "expectedVersion": expectedVersion], timeout: 40)
     }
 
+    static func pulse(id: String, expectedVersion: Int) async throws -> StaffVersionResult {
+        try await ElmHTTP.send(url("story/pulse"), json: ["id": id, "expectedVersion": expectedVersion])
+    }
+
     static func schedule(id: String, at iso: String, expectedVersion: Int) async throws -> StaffVersionResult {
         try await ElmHTTP.send(url("story/schedule"), json: ["id": id, "scheduledAt": iso, "expectedVersion": expectedVersion])
     }
