@@ -161,6 +161,7 @@ export function ActionBar(props: ActionBarProps) {
             <AlertDialogDescription>
               تتصدر المادة الرئيسية ومقدمة قسمها وسلسلتها فورًا. تاريخ النشر الأصلي يبقى كما هو، والتعديلات غير المحفوظة لا تُنشر مع النبض.
               إن كانت مادة أخرى مثبتة في الصدارة، تبقى هي في خانة التثبيت وتأتي هذه المادة بعدها.
+              النبض لمادة واحدة: إن كانت مادة أخرى عليها نبض، تعود إلى موضعها حسب تاريخ نشرها.
               {props.boostedAt ? ` آخر نبض: ${riyadh(props.boostedAt, "long")} بتوقيت الرياض.` : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>

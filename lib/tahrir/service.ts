@@ -31,6 +31,7 @@ export const ACTIVE_STATUSES = ["published", "review", "scheduled", "draft"] as 
 export const ARCHIVE_ACTION = "story:archive";
 export const RESTORE_ACTION = "story:restore";
 export const PULSE_ACTION = "story:pulse";
+export const PULSE_END_ACTION = "story:pulse-end";
 
 function requireDb() {
   const db = getDb();
@@ -272,13 +273,27 @@ export async function pulseStory(id: string, expectedVersion: number, actor: str
   if (story.revisionOf) throw new StoryWriteError("النبض للنسخة المنشورة على الموقع. اعتمد مسودة التعديل أولًا.");
   if (story.status !== "published") throw new StoryWriteError("النبض متاح للمادة المنشورة فقط.");
 
+  // نبض واحد فعّال: المادة التي سبقتها بالنبض تعود إلى موضع تاريخ نشرها.
+  // لا يُرفع إصدارها — boosted_at ليس من حقول التحرير فلا يتعارض مع محرر مفتوح عليها.
+  const previous = await db
+    .select({ id: stories.id, boostedAt: stories.boostedAt })
+    .from(stories)
+    .where(and(ne(stories.id, id), sql`${stories.boostedAt} is not null`));
+  const previousIds = previous.map((row) => row.id);
+
   const now = new Date().toISOString();
   await db.batch([
     lockStory(story),
     db.update(stories).set({ boostedAt: now, version: story.version + 1 }).where(eq(stories.id, id)),
     auditQuery(actor, PULSE_ACTION, id, "رفع الظهور إلى صدارة الرئيسية والقسم والسلسلة", { before: story, after: { boostedAt: now } }),
+    ...(previousIds.length
+      ? [
+          db.update(stories).set({ boostedAt: null }).where(inArray(stories.id, previousIds)),
+          ...previous.map((row) => auditQuery(actor, PULSE_END_ACTION, row.id, "انتهى النبض بنبض مادة أخرى — عادت المادة إلى موضع تاريخ نشرها", { before: { boostedAt: row.boostedAt }, after: { boostedAt: null } })),
+        ]
+      : []),
   ]);
-  return { id: story.id, slug: story.slug, section: story.section, version: story.version + 1, boostedAt: now };
+  return { id: story.id, slug: story.slug, section: story.section, version: story.version + 1, boostedAt: now, unboosted: previousIds };
 }
 
 /** إعادة المادة المؤرشفة إلى مسودة — لا تظهر على الموقع حتى يُعاد نشرها. */

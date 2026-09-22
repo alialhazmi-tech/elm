@@ -162,7 +162,7 @@ struct StaffEditorScreen: View {
         .alert("نبض الظهور؟", isPresented: $showPulse) {
             Button("نبض الآن") { Task { await pulsePublished() } }
             Button("إلغاء", role: .cancel) {}
-        } message: { Text("تتصدر النسخة المنشورة الآن الرئيسية ومقدمة قسمها وسلسلتها. تاريخ النشر يبقى، والتعديلات غير المحفوظة لا تُنشر مع النبض.") }
+        } message: { Text("تتصدر النسخة المنشورة الآن الرئيسية ومقدمة قسمها وسلسلتها. تاريخ النشر يبقى، والتعديلات غير المحفوظة لا تُنشر مع النبض. إن كانت مادة أخرى عليها نبض تعود إلى موضعها.") }
         .alert("نسخة محلية أحدث", isPresented: $showRecovery) {
             Button("استعادة نسختي") { if let recovered { apply(recovered) }; clearRecovery() }
             Button("تجاهلها", role: .cancel) { clearRecovery() }
