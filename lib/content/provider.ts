@@ -112,6 +112,7 @@ function normalizeSeriesSlug(value: string | null): SeriesSlug | undefined {
 /** أعمدة البطاقة — كل شيء إلا المتن: القوائم والترشيح لا تحتاجه، والمتن أثقل الأعمدة. */
 const CARD_COLUMNS = {
   id: storiesTable.id,
+  publicNumber: storiesTable.publicNumber,
   slug: storiesTable.slug,
   section: storiesTable.section,
   title: storiesTable.title,
@@ -134,6 +135,7 @@ const CARD_COLUMNS = {
 
 type CardRow = {
   id: string;
+  publicNumber: number | null;
   slug: string;
   section: string;
   title: string;
@@ -159,6 +161,7 @@ type CardRow = {
 function mapRow(row: CardRow): Story {
   return enrich({
     id: row.id,
+    publicNumber: row.publicNumber ?? undefined,
     slug: row.slug,
     section: row.section,
     title: row.title,
@@ -553,6 +556,7 @@ function searchSeed(tokens: string[]): Story[] {
 
 export type SitemapStoryEntry = {
   id: string;
+  publicNumber: number | null;
   slug: string;
   section: string;
   publishedAt: string | null;
@@ -575,6 +579,7 @@ export async function listSitemapEntries(): Promise<SitemapStoryEntry[]> {
         const rows = await db
           .select({
             id: storiesTable.id,
+            publicNumber: storiesTable.publicNumber,
             slug: storiesTable.slug,
             section: storiesTable.section,
             publishedAt: storiesTable.publishedAt,
@@ -590,6 +595,7 @@ export async function listSitemapEntries(): Promise<SitemapStoryEntry[]> {
       () =>
         seedAll.slice(offset, offset + pageSize).map((story) => ({
           id: story.id,
+          publicNumber: story.publicNumber ?? null,
           slug: story.slug,
           section: story.section,
           publishedAt: story.publishedAt ?? null,
@@ -789,6 +795,8 @@ export const seedContentProvider: ContentProvider = {
 
   async getStory(id) {
     const clean = id.slice(0, 64);
+    // الرابط يحمل المعرّف أو رقم الرابط العام؛ المعرّف يتقدم عند أي تطابق مزدوج.
+    const publicNumber = /^[1-9][0-9]{0,8}$/u.test(clean) ? Number(clean) : null;
     const story = await dbOrSeed(
       `story:${clean}`,
       DB_CACHE_MS,
@@ -797,11 +805,14 @@ export const seedContentProvider: ContentProvider = {
           // القراءة العامة لا تحتاج أعمدة الملكية وإصدارات مسودات التحرير.
           .select({ ...CARD_COLUMNS, body: storiesTable.body, updatedAt: storiesTable.updatedAt })
           .from(storiesTable)
-          .where(and(PUBLISHED, eq(storiesTable.id, clean)))
+          .where(and(PUBLISHED, publicNumber === null
+            ? eq(storiesTable.id, clean)
+            : or(eq(storiesTable.id, clean), eq(storiesTable.publicNumber, publicNumber))))
+          .orderBy(desc(sql`${storiesTable.id} = ${clean}`))
           .limit(1);
         return rows.map(mapRow);
       },
-      () => seedAll.filter((item) => item.id === clean),
+      () => seedAll.filter((item) => item.id === clean || (publicNumber !== null && item.publicNumber === publicNumber)),
     );
     return story[0] ?? null;
   },

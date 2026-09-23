@@ -13,6 +13,7 @@ import { requireScreenActor } from "@/lib/tahrir/screen";
 import { canEditStory } from "@/lib/tahrir/access";
 import { pageRange } from "@/lib/tahrir/pagination";
 import { editorHref } from "@/lib/tahrir/routes";
+import { storedStoryHref } from "@/lib/content/canonical-stories";
 import { inRiyadhDay, riyadhDayBounds } from "@/lib/tahrir/time";
 import {
   ACTIVE_STATUSES,
@@ -115,7 +116,7 @@ export default async function StoriesPage({
       statusLabel: STATUS_LABELS[story.status as StoryStatus] ?? story.status,
       updated: updatedLabel(story.updatedAt ?? story.publishedAt, today),
       href: canEditStory(actor, story) && (story.format !== "jakalelm" || actor.can("jak.manage")) ? editorHref(story) : null,
-      publicHref: story.status === "published" ? `/${story.section}/${story.id}/${story.slug}` : null,
+      publicHref: story.status === "published" ? storedStoryHref(story) : null,
       isJak: story.format === "jakalelm",
     };
   });

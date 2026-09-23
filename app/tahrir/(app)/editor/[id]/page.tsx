@@ -37,6 +37,8 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
   const archiveEvent = story?.status === "archived"
     ? (await latestArchiveEvents([story.id])).get(story.id)
     : undefined;
+  // رقم الرابط العام ملك المادة الأصلية؛ مسودة التعديل تستعيره منها.
+  const publicNumber = story?.revisionOf ? (await getStory(story.revisionOf))?.publicNumber ?? null : story?.publicNumber ?? null;
   const mediaRows = await mediaPromise;
   const recentMedia = mediaRows.map((row) => ({ url: row.url, filename: row.filename }));
 
@@ -62,6 +64,7 @@ export default async function EditorPage({ params }: { params: Promise<{ id: str
           story
             ? {
                 id: story.id,
+                publicNumber,
                 version: story.version,
                 revisionOf: story.revisionOf,
                 title: story.title,

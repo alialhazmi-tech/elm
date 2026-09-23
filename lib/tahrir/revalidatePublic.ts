@@ -7,9 +7,10 @@ import { revalidatePath } from "next/cache";
 
 import { invalidateCorpus } from "@/lib/content/provider";
 
-export function revalidatePublicStory(story: { section: string; id: string; slug: string }) {
+export function revalidatePublicStory(story: { section: string; id: string; slug: string; publicNumber?: number | null }) {
   revalidatePublicContent();
   revalidatePath(`/${story.section}/${story.id}/${story.slug}`);
+  if (story.publicNumber) revalidatePath(`/${story.section}/${story.publicNumber}/${story.slug}`);
 }
 
 export function revalidatePublicContent() {
