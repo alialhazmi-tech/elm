@@ -7,12 +7,15 @@ import { publicShareUrl } from "@/lib/sharing-contract";
 const subscribe = () => () => {};
 
 export function ArticleLinks({ identity, editorId, published, dirty }: {
-  identity: { id: string; section: string; slug: string } | null;
+  identity: { id: string; publicNumber?: number | null; section: string; slug: string } | null;
   editorId: string; published: boolean; dirty: boolean;
 }) {
   const origin = useSyncExternalStore(subscribe, () => window.location.origin, () => "");
   const [notice, setNotice] = useState<{ text: string; url: string } | null>(null);
-  const publicUrl = origin && identity ? publicShareUrl(`${origin}/${encodeURIComponent(identity.section)}/${encodeURIComponent(identity.id)}/${encodeURIComponent(identity.slug)}`) : "";
+  // للمنشور رقم قصير يكفي وحده (/القسم/الرقم يتحول إلى الرابط الكامل)؛ وإلا الرابط الكامل بالمعرّف.
+  const publicUrl = !origin || !identity ? ""
+    : identity.publicNumber ? publicShareUrl(`${origin}/${encodeURIComponent(identity.section)}/${identity.publicNumber}`)
+    : publicShareUrl(`${origin}/${encodeURIComponent(identity.section)}/${encodeURIComponent(identity.id)}/${encodeURIComponent(identity.slug)}`);
   const editorUrl = origin && editorId ? `${origin}/tahrir/editor/${encodeURIComponent(editorId)}` : "";
   async function copy(url: string) {
     try { await navigator.clipboard.writeText(url); setNotice({ text: "نُسخ الرابط.", url }); }

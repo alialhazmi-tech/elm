@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { ALL_SERIES } from "@/lib/content/series";
 import { SECTIONS } from "@/lib/content/sections";
 import { listSitemapEntries } from "@/lib/content/provider";
+import { publicStoryId } from "@/lib/content/canonical-stories";
 
 /**
  * خريطة الموقع الشاملة: الصفحات الثابتة والأقسام والسلاسل وكل المواد المنشورة (stories).
@@ -36,7 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // كل المواد المنشورة — storyHref المقدس /{section}/{id}/{slug} بترميز URL قياسي.
   const stories = await listSitemapEntries();
   const storyPages: MetadataRoute.Sitemap = stories.map((story) => ({
-    url: `${BASE_URL}/${story.section}/${story.id}/${encodeURIComponent(story.slug)}`,
+    url: `${BASE_URL}/${story.section}/${publicStoryId(story)}/${encodeURIComponent(story.slug)}`,
     lastModified: story.updatedAt ?? story.publishedAt ?? undefined,
   }));
 

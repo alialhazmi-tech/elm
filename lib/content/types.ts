@@ -1,4 +1,4 @@
-import { canonicalStoryHref } from "./canonical-stories.ts";
+import { canonicalStoryHref, shortStoryHref as shortHref } from "./canonical-stories.ts";
 
 export type SeriesSlug =
   | "absat"
@@ -32,6 +32,8 @@ export type FactCheck = {
 
 export type Story = {
   id: string;
+  /** رقم الرابط العام لمواد اللوحة؛ غيابه يعني أن المعرّف نفسه هو ما يظهر في الرابط. */
+  publicNumber?: number;
   slug: string;
   section: string;
   title: string;
@@ -101,6 +103,11 @@ export type HomeData = {
 /** رابط المادة مطابق لبنية الإنتاج 1:1 — شرط الهجرة بلا فقد فهرسة. */
 export function storyHref(story: Story): string {
   return canonicalStoryHref(story);
+}
+
+/** رابط المشاركة القصير: /{القسم}/{الرقم} ثم تحويل دائم إلى الرابط الكامل. */
+export function shortStoryHref(story: Story): string {
+  return shortHref(story);
 }
 
 export interface ContentProvider {

@@ -27,8 +27,8 @@ import { brandDate, formatArticleDek, formatArticleTimestamp, formatReadingMinut
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
-import { storyHref } from "@/lib/content/types";
-import { isCanonicalStoryAlias } from "@/lib/content/canonical-stories";
+import { shortStoryHref, storyHref } from "@/lib/content/types";
+import { isCanonicalStoryAlias, publicStoryId } from "@/lib/content/canonical-stories";
 import { toRelatedCard } from "@/lib/personalization/recommend";
 import { fetchEpisodes, formatPodcastDuration, podcastShowFor, presentEpisode } from "@/lib/podcasts";
 import { PodcastPlayer } from "@/app/_components/podcast-player";
@@ -87,7 +87,8 @@ export default async function ArticlePage({ params }: Params) {
 
   // حارس canonical (شرط الهجرة): المعرّف يحسم — أي قسم أو سلاج مخالف للرابط المحفوظ
   // يتحول تحويلًا دائمًا (308) إليه، فلا يوجد 200 على بدائل ولا canonical متعارض.
-  if (isCanonicalStoryAlias(story) || safeDecode(section) !== story.section || safeDecode(slug) !== story.slug) {
+  // روابط UUID القديمة لمواد اللوحة تتحول بالطريقة نفسها إلى رقمها العام القصير.
+  if (isCanonicalStoryAlias(story) || safeDecode(id) !== publicStoryId(story) || safeDecode(section) !== story.section || safeDecode(slug) !== story.slug) {
     // ترويسة Location لا تقبل غير ASCII — الرابط العربي يُرمّز وإلا رد الخادم 500.
     permanentRedirect(encodeURI(storyHref(story)));
   }
@@ -146,7 +147,7 @@ export default async function ArticlePage({ params }: Params) {
                 title: story.title,
                 sectionName: sectionName(story.section),
                 readingMinutes: story.readingMinutes,
-                shareUrl: publicShareUrl(storyHref(story), sharingOrigin()),
+                shareUrl: publicShareUrl(shortStoryHref(story), sharingOrigin()),
                 next: nextStory ? { title: nextStory.title, href: storyHref(nextStory) } : null,
               }}
               slides={slides}
@@ -378,7 +379,7 @@ export default async function ArticlePage({ params }: Params) {
               </div>
 
               <aside className="sa-aside" aria-label="أدوات المادة">
-                <ArticleToolbar storyId={story.id} title={story.title} joinHref={joinHref} excerpt={story.excerpt} shareUrl={publicShareUrl(storyHref(story), sharingOrigin())} />
+                <ArticleToolbar storyId={story.id} title={story.title} joinHref={joinHref} excerpt={story.excerpt} shareUrl={publicShareUrl(shortStoryHref(story), sharingOrigin())} />
 
                 <ArticleInsights key={story.id} storyId={story.id} readingMinutes={story.readingMinutes} />
 

@@ -57,6 +57,13 @@ export function copySource(fromId: string, toId: string) {
 }
 
 /** ينشر النسخة التي اجتازت الحارس فقط، ويحتفظ بالنسخة السابقة ومصدرها. */
+/**
+ * مواد اللوحة (معرّفها UUID) تأخذ رقم رابط عام قصيرًا عند أول نشر ويثبت بعدها.
+ * مواد ووردبريس وجاك معرّفها قصير أصلًا فيبقى رابطها كما هو.
+ */
+const PUBLIC_NUMBER_ON_PUBLISH = sql<number | null>`case when ${stories.id} ~ '^[0-9]+$' or ${stories.id} like 'jak-%' then ${stories.publicNumber}
+  else coalesce(${stories.publicNumber}, nextval('story_public_number_seq')::integer) end`;
+
 export async function publishCheckedStory(story: WorkflowStory, actor: string, detail: string) {
   const db = workflowDb();
   const now = new Date().toISOString();
@@ -64,7 +71,7 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
   if (!story.revisionOf) {
     await db.batch([
       lockStory(story),
-      db.update(stories).set({ status: "published", returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null, updatedAt: now, version: story.version + 1 }).where(eq(stories.id, story.id)),
+      db.update(stories).set({ status: "published", publicNumber: PUBLIC_NUMBER_ON_PUBLISH, returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null, updatedAt: now, version: story.version + 1 }).where(eq(stories.id, story.id)),
       auditQuery(actor, "status:published", story.id, detail, { before: story, after: { status: "published", returnedAt: null, publishedAt: story.publishedAt ?? now, scheduledAt: null } }),
     ]);
     invalidateStatusCounts();
@@ -75,12 +82,13 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
     throw new StoryWriteError("تغيّرت النسخة الأصلية أو أُرشفت؛ راجع أحدث نسخة قبل الاعتماد.");
   }
   // Generated search text must be recomputed by PostgreSQL, never copied in UPDATE.
-  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, editorSearchText: _editorSearchText, boostedAt: _boostedAt, ...content } = story;
-  void _id; void _revisionOf; void _baseVersion; void _searchText; void _editorSearchText; void _boostedAt;
+  // رقم الرابط العام ملك المادة الأصلية؛ مسودة التعديل لا تحمل رقمًا فلا تمحوه.
+  const { id: _id, revisionOf: _revisionOf, baseVersion: _baseVersion, searchText: _searchText, editorSearchText: _editorSearchText, boostedAt: _boostedAt, publicNumber: _publicNumber, ...content } = story;
+  void _id; void _revisionOf; void _baseVersion; void _searchText; void _editorSearchText; void _boostedAt; void _publicNumber;
   await db.batch([
     lockStory(original), lockStory(story), snapshotQuery(original.id, actor),
     db.update(stories).set({ ...content, authorId: original.authorId, authorName: original.authorName,
-      slug: original.slug, section: original.section, status: "published", returnedAt: null, publishedAt: original.publishedAt ?? now,
+      slug: original.slug, section: original.section, status: "published", publicNumber: PUBLIC_NUMBER_ON_PUBLISH, returnedAt: null, publishedAt: original.publishedAt ?? now,
       scheduledAt: null, updatedAt: now, version: original.version + 1 }).where(eq(stories.id, original.id)),
     db.execute(sql`delete from story_slides where story_id=${original.id}`),
     copySlides(story.id, original.id), copySource(story.id, original.id),
@@ -108,7 +116,7 @@ export async function restoreStoryVersion(story: WorkflowStory, versionId: strin
   const now = new Date().toISOString();
   await db.batch([
     lockStory(story),
-    db.insert(stories).values({ ...previous, assignedTo: story.assignedTo, dueAt: story.dueAt, returnedAt: null, id, slug: story.slug, section: story.section, authorId: actor.userId, authorName: actor.displayName, status: "draft", revisionOf: story.id, baseVersion: story.version, version: 1, scheduledAt: null, updatedAt: now }),
+    db.insert(stories).values({ ...previous, publicNumber: null, assignedTo: story.assignedTo, dueAt: story.dueAt, returnedAt: null, id, slug: story.slug, section: story.section, authorId: actor.userId, authorName: actor.displayName, status: "draft", revisionOf: story.id, baseVersion: story.version, version: 1, scheduledAt: null, updatedAt: now }),
     db.execute(sql`insert into story_slides (id,story_id,position,type,title,body,stat,stat_label,image,image_style,image_prompt,source_context,hidden,data)
       select gen_random_uuid()::text, ${id}, position,type,title,body,stat,stat_label,image,image_style,image_prompt,source_context,hidden,data
       from jsonb_populate_recordset(null::story_slides, ${JSON.stringify(snapshot.slides)}::jsonb)`),

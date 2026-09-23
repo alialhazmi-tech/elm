@@ -15,7 +15,7 @@ import { loadPublicTaxonomy } from "@/lib/content/taxonomy-settings";
 import { LIST_PAGE_SIZE, paginate } from "@/lib/content/pagination";
 import { publicShareUrl } from "@/lib/sharing-contract";
 import { sharingOrigin } from "@/lib/sharing";
-import { storyHref } from "@/lib/content/types";
+import { shortStoryHref } from "@/lib/content/types";
 import { stripHtmlToText } from "@/lib/content/html";
 import { decodeKeywordParam } from "@/lib/content/keywords";
 import { MEDIA_WIDTH, optimizedMedia, toMobileCard, type MobileSeriesChip, type MobileStoryCard } from "@/lib/mobile/home";
@@ -189,7 +189,7 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
       ...toMobileCard(story, origin, MEDIA_WIDTH.full),
       body: stripHtmlToText(story.body ?? story.excerpt),
       factCheck: story.factCheck ?? null,
-      shareUrl: publicShareUrl(storyHref(story), sharingOrigin()),
+      shareUrl: publicShareUrl(shortStoryHref(story), sharingOrigin()),
       bodyHtml: body.bodyHtml,
       blocks: body.blocks,
       ...storyVideo(story),

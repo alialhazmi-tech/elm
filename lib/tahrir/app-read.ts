@@ -4,6 +4,7 @@
  * `app/api/tahrir/*` رقيقة: بوابة الصلاحية ثم استدعاء الدالة ثم `Cache-Control: private, no-store`.
  */
 
+import { storedStoryHref } from "@/lib/content/canonical-stories";
 import { SERIES } from "@/lib/content/series";
 import { and, asc, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 
@@ -82,6 +83,7 @@ export interface StoryListRow {
 
 const ROW_COLUMNS = {
   id: stories.id,
+  publicNumber: stories.publicNumber,
   slug: stories.slug,
   section: stories.section,
   title: stories.title,
@@ -146,7 +148,7 @@ function toRow(actor: Actor, row: RawRow, options: { controls?: GuardControls; a
     guard: options.controls && row.body !== undefined
       ? guardFor(row.title, row.body, row.format === "jakalelm" ? "design" : undefined, options.controls)
       : null,
-    publicHref: row.status === "published" ? `/${row.section}/${row.id}/${row.slug}` : null,
+    publicHref: row.status === "published" ? storedStoryHref(row) : null,
     canEdit: canEditStory(actor, { authorId: row.authorId, assignedTo: row.assignedTo }),
     archive: options.archive ?? null,
   };

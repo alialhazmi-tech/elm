@@ -47,6 +47,8 @@ interface EditorInitial {
   version: number;
   revisionOf: string | null;
   id: string;
+  /** رقم الرابط العام للمادة الأصلية (لا لمسودة التعديل)، إن وُجد. */
+  publicNumber?: number | null;
   title: string;
   excerpt: string;
   body: string;
@@ -118,7 +120,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
   const router = useRouter();
   const [revisionOf, setRevisionOf] = useState(initial?.revisionOf ?? null);
   const [id, setId] = useState(initial?.id ?? "");
-  const [savedIdentity, setSavedIdentity] = useState(initial ? { id: initial.revisionOf ?? initial.id, section: initial.section, slug: initial.slug } : null);
+  const [savedIdentity, setSavedIdentity] = useState(initial ? { id: initial.revisionOf ?? initial.id, publicNumber: initial.publicNumber ?? null, section: initial.section, slug: initial.slug } : null);
   const [title, setTitle] = useState(initial?.title ?? "");
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
@@ -178,7 +180,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
       recovery.markSaved(confirmed);
       autosave.markSaved(confirmed);
       setLastUpdatedAt(new Date().toISOString());
-      setSavedIdentity({ id: data.revisionOf ?? data.id, section: data.section, slug: data.slug });
+      setSavedIdentity(current => ({ id: data.revisionOf ?? data.id, publicNumber: current?.id === (data.revisionOf ?? data.id) ? current.publicNumber : null, section: data.section, slug: data.slug }));
       setRevisionOf(data.revisionOf);
       setStatus(data.status);
       if (data.scheduledAt) setScheduleAt(isoToRiyadhWallTime(data.scheduledAt));

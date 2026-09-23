@@ -64,7 +64,10 @@ export const stories = pgTable("stories", {
   editorSearchText: text("editor_search_text").generatedAlwaysAs(sql`alelm_editor_search_normalize("title" || ' ' || "excerpt" || ' ' || coalesce("keywords"::text, '') || ' ' || "body")`),
   /** رابط يوتيوب لمواد شكل «فيديو» (رابط المشاهدة القياسي بلا قائمة تشغيل) — يُسحب من alelm-api ويُحرر من اللوحة. */
   videoUrl: text("video_url"),
+  /** رقم الرابط العام القصير لمواد اللوحة (معرّفها UUID)؛ مواد ووردبريس رقمها هو معرّفها فيبقى null. */
+  publicNumber: integer("public_number"),
 }, (table) => [
+  uniqueIndex("stories_public_number_uidx").on(table.publicNumber),
   index("stories_assigned_to_idx").on(table.assignedTo, table.status),
   index("stories_author_status_idx").on(table.authorId, table.status),
   index("stories_status_idx").on(table.status),

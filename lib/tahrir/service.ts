@@ -147,7 +147,7 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
   }
   if (!existing || fork) {
     const insert = db.insert(stories).values({
-      ...(existing ?? {}), ...content, id, status: "draft", scheduledAt: null,
+      ...(existing ?? {}), ...content, id, status: "draft", scheduledAt: null, publicNumber: null,
       authorId: actor.userId, authorName: actor.displayName, version: 1,
       revisionOf: existing?.revisionOf ?? existing?.id ?? null, baseVersion: existing?.baseVersion ?? existing?.version ?? null,
     });
@@ -561,6 +561,7 @@ export async function listSeriesRows() {
 
 const LITE_COLUMNS = {
   id: stories.id,
+  publicNumber: stories.publicNumber,
   slug: stories.slug,
   section: stories.section,
   title: stories.title,

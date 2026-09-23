@@ -5,7 +5,7 @@ import vm from "node:vm";
 import { transform } from "esbuild";
 import * as jsx from "react/jsx-runtime";
 import * as sharing from "../lib/sharing.ts";
-import { storyHref } from "../lib/content/types.ts";
+import { shortStoryHref, storyHref } from "../lib/content/types.ts";
 import { publicShareUrl } from "../lib/sharing-contract.ts";
 import * as canonicalStories from "../lib/content/canonical-stories.ts";
 
@@ -29,7 +29,7 @@ test("article metadata keeps SEO title separate from the reader title in link pr
   };
   const { generateMetadata } = await loadComponent("../app/[section]/[id]/[slug]/page.tsx", {
     "@/lib/content/provider": { seedContentProvider: { getStory: async () => story } },
-    "@/lib/content/types": { storyHref },
+    "@/lib/content/types": { storyHref, shortStoryHref },
     "@/lib/sharing": sharing,
   });
   for (const seoTitle of ["عنوان مختلف لمحركات البحث", undefined]) {
@@ -56,13 +56,32 @@ test("verified duplicate redirects before loading related content and preserves 
         listRelated: async () => assert.fail("No secondary queries before the redirect"),
       },
     },
-    "@/lib/content/types": { storyHref },
+    "@/lib/content/types": { storyHref, shortStoryHref },
     "@/lib/content/canonical-stories": canonicalStories,
     "next/navigation": { permanentRedirect: value => { location = value; throw redirected; } },
   });
   await assert.rejects(ArticlePage({ params: Promise.resolve(story) }), error => error === redirected);
   assert.equal(location, encodeURI("/world/1660/خطط-دولية-ربما-تجبر-الشركات-الكبرى-على"));
   assert.deepEqual(story, before);
+});
+
+test("legacy UUID link of a tahrir story redirects to its short public number", async () => {
+  const story = { id: "4a48f291-fe4a-4d46-9283-22530bd1e9d2", publicNumber: 300042, section: "politics", slug: "رحلة-السعودية" };
+  let location;
+  const redirected = new Error("redirected");
+  const { default: ArticlePage } = await loadComponent("../app/[section]/[id]/[slug]/page.tsx", {
+    "@/lib/content/provider": {
+      seedContentProvider: {
+        getStory: async () => story,
+        listRelated: async () => assert.fail("No secondary queries before the redirect"),
+      },
+    },
+    "@/lib/content/types": { storyHref, shortStoryHref },
+    "@/lib/content/canonical-stories": canonicalStories,
+    "next/navigation": { permanentRedirect: value => { location = value; throw redirected; } },
+  });
+  await assert.rejects(ArticlePage({ params: Promise.resolve({ section: story.section, id: story.id, slug: encodeURIComponent(story.slug) }) }), error => error === redirected);
+  assert.equal(location, encodeURI("/politics/300042/رحلة-السعودية"));
 });
 
 test("share button sends the reader title as title and text, with a URL-only clipboard fallback", async () => {

@@ -44,7 +44,7 @@ test("مسار المقال يفرض canonical بالمعرّف: تحويل دا
 test("خريطة الموقع تضم كل المواد المنشورة وتُحدَّث دوريًا", async () => {
   const sitemap = await read("app/sitemap.ts");
   assert.match(sitemap, /listSitemapEntries/u, "الخريطة لا تستعلم المواد");
-  assert.match(sitemap, /story\.section.*story\.id.*encodeURIComponent\(story\.slug\)/su, "روابط المواد لا تحفظ الثلاثية");
+  assert.match(sitemap, /story\.section.*publicStoryId\(story\).*encodeURIComponent\(story\.slug\)/su, "روابط المواد لا تحفظ الثلاثية");
   assert.match(sitemap, /export const revalidate/u, "الخريطة بلا إعادة توليد");
 });
 
