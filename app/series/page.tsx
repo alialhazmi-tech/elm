@@ -4,6 +4,7 @@ import { sharingMetadata } from "@/lib/sharing";
 import Link from "next/link";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
+import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { toLatinDigits } from "@/lib/format";
 import { listVisibleArchivedSeries, seriesDirectory } from "@/lib/content/provider";
 
@@ -41,6 +42,7 @@ export default async function SeriesIndexPage() {
       <SiteHeader active="/series" />
 
       <main id="main-content" className="wrap sx-page">
+        <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "السلاسل" }]} />
         <section className="sx-index-hero">
           {/* شريط الطيف: ألوان السلاسل بترتيبها — توقيع الصفحة. */}
           <i className="sx-spectrum" aria-hidden="true" style={spectrum} />

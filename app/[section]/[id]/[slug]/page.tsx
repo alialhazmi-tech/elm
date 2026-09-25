@@ -37,6 +37,9 @@ import { ArticleInsights } from "@/app/_components/article-insights";
 import { ArticleKeywords } from "@/app/_components/article-keywords";
 import "@/app/_components/podcast-player.css";
 import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
+import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
+import { articleMetaDescription, cleanMetadataTitle } from "@/lib/seo/metadata";
+import { articleStructuredData, PUBLIC_SITE_URL } from "@/lib/seo/schema";
 
 export const revalidate = 300;
 /** الأرشيف 29 ألف مادة: يُبنى مسبقًا أحدثها فقط والبقية ISR عند الطلب. */
@@ -67,8 +70,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const story = await seedContentProvider.getStory(id);
   if (!story) return { title: "الخبر غير متاح", robots: { index: false, follow: true } };
 
-  const seoTitle = story.seoTitle || story.title;
-  const seoDescription = story.seoDescription || story.excerpt;
+  const seoTitle = cleanMetadataTitle(story.seoTitle, story.title);
+  const seoDescription = articleMetaDescription(story);
   return {
     title: seoTitle,
     description: seoDescription,
@@ -95,6 +98,13 @@ export default async function ArticlePage({ params }: Params) {
 
   const series = seriesOf(story);
   const related = await seedContentProvider.listRelated(story, 6);
+  const canonicalPath = storyHref(story);
+  const canonicalUrl = new URL(canonicalPath, PUBLIC_SITE_URL).href;
+  const breadcrumbItems = [
+    { label: "الرئيسية", href: "/" },
+    { label: sectionName(story.section), href: `/${story.section}` },
+    { label: story.title },
+  ] as const;
 
   // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية نفسها التي يقرأ منها الموقع القديم.
   const podcastShow = story.format === "podcasts" ? podcastShowFor(story.id) : undefined;
@@ -135,6 +145,7 @@ export default async function ArticlePage({ params }: Params) {
           /* الالتقاط المرن على تمرير الصفحة — proximity لا يحبس القارئ */
           <style>{`html{scroll-snap-type:y proximity}`}</style>
         )}
+        <PublicBreadcrumbs items={breadcrumbItems} />
         <main id="main-content">
           {isLandscapeReport(slides) ? (
             <JakReport
@@ -159,17 +170,11 @@ export default async function ArticlePage({ params }: Params) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "NewsArticle",
-              headline: story.title,
-              description: story.seoDescription || story.excerpt,
-              keywords: story.keywords?.length ? story.keywords.join(", ") : undefined,
-              datePublished: story.publishedAt,
-              articleSection: sectionName(story.section),
-              image: story.image ? [story.image] : undefined,
-              publisher: { "@type": "Organization", name: "العلم", url: "https://alelm.net" },
-            }).replace(/</g, "\\u003c"),
+            __html: JSON.stringify(articleStructuredData({
+              story,
+              canonicalUrl,
+              sectionName: sectionName(story.section),
+            })).replace(/</g, "\\u003c"),
           }}
         />
       </>
@@ -195,18 +200,12 @@ export default async function ArticlePage({ params }: Params) {
   const joinHref = `/join?next=${encodeURIComponent(storyHref(story))}`;
 
   const reading = readingOutline(story.body && looksLikeHtml(story.body) ? sanitizeBodyHtml(story.body) : "");
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "NewsArticle",
-    headline: story.title,
-    description: story.seoDescription || story.excerpt,
-    keywords: story.keywords?.length ? story.keywords.join(", ") : undefined,
-    datePublished: story.publishedAt,
-    dateModified: updatedTimestamp ? story.updatedAt : undefined,
-    articleSection: sectionName(story.section),
-    image: story.image ? [story.image] : undefined,
-    publisher: { "@type": "Organization", name: "العلم", url: "https://alelm.net" },
-  };
+  const articleSchema = articleStructuredData({
+    story: { ...story, updatedAt: updatedTimestamp ? story.updatedAt : undefined },
+    canonicalUrl,
+    sectionName: sectionName(story.section),
+    includeEditorialTeam: true,
+  });
 
   return (
     <>
@@ -215,6 +214,7 @@ export default async function ArticlePage({ params }: Params) {
       {!podcastShow ? <ReadingProgress /> : null}
 
       <main id="main-content" className="article-shell">
+        <PublicBreadcrumbs items={breadcrumbItems} />
         {series && !podcastShow ? (
           <div className="sa-strip" style={{ "--sc": series.color } as React.CSSProperties}>
             <span className="sn">أنت تقرأ ضمن سلسلة «{series.name}» — {series.description}</span>
@@ -260,17 +260,6 @@ export default async function ArticlePage({ params }: Params) {
             <header className={`sa-head${videoUrl ? " has-video" : (isInfographicStory || !story.image) ? " no-media" : ""}`}>
               <div className="sa-head-copy">
                 <div className="sa-head-top">
-                  <nav className="breadcrumb" aria-label="مسار التصفح">
-                    <Link href="/">الرئيسية</Link>
-                    <span aria-hidden="true">·</span>
-                    <Link href={`/${story.section}`}>{sectionName(story.section)}</Link>
-                    {series ? (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <Link href={`/series/${series.slug}`}>{series.name}</Link>
-                      </>
-                    ) : null}
-                  </nav>
                   <h1>{story.title}</h1>
                   {fullExcerpt ? <p className="sa-dek">{fullExcerpt}</p> : null}
                 </div>

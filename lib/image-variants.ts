@@ -1,11 +1,12 @@
 import sharp from "sharp";
 import { MAX_SHARE_SOURCE_BYTES } from "./sharing-image.ts";
+import { DEFAULT_IMAGE_QUALITY, imageQualityForSource } from "./image-source.ts";
 
 /** يحفظ نسبة الأصل ولا يكبّر صورة صغيرة؛ القصّ من مسؤولية إطار العرض. */
-export async function resizeEditorialImage(input: Uint8Array, width: number) {
+export async function resizeEditorialImage(input: Uint8Array, width: number, quality = DEFAULT_IMAGE_QUALITY) {
   if (input.byteLength > MAX_SHARE_SOURCE_BYTES) throw new Error("Image source too large");
   return sharp(input, { limitInputPixels: 40_000_000, animated: false })
-    .rotate().resize({ width, withoutEnlargement: true }).webp({ quality: 78 }).toBuffer();
+    .rotate().resize({ width, withoutEnlargement: true }).webp({ quality: imageQualityForSource("", quality) }).toBuffer();
 }
 
 /** كاش محدود بالبايتات والعدد، مع توحيد الطلبات المتزامنة للصورة نفسها. */

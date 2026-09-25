@@ -67,10 +67,15 @@ try {
   for(let page=1;page<=3;page++) {
     const rows=await listPage(undefined,page,2,{q:'الذكاء الاصطناعي'});
     const review=await listPageForReview(undefined,page,2,{q:'الذكاء الاصطناعي'});
-    assert.deepEqual(review.map(row=>{ const copy={...row}; delete copy.body; return copy; }),rows);
+    assert.deepEqual(review.map(row=>{ const lite={...row}; delete lite.body; delete lite.authorId; delete lite.assignedTo; return lite; }),rows);
     pages.push(...rows.map(r=>r.id));
   }
   assert.deepEqual(pages, ordered);
+  await globalThis.__editorSearchDb.insert(stories).values({id:'ownership',slug:'ownership',section:'health',title:'مادة إسناد',status:'published',seriesSlug:'absat',publishedAt:'2026-01-01',authorId:'fixture-author',assignedTo:'fixture-assignee'});
+  const ownershipReview=await listPageForReview(undefined,1,10,{q:'مادة إسناد'});
+  assert.equal(ownershipReview.length,1);
+  assert.equal(ownershipReview[0].authorId,'fixture-author');
+  assert.equal(ownershipReview[0].assignedTo,'fixture-assignee');
   const actor={userId:'test',can:()=>true};
   const app=await appStoryList(actor,{q:'الذكاء الاصطناعي'});
   assert.equal(app.total,ordered.length);assert.deepEqual(app.rows.map(r=>r.id),ordered);

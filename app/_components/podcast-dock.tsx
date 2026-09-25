@@ -6,7 +6,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-import "@/app/_components/podcast-player.css";
+import "@/app/_components/podcast-dock.css";
 
 export type DockTrack = {
   audioUrl: string;

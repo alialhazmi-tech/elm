@@ -15,12 +15,28 @@ export function publicImageSource(value: string, origin = "https://alelm.net"): 
 }
 
 export const IMAGE_WIDTHS = [168, 360, 640, 1080, 1600];
+/** الجودة القديمة لمسارات التحويل المباشرة؛ مسار next/image يمرّر جودة الطلب صراحة. */
+export const DEFAULT_IMAGE_QUALITY = 78;
+export const MIN_IMAGE_QUALITY = 40;
+export const MAX_IMAGE_QUALITY = 100;
+export const IMAGE_QUALITIES = [60, 75, 78] as const;
+
+export function imageQualityForSource(src: string, quality?: number): number {
+  const requested = quality === undefined ? DEFAULT_IMAGE_QUALITY : Math.round(quality);
+  const bounded = Number.isFinite(requested) && requested >= MIN_IMAGE_QUALITY && requested <= MAX_IMAGE_QUALITY
+    ? IMAGE_QUALITIES.reduce((closest, candidate) =>
+      Math.abs(candidate - requested) < Math.abs(closest - requested) ? candidate : closest, DEFAULT_IMAGE_QUALITY)
+    : DEFAULT_IMAGE_QUALITY;
+  // ملفات PNG غالبًا إنفوجرافيك أو تحتوي نصًا؛ لا نسمح لطلب منخفض الجودة
+  // بإتلاف حواف الحروف عند تحويلها إلى WebP.
+  return /\.png(?:$|[?#])/i.test(src) ? Math.max(78, bounded) : bounded;
+}
 
 export function imageVariantSource(value: string) {
   return publicImageSource(value.startsWith("wp/") ? `https://dash.alelm.net/wp-content/uploads/${value.slice(3)}` : value);
 }
 
-export function imageVariantUrl(src: string, width: number): string {
+export function imageVariantUrl(src: string, width: number, quality?: number): string {
   const source = publicImageSource(src);
   if (!source || /\.gif$/i.test(src)) return src;
   const value = "filename" in source ? `/uploads/${source.filename}` : `wp/${new URL(source.url).pathname.slice("/wp-content/uploads/".length)}`;
@@ -32,5 +48,6 @@ export function imageVariantUrl(src: string, width: number): string {
   // و% كما هي، ونترك الحروف العربية مقروءة لتقليل srcset دون تغيير عنوان المصدر.
   const encoded = Array.from(compact, (char) => char.codePointAt(0)! > 127 ? char : encodeURIComponent(char)).join("");
   const size = IMAGE_WIDTHS.find((size) => size >= width) ?? IMAGE_WIDTHS.at(-1)!;
-  return `/image-variants?src=${encoded}&w=${size}&v=1`;
+  const qualityParam = quality === undefined ? "" : `&q=${imageQualityForSource(src, quality)}`;
+  return `/image-variants?src=${encoded}&w=${size}${qualityParam}&v=1`;
 }

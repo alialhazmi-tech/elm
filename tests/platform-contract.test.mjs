@@ -40,7 +40,9 @@ test("renders Arabic RTL metadata with the approved knowledge positioning", asyn
   assert.match(html, /property="og:locale" content="ar_SA"/);
   assert.match(html, /rel="canonical" href="https:\/\/alelm\.net"/);
   assert.match(html, /منصة إعلام ومعرفة سعودية/);
-  assert.match(html, /"@type":"Organization"/);
+  assert.match(html, /"@type":"NewsMediaOrganization"/);
+  assert.match(html, /"@type":"WebSite"/);
+  assert.match(html, /"@id":"https:\/\/alelm\.net\/#organization"/);
   assert.doesNotMatch(html, /[\u0660-\u0669\u06F0-\u06F9]/, "الواجهة يجب أن تستخدم الأرقام اللاتينية فقط");
   assert.doesNotMatch(html, /name="keywords"/i);
   assert.doesNotMatch(html, /hagerh|allorigins|stage2?\.jakelelm/i);

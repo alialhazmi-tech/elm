@@ -7,12 +7,14 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { Pagination } from "@/app/_components/pagination";
+import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { ALL_SERIES, pageBySeries, sectionName, SERIES, seedContentProvider } from "@/lib/content/provider";
 import { headlineStat } from "@/lib/content/headline-stat";
 import { storyHref } from "@/lib/content/types";
 import { formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
+import { archiveMetaDescription } from "@/lib/seo/metadata";
 
 export const revalidate = 300;
 
@@ -35,15 +37,13 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!series) return { title: "السلسلة غير موجودة" };
 
   const { page } = await loadPage(series.slug, p);
-  const title =
-    Number.isFinite(page) && page > 1
-      ? `سلسلة ${series.name} — صفحة ${page}`
-      : `سلسلة ${series.name}`;
+  const title = Number.isFinite(page) && page > 1 ? `سلسلة ${series.name} — صفحة ${page}` : `سلسلة ${series.name}`;
+  const description = archiveMetaDescription(series.description, page);
 
   return {
     title,
-    description: series.description,
-    ...sharingMetadata({ title, description: series.description, path: page > 1 ? `/series/${series.slug}?p=${page}` : `/series/${series.slug}` }),
+    description,
+    ...sharingMetadata({ title, description, path: page > 1 ? `/series/${series.slug}?p=${page}` : `/series/${series.slug}` }),
     alternates: {
       canonical: page > 1 ? `/series/${series.slug}?p=${page}` : `/series/${series.slug}`,
     },
@@ -83,6 +83,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
       <SiteHeader active="/series" activeSeries={series.slug} />
 
       <main id="main-content" className="wrap sx-page" style={seriesStyle}>
+        <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "السلاسل", href: "/series" }, { label: series.name }]} />
         <nav className="sx-switch" aria-label="السلاسل">
           <Link href="/series" className="sx-all">كل السلاسل</Link>
           {SERIES.map((item) => (

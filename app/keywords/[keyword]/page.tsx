@@ -4,12 +4,14 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
+import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { MosaicCard } from "@/app/_components/story-card";
 import { Pagination } from "@/app/_components/pagination";
 import { pageByKeyword } from "@/lib/content/provider";
 import { decodeKeywordParam, keywordHref } from "@/lib/content/keywords";
 import { pageHref, parsePage } from "@/lib/content/pagination";
 import { toLatinDigits } from "@/lib/format";
+import { archiveMetaDescription } from "@/lib/seo/metadata";
 
 export const revalidate = 120;
 type Props = {
@@ -25,7 +27,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   if (!keyword) return { title: "الكلمة المفتاحية غير موجودة", robots: { index: false } };
   const { total, page } = await loadPage(keyword, p);
   const title = `${keyword}${page > 1 ? ` — صفحة ${page}` : ""}`;
-  const description = `أخبار ومواد العلم المنشورة تحت الكلمة المفتاحية «${keyword}»، مرتبة من الأحدث.`;
+  const description = archiveMetaDescription(`أخبار ومواد العلم المنشورة تحت الكلمة المفتاحية «${keyword}»، مرتبة من الأحدث.`, page);
   return {
     title, description,
     alternates: { canonical: pageHref(keywordHref(keyword), page) },
@@ -48,8 +50,8 @@ export default async function KeywordPage({ params, searchParams }: Props) {
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
       <SiteHeader />
       <main id="main-content" className="wrap keyword-page" dir="rtl">
+        <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الكلمات المفتاحية" }, { label: keyword }]} />
         <header className="keyword-hero">
-          <nav className="breadcrumb" aria-label="مسار التصفح"><Link href="/">الرئيسية</Link><span aria-hidden="true">·</span><span>الكلمات المفتاحية</span></nav>
           <p className="eyebrow">أرشيف الكلمة المفتاحية</p>
           <h1>{keyword}</h1>
           <p>أخبار ومواد مرتبطة بهذه الكلمة، من الأحدث إلى الأقدم.</p>
