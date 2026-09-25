@@ -1,0 +1,37 @@
+.public-breadcrumbs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 22px 0;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.public-breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-breadcrumbs li {
+  display: inline-flex;
+  align-items: center;
+}
+
+.public-breadcrumbs li:not(:last-child)::after {
+  content: "←";
+  margin-inline: 9px;
+  color: var(--line-2);
+}
+
+.public-breadcrumbs a {
+  color: var(--link);
+}
+
+.public-breadcrumbs a:hover,
+.public-breadcrumbs [aria-current="page"] {
+  color: var(--ink);
+}

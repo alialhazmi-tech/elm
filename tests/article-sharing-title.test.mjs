@@ -7,6 +7,7 @@ import * as jsx from "react/jsx-runtime";
 import * as sharing from "../lib/sharing.ts";
 import { shortStoryHref, storyHref } from "../lib/content/types.ts";
 import { publicShareUrl } from "../lib/sharing-contract.ts";
+import * as seoMetadata from "../lib/seo/metadata.ts";
 import * as canonicalStories from "../lib/content/canonical-stories.ts";
 
 async function loadComponent(path, imports, globals = {}) {
@@ -31,6 +32,7 @@ test("article metadata keeps SEO title separate from the reader title in link pr
     "@/lib/content/provider": { seedContentProvider: { getStory: async () => story } },
     "@/lib/content/types": { storyHref, shortStoryHref },
     "@/lib/sharing": sharing,
+    "@/lib/seo/metadata": seoMetadata,
   });
   for (const seoTitle of ["عنوان مختلف لمحركات البحث", undefined]) {
     story.seoTitle = seoTitle;

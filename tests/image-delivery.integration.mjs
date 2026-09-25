@@ -111,7 +111,7 @@ try {
   assert.match(home, /srcSet="[^"]*image-variants/);
   assert.match(home, /w=168/);
   const src = '/uploads/621a297f-10bd-40a5-87ee-67e0a54b5c28.webp';
-  const target = '/image-variants?src='+encodeURIComponent(src)+'&w=168&v=1';
+  const target = '/image-variants?src='+encodeURIComponent(src)+'&w=168&q=75&v=1';
   const first = await fetch(origin+target);
   assert.equal(first.status,200);
   assert.equal(first.headers.get('content-type'),'image/webp');
@@ -125,8 +125,23 @@ try {
   const head = await fetch(origin+target,{method:'HEAD'});
   assert.equal(head.status,200);
   assert.equal(head.headers.get('content-length'),String(bytes.length));
+  // Quality participates in the cache key; a photographic variant must not reuse q75.
+  const lowResponse = await fetch(origin+target.replace('q=75','q=60'));
+  assert.equal(lowResponse.status,200);
+  const lowBytes = Buffer.from(await lowResponse.arrayBuffer());
+  assert.notDeepEqual(lowBytes,bytes);
+  const defaultResponse = await fetch(origin+target.replace('&q=75',''));
+  const defaultBytes = Buffer.from(await defaultResponse.arrayBuffer());
+  const explicitDefault = await fetch(origin+target.replace('q=75','q=78'));
+  assert.deepEqual(Buffer.from(await explicitDefault.arrayBuffer()),defaultBytes);
+  // Text-heavy PNG originals keep q78 even when a client requests q60.
+  const pngTarget = target.replace('.webp','.png');
+  const pngLow = await fetch(origin+pngTarget.replace('q=75','q=60'));
+  const pngDefault = await fetch(origin+pngTarget.replace('q=75','q=78'));
+  assert.deepEqual(Buffer.from(await pngLow.arrayBuffer()),Buffer.from(await pngDefault.arrayBuffer()));
   for(const invalid of [
     '/image-variants?src='+encodeURIComponent(src)+'&w=9999',
+    '/image-variants?src='+encodeURIComponent(src)+'&w=168&q=101',
     '/image-variants?src='+encodeURIComponent('http://127.0.0.1/api/private')+'&w=168',
     '/image-variants?src='+encodeURIComponent('https://dash.alelm.net/admin')+'&w=168',
   ]) {

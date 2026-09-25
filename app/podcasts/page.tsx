@@ -9,6 +9,7 @@ import { listByFormat } from "@/lib/content/provider";
 import { storyHref } from "@/lib/content/types";
 import { brandDate, toLatinDigits } from "@/lib/format";
 import { fetchEpisodes, formatPodcastDuration, podcastShowFor, presentEpisode } from "@/lib/podcasts";
+import "@/app/_components/podcast-player.css";
 
 /**
  * بودكاست العلم — رابط إرثي حي من الموقع القديم (شرط M-2).

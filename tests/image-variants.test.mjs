@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import sharp from 'sharp';
-import { imageVariantUrl, imageVariantSource, publicImageSource } from '../lib/image-source.ts';
+import { imageVariantUrl, imageVariantSource, imageQualityForSource, publicImageSource } from '../lib/image-source.ts';
+import imageVariantLoader from '../lib/image-variant-loader.ts';
 import { createImageVariantCache, resizeEditorialImage } from '../lib/image-variants.ts';
 
 const filename = '621a297f-10bd-40a5-87ee-67e0a54b5c28.webp';
@@ -9,6 +10,11 @@ test('variants normalize stored URLs and leave unsupported assets untouched', ()
   const path = `/uploads/${filename}`;
   assert.equal(imageVariantUrl(path, 168), imageVariantUrl('https://alelm.net' + path, 168));
   assert.equal(new URL(imageVariantUrl(path, 170), 'https://alelm.net').searchParams.get('w'), '360');
+  assert.equal(new URL(imageVariantUrl(path, 170, 72), 'https://alelm.net').searchParams.get('q'), '75');
+  assert.equal(imageQualityForSource('/uploads/infographic.png', 60), 78);
+  assert.equal(imageQualityForSource('/uploads/photo.webp', 60), 60);
+  assert.equal(imageVariantLoader({ src: path, width: 1080, quality: 75 }), imageVariantUrl(path, 1080));
+  assert.match(imageVariantLoader({ src: path, width: 1080, quality: 60 }), /q=60/);
   for (const name of ['صورة-الخبر.webp', 'صورة🌍.webp', 'صورة%20%26%2B%23.webp', 'literal%2520.webp', 'file%23name.webp']) {
     const url = new URL('https://dash.alelm.net/wp-content/uploads/' + name).href;
     const query = new URL(imageVariantUrl(url,168), 'https://alelm.net').searchParams.get('src');
@@ -31,6 +37,14 @@ test('responsive versions preserve aspect ratio, rotate correctly and never enla
   assert.deepEqual([rotated.width, rotated.height], [168, 224]);
   await assert.rejects(resizeEditorialImage(Buffer.from('not an image'), 168));
   await assert.rejects(resizeEditorialImage(new Uint8Array(8 * 1024 * 1024 + 1), 168), /too large/);
+});
+
+test('quality is bounded and changes the encoded size', async () => {
+  const original = await sharp({ create: { width: 800, height: 450, channels: 3, background: '#aa6633' } }).png().toBuffer();
+  const high = await resizeEditorialImage(original, 800, 78);
+  const low = await resizeEditorialImage(original, 800, 60);
+  assert.ok(low.length < high.length);
+  assert.equal(imageQualityForSource('/uploads/photo.webp', 101), 78);
 });
 
 test('cache coalesces requests, bounds concurrent work and allows retries after failure', async () => {

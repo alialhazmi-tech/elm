@@ -5,11 +5,13 @@ import { sharingMetadata } from "@/lib/sharing";
 import { notFound, permanentRedirect } from "next/navigation";
 
 import { Pagination } from "@/app/_components/pagination";
+import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { MosaicCard } from "@/app/_components/story-card";
 import { KNOWN_SECTIONS, pageBySection } from "@/lib/content/provider";
 import { getSection, getSectionDescription, getSectionName } from "@/lib/content/sections";
 import { toLatinDigits } from "@/lib/format";
+import { archiveMetaDescription } from "@/lib/seo/metadata";
 
 export const revalidate = 180;
 
@@ -31,16 +33,14 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   const name = getSectionName(section);
   const { page } = await loadPage(section, p);
-  const title =
-    Number.isFinite(page) && page > 1
-      ? `${name} — صفحة ${page} | العلم`
-      : `${name} | منصة العلم`;
+  const title = Number.isFinite(page) && page > 1 ? `${name} — صفحة ${page}` : name;
+  const description = archiveMetaDescription(getSectionDescription(section), page);
 
   return {
     title,
-    description: getSectionDescription(section),
+    description,
     alternates: { canonical: page > 1 ? `/${section}?p=${page}` : `/${section}` },
-    ...sharingMetadata({ title, description: getSectionDescription(section), path: page > 1 ? `/${section}?p=${page}` : `/${section}` }),
+    ...sharingMetadata({ title, description, path: page > 1 ? `/${section}?p=${page}` : `/${section}` }),
   };
 }
 
@@ -76,6 +76,7 @@ export default async function SectionPage({ params, searchParams }: Props) {
       <SiteHeader active={basePath} />
 
       <main id="main-content">
+        <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: getSectionName(section) }]} />
         <section
           className="hub-hero"
           style={{ "--sc": secDef?.color } as React.CSSProperties}

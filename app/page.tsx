@@ -90,14 +90,6 @@ export default async function Home() {
   const contextFeatured = home.mosaic[0];
   const contextRows: Story[] = home.mosaic.slice(1, 4);
 
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "العلم",
-    url: "https://alelm.net",
-    description: "منصة إعلام ومعرفة سعودية",
-  };
-
   return (
     <>
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
@@ -138,7 +130,7 @@ export default async function Home() {
             </div>
             {hero.image ? (
               <Link className="sh-lead-media" href={storyHref(hero)} aria-hidden="true" tabIndex={-1}>
-                <Image src={hero.image} alt="" fill sizes="(max-width: 900px) 100vw, 560px" priority />
+                <Image src={hero.image} alt="" fill sizes="(max-width: 900px) 100vw, 560px" quality={(hero.format === "news" || !hero.format) && hero.section !== "infographics" ? 60 : 75} loading="eager" fetchPriority="high" />
               </Link>
             ) : null}
           </section>
@@ -426,11 +418,6 @@ export default async function Home() {
 
       <SeriesSpectrum className="home-spectrum" />
       <SiteFooter />
-
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema).replace(/</g, "\\u003c") }}
-      />
     </>
   );
 }

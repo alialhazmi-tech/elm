@@ -1,4 +1,4 @@
-import { imageVariantSource, IMAGE_WIDTHS } from "@/lib/image-source";
+import { DEFAULT_IMAGE_QUALITY, imageQualityForSource, imageVariantSource, IMAGE_QUALITIES, IMAGE_WIDTHS } from "@/lib/image-source";
 import { createImageVariantCache, resizeEditorialImage } from "@/lib/image-variants";
 import { getStoredImage, isMissingStoredImage } from "@/lib/storage/images";
 import { readSharingResponse } from "@/lib/sharing-image";
@@ -11,16 +11,21 @@ export async function GET(request: Request) {
   const value = params.get("src") ?? "";
   const source = value.length <= 2048 ? imageVariantSource(value) : null;
   const width = Number(params.get("w"));
-  if (!source || !IMAGE_WIDTHS.includes(width)) {
+  const requestedQuality = params.get("q");
+  const quality = requestedQuality === null
+    ? DEFAULT_IMAGE_QUALITY
+    : Number(requestedQuality);
+  if (!source || !IMAGE_WIDTHS.includes(width) || !IMAGE_QUALITIES.includes(quality as (typeof IMAGE_QUALITIES)[number])) {
     return new Response(null, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
   const original = "filename" in source ? `/uploads/${source.filename}` : source.url;
   try {
-    const bytes = await renderCached(`${original}:${width}`, async () => {
+    const effectiveQuality = imageQualityForSource(original, quality);
+    const bytes = await renderCached(`${original}:${width}:q${effectiveQuality}`, async () => {
       const input = "filename" in source
         ? (await getStoredImage(source.filename)).bytes
         : await readSharingResponse(await fetch(source.url, { redirect: "error", signal: AbortSignal.timeout(8000) }));
-      return resizeEditorialImage(input, width);
+      return resizeEditorialImage(input, width, effectiveQuality);
     });
     if (bytes) return new Response(new Uint8Array(bytes), { headers: {
       "Content-Type": "image/webp",
