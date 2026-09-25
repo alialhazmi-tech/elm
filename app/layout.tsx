@@ -12,10 +12,12 @@ import { GooglePageviews } from "@/app/_components/google-pageviews";
 import { sharingMetadata, SITE_DESCRIPTION, SITE_TITLE } from "@/lib/sharing";
 import { siteStructuredData } from "@/lib/seo/schema";
 
+// أبقِ الخطوط المستخدمة في الواجهة العربية وأرقامها اللاتينية محمّلة مبكرًا.
+// حذف preload لا يمنع تنزيلها؛ يؤخر اكتشافها حتى وصول CSS.
 // العناوين بـ Alexandria، والنصوص بـ IBM Plex Sans Arabic،
 // والكوفي لمسميات السلاسل. اللوقو الرسمي أصل هندسي في BrandMark.
 const displayFont = Alexandria({
-  subsets: ["arabic"],
+  subsets: ["arabic", "latin"],
   weight: ["700", "800"],
   variable: "--f-display",
   display: "swap",
@@ -24,7 +26,7 @@ const displayFont = Alexandria({
 // خط النصوص الفرعية في كل المشروع: المتون والنبذ والميتا والتسميات والأزرار.
 // الأوزان الأربعة كلها مستخدمة فعليًا في الأنماط — 600 كان يقفز إلى 700 سابقًا.
 const textFont = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"],
+  subsets: ["arabic", "latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--f-text",
   display: "swap",
@@ -36,7 +38,6 @@ const logoFont = Noto_Kufi_Arabic({
   weight: ["700", "800", "900"],
   variable: "--f-logo",
   display: "swap",
-  preload: false,
 });
 
 export const metadata: Metadata = {

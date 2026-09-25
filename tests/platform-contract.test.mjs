@@ -130,11 +130,11 @@ test("production CSP never leaks the development eval and websocket allowances",
 test("keeps the M0 homepage and social card deliberately small", async () => {
   const html = await readFile(htmlPath);
   // العقد يقيس ما يعبر الشبكة فعلًا — كالميزانية المضغوطة لـJS (قرار المالك 2026-08-28).
-  // سقف 28KiB يشمل النص المقروء للنشرة الصوتية والسلسلة التاسعة وروابط التواصل وميتا المشاركة وكود GTM؛ يبقى قياسًا لحجم النقل المضغوط.
+  // سقف 29KiB يشمل النص المقروء للنشرة الصوتية والسلسلة التاسعة وروابط التواصل وميتا المشاركة وكود GTM وسكيما الموقع وروابط تحميل الخطوط مبكرًا؛ يبقى قياسًا لحجم النقل المضغوط.
   const compressed = gzipSync(html, { level: 6 }).length;
   const { width, height, format, hasAlpha } = await sharp(await readFile(ogPath)).metadata();
 
-  assert.ok(compressed < 28 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 28KiB`);
+  assert.ok(compressed < 29 * 1024, `صفحة الرئيسية ${compressed} بايت مضغوطة والسقف 29KiB`);
   assert.deepEqual({ width, height }, { width: 1200, height: 630 });
   assert.equal(format, "jpeg");
   assert.equal(hasAlpha, false);
