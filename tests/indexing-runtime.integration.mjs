@@ -57,7 +57,7 @@ assert.ok(heroImage,'The homepage hero is rendered as an image');
 assert.match(heroImage,/fetchpriority="high"/i);
 assert.match(heroImage,/loading="eager"/i);
 const fontPreloads=[...home.html.matchAll(/<link\b[^>]*>/gi)].filter(([tag]) => /\brel="preload"/i.test(tag) && /\bas="font"/i.test(tag));
-assert.ok(fontPreloads.length > 0, 'Fonts used in the initial viewport should be discovered before CSS');
+assert.equal(fontPreloads.length, 12, 'Required Arabic/Latin and Kufi fonts should retain their early discovery baseline');
 assert.equal(new Set(fontPreloads.map(([tag])=>tag.match(/href="([^"]+)"/)?.[1])).size,fontPreloads.length,'Font preloads must not duplicate requests');
 assert.ok(structuredData(home.html).some(item=>item['@type']==='WebSite'));
 assert.ok(structuredData(home.html).some(item=>item['@type']==='NewsMediaOrganization'));
