@@ -61,6 +61,9 @@ test("عنوان الحلقة يُنظَّف من تكرار اسم البرنا
   const presented = presentEpisode("العلم | بودكاست عتمة | ما وراء السجون مع ياسر البحري", "عتمة");
   assert.equal(presented.title, "ما وراء السجون");
   assert.equal(presented.guest, "ياسر البحري");
+  const titled = presentEpisode("كيف نصبح قرّاء أفضل؟ مع د. محمد الصبي", "الغبوق");
+  assert.equal(titled.title, "كيف نصبح قرّاء أفضل؟");
+  assert.equal(titled.guest, "د. محمد الصبي");
   assert.equal(formatPodcastDuration("4517"), "1:15:17");
   assert.equal(formatPodcastDuration("23:45"), "23:45");
 });

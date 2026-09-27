@@ -58,14 +58,16 @@ test('invalid ranges cannot open storage and stale If-Range returns the full rep
 
 test('hosted episodes survive RSS failure, sort newest first and defer to matching RSS audio', async (t) => {
   const extra = mergePodcastEpisodes('175839', []);
-  assert.equal(extra.length, 2);
-  assert.match(extra[0].title, /تربية الأطفال/);
+  assert.equal(extra.length, 3);
+  assert.equal(extra[0].title, 'كيف نصبح قرّاء أفضل؟ مع د. محمد الصبي');
+  assert.match(extra[0].description, /القراءة السريعة/);
+  assert.match(extra[1].title, /تربية الأطفال/);
   assert.equal(mergePodcastEpisodes('92137', []).length, 0);
-  const rss = { ...extra[0], title: 'لماذا اصبحت تربية الاطفال مهمة شاقة؟ | د. همام الحارثي في بودكاست الغبوق', audioUrl: 'https://example.com/rss.m4a' };
+  const rss = { ...extra[1], title: 'لماذا اصبحت تربية الاطفال مهمة شاقة؟ | د. همام الحارثي في بودكاست الغبوق', audioUrl: 'https://example.com/rss.m4a' };
   const merged = mergePodcastEpisodes('175839', [rss]);
-  assert.equal(merged.length, 2);
-  assert.equal(merged[0].audioUrl, rss.audioUrl);
+  assert.equal(merged.length, 3);
+  assert.equal(merged[1].audioUrl, rss.audioUrl);
   t.mock.method(globalThis, 'fetch', async () => { throw new Error('RSS unavailable'); });
-  assert.equal((await fetchEpisodes(podcastShowFor('175839'))).length, 2);
+  assert.equal((await fetchEpisodes(podcastShowFor('175839'))).length, 3);
   assert.equal((await fetchEpisodes(podcastShowFor('92137'))).length, 0);
 });

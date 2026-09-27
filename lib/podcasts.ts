@@ -49,6 +49,18 @@ export interface PodcastEpisode {
 export const HOSTED_PODCAST_AUDIO = [
   {
     showId: "175839",
+    filename: "alsubai-reading-b8cb32089f7b.m4a",
+    byteLength: 73160584,
+    sha256: "b8cb32089f7b9cfabe85ed20e879beb1208e4d4db0c93db006024492ab3f4118",
+    sourceUrl: "https://drive.google.com/file/d/1uqCmFFynmV5enli3AQmrIGLGskoGpvdM/view",
+    title: "كيف نصبح قرّاء أفضل؟",
+    guest: "د. محمد الصبي",
+    publishedAt: "2026-09-27T14:43:00.000Z",
+    duration: "4517",
+    description: "القراءة السريعة ليست مجرد تحصيل كلمات أكثر في وقت أقل.. في هذه الحلقة من بودكاست الغبوق، نستكشف مع د. محمد الصبي، عميد الأكاديمية العربية للقراءة السريعة، كيف تتحول القراءة إلى مهارة أكثر كفاءة، وكيف يساعد التدريب على زيادة سرعة القراءة مع الحفاظ على الفهم والاستيعاب.",
+  },
+  {
+    showId: "175839",
     filename: "_UGwxxWb4iw-40add49a9b5e.m4a",
     byteLength: 68374801,
     sha256: "40add49a9b5e5b511173a79f7659638b53a6071e59ee21252f05554331ab09de",
@@ -57,6 +69,7 @@ export const HOSTED_PODCAST_AUDIO = [
     guest: "همام الحارثي",
     publishedAt: "2026-08-18T18:29:50.000Z",
     duration: "4228",
+    description: "",
   },
   {
     showId: "175839",
@@ -68,6 +81,7 @@ export const HOSTED_PODCAST_AUDIO = [
     guest: "طالب خفاجي",
     publishedAt: "2026-07-16T18:10:50.000Z",
     duration: "6662",
+    description: "",
   },
 ] as const;
 
@@ -87,7 +101,7 @@ export function mergePodcastEpisodes(showId: string, rss: PodcastEpisode[]): Pod
       mime: "audio/mp4",
       publishedAt: audio.publishedAt,
       duration: audio.duration,
-      description: "",
+      description: audio.description,
       episode: null,
       season: null,
     }));
@@ -145,7 +159,8 @@ export function presentEpisode(rawTitle: string, showName: string, description =
   guest: string | null;
 } {
   const cleaned = stripShowPrefix(rawTitle, showName);
-  const withGuest = /^(.*?)\s+مع\s+([^|،.]{2,40})$/u.exec(cleaned);
+  // لقب مختصر قبل الاسم («د. فلان») لا يُعد نهاية للاسم.
+  const withGuest = /^(.*?)\s+مع\s+((?:[دأم]\.\s*)?[^|،.]{2,40})$/u.exec(cleaned);
   if (withGuest?.[1]?.trim()) {
     return { title: withGuest[1].trim(), guest: withGuest[2].trim() };
   }
