@@ -5,7 +5,7 @@ const UPLOAD_URL = /^\/uploads\/[0-9a-f-]{36}\.(?:png|jpg|webp)$/i;
 export async function uploadStoryImageFile(
   file: File,
   onProgress: (percent: number | null) => void,
-): Promise<{ url: string }> {
+): Promise<{ url: string; width?: number; height?: number }> {
   if (!file.size) throw new Error("الصورة فارغة. اختر ملف صورة صالحًا.");
   if (file.size > MAX_BYTES) throw new Error("الحد الأقصى للصورة 8 ميغابايت.");
 
@@ -41,7 +41,9 @@ export async function uploadStoryImageFile(
         reject(new Error("لم يصل تأكيد حفظ الصورة. تحقق من مكتبة الوسائط قبل إعادة المحاولة."));
         return;
       }
-      resolve({ url: data.url });
+      // الأبعاد اختيارية: تُمرَّر للمتن فقط حين يعيدها الخادم صالحة.
+      const sized = [data.width, data.height].every((value) => Number.isInteger(value) && value > 0);
+      resolve(sized ? { url: data.url, width: data.width, height: data.height } : { url: data.url });
     };
     const form = new FormData();
     form.append("file", file);

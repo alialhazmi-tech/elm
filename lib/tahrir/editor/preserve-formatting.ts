@@ -2,7 +2,7 @@
  * حفظ التنسيق عند تطبيق نص مقترح من الذكاء (تحرير شامل، تدقيق) على متن HTML.
  *
  * عقد الذكاء يعيد نصًا خالصًا؛ فبدل استبدال المتن بفقرات عارية نُعيد:
- *  - التغريدات المضمّنة (blockquote[data-x-post]) في نهاية المتن بترتيبها الأصلي،
+ *  - الصور المضمّنة (figure) ثم التغريدات المضمّنة (blockquote[data-x-post]) في نهاية المتن بترتيبها الأصلي،
  *  - الروابط التي ما زال نص رابطها يظهر حرفيًا في النص الجديد (على أول ظهور)،
  *  - العناوين الفرعية التي جاءت فقرةً مطابقة نصًا في المقترح.
  * القوائم تُعدّ مفقودة دائمًا لأن بنية بنودها لا تُستنتج من نص خالص.
@@ -26,6 +26,8 @@ export interface FormattingInventory {
   headings: HeadingEntry[];
   lists: number;
   xPosts: string[];
+  /** HTML كل صورة كما هو (منقّى) لتُعاد دون إعادة بنائها. */
+  images: string[];
 }
 
 export interface FormattingLoss {
@@ -33,11 +35,13 @@ export interface FormattingLoss {
   headings: { total: number; preserved: number; lost: number };
   lists: number;
   xPosts: { total: number; preserved: number };
+  images: number;
   /** لا شيء يُفقد ولا شيء يُعاد ترتيبه — لا داعي للتنبيه. */
   none: boolean;
 }
 
 const X_POST = /<blockquote\b[^>]*\bdata-x-post\s*=\s*"([1-9][0-9]{0,19})"[^>]*>[\s\S]*?<\/blockquote>/gi;
+const FIGURE = /<figure\b[^>]*>[\s\S]*?<\/figure>|<img\b[^>]*>/gi;
 const LINK = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
 const HREF = /href\s*=\s*(?:"([^"]*)"|'([^']*)')/i;
 const HEADING = /<h([23])\b[^>]*>([\s\S]*?)<\/h\1>/gi;
@@ -52,10 +56,16 @@ const escapeAttr = (text: string) => escapeHtml(text).replace(/"/g, "&quot;");
 /** ما يحمله المتن الحالي من تنسيق يهم المحرر. */
 export function formattingInventory(html: string): FormattingInventory {
   const xPosts: string[] = [];
-  const withoutPosts = html.replace(X_POST, (_match, id: string) => {
-    xPosts.push(id);
-    return "";
-  });
+  const images: string[] = [];
+  const withoutPosts = html
+    .replace(X_POST, (_match, id: string) => {
+      xPosts.push(id);
+      return "";
+    })
+    .replace(FIGURE, (figure) => {
+      images.push(figure);
+      return "";
+    });
   const links: LinkEntry[] = [];
   for (const match of withoutPosts.matchAll(LINK)) {
     const href = (HREF.exec(match[1])?.[1] ?? HREF.exec(match[1])?.[2] ?? "").trim();
@@ -68,7 +78,7 @@ export function formattingInventory(html: string): FormattingInventory {
     if (text) headings.push({ level: match[1] === "2" ? 2 : 3, text });
   }
   const lists = (withoutPosts.match(LIST) ?? []).length;
-  return { links, headings, lists, xPosts };
+  return { links, headings, lists, xPosts, images };
 }
 
 interface Segment {
@@ -140,16 +150,17 @@ function plan(html: string, newText: string): { html: string; loss: FormattingLo
       return `<${tag}>${content}</${tag}>`;
     })
     .join("");
-  const posts = inventory.xPosts.map(xPostHtml).join("");
+  const posts = inventory.images.join("") + inventory.xPosts.map(xPostHtml).join("");
 
   const loss: FormattingLoss = {
     links: { total: inventory.links.length, preserved: linksPreserved, lost: inventory.links.length - linksPreserved },
     headings: { total: inventory.headings.length, preserved: headingsPreserved, lost: inventory.headings.length - headingsPreserved },
     lists: inventory.lists,
     xPosts: { total: inventory.xPosts.length, preserved: inventory.xPosts.length },
+    images: inventory.images.length,
     none: false,
   };
-  loss.none = loss.links.lost === 0 && loss.headings.lost === 0 && loss.lists === 0 && loss.xPosts.total === 0;
+  loss.none = loss.links.lost === 0 && loss.headings.lost === 0 && loss.lists === 0 && loss.xPosts.total === 0 && loss.images === 0;
   return { html: body + posts, loss };
 }
 
@@ -171,6 +182,7 @@ export function formattingLossLabel(loss: FormattingLoss): string {
   if (loss.headings.lost > 0) parts.push(`${loss.headings.lost} من ${loss.headings.total} عناوين فرعية تُفقد`);
   else if (loss.headings.total > 0) parts.push(`العناوين الفرعية الـ${loss.headings.total} محفوظة`);
   if (loss.lists > 0) parts.push(`${loss.lists} قوائم تتحول إلى فقرات`);
+  if (loss.images > 0) parts.push(`${loss.images} صور تُعاد في نهاية المتن`);
   if (loss.xPosts.total > 0) parts.push(`${loss.xPosts.total} تغريدات تُعاد في نهاية المتن`);
   return parts.join(" · ");
 }

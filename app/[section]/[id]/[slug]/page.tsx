@@ -25,6 +25,7 @@ import { ReadingProgress } from "@/app/_components/reading-progress";
 import { normalizeVideoUrl } from "@/lib/content/video";
 import { formatArticleDek, formatArticleTimestamp, formatReadingMinutes } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
+import { responsiveBodyImages } from "@/lib/content/body-images";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { shortStoryHref, storyHref } from "@/lib/content/types";
@@ -290,7 +291,7 @@ export default async function ArticlePage({ params }: Params) {
                 <div className="article-body" id="article-body">
                   {story.body && looksLikeHtml(story.body) ? (
                     // متن محرر اللوحة الغني — يُنقّى عند العرض أيضًا؛ القاعدة ليست مصدر ثقة.
-                    <BodyHtml html={reading.body} />
+                    <BodyHtml html={responsiveBodyImages(reading.body)} />
                   ) : story.body ? (
                     story.body
                       .split(/\n{2,}/)

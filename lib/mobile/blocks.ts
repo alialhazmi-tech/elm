@@ -2,7 +2,7 @@
  * متن المادة → كتل حتمية للتطبيق الأصلي — وحدة نقية بلا اعتماديات.
  *
  * المدخل هو HTML المنقّى من `sanitizeBodyHtml` (p/br/strong/em/u/s/h2/h3/ul/ol/li/blockquote/a
- * مع `style="text-align:…"` و`data-x-post`)، أو النص الإرثي بلا وسوم (فقرات مفصولة بسطرين).
+ * مع `style="text-align:…"` و`data-x-post`، وfigure/img/figcaption لصور المكتبة)، أو النص الإرثي بلا وسوم (فقرات مفصولة بسطرين).
  * الناتج لا يحمل HTML إطلاقًا: كل كتلة تحمل «مقاطع» نصية بعلامات تنسيق منطقية يُصيّرها
  * SwiftUI بـ AttributedString مباشرة. الوسوم غير المعروفة تُسقط ويبقى نصها.
  */
@@ -23,7 +23,9 @@ export type MobileBlock =
   | { type: "heading"; level: 2 | 3; runs: MobileRun[]; align?: MobileBlockAlign }
   | { type: "list"; ordered: boolean; items: MobileRun[][] }
   | { type: "quote"; runs: MobileRun[]; align?: MobileBlockAlign }
-  | { type: "xpost"; postId: string; runs: MobileRun[] };
+  | { type: "xpost"; postId: string; runs: MobileRun[] }
+  /** صورة من المكتبة بمسار نسبي (`/uploads/…`)؛ العميل يحلّه على أصل الموقع. */
+  | { type: "image"; src: string; alt: string; width?: number; height?: number; caption?: string };
 
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
@@ -72,7 +74,7 @@ export function decodeEntities(text: string): string {
 
 /** هل المتن HTML من محرر اللوحة أم نص فقرات إرثي؟ (نفس اختبار `looksLikeHtml` بلا استيراد.) */
 export function bodyLooksLikeHtml(body: string): boolean {
-  return /<(p|h2|h3|ul|ol|li|blockquote|strong|em|u|s|a|br|b|i|div)\b/i.test(body);
+  return /<(p|h2|h3|ul|ol|li|blockquote|strong|em|u|s|a|br|b|i|div|figure|img)\b/i.test(body);
 }
 
 type Mark = { tag: "strong" | "em" | "u" | "s" | "a"; href?: string };
@@ -82,7 +84,8 @@ type OpenBlock =
   | { kind: "heading"; level: 2 | 3; runs: MobileRun[]; align?: MobileBlockAlign }
   | { kind: "quote"; runs: MobileRun[]; align?: MobileBlockAlign }
   | { kind: "xpost"; postId: string; runs: MobileRun[] }
-  | { kind: "item"; runs: MobileRun[] };
+  | { kind: "item"; runs: MobileRun[] }
+  | { kind: "caption"; runs: MobileRun[] };
 
 type OpenList = { ordered: boolean; items: MobileRun[][] };
 
@@ -103,6 +106,26 @@ function hrefOf(attrs: string): string | undefined {
 function xPostOf(attrs: string): string | undefined {
   const match = /(?:^|\s)data-x-post\s*=\s*(?:"([1-9][0-9]{0,19})"|'([1-9][0-9]{0,19})')/i.exec(attrs);
   return match?.[1] ?? match?.[2];
+}
+
+const IMAGE_SRC = /^\/uploads\/[0-9a-f-]{36}\.(?:png|jpg|webp)$/i;
+
+function attrOf(attrs: string, name: string): string | undefined {
+  const match = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(attrs);
+  return match ? decodeEntities(match[1] ?? match[2] ?? "") : undefined;
+}
+
+function imageOf(attrs: string): Extract<MobileBlock, { type: "image" }> | null {
+  const src = (attrOf(attrs, "src") ?? "").trim();
+  if (!IMAGE_SRC.test(src)) return null;
+  const block: Extract<MobileBlock, { type: "image" }> = { type: "image", src, alt: (attrOf(attrs, "alt") ?? "").trim() };
+  const width = Number(attrOf(attrs, "width"));
+  const height = Number(attrOf(attrs, "height"));
+  if (Number.isInteger(width) && width > 0 && Number.isInteger(height) && height > 0) {
+    block.width = width;
+    block.height = height;
+  }
+  return block;
 }
 
 function sameMarks(a: MobileRun, b: MobileRun): boolean {
@@ -139,6 +162,7 @@ export function htmlToBlocks(html: string): MobileBlock[] {
   const marks: Mark[] = [];
   const lists: OpenList[] = [];
   let open: OpenBlock | null = null;
+  let lastImage: Extract<MobileBlock, { type: "image" }> | null = null;
 
   const closeBlock = () => {
     if (!open) return;
@@ -148,6 +172,12 @@ export function htmlToBlocks(html: string): MobileBlock[] {
     if (block.kind === "item") {
       const list = lists[lists.length - 1];
       if (list && runs) list.items.push(runs);
+      return;
+    }
+    if (block.kind === "caption") {
+      const caption = runs?.map((run) => run.text).join("").trim();
+      if (caption && lastImage) lastImage.caption = caption;
+      else if (runs) blocks.push({ type: "paragraph", runs });
       return;
     }
     if (block.kind === "xpost") {
@@ -248,6 +278,24 @@ export function htmlToBlocks(html: string): MobileBlock[] {
       if (closing) continue;
       const postId = xPostOf(attrs);
       open = postId ? { kind: "xpost", postId, runs: [] } : { kind: "quote", runs: [], align: alignOf(attrs) };
+      continue;
+    }
+    if (tag === "img") {
+      if (closing) continue;
+      closeBlock();
+      const image = imageOf(attrs);
+      if (image) blocks.push(image);
+      lastImage = image;
+      continue;
+    }
+    if (tag === "figure") {
+      closeBlock();
+      if (!closing) lastImage = null;
+      continue;
+    }
+    if (tag === "figcaption") {
+      closeBlock();
+      if (!closing) open = { kind: "caption", runs: [] };
       continue;
     }
     // وسم غير معروف: يُسقط ويبقى نصه.

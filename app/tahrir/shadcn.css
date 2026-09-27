@@ -132,6 +132,7 @@
 .tahrir-body ul { list-style: disc; }
 .tahrir-body ol { list-style: decimal; }
 .tahrir-body li p { margin: 0; }
+.tahrir-body img { max-width: 100%; height: auto; }
 .tahrir-body a { color: var(--t-sug); text-decoration: underline; }
 .tahrir-body p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted-foreground); float: right; height: 0; pointer-events: none; }
 .tahrir-body ::selection { background: color-mix(in srgb, var(--primary) 35%, transparent); }

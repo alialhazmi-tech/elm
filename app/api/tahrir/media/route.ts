@@ -70,5 +70,5 @@ export async function POST(request: Request) {
     session.username,
   );
 
-  return NextResponse.json({ ok: true, id, url });
+  return NextResponse.json({ ok: true, id, url, width: meta.width, height: meta.height });
 }

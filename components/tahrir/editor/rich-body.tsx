@@ -6,11 +6,12 @@
  * الأمان ليس هنا: الخادم ينقّي عند الحفظ والعرض ينقّي ثانية (lib/content/html)، واللصق يمر على المنقّي فورًا.
  */
 
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useLayoutEffect, useRef, useState } from "react";
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import StarterKit from "@tiptap/starter-kit";
+import { Mapping } from "@tiptap/pm/transform";
 import {
   AlignCenterIcon,
   AlignJustifyIcon,
@@ -18,6 +19,7 @@ import {
   BoldIcon,
   Heading2Icon,
   Heading3Icon,
+  ImagePlusIcon,
   ItalicIcon,
   LinkIcon,
   ListIcon,
@@ -41,7 +43,9 @@ import { looksLikeHtml, sanitizeBodyHtml, stripHtmlToText, textToHtml } from "@/
 import { findTextRange, type TextRun } from "@/lib/tahrir/editor/preserve-formatting";
 import { cn } from "@/lib/utils";
 import { xPostIdFrom } from "@/lib/content/video";
+import { uploadStoryImageFile } from "@/lib/story-image-upload";
 import { XPostNode } from "./x-post-node";
+import { BodyImageNode } from "./body-image-node";
 import { LinkHover } from "./link-hover";
 
 export interface RichBodyHandle {
@@ -92,12 +96,21 @@ function textRuns(editor: Editor): TextRun[] {
   return runs;
 }
 
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+type UploadState = { kind: "busy" | "ok" | "err"; text: string } | null;
+
 export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ initial, onChange }, ref) {
   const [words, setWords] = useState(() => countWords(toHtml(initial)));
+  const [upload, setUpload] = useState<UploadState>(null);
+  const uploadingRef = useRef(false);
+  // المحرر يُنشأ مرة واحدة؛ معالجات اللصق والإفلات تقرأ الدالة الحالية عبر المرجع.
+  const insertImageRef = useRef<(file: File, at?: number) => void>(() => {});
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       XPostNode,
+      BodyImageNode,
       StarterKit.configure({
         heading: { levels: [2, 3] },
         code: false,
@@ -117,6 +130,20 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
     editorProps: {
       attributes: { class: "tahrir-body focus:outline-none", dir: "rtl", "aria-label": "نص المادة" },
       transformPastedHTML: (html) => sanitizeBodyHtml(html),
+      handlePaste: (_view, event) => {
+        const file = [...(event.clipboardData?.files ?? [])].find((item) => IMAGE_TYPES.includes(item.type));
+        if (!file) return false;
+        insertImageRef.current(file);
+        return true;
+      },
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved) return false;
+        const file = [...(event.dataTransfer?.files ?? [])].find((item) => IMAGE_TYPES.includes(item.type));
+        if (!file) return false;
+        event.preventDefault();
+        insertImageRef.current(file, view.posAtCoords({ left: event.clientX, top: event.clientY })?.pos);
+        return true;
+      },
     },
     onCreate: ({ editor: instance }) => setWords(countWords(instance.getHTML())),
     onUpdate: ({ editor: instance }) => {
@@ -124,6 +151,42 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
       setWords(countWords(html));
       onChange(html, stripHtmlToText(html));
     },
+  });
+
+  /** يرفع إلى مكتبة الوسائط ثم يُدرج الصورة في موضع المؤشر (أو موضع الإفلات) كما كان عند بدء الرفع. */
+  async function insertImage(file: File, at?: number) {
+    if (!editor || uploadingRef.current) return;
+    if (!IMAGE_TYPES.includes(file.type)) {
+      setUpload({ kind: "err", text: "الصيغ المقبولة: PNG أو JPEG أو WebP." });
+      return;
+    }
+    uploadingRef.current = true;
+    // موضع الإدراج يُثبت قبل الرفع ويُتابَع عبر خريطة التغييرات لو كتب المحرر أثناء الانتظار.
+    const anchor = at ?? editor.state.selection.to;
+    const mapping = new Mapping();
+    const track = ({ transaction }: { transaction: { mapping: Mapping } }) => mapping.appendMapping(transaction.mapping);
+    editor.on("transaction", track);
+    setUpload({ kind: "busy", text: "جارٍ رفع الصورة…" });
+    try {
+      const data = await uploadStoryImageFile(file, (percent) => {
+        setUpload({ kind: "busy", text: percent === null ? "اكتمل الإرسال — جارٍ تأكيد حفظ الصورة…" : `جارٍ رفع الصورة… ${percent}%` });
+      });
+      if (editor.isDestroyed) return;
+      const pos = Math.min(mapping.map(anchor), editor.state.doc.content.size);
+      editor.chain().focus().insertContentAt(pos, {
+        type: "bodyImage",
+        attrs: { src: data.url, caption: "", width: data.width ?? null, height: data.height ?? null },
+      }).run();
+      setUpload({ kind: "ok", text: "رُفعت الصورة وأُدرجت في المتن. أضف تعليقًا أو مصدرًا تحتها عند الحاجة." });
+    } catch (error) {
+      setUpload({ kind: "err", text: error instanceof Error ? error.message : "تعذر رفع الصورة. حاول مرة أخرى." });
+    } finally {
+      editor.off("transaction", track);
+      uploadingRef.current = false;
+    }
+  }
+  useLayoutEffect(() => {
+    insertImageRef.current = insertImage;
   });
 
   const emit = (instance: Editor) => {
@@ -195,7 +258,18 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
 
   return (
     <div className="grid">
-      <Toolbar editor={editor} words={words} />
+      <Toolbar editor={editor} words={words} uploading={upload?.kind === "busy"} onImage={(file) => void insertImage(file)} />
+      {upload ? (
+        <p
+          role={upload.kind === "err" ? "alert" : "status"}
+          className={cn(
+            "border-b px-5 py-2 text-xs",
+            upload.kind === "err" ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground",
+          )}
+        >
+          {upload.text}
+        </p>
+      ) : null}
       <div className="px-5 py-4">
         <EditorContent editor={editor} />
         {editor ? <LinkHover editor={editor} /> : null}
@@ -204,7 +278,12 @@ export const RichBody = forwardRef<RichBodyHandle, Props>(function RichBody({ in
   );
 });
 
-function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
+function Toolbar({ editor, words, uploading, onImage }: {
+  editor: Editor | null;
+  words: number;
+  uploading: boolean;
+  onImage: (file: File) => void;
+}) {
   const state = useEditorState({
     editor,
     selector: ({ editor: instance }) => ({
@@ -230,6 +309,7 @@ function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
   const [postOpen, setPostOpen] = useState(false);
   const [postUrl, setPostUrl] = useState("");
   const [postError, setPostError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
   if (!editor || !state) return <div className="h-11 border-b" />;
 
   const keepSelection = (event: React.MouseEvent) => event.preventDefault();
@@ -297,6 +377,32 @@ function Toolbar({ editor, words }: { editor: Editor | null; words: number }) {
           </form>
         </PopoverContent>
       </Popover>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        disabled={uploading}
+        title="رفع صورة أو إنفوجرافيك وإدراجها في موضع المؤشر"
+        onMouseDown={keepSelection}
+        onClick={() => fileRef.current?.click()}
+      >
+        <ImagePlusIcon />
+        {uploading ? "جارٍ الرفع…" : "إدراج صورة"}
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="sr-only"
+        tabIndex={-1}
+        aria-label="اختيار صورة للمتن"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          // يُفرّغ دائمًا ليعمل اختيار الملف نفسه مرة أخرى بعد خطأ.
+          event.target.value = "";
+          if (file) onImage(file);
+        }}
+      />
       <Separator orientation="vertical" className="mx-1 data-[orientation=vertical]:h-5" />
       <Popover
         open={linkOpen}

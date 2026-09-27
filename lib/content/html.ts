@@ -10,7 +10,11 @@
 const ALLOWED_TAGS = new Set([
   "p", "br", "strong", "b", "em", "i", "u", "s",
   "h2", "h3", "ul", "ol", "li", "blockquote", "a",
+  "figure", "figcaption", "img",
 ]);
+
+/** صور المتن من مكتبة الوسائط وحدها — لا عناوين خارجية ولا data:. */
+export const BODY_IMAGE_SRC = /^\/uploads\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:png|jpg|webp)$/i;
 
 /** وسوم يُسقط محتواها بالكامل لا وسمها فقط. */
 const DROP_CONTENT = /<(script|style|iframe|object|embed|svg|math)\b[\s\S]*?<\/\1\s*>/gi;
@@ -20,6 +24,32 @@ const TAG_ALIASES: Record<string, string> = { b: "strong", i: "em", div: "p" };
 const TOKEN = /<\/?([a-zA-Z][a-zA-Z0-9]*)((?:[^"'>]|"[^"]*"|'[^']*')*)\/?>/g;
 
 const escapeText = (text: string) => text.replace(/</g, "&lt;");
+
+const attrValue = (attrs: string, name: string) => {
+  const match = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, "i").exec(attrs);
+  return match ? (match[1] ?? match[2] ?? "") : null;
+};
+
+const decodeAttr = (value: string) =>
+  value.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+
+const escapeAttr = (value: string) =>
+  value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+/** صورة بمصدر من المكتبة وأبعاد رقمية ونص بديل مهرّب؛ غير ذلك يُسقط. */
+function imageTag(attrs: string): string {
+  const src = (attrValue(attrs, "src") ?? "").trim();
+  if (!BODY_IMAGE_SRC.test(src)) return "";
+  const alt = decodeAttr(attrValue(attrs, "alt") ?? "").replace(/\s+/g, " ").trim().slice(0, 300);
+  const size = (name: string) => {
+    const value = Number(attrValue(attrs, name));
+    return Number.isInteger(value) && value > 0 && value <= 20000 ? ` ${name}="${value}"` : "";
+  };
+  const width = size("width");
+  const height = size("height");
+  const dimensions = width && height ? width + height : "";
+  return `<img src="${src}" alt="${escapeAttr(alt)}"${dimensions} loading="lazy" decoding="async">`;
+}
 
 function openTag(tag: string, attrs: string): string {
   if (tag === "blockquote") {
@@ -58,22 +88,26 @@ export function sanitizeBodyHtml(input: string): string {
 
     const closing = match[0].startsWith("</");
     if (tag === "br") output += "<br>";
+    else if (tag === "img") output += closing ? "" : imageTag(match[2] ?? "");
     else if (closing) output += `</${tag}>`;
     else output += openTag(tag, match[2] ?? "");
   }
   output += escapeText(source.slice(cursor));
 
   return output
+    // إطار بلا صورة صالحة (لصق من موقع آخر) لا يبقى إطارًا فارغًا: تعليقه يصير فقرة.
+    .replace(/<figure>((?:(?!<\/figure>)[\s\S])*)<\/figure>/g, (whole, inner: string) =>
+      inner.includes("<img ") ? whole : inner.replace(/<(\/?)figcaption>/g, "<$1p>"))
     .replace(/<p>(\s|&nbsp;|<br>)*<\/p>/gi, "")
     .trim();
 }
 
 /** هل المتن HTML من محرر اللوحة أم نص فقرات إرثي؟ */
 export function looksLikeHtml(body: string): boolean {
-  return /<(p|h2|h3|ul|ol|li|blockquote|strong|em|u|s|a|br)\b/i.test(body);
+  return /<(p|h2|h3|ul|ol|li|blockquote|strong|em|u|s|a|br|figure|img)\b/i.test(body);
 }
 
-const BLOCK_END = /<\/(p|h2|h3|li|blockquote|ul|ol)>|<br\s*\/?>/gi;
+const BLOCK_END = /<\/(p|h2|h3|li|blockquote|ul|ol|figure|figcaption)>|<br\s*\/?>/gi;
 
 const ENTITIES: Record<string, string> = {
   "&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">",
