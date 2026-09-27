@@ -20,6 +20,7 @@ import { relativeTimeAr } from "@/lib/format";
 import { brandDate, formatReadingMinutes, riyadhDateISO, toLatinDigits } from "@/lib/format";
 import { sectionName, seedContentProvider, seriesDirectory, seriesOf } from "@/lib/content/provider";
 import { storyHref, type Story } from "@/lib/content/types";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 export const revalidate = 120;
 
@@ -80,7 +81,7 @@ export default async function Home() {
   const riverItems = (stream?.river ?? []).map((story) => {
     const series = seriesOf(story);
     return {
-      id: story.id, href: storyHref(story), title: story.title, image: story.image ?? null,
+      id: story.id, href: storyHref(story), title: story.title, image: story.image ?? null, imageFocus: story.imageFocus ?? null,
       kick: series?.name ?? sectionName(story.section), color: series?.color ?? null,
       when: relativeTimeAr(story.publishedAt) ?? "", publishedAt: story.publishedAt ?? null,
       fresh: Boolean(story.publishedAt && stream && stream.pulse.nowMs - Date.parse(story.publishedAt) < 3_600_000),
@@ -137,7 +138,7 @@ export default async function Home() {
             </div>
             {hero.image ? (
               <Link className="sh-lead-media" href={storyHref(hero)} aria-hidden="true" tabIndex={-1}>
-                <Image src={hero.image} alt="" fill sizes="(max-width: 900px) 100vw, 560px" quality={(hero.format === "news" || !hero.format) && hero.section !== "infographics" ? 60 : 75} loading="eager" fetchPriority="high" />
+                <Image src={hero.image} style={imageFocusStyle(hero.imageFocus)} alt="" fill sizes="(max-width: 900px) 100vw, 560px" quality={(hero.format === "news" || !hero.format) && hero.section !== "infographics" ? 60 : 75} loading="eager" fetchPriority="high" />
               </Link>
             ) : null}
           </section>
@@ -238,7 +239,7 @@ export default async function Home() {
                 <article className="sh-ctx-featured" data-story-id={contextFeatured.id}>
                   {contextFeatured.image ? (
                     <Link className="soft-img" href={storyHref(contextFeatured)} aria-hidden="true" tabIndex={-1}>
-                      <Image src={contextFeatured.image} alt="" fill sizes="(max-width: 1040px) 100vw, 560px" />
+                      <Image src={contextFeatured.image} style={imageFocusStyle(contextFeatured.imageFocus)} alt="" fill sizes="(max-width: 1040px) 100vw, 560px" />
                     </Link>
                   ) : null}
                   <Kick story={contextFeatured} />
@@ -252,7 +253,7 @@ export default async function Home() {
                     <article className="sh-ctx-row" key={story.id} data-story-id={story.id}>
                       {story.image ? (
                         <Link className="soft-img" href={storyHref(story)} aria-hidden="true" tabIndex={-1}>
-                          <Image src={story.image} alt="" width={132} height={92} />
+                          <Image src={story.image} style={imageFocusStyle(story.imageFocus)} alt="" width={132} height={92} />
                         </Link>
                       ) : null}
                       <div className="body">
@@ -291,7 +292,7 @@ export default async function Home() {
                         {panel.lead.image ? (
                           <div className="panel-lead-media">
                             <Link className="soft-img" href={storyHref(panel.lead)} aria-hidden="true" tabIndex={-1}>
-                              <Image src={panel.lead.image} alt="" fill sizes="(max-width: 720px) 100vw, 560px" />
+                              <Image src={panel.lead.image} style={imageFocusStyle(panel.lead.imageFocus)} alt="" fill sizes="(max-width: 720px) 100vw, 560px" />
                             </Link>
                             <div className="panel-lead-overlay">
                               <LeadHead story={panel.lead} />

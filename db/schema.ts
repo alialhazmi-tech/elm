@@ -25,6 +25,8 @@ export const stories = pgTable("stories", {
   readingMinutes: integer("reading_minutes").notNull().default(3),
   seriesSlug: text("series_slug"),
   image: text("image"),
+  /** نقطة تركيز الصورة "س% ص%" لـobject-position — null = المنتصف. تُمسح عند تغيير الصورة. */
+  imageFocus: text("image_focus"),
   /** ISO 8601 كما في مصدر ووردبريس — يُحوَّل لكائن تاريخ عند العرض فقط. */
   publishedAt: text("published_at"),
   /** نبض تحريري: يرفع المادة في ترتيب الرئيسية والقسم والسلسلة دون تغيير تاريخ النشر. */

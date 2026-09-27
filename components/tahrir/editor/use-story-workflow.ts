@@ -15,6 +15,8 @@ export interface StorySnapshot {
   slug: string;
   seriesSlug: string | null;
   image: string;
+  /** "س% ص%" أو "" للمنتصف. */
+  imageFocus: string;
   format: string;
   seoTitle: string;
   seoDescription: string;
@@ -100,6 +102,7 @@ export function useStoryWorkflow(options: Options) {
         updateScheduled,
         rescheduleAt,
         image: savedSnapshot.image || null,
+        imageFocus: (savedSnapshot.image && savedSnapshot.imageFocus) || null,
         videoUrl: savedSnapshot.videoUrl.trim() || null,
       });
       if (!result.ok) {

@@ -25,6 +25,7 @@ export type RelatedCard = {
   excerpt: string;
   sectionLabel: string;
   image?: string;
+  imageFocus?: string;
   readingMinutes: number;
   reason?: { code: string; text: string };
 };
@@ -39,6 +40,7 @@ export function toRelatedCard(story: Story, reason?: { code: string; text: strin
     excerpt: story.excerpt,
     sectionLabel: sectionName(story.section),
     image: story.image,
+    imageFocus: story.imageFocus,
     readingMinutes: story.readingMinutes,
     reason,
   };

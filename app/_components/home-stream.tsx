@@ -8,12 +8,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 export interface RiverItem {
   id: string;
   href: string;
   title: string;
   image: string | null;
+  imageFocus?: string | null;
   kick: string;
   color: string | null;
   when: string;
@@ -71,7 +73,7 @@ export function NewsRiver({ initial, exclude }: { initial: RiverItem[]; exclude:
             <article key={item.id} className="river-card" role="listitem" data-story-id={item.id}>
               {item.image ? (
                 <Link className="river-img" href={item.href} tabIndex={-1} aria-hidden="true">
-                  <Image src={item.image} alt="" width={84} height={84} />
+                  <Image src={item.image} style={imageFocusStyle(item.imageFocus)} alt="" width={84} height={84} />
                 </Link>
               ) : null}
               <div className="river-body">

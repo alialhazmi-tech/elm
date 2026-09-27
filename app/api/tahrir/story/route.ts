@@ -49,6 +49,7 @@ async function saveStory(request: Request) {
     slug?: string;
     seriesSlug?: string | null;
     image?: string | null;
+    imageFocus?: string | null;
     format?: string;
     seoTitle?: string;
     seoDescription?: string;
@@ -76,7 +77,7 @@ async function saveStory(request: Request) {
   if (!input || typeof input.title !== "string" || (!input.title.trim() && !automatic)) {
     return NextResponse.json({ error: "العنوان مطلوب." }, { status: 400 });
   }
-  for (const field of ["id", "excerpt", "body", "section", "slug", "seriesSlug", "image", "format", "seoTitle", "seoDescription", "videoUrl"] as const) {
+  for (const field of ["id", "excerpt", "body", "section", "slug", "seriesSlug", "image", "imageFocus", "format", "seoTitle", "seoDescription", "videoUrl"] as const) {
     if (input[field] != null && typeof input[field] !== "string") return NextResponse.json({ error: "مدخل غير صالح." }, { status: 400 });
   }
   if (input.title.length > 500 || (input.body?.length ?? 0) > 200_000) return NextResponse.json({ error: "تجاوز النص الحد المسموح." }, { status: 413 });
@@ -148,6 +149,7 @@ async function saveStory(request: Request) {
       slug,
       seriesSlug: input.seriesSlug || null,
       image: input.image?.trim() || null,
+      ...(input.imageFocus !== undefined ? { imageFocus: input.imageFocus } : {}),
       format: isJak ? "jakalelm" : (input.format?.trim() || undefined),
       seoTitle: input.seoTitle?.trim().slice(0, 90) ?? "",
       seoDescription: input.seoDescription?.trim().slice(0, 200) ?? "",

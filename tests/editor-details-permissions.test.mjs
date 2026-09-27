@@ -16,6 +16,7 @@ test('details expose pinning and scheduling independently from publishing, with 
     '@/components/ui/switch': 'export const Switch="switch"',
     '@/components/ui/select': 'export const Select="select",SelectContent="options",SelectItem="option",SelectTrigger="trigger",SelectValue="value"',
     '@/components/content/video-player': 'export const VideoPlayer="video"',
+    './image-focus-picker': 'export const ImageFocusPicker="image-focus-picker"',
   };
   try {
     await build({ entryPoints: ['components/tahrir/editor/details-panel.tsx'], outfile: `${directory}/subject.mjs`, bundle: true, platform: 'node', format: 'esm', packages: 'external', jsx: 'automatic', plugins: [{ name: 'details-fixture', setup(builder) {

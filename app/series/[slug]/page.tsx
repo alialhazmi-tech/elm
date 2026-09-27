@@ -15,6 +15,7 @@ import { headlineStat } from "@/lib/content/headline-stat";
 import { storyHref } from "@/lib/content/types";
 import { formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
 import { archiveMetaDescription } from "@/lib/seo/metadata";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 export const revalidate = 300;
 
@@ -127,7 +128,7 @@ export default async function SeriesPage({ params, searchParams }: Props) {
           </div>
           {lead?.image ? (
             <Link className="sx-hero-media soft-img" href={storyHref(lead)} aria-hidden="true" tabIndex={-1}>
-              <Image src={lead.image} alt="" fill sizes="(max-width: 1040px) 100vw, 560px" priority />
+              <Image src={lead.image} style={imageFocusStyle(lead.imageFocus)} alt="" fill sizes="(max-width: 1040px) 100vw, 560px" priority />
             </Link>
           ) : null}
         </section>

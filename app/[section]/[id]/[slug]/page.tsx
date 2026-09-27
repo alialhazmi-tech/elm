@@ -40,6 +40,7 @@ import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { articleMetaDescription, cleanMetadataTitle } from "@/lib/seo/metadata";
 import { articleStructuredData, PUBLIC_SITE_URL } from "@/lib/seo/schema";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 export const revalidate = 300;
 /** الأرشيف 29 ألف مادة: يُبنى مسبقًا أحدثها فقط والبقية ISR عند الطلب. */
@@ -260,7 +261,7 @@ export default async function ArticlePage({ params }: Params) {
                 <figure className="sa-media">
                   <div className="soft-img">
                     <Image
-                      src={story.image}
+                      src={story.image} style={imageFocusStyle(story.imageFocus)}
                       alt={story.title}
                       fill
                       sizes="(max-width: 1040px) 100vw, 600px"
@@ -346,7 +347,7 @@ export default async function ArticlePage({ params }: Params) {
                       <Link key={item.id} href={storyHref(item)}>
                         {index === 0 && item.image ? (
                           <span className="soft-img">
-                            <Image src={item.image} alt="" fill sizes="360px" />
+                            <Image src={item.image} style={imageFocusStyle(item.imageFocus)} alt="" fill sizes="360px" />
                           </span>
                         ) : null}
                         <h3>{item.title}</h3>

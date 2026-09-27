@@ -42,6 +42,7 @@ import {
   toggleNewsletter,
   togglePersonalization,
 } from "./actions";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 const navigation = [
   { id: "overview", label: "نظرة عامة", icon: LayoutGrid },
@@ -102,7 +103,7 @@ function StoryList({
             >
               {story.image ? (
                 <Image
-                  src={story.image}
+                  src={story.image} style={imageFocusStyle(story.imageFocus)}
                   alt=""
                   fill
                   sizes="(max-width:600px) 78px, 108px"
