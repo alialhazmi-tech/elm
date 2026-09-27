@@ -1,15 +1,21 @@
-import { HOSTED_PODCAST_AUDIO } from "./podcasts.ts";
+import type { HostedPodcastAudio } from "./podcasts.ts";
 
 type OpenAudio = (key: string, range: string | undefined, signal: AbortSignal) => Promise<ReadableStream>;
+type ServedAudio = Pick<HostedPodcastAudio, "objectKey" | "byteLength" | "etag" | "mime">;
 
-/** بث مجزأ من المخزن؛ لا تُحمّل الحلقة كاملة في ذاكرة خادم Next. */
-export async function servePodcastAudio(request: Request, filename: string, openAudio: OpenAudio): Promise<Response> {
-  const audio = HOSTED_PODCAST_AUDIO.find((item) => item.filename === filename);
-  if (!audio) return new Response(null, { status: 404 });
+/** اسم ملف حلقة كما يصل في /podcast-audio/<filename> — لا مسارات ولا امتدادات أخرى. */
+export const PODCAST_AUDIO_FILENAME = /^[A-Za-z0-9_-]{1,80}\.(?:m4a|mp3)$/;
+
+/**
+ * بث مجزأ من المخزن؛ لا تُحمّل الحلقة كاملة في ذاكرة خادم Next.
+ * المستدعي يحسم الحلقة من الكتالوج (القاعدة)؛ غيابها أو إخفاؤها يعطي 404.
+ */
+export async function servePodcastAudio(request: Request, audio: ServedAudio | null, openAudio: OpenAudio): Promise<Response> {
+  if (!audio) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
   const size = audio.byteLength;
-  const etag = `"${audio.sha256}"`;
+  const etag = `"${audio.etag}"`;
   const headers = new Headers({
-    "Content-Type": "audio/mp4",
+    "Content-Type": audio.mime,
     "Content-Length": String(size),
     "Accept-Ranges": "bytes",
     "Cache-Control": "public, max-age=31536000, immutable",
@@ -53,7 +59,7 @@ export async function servePodcastAudio(request: Request, filename: string, open
     headers.set("Content-Length", String(end - start + 1));
   }
   try {
-    const stream = await openAudio(`podcasts/alghabouq/${audio.filename}`, range, request.signal);
+    const stream = await openAudio(audio.objectKey, range, request.signal);
     return new Response(stream, { status: range ? 206 : 200, headers });
   } catch {
     return new Response(null, { status: 502, headers: { "Cache-Control": "no-store" } });

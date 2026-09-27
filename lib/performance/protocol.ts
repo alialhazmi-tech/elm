@@ -7,6 +7,7 @@ export function publicPerformanceRoute(pathname: string): string | null {
   const parts = path.split('/').slice(1);
   if (parts[0] === 'keywords' && parts.length === 2 && parts[1]) return '/keywords/[keyword]';
   if (parts[0] === 'series' && parts.length === 2 && series.has(parts[1])) return path;
+  if (parts[0] === 'podcasts' && parts.length === 2 && /^[a-z][a-z0-9-]{0,39}$/.test(parts[1])) return '/podcasts/[slug]';
   if (!sections.has(parts[0])) return null;
   if (parts.length === 1) return path;
   if (parts.length >= 2 && parts.length <= 3 && /^(?:\d{1,12}|[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})$/i.test(parts[1])) return '/' + parts[0] + '/' + parts[1];
@@ -59,7 +60,7 @@ export function performanceInput(input: unknown, now = Date.now(), routeFor: (pa
 /** Dashboard telemetry carries page classes only, never IDs, search terms or account paths. */
 export function dashboardPerformanceRoute(pathname: string): string | null {
   const path = pathname.split(/[?#]/, 1)[0].replace(/\/$/, "");
-  if (["/tahrir", "/tahrir/tasks", "/tahrir/help", "/tahrir/stories", "/tahrir/media", "/tahrir/series", "/tahrir/schedule", "/tahrir/stats", "/tahrir/infographics", "/tahrir/ai-images", "/tahrir/ai-settings", "/tahrir/settings", "/tahrir/audit", "/tahrir/members", "/tahrir/admin-accounts", "/tahrir/roles"].includes(path)) return path;
-  if (/^\/tahrir\/(editor|history|jak)\/[^/]+$/.test(path)) return `/tahrir/${path.split("/")[2]}/[id]`;
+  if (["/tahrir", "/tahrir/tasks", "/tahrir/help", "/tahrir/stories", "/tahrir/media", "/tahrir/podcasts", "/tahrir/series", "/tahrir/schedule", "/tahrir/stats", "/tahrir/infographics", "/tahrir/ai-images", "/tahrir/ai-settings", "/tahrir/settings", "/tahrir/audit", "/tahrir/members", "/tahrir/admin-accounts", "/tahrir/roles"].includes(path)) return path;
+  if (/^\/tahrir\/(editor|history|jak|podcasts)\/[^/]+$/.test(path)) return `/tahrir/${path.split("/")[2]}/[id]`;
   return null;
 }

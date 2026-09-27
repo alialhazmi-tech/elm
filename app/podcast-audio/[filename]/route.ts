@@ -1,12 +1,16 @@
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { servePodcastAudio } from "@/lib/podcast-audio";
+import { PODCAST_AUDIO_FILENAME, servePodcastAudio } from "@/lib/podcast-audio";
+import { findHostedAudio } from "@/lib/podcast-catalog";
 import { resolveStorageConfig } from "@/lib/storage/images";
 
 export const runtime = "nodejs";
 let client: S3Client | undefined;
 
 async function respond(request: Request, { params }: { params: Promise<{ filename: string }> }) {
-  return servePodcastAudio(request, (await params).filename, async (key, range, signal) => {
+  const { filename } = await params;
+  // الاسم يُفحص قبل الكتالوج: لا مسارات ولا استعلام لأسماء عشوائية.
+  const audio = PODCAST_AUDIO_FILENAME.test(filename) ? await findHostedAudio(filename) : null;
+  return servePodcastAudio(request, audio, async (key, range, signal) => {
     const config = resolveStorageConfig();
     client ??= new S3Client({
       endpoint: config.endpoint,

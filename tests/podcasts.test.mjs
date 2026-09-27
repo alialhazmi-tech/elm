@@ -59,6 +59,8 @@ test("عنوان الحلقة يُنظَّف من تكرار اسم البرنا
   assert.equal(stripShowPrefix("العلم | بودكاست عتمة | فلسفة الحب", "عتمة"), "فلسفة الحب");
   assert.equal(stripShowPrefix("بودكاست عتمة | اللغة و البنية النفسية", "عتمة"), "اللغة و البنية النفسية");
   const presented = presentEpisode("العلم | بودكاست عتمة | ما وراء السجون مع ياسر البحري", "عتمة");
+  // الضيف المعروف من اللوحة لا يُفكك من العنوان — «أ.د.» لا تكسره.
+  assert.deepEqual(presentEpisode("قراءة في المستقبل", "الغبوق", "", "أ.د. فلان"), { title: "قراءة في المستقبل", guest: "أ.د. فلان" });
   assert.equal(presented.title, "ما وراء السجون");
   assert.equal(presented.guest, "ياسر البحري");
   const titled = presentEpisode("كيف نصبح قرّاء أفضل؟ مع د. محمد الصبي", "الغبوق");
@@ -70,13 +72,16 @@ test("عنوان الحلقة يُنظَّف من تكرار اسم البرنا
 
 test("قالب المقال يشغّل الحلقات بمشغل «الطبعة التحريرية» وسياسة الأمان تسمح ببثها", async () => {
   const { readFile } = await import("node:fs/promises");
-  const [page, player, dock, config] = await Promise.all([
+  const [article, view, player, dock, config] = await Promise.all([
     readFile(new URL("../app/[section]/[id]/[slug]/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/_components/podcast-show-view.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/_components/podcast-player.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/_components/podcast-dock.tsx", import.meta.url), "utf8"),
     Promise.resolve(contentSecurityPolicy(false)),
   ]);
-  assert.match(page, /story\.format === "podcasts"/u);
+  assert.match(article, /story\.format === "podcasts"/u);
+  assert.match(article, /<PodcastShowView/u, "قالب المقال لا يعرض صفحة البرنامج المشتركة");
+  const page = article + view;
   assert.match(page, /<PodcastPlayer/u, "مكون المشغل غير مستخدم في القالب");
   assert.match(page, /podcast-show/u, "غلاف البرنامج الضخم ما زال قالب المقال");
   assert.match(page, /presentEpisode/u);

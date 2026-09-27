@@ -7,9 +7,13 @@
  */
 
 export interface PodcastShow {
-  /** معرّف مادة البرنامج في stories — الرابط المقدس نفسه. */
-  storyId: string;
+  /** معرّف لاتيني ثابت — رابط الصفحة /podcasts/<id> للبرنامج الذي لا مادة له. */
+  id: string;
+  /** مادة صفحة البرنامج القديمة (الرابط المقدس)؛ null لبرنامج أُنشئ من اللوحة. */
+  storyId: string | null;
   name: string;
+  /** وصف البرنامج؛ فارغ في البرامج القديمة فيُستعمل ملخص مادتها. */
+  description: string;
   /** غلاف معتمد للبرنامج؛ عند غيابه تُستخدم صورة المادة. */
   cover?: string;
   /** طابع البرنامج اللوني — من غلافه، للمشغل والبطاقات. */
@@ -21,16 +25,24 @@ export interface PodcastShow {
 
 export const ALELM_YOUTUBE = "https://www.youtube.com/c/alelmmedia";
 
-/** برامج الموقع القديم؛ رُبط الغبوق بخلاصته الصوتية المتحققة في 2026-09-07. */
+/**
+ * بذرة البرامج — مطابقة لترحيل 0020؛ تُقرأ فقط حين لا تتوفر قاعدة (البناء والاختبارات)
+ * أو فشل الاستعلام. رُبط الغبوق بخلاصته الصوتية المتحققة في 2026-09-07.
+ */
 export const PODCAST_SHOWS: PodcastShow[] = [
-  { storyId: "175839", name: "الغبوق", cover: "/podcasts/alghabouq.jpg", accent: "#b35c1e", feedUrl: "https://media.rss.com/alghabouk/feed.xml", youtube: ALELM_YOUTUBE },
-  { storyId: "92137", name: "ملامح", accent: "#2B5C9E", feedUrl: "https://media.rss.com/malameh/feed.xml", youtube: ALELM_YOUTUBE },
-  { storyId: "71148", name: "عتمة", accent: "#c9932e", feedUrl: "https://media.rss.com/atmahpodcast/feed.xml", youtube: ALELM_YOUTUBE },
-  { storyId: "70190", name: "تقرير", accent: "#1f8f8a", feedUrl: "https://media.rss.com/alelmbodcast/feed.xml", youtube: ALELM_YOUTUBE },
+  { id: "alghabouq", storyId: "175839", name: "الغبوق", description: "", cover: "/podcasts/alghabouq.jpg", accent: "#b35c1e", feedUrl: "https://media.rss.com/alghabouk/feed.xml", youtube: ALELM_YOUTUBE },
+  { id: "malameh", storyId: "92137", name: "ملامح", description: "", accent: "#2B5C9E", feedUrl: "https://media.rss.com/malameh/feed.xml", youtube: ALELM_YOUTUBE },
+  { id: "atmah", storyId: "71148", name: "عتمة", description: "", accent: "#c9932e", feedUrl: "https://media.rss.com/atmahpodcast/feed.xml", youtube: ALELM_YOUTUBE },
+  { id: "taqrir", storyId: "70190", name: "تقرير", description: "", accent: "#1f8f8a", feedUrl: "https://media.rss.com/alelmbodcast/feed.xml", youtube: ALELM_YOUTUBE },
 ];
 
 export function podcastShowFor(storyId: string): PodcastShow | undefined {
   return PODCAST_SHOWS.find((show) => show.storyId === storyId);
+}
+
+/** صفحة البرنامج: مادته القديمة إن وُجدت (يمررها المستدعي)، وإلا /podcasts/<id>. */
+export function podcastShowPath(show: Pick<PodcastShow, "id">): string {
+  return `/podcasts/${show.id}`;
 }
 
 export interface PodcastEpisode {
@@ -43,69 +55,112 @@ export interface PodcastEpisode {
   description: string;
   episode: string | null;
   season: string | null;
+  /** ضيف معروف مسبقًا (الحلقات المرفوعة)؛ null لحلقات الخلاصة فيُستخرج من العنوان. */
+  guest?: string | null;
 }
 
-/** ملفات أصلية من مجلد المالك؛ الاسم يتضمن بصمة المحتوى للكاش الدائم. */
-export const HOSTED_PODCAST_AUDIO = [
+/** حلقة ملفها في مخزن الموقع — من جدول podcast_episodes أو بذرته أدناه. */
+export interface HostedPodcastAudio {
+  id: string;
+  showId: string;
+  filename: string;
+  objectKey: string;
+  mime: string;
+  byteLength: number;
+  /** بصمة المحتوى للـETag: sha256 للملفات القديمة، وETag المخزن للمرفوعة من اللوحة. */
+  etag: string;
+  title: string;
+  guest: string;
+  description: string;
+  publishedAt: string;
+  durationSeconds: number | null;
+  sourceUrl: string | null;
+  visible: boolean;
+}
+
+/** بذرة الحلقات المستضافة — مطابقة لترحيل 0020؛ ملفات أصلية من مجلد المالك. */
+export const HOSTED_PODCAST_AUDIO: HostedPodcastAudio[] = [
   {
-    showId: "175839",
+    id: "hosted-alsubai-reading",
+    showId: "alghabouq",
     filename: "alsubai-reading-b8cb32089f7b.m4a",
+    objectKey: "podcasts/alghabouq/alsubai-reading-b8cb32089f7b.m4a",
+    mime: "audio/mp4",
     byteLength: 73160584,
-    sha256: "b8cb32089f7b9cfabe85ed20e879beb1208e4d4db0c93db006024492ab3f4118",
+    etag: "b8cb32089f7b9cfabe85ed20e879beb1208e4d4db0c93db006024492ab3f4118",
     sourceUrl: "https://drive.google.com/file/d/1uqCmFFynmV5enli3AQmrIGLGskoGpvdM/view",
     title: "كيف نصبح قرّاء أفضل؟",
     guest: "د. محمد الصبي",
     publishedAt: "2026-09-27T14:43:00.000Z",
-    duration: "4517",
+    durationSeconds: 4517,
     description: "القراءة السريعة ليست مجرد تحصيل كلمات أكثر في وقت أقل.. في هذه الحلقة من بودكاست الغبوق، نستكشف مع د. محمد الصبي، عميد الأكاديمية العربية للقراءة السريعة، كيف تتحول القراءة إلى مهارة أكثر كفاءة، وكيف يساعد التدريب على زيادة سرعة القراءة مع الحفاظ على الفهم والاستيعاب.",
+    visible: true,
   },
   {
-    showId: "175839",
+    id: "hosted-_UGwxxWb4iw",
+    showId: "alghabouq",
     filename: "_UGwxxWb4iw-40add49a9b5e.m4a",
+    objectKey: "podcasts/alghabouq/_UGwxxWb4iw-40add49a9b5e.m4a",
+    mime: "audio/mp4",
     byteLength: 68374801,
-    sha256: "40add49a9b5e5b511173a79f7659638b53a6071e59ee21252f05554331ab09de",
+    etag: "40add49a9b5e5b511173a79f7659638b53a6071e59ee21252f05554331ab09de",
     sourceUrl: "https://www.youtube.com/watch?v=_UGwxxWb4iw",
     title: "لماذا أصبحت تربية الأطفال مهمة شاقة؟",
     guest: "همام الحارثي",
     publishedAt: "2026-08-18T18:29:50.000Z",
-    duration: "4228",
+    durationSeconds: 4228,
     description: "",
+    visible: true,
   },
   {
-    showId: "175839",
+    id: "hosted-KP5TyvDbRBY",
+    showId: "alghabouq",
     filename: "KP5TyvDbRBY-46d745aa20f7.m4a",
+    objectKey: "podcasts/alghabouq/KP5TyvDbRBY-46d745aa20f7.m4a",
+    mime: "audio/mp4",
     byteLength: 107746799,
-    sha256: "46d745aa20f7da08ef9a8117f6beb9c3ef03401f3db0c39909014ad6bda8a6e2",
+    etag: "46d745aa20f7da08ef9a8117f6beb9c3ef03401f3db0c39909014ad6bda8a6e2",
     sourceUrl: "https://www.youtube.com/watch?v=KP5TyvDbRBY",
     title: "العقل الذي لا نعرفه.. كيف يصنع أفكارنا وسلوكنا؟",
     guest: "طالب خفاجي",
     publishedAt: "2026-07-16T18:10:50.000Z",
-    duration: "6662",
+    durationSeconds: 6662,
     description: "",
+    visible: true,
   },
-] as const;
+];
+
+export function seedHostedFor(showId: string): HostedPodcastAudio[] {
+  return HOSTED_PODCAST_AUDIO.filter((audio) => audio.showId === showId);
+}
 
 function normalizedEpisodeTitle(title: string): string {
   return title.normalize("NFKD").replace(/[\u064b-\u065f\u0670\u0640]/g, "")
     .replace(/[^\p{L}\p{N}]/gu, "");
 }
 
-/** تفضيل RSS إذا نُشرت الحلقة فيه لاحقًا، مع استمرار الملفات الأصلية عند تعطله. */
-export function mergePodcastEpisodes(showId: string, rss: PodcastEpisode[]): PodcastEpisode[] {
-  const hosted = HOSTED_PODCAST_AUDIO.filter((audio) => audio.showId === showId)
+/** الحلقة المستضافة بصيغة الخلاصة، وضيفها حقل مستقل لا يُفكك من العنوان. */
+export function hostedEpisode(audio: HostedPodcastAudio): PodcastEpisode {
+  return {
+    title: audio.title,
+    guest: audio.guest || null,
+    audioUrl: `/podcast-audio/${audio.filename}`,
+    mime: audio.mime,
+    publishedAt: audio.publishedAt,
+    duration: audio.durationSeconds ? String(audio.durationSeconds) : null,
+    description: audio.description,
+    episode: null,
+    season: null,
+  };
+}
+
+/** تفضيل RSS إذا نُشرت الحلقة فيه لاحقًا، مع استمرار الملفات المستضافة عند تعطله. */
+export function mergePodcastEpisodes(rss: PodcastEpisode[], hosted: readonly HostedPodcastAudio[]): PodcastEpisode[] {
+  const own = hosted.filter((audio) => audio.visible)
     .filter((audio) => !rss.some((episode) =>
       normalizedEpisodeTitle(episode.title).includes(normalizedEpisodeTitle(audio.title))))
-    .map((audio): PodcastEpisode => ({
-      title: `${audio.title} مع ${audio.guest}`,
-      audioUrl: `/podcast-audio/${audio.filename}`,
-      mime: "audio/mp4",
-      publishedAt: audio.publishedAt,
-      duration: audio.duration,
-      description: audio.description,
-      episode: null,
-      season: null,
-    }));
-  return [...rss, ...hosted]
+    .map(hostedEpisode);
+  return [...rss, ...own]
     .sort((a, b) => (b.publishedAt ?? "").localeCompare(a.publishedAt ?? ""))
     .slice(0, EPISODES_LIMIT);
 }
@@ -154,11 +209,12 @@ export function formatPodcastDuration(raw: string | null): string | null {
   return value;
 }
 
-export function presentEpisode(rawTitle: string, showName: string, description = ""): {
+export function presentEpisode(rawTitle: string, showName: string, description = "", knownGuest?: string | null): {
   title: string;
   guest: string | null;
 } {
   const cleaned = stripShowPrefix(rawTitle, showName);
+  if (knownGuest) return { title: cleaned, guest: knownGuest };
   // لقب مختصر قبل الاسم («د. فلان») لا يُعد نهاية للاسم.
   const withGuest = /^(.*?)\s+مع\s+((?:[دأم]\.\s*)?[^|،.]{2,40})$/u.exec(cleaned);
   if (withGuest?.[1]?.trim()) {
@@ -206,17 +262,25 @@ export function parseRssEpisodes(xml: string): PodcastEpisode[] {
 
 const EPISODES_LIMIT = 30;
 
-/** حلقات برنامج — كاش RSS عشر دقائق مع الحلقات المحفوظة في مخزن الموقع. */
-export async function fetchEpisodes(show: PodcastShow): Promise<PodcastEpisode[]> {
-  if (!show.feedUrl) return mergePodcastEpisodes(show.storyId, []);
+/** حلقات خلاصة RSS — كاش عشر دقائق؛ أي فشل يعطي قائمة فارغة لا خطأ. */
+export async function fetchRssEpisodes(feedUrl: string | null): Promise<PodcastEpisode[]> {
+  if (!feedUrl) return [];
   try {
-    const response = await fetch(show.feedUrl, {
+    const response = await fetch(feedUrl, {
       headers: { "User-Agent": "alelm-platform/1.0 (+https://alelm.net)" },
       next: { revalidate: 600 },
     } as RequestInit);
-    if (!response.ok) return mergePodcastEpisodes(show.storyId, []);
-    return mergePodcastEpisodes(show.storyId, parseRssEpisodes(await response.text()));
+    if (!response.ok) return [];
+    return parseRssEpisodes(await response.text());
   } catch {
-    return mergePodcastEpisodes(show.storyId, []);
+    return [];
   }
+}
+
+/** حلقات برنامج: الخلاصة مع الحلقات المستضافة (من القاعدة يمررها المستدعي، وإلا البذرة). */
+export async function fetchEpisodes(
+  show: PodcastShow,
+  hosted: readonly HostedPodcastAudio[] = seedHostedFor(show.id),
+): Promise<PodcastEpisode[]> {
+  return mergePodcastEpisodes(await fetchRssEpisodes(show.feedUrl), hosted);
 }

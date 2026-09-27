@@ -452,3 +452,51 @@ export const visitorStoryInteractions = pgTable("visitor_story_interactions", {
   check("visitor_interactions_like", sql`${table.liked} in (0, 1)`),
   check("visitor_interactions_answer", sql`${table.closingAnswer} in (0, 1)`),
 ]);
+
+/** برامج البودكاست — كيان مستقل عن المواد؛ البرامج القديمة تحتفظ بمادة صفحتها في story_id. */
+export const podcastShows = pgTable("podcast_shows", {
+  /** رابط الصفحة /podcasts/<id> — لاتيني ثابت بعد الإنشاء. */
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull().default(""),
+  cover: text("cover"),
+  accent: text("accent").notNull(),
+  feedUrl: text("feed_url"),
+  youtube: text("youtube").notNull(),
+  /** مادة الصفحة القديمة؛ null لبرنامج صفحته /podcasts/<id>. */
+  storyId: text("story_id"),
+  visible: integer("visible").notNull().default(1),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [
+  uniqueIndex("podcast_shows_story_idx").on(table.storyId),
+  check("podcast_shows_visible", sql`${table.visible} in (0, 1)`),
+]);
+
+/** حلقات مرفوعة من اللوحة (أو مستضافة يدويًا قبلها) — ملفها في المخزن تحت object_key. */
+export const podcastEpisodes = pgTable("podcast_episodes", {
+  id: text("id").primaryKey(),
+  showId: text("show_id").notNull().references(() => podcastShows.id),
+  title: text("title").notNull(),
+  guest: text("guest").notNull().default(""),
+  description: text("description").notNull().default(""),
+  /** اسم الملف في /podcast-audio/<filename> — فريد وثابت فيُخزَّن مؤقتًا للأبد. */
+  filename: text("filename").notNull(),
+  objectKey: text("object_key").notNull(),
+  mime: text("mime").notNull(),
+  byteLength: integer("byte_length").notNull(),
+  /** بصمة المحتوى للـETag: sha256 للملفات القديمة، وETag المخزن للمرفوعة. */
+  etag: text("etag").notNull(),
+  durationSeconds: integer("duration_seconds"),
+  publishedAt: text("published_at").notNull(),
+  visible: integer("visible").notNull().default(1),
+  sourceUrl: text("source_url"),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull(),
+}, (table) => [
+  uniqueIndex("podcast_episodes_filename_idx").on(table.filename),
+  index("podcast_episodes_show_time_idx").on(table.showId, table.publishedAt.desc()),
+  check("podcast_episodes_visible", sql`${table.visible} in (0, 1)`),
+]);

@@ -186,7 +186,7 @@ test("التنقل: عناوين أمان الحساب وسجل النسخ، و�
             b.onLoad({ filter: /.*/, namespace: "fixture" }, () => ({
               loader: "js",
               contents: 'export default new Proxy({}, { get: (_t, name) => () => name });' +
-                "export const " + ["BookOpenIcon","ClipboardListIcon","BarChart3Icon","CalendarClockIcon","CheckCheckIcon","FileClockIcon","ImagesIcon","LayoutDashboardIcon","LayoutGridIcon","LayersIcon","ListIcon","PenLineIcon","ShieldCheckIcon","UsersIcon","ChartNoAxesColumnIcon","SparklesIcon","Settings2Icon","SlidersHorizontalIcon"].map((n) => `${n}=()=>"${n}"`).join(","),
+                "export const " + ["BookOpenIcon","ClipboardListIcon","BarChart3Icon","CalendarClockIcon","CheckCheckIcon","FileClockIcon","ImagesIcon","LayoutDashboardIcon","LayoutGridIcon","LayersIcon","ListIcon","MicIcon","PenLineIcon","ShieldCheckIcon","UsersIcon","ChartNoAxesColumnIcon","SparklesIcon","Settings2Icon","SlidersHorizontalIcon"].map((n) => `${n}=()=>"${n}"`).join(","),
             }));
           },
         },

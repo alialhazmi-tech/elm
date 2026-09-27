@@ -45,6 +45,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
       { key: "series.visibility", label: "إظهار وإخفاء السلاسل", description: "مفتاح ظهور السلاسل المتقاعدة." },
       { key: "media.upload", label: "رفع الوسائط", description: "رفع الصور إلى المكتبة." },
       { key: "media.rights", label: "حقوق الوسائط", description: "توثيق حقوق الصور أو سحبه." },
+      { key: "podcasts.manage", label: "البودكاست", description: "إضافة البرامج وتعديلها ورفع الحلقات ونشرها." },
     ],
   },
   {
@@ -131,6 +132,7 @@ export const SYSTEM_ROLES: SystemRole[] = [
       "series.visibility",
       "media.upload",
       "media.rights",
+      "podcasts.manage",
       "ai.assist",
       "ai.image",
       "ai.infographic",

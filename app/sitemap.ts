@@ -4,6 +4,8 @@ import { ALL_SERIES } from "@/lib/content/series";
 import { SECTIONS } from "@/lib/content/sections";
 import { listSitemapEntries } from "@/lib/content/provider";
 import { publicStoryId } from "@/lib/content/canonical-stories";
+import { listPodcastShows } from "@/lib/podcast-catalog";
+import { podcastShowPath } from "@/lib/podcasts";
 
 /**
  * خريطة الموقع الشاملة: الصفحات الثابتة والأقسام والسلاسل وكل المواد المنشورة (stories).
@@ -34,6 +36,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${BASE_URL}/series/${s.slug}`,
   }));
 
+  // برامج البودكاست التي لا مادة لها — البرامج القديمة تظهر بروابط موادها أدناه.
+  const podcastPages: MetadataRoute.Sitemap = (await listPodcastShows())
+    .filter((show) => !show.storyId)
+    .map((show) => ({ url: `${BASE_URL}${podcastShowPath(show)}` }));
+
   // كل المواد المنشورة — storyHref المقدس /{section}/{id}/{slug} بترميز URL قياسي.
   const stories = await listSitemapEntries();
   const storyPages: MetadataRoute.Sitemap = stories.map((story) => ({
@@ -41,5 +48,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: story.updatedAt ?? story.publishedAt ?? undefined,
   }));
 
-  return [...staticPages, ...sectionPages, ...seriesPages, ...storyPages];
+  return [...staticPages, ...sectionPages, ...seriesPages, ...podcastPages, ...storyPages];
 }

@@ -23,5 +23,6 @@ export function revalidatePublicContent() {
   revalidatePath("/[section]", "page");
   revalidatePath("/[section]/[id]/[slug]", "page");
   revalidatePath("/series/[slug]", "page");
+  revalidatePath("/podcasts/[slug]", "page");
   revalidatePath("/keywords/[keyword]", "page");
 }

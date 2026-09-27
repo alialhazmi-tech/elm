@@ -23,16 +23,15 @@ import { BodyHtml } from "@/components/content/body-html";
 import { VideoPlayer } from "@/components/content/video-player";
 import { ReadingProgress } from "@/app/_components/reading-progress";
 import { normalizeVideoUrl } from "@/lib/content/video";
-import { brandDate, formatArticleDek, formatArticleTimestamp, formatReadingMinutes, toLatinDigits } from "@/lib/format";
+import { formatArticleDek, formatArticleTimestamp, formatReadingMinutes } from "@/lib/format";
 import { looksLikeHtml, sanitizeBodyHtml } from "@/lib/content/html";
 import { listPublicSlides, listRecent, sectionName, seedContentProvider, seriesOf } from "@/lib/content/provider";
 import { isLandscapeReport, type JakSlide, type SlideData, type SlideType } from "@/lib/tahrir/jak";
 import { shortStoryHref, storyHref } from "@/lib/content/types";
 import { isCanonicalStoryAlias, publicStoryId } from "@/lib/content/canonical-stories";
 import { toRelatedCard } from "@/lib/personalization/recommend";
-import { fetchEpisodes, formatPodcastDuration, podcastShowFor, presentEpisode } from "@/lib/podcasts";
-import { PodcastPlayer } from "@/app/_components/podcast-player";
-import { PodcastHeroPlay } from "@/app/_components/podcast-hero";
+import { podcastShowForStory, showEpisodes } from "@/lib/podcast-catalog";
+import { PodcastShowView } from "@/app/_components/podcast-show-view";
 import { ArticleInsights } from "@/app/_components/article-insights";
 import { ArticleKeywords } from "@/app/_components/article-keywords";
 import "@/app/_components/podcast-player.css";
@@ -106,17 +105,9 @@ export default async function ArticlePage({ params }: Params) {
     { label: story.title },
   ] as const;
 
-  // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية نفسها التي يقرأ منها الموقع القديم.
-  const podcastShow = story.format === "podcasts" ? podcastShowFor(story.id) : undefined;
-  const podcastCover = podcastShow?.cover ?? story.image;
-  const episodes = podcastShow ? await fetchEpisodes(podcastShow) : [];
-  const latestEpisode =
-    podcastShow && episodes[0]
-      ? (() => {
-          const presented = presentEpisode(episodes[0].title, podcastShow.name, episodes[0].description);
-          return { title: presented.title, guest: presented.guest, audioUrl: episodes[0].audioUrl };
-        })()
-      : null;
+  // برنامج بودكاست: حلقاته من خلاصة RSS المصدرية مع ما رُفع من اللوحة.
+  const podcastShow = story.format === "podcasts" ? await podcastShowForStory(story.id) : undefined;
+  const episodes = podcastShow ? await showEpisodes(podcastShow) : [];
 
   // «جاك العلم»: نفس الرابط المقدس، قالب قراءة غامر مختلف كليًا.
   if (story.format === "jakalelm") {
@@ -224,38 +215,13 @@ export default async function ArticlePage({ params }: Params) {
 
         <article data-story-id={story.id}>
           {podcastShow ? (
-            <header className="pc-hero podcast-show" style={{ "--pc": podcastShow.accent } as React.CSSProperties}>
-              <div className="pc-hero-cover">
-                {podcastCover ? <Image src={podcastCover} alt="" fill sizes="(max-width: 640px) 160px, 260px" unoptimized={Boolean(podcastShow.cover)} priority /> : null}
-              </div>
-              <div className="pc-hero-copy">
-                <span className="pc-kicker">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" />
-                  </svg>
-                  <Link href="/podcasts">بودكاست العلم</Link>
-                </span>
-                <h1>{podcastShow.name}</h1>
-                {story.excerpt ? <p className="pc-hero-desc">{story.excerpt}</p> : null}
-                <p className="pc-hero-meta">
-                  {episodes.length > 0 ? `${toLatinDigits(episodes.length)} حلقة` : "الحلقات على يوتيوب"}
-                  {published && story.publishedAt ? (
-                    <>
-                      <span aria-hidden="true"> · </span>
-                      منذ <time dateTime={story.publishedAt}>{brandDate(story.publishedAt).gregorian}</time>
-                    </>
-                  ) : null}
-                </p>
-                <div className="pc-hero-actions">
-                  <PodcastHeroPlay
-                    showName={podcastShow.name}
-                    accent={podcastShow.accent}
-                    episode={latestEpisode}
-                  />
-                  <a className="pc-yt" href={podcastShow.youtube} rel="noopener noreferrer" target="_blank">يوتيوب ←</a>
-                </div>
-              </div>
-            </header>
+            <PodcastShowView
+              show={podcastShow}
+              cover={podcastShow.cover ?? story.image}
+              description={podcastShow.description || story.excerpt}
+              since={published ? story.publishedAt : null}
+              episodes={episodes}
+            />
           ) : (
             <header className={`sa-head${videoUrl ? " has-video" : (isInfographicStory || !story.image) ? " no-media" : ""}`}>
               <div className="sa-head-copy">
@@ -393,39 +359,6 @@ export default async function ArticlePage({ params }: Params) {
             </div>
           ) : null}
 
-          {podcastShow ? (
-            episodes.length > 0 ? (
-              <PodcastPlayer
-                showName={podcastShow.name}
-                accent={podcastShow.accent}
-                youtube={podcastShow.youtube}
-                episodes={episodes.map((episode) => {
-                  const presented = presentEpisode(episode.title, podcastShow.name, episode.description);
-                  return {
-                    title: presented.title,
-                    guest: presented.guest,
-                    audioUrl: episode.audioUrl,
-                    publishedAt: episode.publishedAt,
-                    duration: formatPodcastDuration(episode.duration),
-                    description: episode.description,
-                    episode: episode.episode,
-                  };
-                })}
-                dateLabels={episodes.map((episode) =>
-                  episode.publishedAt ? brandDate(episode.publishedAt).gregorian : "",
-                )}
-              />
-            ) : (
-              <section className="ai-surface" style={{ marginTop: 26 }} aria-label="حلقات البرنامج">
-                <p style={{ margin: 0, lineHeight: 1.9 }}>
-                  حلقات {podcastShow.name} تُبث عبر{" "}
-                  <a href={podcastShow.youtube} rel="noopener noreferrer" target="_blank">
-                    قناة العلم في يوتيوب ←
-                  </a>
-                </p>
-              </section>
-            )
-          ) : null}
           {podcastShow ? <ArticleKeywords keywords={story.keywords} /> : null}
         </article>
 

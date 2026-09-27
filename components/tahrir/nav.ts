@@ -10,6 +10,7 @@ import {
   LayoutGridIcon,
   LayersIcon,
   ListIcon,
+  MicIcon,
   PenLineIcon,
   ShieldCheckIcon,
   UsersIcon,
@@ -77,6 +78,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { title: "السلاسل", href: "/tahrir/series", icon: LayersIcon },
       { title: "التصنيفات والأقسام", href: "/tahrir/taxonomy", icon: LayersIcon, permission: "ai.settings" },
       { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon, permission: "media.upload" },
+      { title: "البودكاست", href: "/tahrir/podcasts", icon: MicIcon, permission: "podcasts.manage" },
     ],
   },
   {

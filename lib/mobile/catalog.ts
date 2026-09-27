@@ -33,7 +33,8 @@ import {
   type MobilePodcastShow,
   type MobileVideoKind,
 } from "@/lib/mobile/story-extras";
-import { fetchEpisodes, PODCAST_SHOWS } from "@/lib/podcasts";
+import { listPodcastShows, podcastShowForStory, showEpisodes } from "@/lib/podcast-catalog";
+import { podcastShowPath } from "@/lib/podcasts";
 import { isReportPalette, REPORT_PALETTES, type ReportPalette, type SlideData } from "@/lib/tahrir/jak";
 import { forYouForMember } from "@/lib/personalization/recommend";
 import { normalizeArabic } from "@/lib/policy/normalize";
@@ -153,7 +154,7 @@ export async function toMobileStory(id: string, origin?: string): Promise<Mobile
 
   const [slideRows, podcast] = await Promise.all([
     story.format === "jakalelm" ? listPublicSlides(story.id) : Promise.resolve([]),
-    storyPodcast(story, origin ?? SITE),
+    storyPodcast(story, origin ?? SITE, showEpisodes, podcastShowForStory),
   ]);
   const body = storyBody(story.body ?? story.excerpt);
   const slides: MobileSlide[] | null =
@@ -215,14 +216,14 @@ export type MobilePodcastsPayload = {
 /** برامج البودكاست كلها بحلقاتها — الغلاف من البرنامج أو من صورة مادته؛ فشل خلاصة يعطي حلقات فارغة. */
 export async function toMobilePodcasts(origin?: string): Promise<MobilePodcastsPayload> {
   const shows = await Promise.all(
-    PODCAST_SHOWS.map(async (show) => {
+    (await listPodcastShows()).map(async (show) => {
       const [story, episodes] = await Promise.all([
-        seedContentProvider.getStory(show.storyId).catch(() => null),
-        fetchEpisodes(show).catch(() => []),
+        show.storyId ? seedContentProvider.getStory(show.storyId).catch(() => null) : null,
+        showEpisodes(show).catch(() => []),
       ]);
       return {
         ...toMobilePodcastShow(show, origin ?? SITE, story?.image),
-        href: story ? toMobileCard(story, origin).href : null,
+        href: story ? toMobileCard(story, origin).href : show.storyId ? null : podcastShowPath(show),
         episodes: episodes.map((episode) => toMobileEpisode(episode, origin ?? SITE)),
       };
     }),

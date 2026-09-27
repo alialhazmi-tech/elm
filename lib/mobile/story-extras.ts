@@ -79,10 +79,13 @@ export type MobilePodcastShow = {
 
 export type MobilePodcast = { show: MobilePodcastShow; episodes: MobilePodcastEpisode[] };
 
-/** الحلقة كما في الخلاصة مع رابط صوت مطلق (الملفات المضيفة على `/podcast-audio/`). */
+/**
+ * الحلقة كما في الخلاصة مع رابط صوت مطلق (الملفات المضيفة على `/podcast-audio/`).
+ * ضيف الحلقة المرفوعة يلحق عنوانها بـ«مع» كما اعتاد التطبيق قبل فصله حقلًا.
+ */
 export function toMobileEpisode(episode: PodcastEpisode, origin: string): MobilePodcastEpisode {
   return {
-    title: episode.title,
+    title: episode.guest ? `${episode.title} مع ${episode.guest}` : episode.title,
     audioUrl: absoluteMedia(episode.audioUrl, origin) ?? episode.audioUrl,
     mime: episode.mime,
     publishedAt: episode.publishedAt,
@@ -95,7 +98,8 @@ export function toMobileEpisode(episode: PodcastEpisode, origin: string): Mobile
 
 export function toMobilePodcastShow(show: PodcastShow, origin: string, fallbackCover?: string | null): MobilePodcastShow {
   return {
-    storyId: show.storyId,
+    // هوية البرنامج في التطبيق نصية إلزامية: مادته القديمة، أو معرّفه للبرنامج الجديد.
+    storyId: show.storyId ?? show.id,
     name: show.name,
     cover: absoluteMedia(show.cover ?? fallbackCover ?? undefined, origin),
     accent: show.accent,
@@ -107,10 +111,11 @@ export function toMobilePodcastShow(show: PodcastShow, origin: string, fallbackC
 export async function storyPodcast(
   story: { id: string; format?: string | null; image?: string | null },
   origin: string,
-  loadEpisodes: (show: PodcastShow) => Promise<PodcastEpisode[]> = fetchEpisodes,
+  loadEpisodes: (show: PodcastShow) => Promise<PodcastEpisode[]> = (show) => fetchEpisodes(show),
+  findShow: (storyId: string) => Promise<PodcastShow | undefined> = async (storyId) => podcastShowFor(storyId),
 ): Promise<MobilePodcast | null> {
   if (story.format !== "podcasts") return null;
-  const show = podcastShowFor(story.id);
+  const show = await findShow(story.id);
   if (!show) return null;
   const episodes = await loadEpisodes(show).catch(() => [] as PodcastEpisode[]);
   return { show: toMobilePodcastShow(show, origin, story.image), episodes: episodes.map((episode) => toMobileEpisode(episode, origin)) };
