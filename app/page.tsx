@@ -11,6 +11,8 @@ import Link from "next/link";
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
 import { VideoCard } from "@/app/_components/story-card";
 import { InfographicGallery, NewsRiver } from "@/app/_components/home-stream";
+import { LatestEpisodeList, PodcastShowGrid } from "@/app/_components/podcast-overview";
+import { latestEpisodes, podcastOverview } from "@/lib/podcast-catalog";
 import { HomeAskBand } from "@/app/_components/home-ask-band";
 import { SeriesSpectrum } from "@/app/_components/series-navigator";
 import { homeStream } from "@/lib/content/homeStream";
@@ -62,7 +64,12 @@ export default async function Home() {
   const hero = home.hero;
   // التدفّق: يستبعد ما تعرضه الصدارة و«وراء الخبر» ومختارات من الأرشيف حتى لا يتكرر خبر في الصفحة.
   const shownIds = new Set<string>([hero?.id, ...home.mosaic.map((s) => s.id), ...home.mostRead.map((s) => s.id)].filter((id): id is string => Boolean(id)));
-  const stream = await homeStream(shownIds).catch(() => null);
+  const [stream, podcasts] = await Promise.all([
+    homeStream(shownIds).catch(() => null),
+    // البودكاست قسم مستقل عن «مرئي وصوتي» (الفيديو): البرامج ثم آخر حلقتين منشورتين.
+    podcastOverview().catch(() => []),
+  ]);
+  const podcastLatest = latestEpisodes(podcasts, 2);
   // مختارات من الأرشيف لا يكرر ما يعرضه معرض الإنفوجرافيك أو النهر أو اللوحات.
   const streamIds = new Set<string>([
     ...(stream?.river ?? []).map((s) => s.id),
@@ -258,6 +265,23 @@ export default async function Home() {
                 </div>
               ) : null}
             </div>
+          </section>
+        ) : null}
+
+        {podcasts.length > 0 ? (
+          <section className="sh-section home-podcasts" aria-labelledby="podcasts-title">
+            <div className="section-head">
+              <h2 id="podcasts-title">بودكاست العلم</h2>
+              <span className="sub">حوارات تُسمع بهدوء</span>
+              <Link className="more" href="/podcasts">كل البرامج</Link>
+            </div>
+            <PodcastShowGrid entries={podcasts} compact />
+            {podcastLatest.length > 0 ? (
+              <div className="home-podcasts-latest">
+                <h3>أحدث الحلقات</h3>
+                <LatestEpisodeList items={podcastLatest} compact />
+              </div>
+            ) : null}
           </section>
         ) : null}
 

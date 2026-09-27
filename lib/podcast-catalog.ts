@@ -8,11 +8,14 @@ import { asc, eq } from "drizzle-orm";
 
 import { podcastEpisodes, podcastShows } from "@/db/schema";
 import { cachedPublicQuery } from "@/lib/content/cache";
+import { listByFormat } from "@/lib/content/provider";
+import { storyHref } from "@/lib/content/types";
 import { getDb } from "@/lib/db";
 import {
   HOSTED_PODCAST_AUDIO,
   PODCAST_SHOWS,
   fetchEpisodes,
+  podcastShowPath,
   type HostedPodcastAudio,
   type PodcastEpisode,
   type PodcastShow,
@@ -117,4 +120,41 @@ export async function findHostedAudio(filename: string): Promise<HostedPodcastAu
 /** حلقات برنامج: خلاصته مع حلقاته المرفوعة من اللوحة. */
 export async function showEpisodes(show: PodcastShow): Promise<PodcastEpisode[]> {
   return fetchEpisodes(show, await hostedAudioFor(show.id));
+}
+
+export interface PodcastShowEntry {
+  show: PodcastShow;
+  /** الرابط المقدس لمادة البرنامج القديم، وإلا /podcasts/<id>. */
+  href: string;
+  description: string;
+  cover: string | undefined;
+  episodes: PodcastEpisode[];
+}
+
+/**
+ * البرامج الظاهرة بحلقاتها وروابطها — لصفحة /podcasts وقسم الرئيسية.
+ * مادة البرنامج القديم تعطيه رابطه وملخصه وصورته الاحتياطية.
+ */
+export async function podcastOverview(): Promise<PodcastShowEntry[]> {
+  const [catalog, stories] = await Promise.all([listPodcastShows(), listByFormat("podcasts", 24)]);
+  return Promise.all(
+    catalog.map(async (show) => {
+      const story = show.storyId ? stories.find((item) => item.id === show.storyId) : undefined;
+      return {
+        show,
+        href: story ? storyHref(story) : podcastShowPath(show),
+        description: show.description || story?.excerpt || "",
+        cover: show.cover ?? story?.image ?? undefined,
+        episodes: await showEpisodes(show).catch(() => []),
+      };
+    }),
+  );
+}
+
+/** أحدث الحلقات عبر البرامج: حتى perShow من كل برنامج ثم الأحدث نشرًا. */
+export function latestEpisodes(entries: PodcastShowEntry[], limit: number, perShow = 3) {
+  return entries
+    .flatMap(({ show, href, episodes }) => episodes.slice(0, perShow).map((episode) => ({ show, href, episode })))
+    .sort((a, b) => (b.episode.publishedAt ?? "").localeCompare(a.episode.publishedAt ?? ""))
+    .slice(0, limit);
 }

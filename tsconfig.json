@@ -39,7 +39,9 @@
     ".next-gate/types/**/*.ts",
     ".next-gate/dev/types/**/*.ts",
     "tmp/ios-next/types/**/*.ts",
-    "tmp/ios-next/dev/types/**/*.ts"
+    "tmp/ios-next/dev/types/**/*.ts",
+    ".next-sim/types/**/*.ts",
+    ".next-sim/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

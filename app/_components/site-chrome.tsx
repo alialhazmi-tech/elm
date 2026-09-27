@@ -120,6 +120,8 @@ export async function SiteHeader({
             <MobileNavigation>
               <Link className="site-drawer-home" href="/" aria-current={active === "/" ? "page" : undefined}>الرئيسية <span aria-hidden="true">←</span></Link>
               <a className="site-drawer-home" href="https://jakelelm.alelm.net">جاك العلم <span aria-hidden="true">←</span></a>
+              {/* البودكاست في أعلى القائمة لا في آخرها تحت «مرئي وصوتي». */}
+              <Link className="site-drawer-home" href="/podcasts" aria-current={active === "/podcasts" ? "page" : undefined}>بودكاست العلم <span aria-hidden="true">←</span></Link>
               <section className="site-drawer-section" aria-label="الأقسام">
                 <h3>الأقسام</h3>
                 <div className="site-drawer-grid">
@@ -137,7 +139,7 @@ export async function SiteHeader({
               <section className="site-drawer-section" aria-label="مرئي وصوتي">
                 <h3>مرئي وصوتي</h3>
                 <div className="site-drawer-grid">
-                  {FORMATS.filter(item => item.href !== "/infographics" || taxonomy.sections.some(section => section.slug === "infographics")).map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
+                  {FORMATS.filter(item => item.href !== "/podcasts" && (item.href !== "/infographics" || taxonomy.sections.some(section => section.slug === "infographics"))).map((item) => <Link key={item.href} href={item.href} aria-current={active === item.href ? "page" : undefined}>{item.label}</Link>)}
                 </div>
               </section>
             </MobileNavigation>

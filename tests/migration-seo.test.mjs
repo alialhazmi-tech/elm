@@ -138,12 +138,14 @@ test("الصفحات الإرثية الأربع حية بروابطها الق�
 });
 
 test("أرشيف البودكاست الإرثي /podcasts حي ويقود إلى قناة العلم", async () => {
-  const [page, sitemap, provider] = await Promise.all([
+  const [page, sitemap, provider, catalog] = await Promise.all([
     read("app/podcasts/page.tsx"),
     read("app/sitemap.ts"),
     read("lib/content/provider.ts"),
+    read("lib/podcast-catalog.ts"),
   ]);
-  assert.match(page, /listByFormat\("podcasts"/u, "الصفحة لا تستعلم مواد شكل البودكاست");
+  assert.match(page, /podcastOverview\(\)/u, "الصفحة لا تقرأ كتالوج البرامج");
+  assert.match(catalog, /listByFormat\("podcasts"/u, "الكتالوج لا يستعلم مواد شكل البودكاست لروابط البرامج القديمة");
   assert.match(page, /youtube\.com\/c\/alelmmedia/u, "لا رابط لقناة الحلقات");
   assert.match(sitemap, /\/podcasts/u, "خريطة الموقع بلا أرشيف البودكاست");
   assert.match(provider, /listByFormat/u);
