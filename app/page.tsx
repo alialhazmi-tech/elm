@@ -268,23 +268,6 @@ export default async function Home() {
           </section>
         ) : null}
 
-        {podcasts.length > 0 ? (
-          <section className="sh-section home-podcasts" aria-labelledby="podcasts-title">
-            <div className="section-head">
-              <h2 id="podcasts-title">بودكاست العلم</h2>
-              <span className="sub">حوارات تُسمع بهدوء</span>
-              <Link className="more" href="/podcasts">كل البرامج</Link>
-            </div>
-            <PodcastShowGrid entries={podcasts} compact />
-            {podcastLatest.length > 0 ? (
-              <div className="home-podcasts-latest">
-                <h3>أحدث الحلقات</h3>
-                <LatestEpisodeList items={podcastLatest} compact />
-              </div>
-            ) : null}
-          </section>
-        ) : null}
-
         {/* الأقسام — شبكة تحريرية واضحة بدل سلسلة طويلة من الكتل المتشابهة. */}
         {stream && stream.panels.length > 0 ? (
           <section className="panels" aria-labelledby="sections-title">
@@ -348,6 +331,24 @@ export default async function Home() {
                 kick: seriesOf(story)?.name ?? sectionName(story.section),
               }))}
             />
+          </section>
+        ) : null}
+
+        {/* بودكاست العلم — يلي معرض الإنفوجرافيك */}
+        {podcasts.length > 0 ? (
+          <section className="sh-section home-podcasts" aria-labelledby="podcasts-title">
+            <div className="section-head">
+              <h2 id="podcasts-title">بودكاست العلم</h2>
+              <span className="sub">حوارات تُسمع بهدوء</span>
+              <Link className="more" href="/podcasts">كل البرامج</Link>
+            </div>
+            <PodcastShowGrid entries={podcasts} compact />
+            {podcastLatest.length > 0 ? (
+              <div className="home-podcasts-latest">
+                <h3>أحدث الحلقات</h3>
+                <LatestEpisodeList items={podcastLatest} compact />
+              </div>
+            ) : null}
           </section>
         ) : null}
 
