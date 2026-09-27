@@ -22,10 +22,11 @@ function Progress({
       )}
       {...props}
     >
+      {/* العرض وحده يحدد الامتلاء؛ flex-1 كان يمدّه للمسار كله. صف flex يبدأ من اليمين تحت dir="rtl". */}
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
-        className={cn("size-full flex-1 bg-primary transition-all", indicatorColor)}
-        style={{ width: `${value || 0}%` }}
+        className={cn("h-full shrink-0 bg-primary transition-[width]", indicatorColor)}
+        style={{ width: `${Math.min(100, Math.max(0, value || 0))}%` }}
       />
     </ProgressPrimitive.Root>
   )
