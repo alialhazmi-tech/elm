@@ -15,6 +15,7 @@ test("Arabic report links render in encoded and decoded form without a self redi
           path === "next/navigation" ? "export function notFound(){throw new Error('404')} export function permanentRedirect(path){throw new Error('308:'+path)}" :
           path.endsWith("jak-reports") ? "export async function getJakReport(){return {id:'test',slug:'الفيفا-لعبة-المال',title:'الفيفا',status:'published',excerpt:''}}" :
           path.endsWith("jak-code-frame") ? "export const JakCodeFrame=()=>null" :
+          path.endsWith("jak-sharing") ? "export const jakReportMetadata=()=>({})" :
           path.endsWith("site-chrome") ? "export const SiteHeader=()=>null;export const SiteFooter=()=>null" : "export default ()=>null",
         }));
       } }],
