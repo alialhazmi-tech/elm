@@ -154,6 +154,49 @@ img { max-width: 100%; display: block; }
 }
 .skip-link:focus { inset-inline-start: 22px; }
 
+/* ============ قارئ جاك العام ============ */
+.jak-reader-shell {
+  position: relative;
+  min-height: 100dvh;
+  background: #080b12;
+}
+.jak-reader-nav {
+  position: absolute;
+  z-index: 2;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+}
+.jak-reader-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: 999px;
+  color: #fff;
+  background: rgb(6 14 26 / 0.72);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.2);
+  backdrop-filter: blur(8px);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.jak-reader-back:hover { background: rgb(6 14 26 / 0.9); color: #ffe39a; }
+.jak-reader-back span[aria-hidden="true"] { font-size: 1.15rem; line-height: 1; }
+.jak-reader-frame {
+  display: block;
+  width: 100%;
+  height: 100dvh;
+  border: 0;
+  background: #080b12;
+}
+
+@media (max-width: 640px) {
+  .jak-reader-nav { inset-block-start: 8px; inset-inline-start: 8px; }
+  .jak-reader-back { min-height: 30px; padding: 3px 8px; font-size: 0.7rem; }
+}
+
 /* ============ الهيدر ============ */
 .topbar {
   background: #060e1a;
@@ -1957,4 +2000,3 @@ a.story-link:hover { color: var(--link); }
   .series-switch { top: 97px; padding-inline: 14px; }
   .series-feed .series-lead .c-img { height: 210px; min-height: 210px; }
 }
-

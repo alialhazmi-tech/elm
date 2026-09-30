@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 
 import { jakCodeReports } from "@/db/schema";
 import { getDb } from "@/lib/db";
@@ -123,6 +123,17 @@ export async function getJakReport(id: string, actor?: WriteActor): Promise<JakC
     assertManage(actor);
     assertOwnOrAny(actor, row);
   }
+  return row ? toReport(row) : null;
+}
+
+/** Only published imports may replace historical public story links. */
+export async function getPublishedJakReportBySourceId(sourcePostId: number): Promise<JakCodeReport | null> {
+  const db = getDb();
+  if (!db || !Number.isSafeInteger(sourcePostId) || sourcePostId < 1) return null;
+  const [row] = await db.select().from(jakCodeReports).where(and(
+    eq(jakCodeReports.sourcePostId, sourcePostId),
+    eq(jakCodeReports.status, "published"),
+  )).limit(1);
   return row ? toReport(row) : null;
 }
 

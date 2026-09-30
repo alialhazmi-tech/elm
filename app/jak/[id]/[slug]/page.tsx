@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
-import { SiteHeader, SiteFooter } from "@/app/_components/site-chrome";
 import { getJakReport } from "@/lib/tahrir/jak-reports";
 import { JakCodeFrame } from "@/components/jak-code-frame";
 
@@ -24,12 +23,17 @@ export default async function JakReportPage({ params }: Props) {
   let decodedSlug = slug;
   try { decodedSlug = decodeURIComponent(slug); } catch { /* Redirect malformed aliases to the canonical path. */ }
   if (decodedSlug !== report.slug) permanentRedirect(`/jak/${report.id}/${encodeURIComponent(report.slug)}`);
-  return <>
-    <SiteHeader active="/jak" />
-    <main id="main-content">
-      <div className="wrap" style={{ paddingBlock: 12 }}><Link href="/jak">جاك العلم</Link><h1 style={{ fontSize: "1.1rem", marginBlock: 6 }}>{report.title}</h1></div>
+  return (
+    <main id="main-content" className="jak-reader-shell">
+      <a className="skip-link" href="#jak-report-frame">انتقل إلى التقرير</a>
+      <nav className="jak-reader-nav" aria-label="التنقل في التقرير">
+        <Link className="jak-reader-back" href="/jak">
+          <span aria-hidden="true">←</span>
+          <span>جاك العلم</span>
+        </Link>
+      </nav>
+      <h1 className="sr-only">{report.title}</h1>
       <JakCodeFrame id={report.id} title={report.title} />
     </main>
-    <SiteFooter />
-  </>;
+  );
 }
