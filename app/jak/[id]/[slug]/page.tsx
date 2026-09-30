@@ -19,7 +19,11 @@ export default async function JakReportPage({ params }: Props) {
   const { id, slug } = await params;
   const report = await getJakReport(id);
   if (!report || report.status !== "published") notFound();
-  if (slug !== report.slug) permanentRedirect(`/jak/${report.id}/${encodeURIComponent(report.slug)}`);
+  // Next may pass URL-encoded Arabic parameters; compare their decoded value
+  // before redirecting, otherwise the canonical URL redirects to itself.
+  let decodedSlug = slug;
+  try { decodedSlug = decodeURIComponent(slug); } catch { /* Redirect malformed aliases to the canonical path. */ }
+  if (decodedSlug !== report.slug) permanentRedirect(`/jak/${report.id}/${encodeURIComponent(report.slug)}`);
   return <>
     <SiteHeader active="/jak" />
     <main id="main-content">
