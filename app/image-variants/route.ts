@@ -24,7 +24,9 @@ export async function GET(request: Request) {
     const bytes = await renderCached(`${original}:${width}:q${effectiveQuality}`, async () => {
       const input = "filename" in source
         ? (await getStoredImage(source.filename)).bytes
-        : await readSharingResponse(await fetch(source.url, { redirect: "error", signal: AbortSignal.timeout(8000) }));
+        : await readSharingResponse(await fetch(source.url, { redirect: "error", signal: AbortSignal.timeout(8000) }), {
+          allowMissingContentType: new URL(source.url).hostname === "jakelelm.alelm.net",
+        });
       return resizeEditorialImage(input, width, effectiveQuality);
     });
     if (bytes) return new Response(new Uint8Array(bytes), { headers: {

@@ -20,8 +20,15 @@ test('variants normalize stored URLs and leave unsupported assets untouched', ()
     const query = new URL(imageVariantUrl(url,168), 'https://alelm.net').searchParams.get('src');
     assert.deepEqual(imageVariantSource(query), {url});
   }
+  const dashUrl = 'https://dash.alelm.net/wp-content/uploads/2026/09/fifa.webp';
+  const jakUrl = 'https://jakelelm.alelm.net/wp-content/uploads/2026/09/fifa.webp';
+  const dashQuery = new URL(imageVariantUrl(dashUrl, 168), 'https://alelm.net').searchParams.get('src');
+  const jakQuery = new URL(imageVariantUrl(jakUrl, 168), 'https://alelm.net').searchParams.get('src');
+  assert.equal(dashQuery, 'wp/2026/09/fifa.webp', 'Dash keeps its compact source alias');
+  assert.equal(jakQuery, jakUrl, 'JAK keeps its full trusted source URL');
+  assert.deepEqual(imageVariantSource(jakQuery), { url: jakUrl });
   for (const src of ['/brand/logo.png', 'https://example.com/a.jpg', 'https://dash.alelm.net/wp-content/uploads/animation.gif']) assert.equal(imageVariantUrl(src, 168), src);
-  for (const src of ['http://127.0.0.1/a.jpg', 'https://dash.alelm.net.evil.test/wp-content/uploads/a.jpg', 'https://user:pass@dash.alelm.net/wp-content/uploads/a.jpg', 'https://dash.alelm.net/wp-content/uploads/../../admin', 'https://dash.alelm.net/wp-content/uploads/%2e%2e%2fa.jpg', 'https://dash.alelm.net/wp-content/uploads/file.php', 'https://dash.alelm.net:444/wp-content/uploads/a.jpg', '/uploads/../api/health', '/uploads/'+filename+'?x=1']) assert.equal(publicImageSource(src), null);
+  for (const src of ['http://127.0.0.1/a.jpg', 'https://dash.alelm.net.evil.test/wp-content/uploads/a.jpg', 'https://user:pass@dash.alelm.net/wp-content/uploads/a.jpg', 'https://user:pass@jakelelm.alelm.net/wp-content/uploads/a.jpg', 'https://dash.alelm.net/wp-content/uploads/../../admin', 'https://dash.alelm.net/wp-content/uploads/%2e%2e%2fa.jpg', 'https://jakelelm.alelm.net/wp-content/uploads/%2e%2e%2fa.jpg', 'https://dash.alelm.net/wp-content/uploads/file.php', 'https://jakelelm.alelm.net/wp-content/uploads/file.php', 'https://dash.alelm.net:444/wp-content/uploads/a.jpg', 'https://jakelelm.alelm.net:444/wp-content/uploads/a.jpg', 'https://jakelelm.alelm.net/wp-content/uploads/a.jpg?x=1', 'https://jakelelm.alelm.net/wp-content/uploads/a.jpg#x', '/uploads/../api/health', '/uploads/'+filename+'?x=1']) assert.equal(publicImageSource(src), null);
 });
 
 test('responsive versions preserve aspect ratio, rotate correctly and never enlarge originals', async () => {

@@ -41,6 +41,9 @@ try {
   const subject = await import(`../${directory}/subject.mjs`);
 
   const created = await subject.saveJakReport(input(), owner);
+  await client.query("update jak_code_reports set source_post_id = 1741 where id = $1", [id]);
+  assert.equal(await subject.getPublishedJakReportBySourceId(1741), null, "draft imports cannot replace public links");
+  assert.equal(await subject.getPublishedJakReportBySourceId(NaN), null);
   assert.equal(created.status, "draft");
   assert.equal(created.version, 1);
   assert.equal(created.html, input().html);
@@ -69,7 +72,9 @@ try {
   const review = await subject.transitionJakReport(id, "review", latest.version, owner);
   await assert.rejects(subject.transitionJakReport(id, "draft", review.version, other), error => error.status === 403, "submit permission alone cannot return another author's review");
   const published = await subject.transitionJakReport(id, "published", review.version, publisher);
+  assert.equal((await subject.getPublishedJakReportBySourceId(1741)).id, id);
   const archived = await subject.transitionJakReport(id, "archived", published.version, publisher);
+  assert.equal(await subject.getPublishedJakReportBySourceId(1741), null, "archived reports cannot become redirect targets");
   await assert.rejects(subject.transitionJakReport(id, "published", archived.version, publisher), error => error.status === 409, "archived report must be restored before publishing");
   const restored = await subject.transitionJakReport(id, "draft", archived.version, publisher);
   assert.equal(restored.status, "draft");

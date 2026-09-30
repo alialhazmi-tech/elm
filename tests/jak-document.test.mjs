@@ -1,7 +1,27 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { buildJakDocument, jakDocumentHeaders, JAK_SANDBOX } from "../lib/jak-report-document.ts";
+import { buildJakDocument, isMobileJakReader, jakDocumentHeaders, JAK_SANDBOX } from "../lib/jak-report-document.ts";
+
+test("mobile FIFA bounds image decoding and disables optional animation while retaining layout and source", () => {
+  const image = '<img class="bg-photo" src="https://jakelelm.alelm.net/wp-content/uploads/2026/08/page1-bg.webp" alt="غلاف">';
+  const html = `<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script><script>function rescale(){ return 1920; } rescale();</script>${image.repeat(3)}<a href="https://alelm.net/sport/262093/example">اقرأ المزيد</a>`;
+  const report = { html, css: ".page-stage{width:1920px}", title: "الفيفا", sourcePostId: 1956 };
+  const mobile = buildJakDocument(report, { mobile: true });
+  assert.doesNotMatch(mobile, /<script src=/);
+  assert.match(mobile, /function rescale/);
+  assert.equal((mobile.match(/loading="eager"/g) ?? []).length, 2);
+  assert.equal((mobile.match(/loading="lazy"/g) ?? []).length, 1);
+  assert.equal((mobile.match(/decoding="async"/g) ?? []).length, 3);
+  assert.match(mobile, /image-variants\?src=https%3A%2F%2Fjakelelm\.alelm\.net/);
+  assert.match(mobile, /&amp;w=1080/);
+  assert.match(mobile, /اقرأ المزيد/);
+  assert.match(buildJakDocument(report), /<script src=/);
+  assert.match(buildJakDocument({ ...report, sourcePostId: 40 }, { mobile: true }), /<script src=/);
+  assert.equal(report.html, html);
+  assert.equal(isMobileJakReader("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile Safari"), true);
+  assert.equal(isMobileJakReader("Mozilla/5.0 (Macintosh; Intel Mac OS X) AppleWebKit Safari"), false);
+});
 
 test("legacy document preserves scenes, inline scripts and CSS while replacing the stylesheet placeholder", () => {
   const html = '<!DOCTYPE html><html dir="rtl"><head><link rel="stylesheet" href="style.css"></head><body><section id="scene">نص كامل</section><script>document.body.dataset.ready="yes"</script></body></html>';

@@ -9,7 +9,7 @@ export function publicImageSource(value: string, origin = "https://alelm.net"): 
     }
     const decoded = decodeURIComponent(url.pathname);
     if (decoded.includes("\\") || decoded.split("/").some((part) => part === ".." || part === ".")) return null;
-    if (url.protocol === "https:" && !url.port && url.hostname === "dash.alelm.net" && url.pathname.startsWith("/wp-content/uploads/") && /\.(?:jpe?g|png|webp|gif|avif)$/i.test(url.pathname)) return { url: url.href };
+    if (url.protocol === "https:" && !url.port && ["dash.alelm.net", "jakelelm.alelm.net"].includes(url.hostname) && url.pathname.startsWith("/wp-content/uploads/") && /\.(?:jpe?g|png|webp|gif|avif)$/i.test(url.pathname)) return { url: url.href };
   } catch { /* المصدر غير صالح. */ }
   return null;
 }
@@ -39,7 +39,12 @@ export function imageVariantSource(value: string) {
 export function imageVariantUrl(src: string, width: number, quality?: number): string {
   const source = publicImageSource(src);
   if (!source || /\.gif$/i.test(src)) return src;
-  const value = "filename" in source ? `/uploads/${source.filename}` : `wp/${new URL(source.url).pathname.slice("/wp-content/uploads/".length)}`;
+  const sourceUrl = "url" in source ? new URL(source.url) : null;
+  const value = "filename" in source
+    ? `/uploads/${source.filename}`
+    : sourceUrl?.hostname === "jakelelm.alelm.net"
+      ? sourceUrl.href
+      : `wp/${sourceUrl!.pathname.slice("/wp-content/uploads/".length)}`;
   // لا نكرر ترميز حروف العناوين العربية (%D8 → %25D8) في كل مرشح srcset.
   // نختصرها فقط إذا أعاد URL بناء العنوان نفسه، لحفظ أسماء الملفات التي تحتوي % حرفيًا.
   const readable = decodeURI(value);

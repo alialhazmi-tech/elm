@@ -41,6 +41,7 @@ import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { articleMetaDescription, cleanMetadataTitle } from "@/lib/seo/metadata";
 import { articleStructuredData, PUBLIC_SITE_URL } from "@/lib/seo/schema";
 import { imageFocusStyle } from "@/lib/content/image-focus";
+import { getPublishedJakReportBySourceId } from "@/lib/tahrir/jak-reports";
 
 export const revalidate = 300;
 /** الأرشيف 29 ألف مادة: يُبنى مسبقًا أحدثها فقط والبقية ISR عند الطلب. */
@@ -88,6 +89,12 @@ export default async function ArticlePage({ params }: Params) {
   const { id, section, slug } = await params;
   const story = await seedContentProvider.getStory(id);
   if (!story) notFound();
+
+  const legacyJakId = story.format === "jakalelm" ? /^jak-(\d+)$/.exec(story.id) : null;
+  if (legacyJakId) {
+    const report = await getPublishedJakReportBySourceId(Number(legacyJakId[1]));
+    if (report) permanentRedirect(`/jak/${report.id}/${encodeURIComponent(report.slug)}`);
+  }
 
   // حارس canonical (شرط الهجرة): المعرّف يحسم — أي قسم أو سلاج مخالف للرابط المحفوظ
   // يتحول تحويلًا دائمًا (308) إليه، فلا يوجد 200 على بدائل ولا canonical متعارض.
