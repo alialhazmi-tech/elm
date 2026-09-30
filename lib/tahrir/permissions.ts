@@ -39,7 +39,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     key: "content",
     label: "المحتوى",
     permissions: [
-      { key: "jak.manage", label: "جاك العلم", description: "تحرير شرائح جاك العلم وتوليدها." },
+      { key: "jak.manage", label: "جاك العلم", description: "إضافة تقارير جاك العلم وتحرير أكوادها ومعاينتها." },
       { key: "series.propose", label: "اقتراح سلسلة", description: "رفع مقترح سلسلة جديدة." },
       { key: "series.decide", label: "البتّ في المقترحات", description: "قبول مقترحات السلاسل أو رفضها." },
       { key: "series.visibility", label: "إظهار وإخفاء السلاسل", description: "مفتاح ظهور السلاسل المتقاعدة." },

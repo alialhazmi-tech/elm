@@ -112,7 +112,7 @@ export const FORMAT_LABELS: Record<string, string> = {
   videos: "فيديو",
   reports: "تقارير",
   podcasts: "بودكاست",
-  jakalelm: "جاك العلم",
+  jakalelm: "جاك العلم المحدثة",
 };
 
 function guardFor(title: string, body: string, surface: "design" | undefined, controls: GuardControls): { tone: GuardTone; label: string } {

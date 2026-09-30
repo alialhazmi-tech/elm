@@ -100,6 +100,9 @@ async function saveStory(request: Request) {
   // مواد «جاك العلم»: المتن إسقاط آلي من الشرائح (`lib/tahrir/jak.ts`) والشكل ثابت — أي عميل
   // (ومنه التطبيق) لا يستطيع الكتابة فوق الإسقاط أو تبديل الشكل عبر هذا المسار؛ الشرائح من `jak/slides`.
   const isJak = existing?.format === "jakalelm";
+  if (isJak || input.format?.trim() === "jakalelm") {
+    return NextResponse.json({ error: "جاك العلم المحدثة متوقفة. استخدم قسم جاك العلم الجديد." }, { status: 410 });
+  }
   if (existing && !isJak && input.format?.trim() === "jakalelm") {
     return NextResponse.json({ error: "تقارير جاك العلم تُنشأ من محررها؛ لا يمكن تحويل مادة قائمة إلى تقرير." }, { status: 409 });
   }

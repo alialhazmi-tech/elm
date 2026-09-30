@@ -29,6 +29,7 @@ export interface NavItem {
   icon: LucideIcon;
   /** بند ظاهر للتعريف فقط، بلا تنقّل حتى إطلاقه. */
   comingSoon?: boolean;
+  disabledLabel?: string;
   experimental?: boolean;
   /** المفتاح الذي يُقرأ منه العدد الحي في الشارة. */
   badge?: NavBadgeKey;
@@ -74,7 +75,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     title: "المحتوى",
     items: [
-      { title: "جاك العلم", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage" },
+      { title: "جاك العلم", href: "/tahrir/jak-reports", icon: LayoutGridIcon, permission: "jak.manage" },
+      { title: "جاك العلم المحدثة", href: "/tahrir/jak", icon: LayoutGridIcon, permission: "jak.manage", comingSoon: true, disabledLabel: "متوقفة" },
       { title: "السلاسل", href: "/tahrir/series", icon: LayersIcon },
       { title: "التصنيفات والأقسام", href: "/tahrir/taxonomy", icon: LayersIcon, permission: "ai.settings" },
       { title: "الوسائط", href: "/tahrir/media", icon: ImagesIcon, permission: "media.upload" },

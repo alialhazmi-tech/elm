@@ -125,13 +125,13 @@ export function AppSidebar({ user, counts }: { user: SidebarUser; counts: NavCou
                         {item.comingSoon ? (
                           <SidebarMenuButton
                             disabled
-                            tooltip={`${item.title} — قريبًا`}
+                            tooltip={`${item.title} — ${item.disabledLabel ?? "قريبًا"}`}
                             className="text-sidebar-foreground/70 disabled:opacity-100"
                           >
                             <item.icon />
                             <span>
                               {item.title}
-                              <small className="ms-2 text-[10px] font-normal">قريبًا</small>
+                              <small className="ms-2 text-[10px] font-normal">{item.disabledLabel ?? "قريبًا"}</small>
                             </span>
                           </SidebarMenuButton>
                         ) : (
