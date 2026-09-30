@@ -17,8 +17,12 @@ export async function sharingJpeg(bytes: Uint8Array, background = "#f8f7f4", fit
     .flatten({ background }).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
 }
 
-export async function readSharingResponse(response: Response): Promise<Uint8Array> {
-  if (!response.ok || !/^image\/(jpeg|png|webp|gif|avif)(?:;|$)/i.test(response.headers.get("Content-Type") ?? "")) throw new Error("Sharing image unavailable");
+export async function readSharingResponse(response: Response, options: { allowMissingContentType?: boolean } = {}): Promise<Uint8Array> {
+  const type = response.headers.get("Content-Type");
+  // Some legacy Jak uploads omit MIME entirely. Callers must first allowlist
+  // their origin/path and validate the bounded bytes with the image decoder.
+  const missingLegacyType = options.allowMissingContentType && !type;
+  if (!response.ok || (!missingLegacyType && !/^image\/(jpeg|png|webp|gif|avif)(?:;|$)/i.test(type ?? ""))) throw new Error("Sharing image unavailable");
   if (Number(response.headers.get("Content-Length")) > MAX_SHARE_SOURCE_BYTES) throw new Error("Sharing image too large");
   const reader = response.body?.getReader();
   if (!reader) throw new Error("Empty sharing image");

@@ -1,3 +1,5 @@
+import { imageVariantUrl } from "./image-source.ts";
+
 /** Raw report code is executable only inside an opaque-origin sandbox document.
  * Never inject it into an application page or use srcDoc (it inherits the app CSP).
  */
@@ -32,13 +34,37 @@ export function jakDocumentHeaders() {
 
 const escapeText = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
+export function isMobileJakReader(userAgent: string) {
+  return /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent);
+}
+
+/** FIFA's 37 full-resolution image layers can overload mobile WebKit. Keep the
+ * stored artwork intact, bound decoded image sizes and skip optional GSAP on
+ * phones. Its rescale script remains essential to the 1920px artboard layout. */
+function mobileFifaSource(html: string) {
+  let imageIndex = 0;
+  return html
+    .replace(/<script\b[^>]*\bsrc=["']https:\/\/cdnjs\.cloudflare\.com\/ajax\/libs\/gsap\/3\.12\.5\/[^"']+["'][^>]*>\s*<\/script>/gi, "")
+    .replace(/<img\b[^>]*>/gi, (tag) => {
+      const source = /\bsrc=["']([^"']+)["']/i.exec(tag);
+      if (!source) return tag;
+      const optimized = imageVariantUrl(source[1], 1080, 78);
+      if (optimized === source[1]) return tag;
+      const loading = imageIndex++ < 2 ? "eager" : "lazy";
+      return tag.replace(source[0], `src="${escapeText(optimized)}"`)
+        .replace(/\s+(?:loading|decoding|srcset|sizes)\s*=\s*["'][^"']*["']/gi, "")
+        .replace(/\s*\/?>$/, ` loading="${loading}" decoding="async">`);
+    });
+}
+
 /** Keep stored source untouched. Combine the separate CSS field only at rendering. */
-export function buildJakDocument({ html, css, title }: { html: string; css: string; title: string }): string {
+export function buildJakDocument({ html, css, title, sourcePostId }: { html: string; css: string; title: string; sourcePostId?: number | null }, options: { mobile?: boolean } = {}): string {
+  const renderedHtml = options.mobile && sourcePostId === 1956 ? mobileFifaSource(html) : html;
   // The original FIFA source includes a placeholder style.css link although its
   // actual stylesheet is stored in the separate field. Do not request our API URL.
   const source = css.trim()
-    ? html.replace(/<link\b(?=[^>]*\brel\s*=\s*["']stylesheet["'])(?=[^>]*\bhref\s*=\s*["'](?:\.\/)?style\.css["'])[^>]*>/gi, "")
-    : html;
+    ? renderedHtml.replace(/<link\b(?=[^>]*\brel\s*=\s*["']stylesheet["'])(?=[^>]*\bhref\s*=\s*["'](?:\.\/)?style\.css["'])[^>]*>/gi, "")
+    : renderedHtml;
   const style = css.trim() ? `<style>${css.replace(/<\/style/gi, "<\\/style")}</style>` : "";
   const fallback = `<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeText(title)}</title>`;
   // Appended CSS respects a standalone document's own fonts, styles and scripts.

@@ -3,6 +3,15 @@ import test from "node:test";
 import sharp from "sharp";
 import { MAX_SHARE_SOURCE_BYTES, readSharingResponse, sharingImageSource, sharingJpeg } from "../lib/sharing-image.ts";
 
+test("legacy missing MIME is opt-in and never accepts explicit HTML or unbounded data", async () => {
+  const bytes = new Uint8Array([1, 2, 3]);
+  await assert.rejects(readSharingResponse(new Response(bytes)), /unavailable/);
+  assert.deepEqual(await readSharingResponse(new Response(bytes), { allowMissingContentType: true }), Buffer.from(bytes));
+  await assert.rejects(readSharingResponse(new Response("html"), { allowMissingContentType: true }), /unavailable/);
+  await assert.rejects(readSharingResponse(new Response(new Uint8Array(MAX_SHARE_SOURCE_BYTES + 1)), { allowMissingContentType: true }), /too large/);
+  await assert.rejects(sharingJpeg(bytes), /unsupported image format/);
+});
+
 test("sharing accepts only stored UUID images and the known legacy media path", () => {
   const filename = "621a297f-10bd-40a5-87ee-67e0a54b5c28.webp";
   assert.deepEqual(sharingImageSource(`/uploads/${filename}`), { filename });
