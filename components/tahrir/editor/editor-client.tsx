@@ -21,6 +21,7 @@ import { describeRecoveryDiff, recoveryDiffLabel } from "@/lib/tahrir/editor/rec
 import { isoToRiyadhWallTime, riyadhWallTimeToIso } from "@/lib/tahrir/riyadh-time";
 import { cn } from "@/lib/utils";
 import { uploadStoryImageFile } from "@/lib/story-image-upload";
+import { allowsAutoImageFocus } from "@/lib/content/image-focus";
 
 import { useDraftRecovery, useDraftTabToken } from "@/components/tahrir/use-draft-recovery";
 import { useDraftAutosave } from "@/components/tahrir/use-draft-autosave";
@@ -56,6 +57,7 @@ interface EditorInitial {
   slug: string;
   seriesSlug: string | null;
   image: string | null;
+  imageFocus?: string | null;
   format: string;
   pinned: boolean;
   breakingUntil: string | null;
@@ -128,6 +130,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [seriesSlug, setSeriesSlug] = useState(initial?.seriesSlug ?? null);
   const [image, setImage] = useState(initial?.image ?? "");
+  const [imageFocus, setImageFocus] = useState(initial?.imageFocus ?? "");
   const [format, setFormat] = useState(initial?.format ?? "news");
   const [pinned, setPinned] = useState(initial?.pinned ?? false);
   const [breakingUntil, setBreakingUntil] = useState<string | null>(initial?.breakingUntil ?? null);
@@ -155,7 +158,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
   const guard = useLiveGuard({ title, body, image, format, breakingUntil });
   const full = useFullEditStream({ setMessage });
 
-  const recoverySnapshot: StorySnapshot = { title, excerpt, body, section, slug, seriesSlug, image, format, seoTitle, seoDescription, keywords, videoUrl, pinned, breakingUntil };
+  const recoverySnapshot: StorySnapshot = { title, excerpt, body, section, slug, seriesSlug, image, imageFocus, format, seoTitle, seoDescription, keywords, videoUrl, pinned, breakingUntil };
   const tabToken = useDraftTabToken();
 
   const workflow = useStoryWorkflow({
@@ -232,7 +235,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
     setTitle(value.title); setExcerpt(value.excerpt); setBody(value.body);
     richRef.current?.setHtml(value.body);
     setSection(value.section); setSlug(value.slug); setSeriesSlug(value.seriesSlug);
-    setImage(value.image); setFormat(value.format); setSeoTitle(value.seoTitle);
+    setImage(value.image); setImageFocus(value.imageFocus ?? ""); setFormat(value.format); setSeoTitle(value.seoTitle);
     setSeoDescription(value.seoDescription); setKeywords(value.keywords); setVideoUrl(value.videoUrl);
     setPinned(value.pinned ?? false); setBreakingUntil(value.breakingUntil ?? null);
     setConfirmStaleRestore(false);
@@ -296,6 +299,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
       });
       markDraftChanged();
       setImage(data.url);
+      setImageFocus("");
       guard.scheduleGuard({ image: data.url, body: bodyHtml() });
       setImageUploadMessage(
         guardControls.requireImageRights
@@ -543,10 +547,18 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
                   }}
                   image={image}
                   onImage={(value) => {
+                    // النقطة تخص الصورة: صورة أخرى تبدأ من المنتصف حتى يُكشف وجهها.
+                    if (value !== image) setImageFocus("");
                     setImage(value);
                     if (!value) setImageUploadMessage("");
                     guard.scheduleGuard({ body: bodyHtml(), image: value });
                   }}
+                  imageFocus={imageFocus}
+                  onImageFocus={(value) => {
+                    markDraftChanged();
+                    setImageFocus(value);
+                  }}
+                  autoImageFocus={allowsAutoImageFocus(format, section)}
                   onPickImage={() => imageFileRef.current?.click()}
                   imageUploadBusy={imageUploadBusy}
                   imageUploadMessage={imageUploadMessage}

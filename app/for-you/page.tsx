@@ -8,6 +8,7 @@ import { memberAuthConfigured } from "@/lib/membership/auth";
 import { getMemberProfile } from "@/lib/membership/profile";
 import { forYouForMember } from "@/lib/personalization/recommend";
 import "./for-you.css";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 export const metadata: Metadata = { title: "لك", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -37,7 +38,7 @@ export default async function ForYouPage() {
         <div className="fy-tags">{profile.interests.map((item) => <span key={item.id}>{item.label}</span>)}</div>
         {lead ? (
           <section className="fy-lead">
-            <div>{lead.image ? <Image src={lead.image} alt="" fill sizes="(max-width:800px) 100vw,60vw" /> : null}</div>
+            <div>{lead.image ? <Image src={lead.image} style={imageFocusStyle(lead.imageFocus)} alt="" fill sizes="(max-width:800px) 100vw,60vw" /> : null}</div>
             <article>
               <span>{lead.sectionLabel}</span>
               <h2><Link href={lead.href}>{lead.title}</Link></h2>
@@ -49,7 +50,7 @@ export default async function ForYouPage() {
         <section className="fy-grid">
           {stories.slice(1).map((story) => (
             <article key={story.id}>
-              {story.image ? <div><Image src={story.image} alt="" fill sizes="300px" /></div> : null}
+              {story.image ? <div><Image src={story.image} style={imageFocusStyle(story.imageFocus)} alt="" fill sizes="300px" /></div> : null}
               <span>{story.sectionLabel}</span>
               <h2><Link href={story.href}>{story.title}</Link></h2>
               <small>لماذا ظهر لك؟ {story.reason?.text ?? "لأنه قريب من اهتماماتك أو من اختيارات المحررين."}</small>

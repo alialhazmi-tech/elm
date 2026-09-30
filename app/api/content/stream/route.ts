@@ -17,6 +17,7 @@ export async function GET(request: Request) {
           href: storyHref(story),
           title: story.title,
           image: story.image ?? null,
+          imageFocus: story.imageFocus ?? null,
           kick: series?.name ?? sectionName(story.section),
           color: series?.color ?? null,
           when: relativeTimeAr(story.publishedAt) ?? "",

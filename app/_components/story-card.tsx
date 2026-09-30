@@ -4,6 +4,7 @@ import Link from "next/link";
 import { sectionName, seriesOf } from "@/lib/content/provider";
 import { formatReadingMinutes, relativeTimeAr, toLatinDigits } from "@/lib/format";
 import { storyHref, type Story } from "@/lib/content/types";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 /**
  * صور البطاقات width/height بلا sizes عمدًا: مرشّحا 1x/2x فقط —
@@ -33,7 +34,7 @@ export function ContextRowCard({ story }: { story: Story }) {
       </div>
       {story.image ? (
         <Link className="ctx-thumb" href={storyHref(story)} tabIndex={-1} aria-hidden="true">
-          <Image src={story.image} alt="" width={112} height={112} />
+          <Image src={story.image} style={imageFocusStyle(story.imageFocus)} alt="" width={112} height={112} />
         </Link>
       ) : null}
     </article>
@@ -64,7 +65,7 @@ export function MosaicCard({
     >
       {story.image ? (
         <Link className="m-media" href={storyHref(story)} tabIndex={-1} aria-hidden="true">
-          <Image className="c-img" src={story.image} alt="" width={640} height={tall ? 590 : 400} />
+          <Image className="c-img" src={story.image} style={imageFocusStyle(story.imageFocus)} alt="" width={640} height={tall ? 590 : 400} />
         </Link>
       ) : null}
       <div className="m-body">
@@ -98,7 +99,7 @@ export function VideoCard({ story }: { story: Story }) {
     <article className="media-card" data-story-id={story.id}>
       <div className="media-thumb">
         {story.image ? (
-          <Image src={story.image} alt="" fill sizes="(max-width: 940px) 100vw, 380px" />
+          <Image src={story.image} style={imageFocusStyle(story.imageFocus)} alt="" fill sizes="(max-width: 940px) 100vw, 380px" />
         ) : null}
         <span className="dur">{formatReadingMinutes(story.readingMinutes)}</span>
       </div>

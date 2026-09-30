@@ -21,6 +21,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // الكِت المرجعي لا يُفحص: نستنسخ منه ولا نبنيه.
     "shadcn-ui-kit-dashboard-main/**",
+    // محمّل WASM لكاشف الوجوه منسوخ من الحزمة عند التثبيت (scripts/copy-mediapipe-wasm.mjs).
+    "public/vendor/**",
   ]),
   eslint.configs.recommended,
   ...tseslint.configs.recommended,

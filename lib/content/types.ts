@@ -56,6 +56,8 @@ export type Story = {
   /** عاجل حتى هذا الوقت (ISO) — بعده يختفي الشريط تلقائيًا. */
   breakingUntil?: string;
   image?: string;
+  /** نقطة تركيز الصورة "س% ص%" — تُمرَّر إلى object-position في الإطارات المقصوصة. */
+  imageFocus?: string;
   /** رابط يوتيوب أو تغريدة X لمواد شكل «فيديو» — يُعرض مشغّلًا مضمَّنًا بدل الصورة البارزة. */
   videoUrl?: string;
   publishedAt?: string;

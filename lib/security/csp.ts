@@ -20,7 +20,8 @@ return [
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
   "media-src 'self' blob: https:",
   "object-src 'none'",
-  `script-src 'self' ${nonce ? `'nonce-${nonce}' ${bootstrapHashes}` : "'unsafe-inline'"} https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
+  // 'wasm-unsafe-eval' للوحة وحدها: كاشف الوجوه (نقطة تركيز الصورة) يترجم WASM من أصلنا؛ لا يفتح eval للنصوص.
+  `script-src 'self' ${nonce ? `'nonce-${nonce}' ${bootstrapHashes} 'wasm-unsafe-eval'` : "'unsafe-inline'"} https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com${isDevelopment ? " 'unsafe-eval'" : ""}`,
   "script-src-attr 'none'",
   "style-src 'self' 'unsafe-inline'",
   `connect-src 'self' ${googleConnectSources} https://platform.twitter.com https://syndication.twitter.com https://cdn.syndication.twimg.com${isDevelopment ? " ws: wss:" : ""}`,

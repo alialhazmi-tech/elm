@@ -32,6 +32,7 @@ import { normalizeSearchText } from "./search-normalize";
 import { storyKeywords } from "./keywords";
 import { cachedPublicQuery, invalidatePublicContent } from "./cache";
 import { publicRecencyIso } from "./recency";
+import { normalizeImageFocus } from "./image-focus";
 
 export { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
 import { ALL_SERIES, ARCHIVED_SERIES, SERIES } from "./series";
@@ -121,6 +122,7 @@ const CARD_COLUMNS = {
   readingMinutes: storiesTable.readingMinutes,
   seriesSlug: storiesTable.seriesSlug,
   image: storiesTable.image,
+  imageFocus: storiesTable.imageFocus,
   publishedAt: storiesTable.publishedAt,
   boostedAt: storiesTable.boostedAt,
   factCheck: storiesTable.factCheck,
@@ -144,6 +146,7 @@ type CardRow = {
   readingMinutes: number;
   seriesSlug: string | null;
   image: string | null;
+  imageFocus: string | null;
   publishedAt: string | null;
   boostedAt: string | null;
   factCheck: unknown;
@@ -170,6 +173,7 @@ function mapRow(row: CardRow): Story {
     readingMinutes: row.readingMinutes,
     series: normalizeSeriesSlug(row.seriesSlug),
     image: row.image ?? undefined,
+    imageFocus: (row.image && normalizeImageFocus(row.imageFocus)) || undefined,
     publishedAt: row.publishedAt ?? undefined,
     boostedAt: row.boostedAt ?? undefined,
     updatedAt: row.updatedAt ?? undefined,

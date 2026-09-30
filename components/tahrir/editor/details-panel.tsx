@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { instagramPostUrlFrom, normalizeVideoUrl, xPostIdFrom } from "@/lib/content/video";
 import { formatRiyadhDateTime, formatRiyadhTime, riyadhWallTimeToIso } from "@/lib/tahrir/riyadh-time";
 import { VideoPlayer } from "@/components/content/video-player";
+import { ImageFocusPicker } from "./image-focus-picker";
 import { cn } from "@/lib/utils";
 
 export interface DetailsPanelProps {
@@ -38,6 +39,11 @@ export interface DetailsPanelProps {
   onSection: (value: string) => void;
   image: string;
   onImage: (value: string) => void;
+  /** نقطة تركيز الصورة "س% ص%" أو "" للمنتصف. */
+  imageFocus: string;
+  onImageFocus: (value: string) => void;
+  /** الكشف التلقائي للوجوه عند اختيار صورة جديدة (معطّل للإنفوجرافيك). */
+  autoImageFocus: boolean;
   onPickImage: () => void;
   imageUploadBusy: boolean;
   imageUploadMessage: string;
@@ -278,9 +284,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
         <Input dir="ltr" placeholder="/uploads/… أو رابط خارجي" value={props.image} onChange={(event) => props.onImage(event.target.value)} />
         {props.image ? (
           <div className="grid gap-1.5">
-            {/* مسار ديناميكي من المكتبة؛ المعاينة تعرض الأصل مباشرة. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={props.image} alt="معاينة صورة المادة" className="aspect-video w-full rounded-md border object-cover" />
+            <ImageFocusPicker image={props.image} focus={props.imageFocus} autoDetect={props.autoImageFocus} onFocus={props.onImageFocus} />
             <Button size="xs" variant="ghost" className="justify-self-start" onClick={() => props.onImage("")}>
               إزالة الصورة
             </Button>

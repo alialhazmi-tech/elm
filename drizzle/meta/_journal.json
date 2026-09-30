@@ -153,7 +153,14 @@
       "idx": 21,
       "version": "7",
       "when": 1789700000000,
-      "tag": "0021_jak_code_reports",
+      "tag": "0021_story_image_focus",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1789800000000,
+      "tag": "0022_jak_code_reports",
       "breakpoints": true
     }
   ]

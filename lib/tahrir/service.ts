@@ -6,6 +6,7 @@ import { and, asc, desc, eq, ilike, inArray, ne, sql, type SQL } from "drizzle-o
 
 import { auditLog, stories, users } from "@/db/schema";
 import { stripHtmlToText } from "@/lib/content/html";
+import { normalizeImageFocus } from "@/lib/content/image-focus";
 import { getDb } from "@/lib/db";
 import { assertCanWrite, assertExpectedVersion, stableIdentity, StoryWriteError, type WriteActor } from "./write-policy";
 import { cachedStatusCounts, invalidateStatusCounts } from "./status-counts";
@@ -80,6 +81,8 @@ export interface DraftInput {
   slug: string;
   seriesSlug: string | null;
   image: string | null;
+  /** نقطة تركيز الصورة — undefined = تبقى كما هي ما لم تتغير الصورة (عملاء لا يعرفون الحقل كالتطبيق). */
+  imageFocus?: string | null;
   format?: string;
   seoTitle?: string;
   seoDescription?: string;
@@ -123,9 +126,13 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
   // الحفظ التلقائي يبدأ مبكرًا؛ تبقى هوية المسودة الجديدة قابلة للاستكمال.
   // المنشور ومسودات تعديله يحافظان على الرابط والقسم المعتمدين.
   const identity = stableIdentity(existing?.status === "draft" && !existing.revisionOf && !existing.publishedAt ? null : existing, input, id);
+  // نقطة التركيز تخص الصورة: تغيير الصورة دون نقطة جديدة يعيدها إلى المنتصف.
+  const imageFocus = !input.image ? null
+    : input.imageFocus !== undefined ? normalizeImageFocus(input.imageFocus)
+    : existing?.image === input.image ? normalizeImageFocus(existing.imageFocus) : null;
   const content = {
     ...identity, title: input.title, excerpt: input.excerpt, body: input.body,
-    seriesSlug: input.seriesSlug, image: input.image, updatedAt: now, readingMinutes,
+    seriesSlug: input.seriesSlug, image: input.image, imageFocus, updatedAt: now, readingMinutes,
     ...privileged, ...seo,
   };
   if (input.updateScheduled) {

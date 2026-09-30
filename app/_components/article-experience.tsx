@@ -9,6 +9,7 @@ import { useArticleState } from "@/app/_components/use-article-state";
 import { SummaryListen } from "@/app/_components/summary-listen";
 import { EndingPoll } from "@/app/_components/poll";
 import { toLatinDigits } from "@/lib/format";
+import { imageFocusStyle } from "@/lib/content/image-focus";
 
 export function ArticleClosingPoll({
   storyId,
@@ -29,6 +30,7 @@ export type RelatedCard = {
   excerpt: string;
   sectionLabel: string;
   image?: string;
+  imageFocus?: string;
   readingMinutes: number;
   reason?: { code: string; text: string };
 };
@@ -415,7 +417,7 @@ export function PersonalizedRelated({
         {items.map((item) => (
           <article key={item.id} className="m-card">
             {item.image ? (
-              <Image className="c-img" src={item.image} alt="" width={640} height={400} />
+              <Image className="c-img" src={item.image} style={imageFocusStyle(item.imageFocus)} alt="" width={640} height={400} />
             ) : null}
             <div className="m-body">
               <div className="m-kick">

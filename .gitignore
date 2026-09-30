@@ -67,3 +67,6 @@ ios/**/xcuserdata/
 
 # كِت shadcn المرجعي — نستنسخ منه ولا نستورده
 shadcn-ui-kit-dashboard-main/
+
+# كاشف الوجوه: ملفات WASM تُنسخ من node_modules عند التثبيت
+/public/vendor/mediapipe/*/wasm/
