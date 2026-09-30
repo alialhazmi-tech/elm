@@ -42,6 +42,17 @@ try {
   for (const file of ['app/image-variants/route.ts', 'app/share/[id]/[version]/route.ts', 'app/share-images/[filename]/route.ts', 'lib/image-source.ts', 'lib/image-variant-loader.ts', 'lib/image-variants.ts', 'lib/sharing-image.ts', 'lib/sharing.ts', 'lib/sharing-contract.ts']) {
     await write(file, await readFile(file, 'utf8'));
   }
+  const publishedJakId = '123e4567-e89b-12d3-a456-426614174000';
+  const draftJakId = '123e4567-e89b-12d3-a456-426614174001';
+  const archivedJakId = '123e4567-e89b-12d3-a456-426614174002';
+  await write('lib/tahrir/jak-reports.ts', `
+    const reports = new Map([
+      ['${publishedJakId}', { id: '${publishedJakId}', status: 'published', image: '/uploads/621a297f-10bd-40a5-87ee-67e0a54b5c28.webp' }],
+      ['${draftJakId}', { id: '${draftJakId}', status: 'draft', image: '/uploads/621a297f-10bd-40a5-87ee-67e0a54b5c28.webp' }],
+      ['${archivedJakId}', { id: '${archivedJakId}', status: 'archived', image: '/uploads/621a297f-10bd-40a5-87ee-67e0a54b5c28.webp' }],
+    ]);
+    export async function getJakReport(id:string) { return reports.get(id) ?? null; }
+  `);
   await write('lib/content/provider.ts', `export const seedContentProvider={getStory:async(id:string)=>id==='published'?{id,section:'politics',slug:'news',title:'Public story',excerpt:'Public description',image:'/uploads/621a297f-10bd-40a5-87ee-67e0a54b5c28.webp'}:null};`);
   await write('lib/content/types.ts', `export function storyHref(story:{section:string;id:string;slug:string}){return '/'+story.section+'/'+story.id+'/'+story.slug}`);
   await write('lib/brand-sharing-image.ts', `export async function brandSharingImage():Promise<Buffer>{throw new Error('Unexpected brand fallback')}`);
@@ -96,6 +107,19 @@ try {
   assert.equal(sharedImage.search,'');
   assert.ok(sharedImage.pathname.includes('.v'+SHARING_VERSION+'-cover-'));
   assert.equal((await fetch(origin+sharedImage.pathname)).status,200);
+  const jakImagePath = `/share-images/jak-report-${publishedJakId}.jpg`;
+  const jakImage = await fetch(origin + jakImagePath);
+  assert.equal(jakImage.status, 200);
+  assert.equal(jakImage.headers.get('content-type'), 'image/jpeg');
+  const jakBytes = Buffer.from(await jakImage.arrayBuffer());
+  const jakMeta = await sharp(jakBytes).metadata();
+  assert.deepEqual([jakMeta.width, jakMeta.height], [1200, 630]);
+  const jakHead = await fetch(origin + jakImagePath, { method: 'HEAD' });
+  assert.equal(jakHead.status, 200);
+  assert.equal(jakHead.headers.get('content-length'), String(jakBytes.length));
+  for (const id of [draftJakId, archivedJakId, '123e4567-e89b-12d3-a456-426614174099']) {
+    assert.equal((await fetch(origin + `/share-images/jak-report-${id}.jpg`)).status, 404);
+  }
   // روابط /share/ القديمة تحوَّل نهائيًا إلى الرابط القانوني مع حفظ معاملات التتبع.
   const legacyShare='/share/published/'+SHARING_VERSION+'?utm_source=x';
   const shared=await fetch(origin+legacyShare,{headers:{'User-Agent':'Twitterbot/1.0'},redirect:'manual'});

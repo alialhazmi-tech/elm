@@ -7,8 +7,8 @@ export function JakReportIndex({ reports, preview = false }: { reports: JakCodeR
   return <>
     <section className="hub-hero" style={{ margin: "0 0 24px", "--sc": "#12284b" } as React.CSSProperties}>
       <div className="hub-hero-copy">
-        <p className="eyebrow">جاك العلم</p>
-        <h1>ملفات كبرى تشكّل العالم</h1>
+        <p className="eyebrow">ملفات كبرى تشكّل العالم</p>
+        <h1>جاك العلم</h1>
         <p className="hub-tagline">تقارير بصرية تفاعلية تضع الأحداث في سياقها.</p>
       </div>
       <p className="hub-count">{visible.length} تقارير{preview ? " · معاينة خاصة" : ""}</p>

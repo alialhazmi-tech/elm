@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import { getJakReport } from "@/lib/tahrir/jak-reports";
 import { JakCodeFrame } from "@/components/jak-code-frame";
+import { jakReportMetadata } from "@/lib/jak-sharing";
 
 export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ id: string; slug: string }> };
@@ -10,8 +11,7 @@ type Props = { params: Promise<{ id: string; slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const report = await getJakReport((await params).id);
   if (!report || report.status !== "published") return { title: "التقرير غير موجود", robots: { index: false, follow: false } };
-  const url = `/jak/${report.id}/${encodeURIComponent(report.slug)}`;
-  return { title: report.title, description: report.excerpt, alternates: { canonical: url }, openGraph: { title: report.title, description: report.excerpt, url, type: "article", ...(report.image ? { images: [report.image] } : {}) } };
+  return jakReportMetadata(report);
 }
 
 export default async function JakReportPage({ params }: Props) {
