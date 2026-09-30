@@ -48,13 +48,13 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: "/:path*", headers: securityHeaders.filter(({ key }) => !["Content-Security-Policy", "X-Frame-Options"].includes(key)) },
       {
         // Executable report documents set their own sandbox policy. A second app
         // CSP would block both the iframe and the original report's resources.
         source: "/:path((?!api/jak-reports/[^/]+/document/?$|api/tahrir/jak-reports/preview/?$).*)",
-        headers: securityHeaders.filter(({ key }) => ["Content-Security-Policy", "X-Frame-Options"].includes(key)),
+        headers: securityHeaders,
       },
+      { source: "/:path*", headers: securityHeaders.filter(({ key }) => !["Content-Security-Policy", "X-Frame-Options"].includes(key)) },
       { source: "/tahrir/recover", headers: [{ key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "private, no-store" }] },
       {
         // روابط iOS العالمية: آبل تشترط JSON صريحًا لملف الربط (بلا امتداد في public/).

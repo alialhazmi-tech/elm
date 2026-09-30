@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFile } from "node:fs/promises";
 import { buildJakDocument, jakDocumentHeaders, JAK_SANDBOX } from "../lib/jak-report-document.ts";
 
 test("legacy document preserves scenes, inline scripts and CSS while replacing the stylesheet placeholder", () => {
@@ -34,4 +35,14 @@ test("separate CSS cannot close its style element", () => {
   const result = buildJakDocument({ html: "<p>محتوى</p>", css: '</style><script>alert(1)</script>', title: "تقرير" });
   assert.equal((result.match(/<\/style>/g) ?? []).length, 1);
   assert.match(result, /<\\\/style>/);
+});
+
+test("built routing excludes only the sandbox documents from application frame denial", async () => {
+  const routes = JSON.parse(await readFile(`${process.env.NEXT_DIST_DIR ?? ".next-gate"}/routes-manifest.json`, "utf8"));
+  const policies = (path) => routes.headers.filter((rule) => new RegExp(rule.regex).test(path)).flatMap((rule) => rule.headers).filter((header) => ["Content-Security-Policy", "X-Frame-Options"].includes(header.key));
+  assert.deepEqual(policies("/api/jak-reports/example/document"), []);
+  assert.deepEqual(policies("/api/tahrir/jak-reports/preview"), []);
+  for (const path of ["/", "/tahrir", "/jak", "/api/tahrir/jak-reports", "/api/jak-reports/example/document/extra"]) {
+    assert.ok(policies(path).some((header) => header.key === "X-Frame-Options" && header.value === "DENY"), path);
+  }
 });

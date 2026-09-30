@@ -44,6 +44,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const gate = await requirePermission("jak.manage");
   if (!gate.ok) return gate.response;
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? new URL(request.url).host;
+  let originHost = "";
+  try { originHost = origin ? new URL(origin).host : ""; } catch { /* Reject malformed origins. */ }
+  if (!originHost || originHost !== host || request.headers.get("sec-fetch-site") === "cross-site") {
+    return NextResponse.json({ error: "مصدر الطلب غير مسموح." }, { status: 403 });
+  }
   const body = await request.json().catch(() => null) as Record<string, unknown> | null;
   if (!body || typeof body.action !== "string") return NextResponse.json({ error: "الإجراء مطلوب." }, { status: 400 });
   try {
