@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 
 import { SiteFooter, SiteHeader } from "@/app/_components/site-chrome";
-import { MosaicCard } from "@/app/_components/story-card";
-import { listByFormat } from "@/lib/content/provider";
-import { toLatinDigits } from "@/lib/format";
+import { JakReportIndex } from "@/components/jak-report-index";
+import { listJakReports } from "@/lib/tahrir/jak-reports";
+
 
 /** جاك العلم — الملفات الكبرى بقالب القراءة الغامر؛ دليلها العام. */
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "جاك العلم",
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default async function JakIndexPage() {
-  const stories = await listByFormat("jakalelm", 36);
+  const reports = await listJakReports({ publicOnly: true, limit: 100 });
 
   return (
     <>
@@ -24,24 +24,7 @@ export default async function JakIndexPage() {
       <SiteHeader active="/jak" />
 
       <main id="main-content" className="wrap sx-page">
-        <section className="hub-hero" style={{ margin: "0 0 24px", "--sc": "#12284b" } as React.CSSProperties}>
-          <div className="hub-hero-copy">
-            <p className="eyebrow">جاك العلم</p>
-            <h1>ملفات كبرى تشكّل العالم</h1>
-            <p className="hub-tagline">نحللها، ونضعها في سياقها التاريخي، ونقدّمها بقالب قراءة غامر.</p>
-          </div>
-          <p className="hub-count">{stories.length > 0 ? `${toLatinDigits(stories.length)} ملفًا` : "الملفات في الطريق"}</p>
-        </section>
-
-        {stories.length > 0 ? (
-          <div className="grid-3 sx-grid" style={{ marginTop: 0 }}>
-            {stories.map((story) => (
-              <MosaicCard key={story.id} story={story} />
-            ))}
-          </div>
-        ) : (
-          <p className="empty-state">ملفات جاك العلم في الطريق.</p>
-        )}
+        <JakReportIndex reports={reports} />
       </main>
 
       <SiteFooter />

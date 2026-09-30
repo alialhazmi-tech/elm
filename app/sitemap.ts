@@ -6,6 +6,7 @@ import { listSitemapEntries } from "@/lib/content/provider";
 import { publicStoryId } from "@/lib/content/canonical-stories";
 import { listPodcastShows } from "@/lib/podcast-catalog";
 import { podcastShowPath } from "@/lib/podcasts";
+import { listJakReports } from "@/lib/tahrir/jak-reports";
 
 /**
  * خريطة الموقع الشاملة: الصفحات الثابتة والأقسام والسلاسل وكل المواد المنشورة (stories).
@@ -23,6 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: BASE_URL },
     { url: `${BASE_URL}/series` },
     { url: `${BASE_URL}/podcasts` },
+    { url: `${BASE_URL}/jak` },
     { url: `${BASE_URL}/about` },
     { url: `${BASE_URL}/contact` },
     { url: `${BASE_URL}/privacy-policy` },
@@ -48,5 +50,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: story.updatedAt ?? story.publishedAt ?? undefined,
   }));
 
-  return [...staticPages, ...sectionPages, ...seriesPages, ...podcastPages, ...storyPages];
+  const jakPages: MetadataRoute.Sitemap = (await listJakReports({ publicOnly: true, limit: 100 }))
+    .map((report) => ({ url: `${BASE_URL}/jak/${report.id}/${encodeURIComponent(report.slug)}`, lastModified: report.updatedAt }));
+  return [...staticPages, ...sectionPages, ...seriesPages, ...podcastPages, ...storyPages, ...jakPages];
 }

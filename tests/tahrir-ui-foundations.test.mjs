@@ -196,8 +196,11 @@ test("التنقل: عناوين أمان الحساب وسجل النسخ، و�
     assert.equal(pageTitleFor("/tahrir/security", null), "أمان الحساب");
     assert.equal(pageTitleFor("/tahrir/history/story-id", null), "سجل النسخ");
     assert.equal(pageTitleFor("/tahrir/stories", "review"), "الاعتماد");
-    const jak = NAV_GROUPS.flatMap((g) => g.items).find((item) => item.href === "/tahrir/jak");
+    const jak = NAV_GROUPS.flatMap((g) => g.items).find((item) => item.href === "/tahrir/jak-reports");
     assert.equal(jak.comingSoon, undefined);
+    const legacyJak = NAV_GROUPS.flatMap((g) => g.items).find((item) => item.href === "/tahrir/jak");
+    assert.equal(legacyJak.title, "جاك العلم المحدثة");
+    assert.equal(legacyJak.comingSoon, true);
     const daily = NAV_GROUPS[0].items;
     assert.equal(daily[daily.length - 1].title, "دليل الاستخدام");
     assert.ok(navGroupsFor(["jak.manage"]).flatMap((g) => g.items).some((item) => item.href === "/tahrir/jak"));

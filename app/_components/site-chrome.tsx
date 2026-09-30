@@ -83,7 +83,7 @@ export async function SiteHeader({
 
           <nav className="topnav" aria-label="التنقل الرئيسي">
             <Link href="/" className={active === "/" ? "is-active" : undefined}>الرئيسية</Link>
-            <a href="https://jakelelm.alelm.net">جاك العلم</a>
+            <Link href="/jak">جاك العلم</Link>
             <div className="nav-item has-menu">
               <Link href={visibleSections.some(item => item.href === "/politics") ? "/politics" : "/news"} className={sectionActive ? "is-active" : undefined} aria-haspopup="true">
                 الأخبار <Caret />
@@ -119,7 +119,7 @@ export async function SiteHeader({
           <div className="top-tools">
             <MobileNavigation>
               <Link className="site-drawer-home" href="/" aria-current={active === "/" ? "page" : undefined}>الرئيسية <span aria-hidden="true">←</span></Link>
-              <a className="site-drawer-home" href="https://jakelelm.alelm.net">جاك العلم <span aria-hidden="true">←</span></a>
+              <Link className="site-drawer-home" href="/jak">جاك العلم <span aria-hidden="true">←</span></Link>
               {/* البودكاست في أعلى القائمة لا في آخرها تحت «مرئي وصوتي». */}
               <Link className="site-drawer-home" href="/podcasts" aria-current={active === "/podcasts" ? "page" : undefined}>بودكاست العلم <span aria-hidden="true">←</span></Link>
               <section className="site-drawer-section" aria-label="الأقسام">

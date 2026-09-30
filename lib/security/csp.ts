@@ -14,8 +14,8 @@ return [
   "form-action 'self'",
   "frame-ancestors 'none'",
   // مشغّلات يوتيوب وInstagram وتضمين X الرسمي وإطار GTM البديل عند تعطيل JavaScript.
-  "frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://twitter.com/i/videos/tweet/ https://x.com/i/videos/tweet/ https://www.instagram.com",
-  "img-src 'self' data: blob: https://dash.alelm.net https://www.googletagmanager.com https://*.google-analytics.com",
+  "frame-src 'self' https://www.youtube-nocookie.com https://www.googletagmanager.com https://platform.twitter.com https://syndication.twitter.com https://twitter.com/i/videos/tweet/ https://x.com/i/videos/tweet/ https://www.instagram.com",
+  "img-src 'self' data: blob: https://dash.alelm.net https://jakelelm.alelm.net https://www.googletagmanager.com https://*.google-analytics.com",
   // بث حلقات البودكاست: مضيفو الخلاصات يحوّلون الملفات عبر CDN متغير النطاقات،
   // والمنقّي يجرد أي وسم وسائط من المتون — مكوناتنا وحدها مصدر <audio>.
   "media-src 'self' blob: https:",

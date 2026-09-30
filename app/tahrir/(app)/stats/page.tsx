@@ -32,7 +32,7 @@ const FORMAT_NAMES: Record<string, { label: string; color: string }> = {
   videos: { label: "فيديو", color: "#ef4444" },
   reports: { label: "تقارير", color: "#10b981" },
   podcasts: { label: "بودكاست", color: "#8b5cf6" },
-  jakalelm: { label: "جاك العلم", color: "#f59e0b" },
+  jakalelm: { label: "جاك العلم المحدثة", color: "#f59e0b" },
 };
 
 function daysAgoIso(days: number): string {
