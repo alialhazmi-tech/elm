@@ -55,12 +55,15 @@ test("قائمة الهاتف تفصل الأقسام والسلاسل والص�
 });
 
 test("قوائم المواد على الهاتف بطاقات أفقية كثيفة", async () => {
-  const [css, pagination, search] = await Promise.all([
-    read("app/globals.css"), read("lib/content/pagination.ts"), read("app/search/page.tsx"),
+  const [css, editorial, pagination, search] = await Promise.all([
+    read("app/globals.css"), read("app/editorial-v2.css"), read("lib/content/pagination.ts"), read("app/search/page.tsx"),
   ]);
-  assert.match(css, /\.grid-3 \.m-card[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) 112px/);
-  assert.match(css, /\.section-feed \.m-card:not\(\.section-lead\)/);
-  assert.match(css, /\.series-feed \.m-card:not\(\.series-lead\)/);
+  // هندسة الصف ملكها editorial-v2؛ وبطاقات الصدارة (m-tall/section-lead) تبقى طولية.
+  assert.match(editorial, /\.grid-3 \.m-card:not\(\.m-tall\)[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) 116px/);
+  assert.match(editorial, /\.m-card:not\(\.m-tall\):not\(\.section-lead\):not\(\.series-lead\)/);
+  // المصغّرة إطار عرضي ثابت 116×100، لا تتبع ارتفاع النص فتُقصّ إلى شريط طولي.
+  assert.match(editorial, /\.grid-3 \.m-card:not\(\.m-tall\) \.c-img\s*\{\s*width:\s*116px;\s*height:\s*100px;\s*min-height:\s*100px/);
+  assert.doesNotMatch(css, /\.m-card:not\(\.m-tall\):not\(\.section-lead\):not\(\.series-lead\) \.c-img/);
   assert.match(css, /\.series-directory-card\s*\{\s*min-height:\s*0/);
   assert.match(pagination, /LIST_PAGE_SIZE = 18/);
   assert.match(search, /<Pagination basePath="\/search"/);
