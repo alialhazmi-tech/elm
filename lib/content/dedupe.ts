@@ -16,3 +16,14 @@ export function takeUniqueStories(
 
   return unique;
 }
+
+/**
+ * المصوّر أولًا مع حفظ الترتيب داخل كل مجموعة.
+ *
+ * صفّ «مرئي وصوتي» في الرئيسية بطاقتان متجاورتان: بطاقة بلا غلاف تُرسم مستطيلًا
+ * كحليًا فارغًا فيبدو الصفّ غير متوازن بجانب بطاقة مصوّرة. تقديم المصوّر يمنع ذلك،
+ * وبقاء غير المصوّر في الذيل يحفظ صفًّا مكتملًا حين تقلّ الفيديوهات المصوّرة.
+ */
+export function preferWithImages(stories: readonly Story[]): Story[] {
+  return [...stories.filter((story) => story.image), ...stories.filter((story) => !story.image)];
+}
