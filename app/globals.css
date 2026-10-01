@@ -1099,24 +1099,11 @@ a.story-link:hover { color: var(--link); }
 
   
 
-  .m-card:not(.m-tall):not(.section-lead):not(.series-lead),
-  .grid-3 .m-card,
-  .section-feed .m-card:not(.section-lead),
-  .series-feed .m-card:not(.series-lead) {
-    display: grid; grid-template-columns: minmax(0, 1fr) 112px; min-height: 112px; border-radius: 12px;
-  }
-  .m-card:not(.m-tall):not(.section-lead):not(.series-lead) .c-img,
-  .grid-3 .m-card .c-img,
-  .section-feed .m-card:not(.section-lead) .c-img,
-  .series-feed .m-card:not(.series-lead) .c-img {
-    grid-column: 2; grid-row: 1; width: 112px; height: 100%; min-height: 112px; object-fit: cover;
-  }
-  .m-card:not(.m-tall):not(.section-lead):not(.series-lead) .m-body,
-  .grid-3 .m-card .m-body,
-  .section-feed .m-card:not(.section-lead) .m-body,
-  .series-feed .m-card:not(.series-lead) .m-body {
-    grid-column: 1; grid-row: 1; min-width: 0; padding: 12px; justify-content: center;
-  }
+  /* هندسة الصف الأفقي على الهاتف (عمود المصغّرة وأبعاد الصورة) ملكها editorial-v2:
+     .m-card:not(.m-tall):not(.section-lead):not(.series-lead) فيها مصغّرة ثابتة 116×100.
+     تكرارها هنا بمُحدِّدات :not() يرفع الأخصّصية فوقها فيغلبها، وقد كان يمدّ الصورة إلى
+     ارتفاع النص فتتحوّل الأعمال العرضية إلى شرائح طولية مقصوصة وغير متساوية. */
+
   .m-card h3 { font-size: 13px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .m-kick { font-size: 9.5px; }
   .m-kick time { display: none; }

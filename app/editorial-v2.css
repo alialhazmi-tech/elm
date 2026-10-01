@@ -653,8 +653,10 @@ body {
   .series-feed .series-lead .c-img { height: 240px; min-height: 0; }
   .section-feed .section-lead h3,
   .series-feed .series-lead h3 { font-size: 25px; }
-  .m-card:not(.section-lead):not(.series-lead),
-  .grid-3 .m-card {
+  /* بطاقات القوائم صفّ أفقي: المصغّرة إطار عرضي ثابت 116×100 فلا يتبع ارتفاع النص
+     (وإلا قُصّت الصورة إلى شريط طولي يختلف بين بطاقة وأخرى)، وبطاقات الصدارة تبقى طولية. */
+  .m-card:not(.m-tall):not(.section-lead):not(.series-lead),
+  .grid-3 .m-card:not(.m-tall) {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 116px;
     gap: 14px;
@@ -662,12 +664,12 @@ body {
     padding-bottom: 20px;
     border-bottom: 1px solid var(--line);
   }
-  .m-card:not(.section-lead):not(.series-lead) .m-media,
-  .grid-3 .m-card .m-media { grid-column: 2; grid-row: 1; border-radius: 5px; }
-  .m-card:not(.section-lead):not(.series-lead) .c-img,
-  .grid-3 .m-card .c-img { width: 116px; height: 100px; min-height: 100px; }
-  .m-card:not(.section-lead):not(.series-lead) .m-body,
-  .grid-3 .m-card .m-body { grid-column: 1; grid-row: 1; padding: 0; justify-content: start; }
+  .m-card:not(.m-tall):not(.section-lead):not(.series-lead) .m-media,
+  .grid-3 .m-card:not(.m-tall) .m-media { grid-column: 2; grid-row: 1; align-self: center; border-radius: 5px; }
+  .m-card:not(.m-tall):not(.section-lead):not(.series-lead) .c-img,
+  .grid-3 .m-card:not(.m-tall) .c-img { width: 116px; height: 100px; min-height: 100px; }
+  .m-card:not(.m-tall):not(.section-lead):not(.series-lead) .m-body,
+  .grid-3 .m-card:not(.m-tall) .m-body { grid-column: 1; grid-row: 1; min-width: 0; padding: 0; justify-content: start; }
   .m-card h3 { font-size: 15px; }
   .m-card .m-meta { margin-top: auto; }
   .grid-3 { grid-template-columns: 1fr; gap: 24px; }
