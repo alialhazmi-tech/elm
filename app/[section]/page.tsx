@@ -65,6 +65,9 @@ export default async function SectionPage({ params, searchParams }: Props) {
   // ترقيم في SQL — القسم قد يحوي آلاف مواد الأرشيف ولا يُحمَّل كله.
   const { items, page, pageCount, total, from, to } = await loadPage(section, p);
   const basePath = `/${section}`;
+  // الإنفوجرافيك لوحاته نصية كاملة: لا بطاقة بارزة تستحوذ على الصدارة،
+  // ترويسة القسم (الاسم + التعريف) تكفي ثم تمشي الشبكة مصغّرة موحّدة.
+  const isInfographic = section === "infographics";
   // Do not publish infinite self-canonical aliases of the final archive page.
   if (p !== undefined && p !== (page > 1 ? String(page) : undefined)) {
     permanentRedirect(pageHref(basePath, page));
@@ -100,15 +103,19 @@ export default async function SectionPage({ params, searchParams }: Props) {
         <div className="wrap">
           {items.length > 0 ? (
             <>
-              <div className="section-feed">
-                {items.map((story, index) => (
-                  <MosaicCard
-                    key={story.id}
-                    story={story}
-                    tall={page === 1 && index === 0}
-                    className={page === 1 && index === 0 ? "section-lead" : undefined}
-                  />
-                ))}
+              {/* وسم الإنفوجرافيك: لوحاته نصية طولية 3:4 فتُعرض كاملة لا مقصوصة (editorial-v2). */}
+              <div className={isInfographic ? "section-feed is-infographic" : "section-feed"}>
+                {items.map((story, index) => {
+                  const isLead = !isInfographic && page === 1 && index === 0;
+                  return (
+                    <MosaicCard
+                      key={story.id}
+                      story={story}
+                      tall={isLead}
+                      className={isLead ? "section-lead" : undefined}
+                    />
+                  );
+                })}
               </div>
               <Pagination basePath={basePath} page={page} pageCount={pageCount} />
             </>

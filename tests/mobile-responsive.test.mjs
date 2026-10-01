@@ -69,6 +69,23 @@ test("قوائم المواد على الهاتف بطاقات أفقية كثي
   assert.match(search, /<Pagination basePath="\/search"/);
 });
 
+test("صفحة الإنفوجرافيك: ترويسة القسم فقط ثم لوحات كاملة مصغّرة بلا بطاقة بارزة", async () => {
+  const [page, editorial] = await Promise.all([
+    read("app/[section]/page.tsx"), read("app/editorial-v2.css"),
+  ]);
+  // ترويسة القسم (الاسم + التعريف) تكفي: لا بطاقة صدارة في الإنفوجرافيك.
+  assert.match(page, /const isInfographic = section === "infographics"/);
+  assert.match(page, /const isLead = !isInfographic && page === 1 && index === 0/);
+  assert.match(page, /tall=\{isLead\}/);
+  assert.doesNotMatch(editorial, /\.section-feed\.is-infographic \.section-lead/);
+  // وسم القسم يجعل القواعد خاصة بلوحاته النصية الطولية، مصغّرة بأربعة أعمدة.
+  assert.match(page, /isInfographic \? "section-feed is-infographic"/);
+  assert.match(editorial, /\.section-feed\.is-infographic \.m-card\s*\{\s*grid-column:\s*span 3/);
+  // الإطار بنسبة المصدر 3:4 مع contain: لا قصّ ولا شرائط، وقيود الارتفاع القديمة ملغاة.
+  assert.match(editorial, /\.section-feed\.is-infographic \.m-card \.c-img\s*\{[^}]*max-height:\s*none;[^}]*aspect-ratio:\s*3 \/ 4;[^}]*object-fit:\s*contain/);
+  assert.match(editorial, /\.section-feed\.is-infographic \.m-card:not\(\.m-tall\):not\(\.section-lead\) \.c-img\s*\{[^}]*aspect-ratio:\s*3 \/ 4/);
+});
+
 test("العضوية ولوحة التحرير لهما قواعد هاتف مستقلة", async () => {
   const [join, welcome, feed, layout, editor, table] = await Promise.all([
     read("app/join/member-auth.css"),

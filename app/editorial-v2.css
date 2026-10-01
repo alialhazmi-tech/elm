@@ -297,6 +297,18 @@ body {
 .grid-3 { gap: 42px 25px; margin-top: 38px; }
 .grid-3 .m-card { min-width: 0; }
 
+/* ---------- الإنفوجرافيك لوحة نصية: تُعرض كاملة مصغّرة ----------
+   مصادر الإنفوجرافيك طولية 3:4 ونصّها داخل الصورة؛ والإطار العرضي كان يقتطع
+   نحو 57% منها. الآن إطارها 3:4 (نسبة المصدر نفسها) مع object-fit: contain
+   فلا يُقطع أي جزء حتى لو خرجت لوحة بنسبة أخرى، وبأربعة أعمدة تبقى مصغّرة
+   كمعرض الواجهة، والخلفية تملأ أي فراغ حول اللوحة.
+   ولا بطاقة بارزة في هذا القسم: ترويسة القسم (الاسم + التعريف) تكفي. */
+.section-feed.is-infographic .m-card { grid-column: span 3; }
+.section-feed.is-infographic .m-card .c-img {
+  width: 100%; height: auto; min-height: 0; max-height: none; aspect-ratio: 3 / 4;
+  object-fit: contain; background: var(--surface-2);
+}
+
 .ask-block.ai-surface {
   margin-top: 30px !important;
   padding: 0 0 28px;
@@ -673,6 +685,15 @@ body {
   .m-card h3 { font-size: 15px; }
   .m-card .m-meta { margin-top: auto; }
   .grid-3 { grid-template-columns: 1fr; gap: 24px; }
+
+  /* الإنفوجرافيك على الهاتف: مصغّرة طولية كاملة بدل شريط عرضي مقصوص */
+  .section-feed.is-infographic .m-card:not(.m-tall):not(.section-lead) {
+    grid-template-columns: minmax(0, 1fr) 96px;
+  }
+  .section-feed.is-infographic .m-card:not(.m-tall):not(.section-lead) .c-img {
+    width: 96px; height: auto; min-height: 0; aspect-ratio: 3 / 4;
+    object-fit: contain; background: var(--surface-2);
+  }
 
   .series-index-hero,
   .series-detail-hero { padding: 39px 14px 27px; }
