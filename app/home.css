@@ -295,6 +295,16 @@ body:has(.home-shell) {
   padding: 3px 10px; border-radius: 999px; display: flex; align-items: center; gap: 6px;
 }
 .media-thumb .dur::before { content: "▶"; font-size: 8px; }
+/* بطاقة بلا صورة مصغّرة (فيديو بلا غلاف): زر تشغيل مركزي بدل مستطيل كحلي فارغ */
+.media-thumb:not(:has(img))::after {
+  content: "▶";
+  position: absolute; inset: 0; margin: auto; width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
+  padding-inline-start: 4px;
+  border-radius: 50%; background: rgb(255 255 255 / 0.93); color: var(--navy-deep);
+  font-size: 17px; line-height: 1;
+  box-shadow: 0 12px 28px -14px rgb(0 0 0 / 0.65);
+}
 .media-card .kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--navy); }
 .media-card .kicker::before { background: var(--navy); }
 .media-card .kicker .sect { color: var(--ink-3); font-weight: 500; }

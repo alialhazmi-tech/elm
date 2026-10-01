@@ -15,7 +15,7 @@ import { stories as storiesTable } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { LIST_PAGE_SIZE, paginate, parsePage, type PageSlice } from "./pagination";
 import { SECTION_NAMES, seedStories, seedVideos } from "./seed";
-import { takeUniqueStories } from "./dedupe";
+import { preferWithImages, takeUniqueStories } from "./dedupe";
 import type {
   BriefItem,
   ContentProvider,
@@ -696,7 +696,9 @@ function composeHome(articles: Story[], videos: Story[], stories: Story[]): Home
     : null;
   if (questionStory) seen.add(questionStory.id);
 
-  const homeVideos = takeUniqueStories(videos, seen, 2);
+  // «مرئي وصوتي»: المصوّر أولًا حتى لا تقع بطاقة كحلية فارغة بجانب صورة (لا توازن)،
+  // ومن بلا صورة يبقى بديلًا إن قلّ عدد الفيديوهات المصوّرة.
+  const homeVideos = takeUniqueStories(preferWithImages(videos), seen, 2);
 
   // الموجز يعرض ما ليس أمام القارئ: الهيرو مجاور له فلا يتكرر فيه.
   const briefExtras = takeUniqueStories(
