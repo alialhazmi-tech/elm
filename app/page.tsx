@@ -94,9 +94,10 @@ export default async function Home() {
     home.brief.map((item) => item.publishedAt).filter(Boolean).sort().at(-1) ?? undefined,
   );
 
-  // «وراء الخبر»: مرتكز + 3 صفوف تحريرية.
+  // «وراء الخبر»: مرتكز + 4 صفوف تحريرية — الرابع (المُجلَب أصلًا في التدفق)
+  // يملأ الفراغ أسفل العمود بجانب المرتكز الطويل فلا تبقى مساحة بيضاء.
   const contextFeatured = home.mosaic[0];
-  const contextRows: Story[] = home.mosaic.slice(1, 4);
+  const contextRows: Story[] = home.mosaic.slice(1, 5);
 
   return (
     <>
