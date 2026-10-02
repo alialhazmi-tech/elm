@@ -300,8 +300,8 @@ body {
 /* ---------- الإنفوجرافيك لوحة نصية: تُعرض كاملة مصغّرة ----------
    مصادر الإنفوجرافيك طولية 3:4 ونصّها داخل الصورة؛ والإطار العرضي كان يقتطع
    نحو 57% منها. الآن إطارها 3:4 (نسبة المصدر نفسها) مع object-fit: contain
-   فلا يُقطع أي جزء حتى لو خرجت لوحة بنسبة أخرى، وبأربعة أعمدة تبقى مصغّرة
-   كمعرض الواجهة، والخلفية تملأ أي فراغ حول اللوحة.
+   فلا يُقطع أي جزء حتى لو خرجت لوحة بنسبة أخرى. أربعة أعمدة على الشاشات
+   الكبيرة، وعمودان على التابلت، وبطاقة بعرض الصف على الهاتف.
    ولا بطاقة بارزة في هذا القسم: ترويسة القسم (الاسم + التعريف) تكفي. */
 .section-feed.is-infographic .m-card { grid-column: span 3; }
 .section-feed.is-infographic .m-card .c-img {
@@ -574,6 +574,7 @@ body {
   .why-panel { grid-template-columns: 160px 1fr; }
   .why-action { grid-column: 2; }
   .section-feed .m-card,
+  .section-feed.is-infographic .m-card,
   .series-feed .m-card { grid-column: span 6; }
   .article-reading-layout { grid-template-columns: 1fr; gap: 22px; width: min(100%, 720px); }
   .article-reader-rail { position: static; }
@@ -658,6 +659,7 @@ body {
   .section-feed,
   .series-feed { gap: 26px 0; margin-top: 25px; }
   .section-feed .m-card,
+  .section-feed.is-infographic .m-card,
   .series-feed .m-card { grid-column: 1 / -1; }
   .section-feed .section-lead,
   .series-feed .series-lead { gap: 17px; padding-bottom: 28px; }
@@ -693,6 +695,18 @@ body {
   .section-feed.is-infographic .m-card:not(.m-tall):not(.section-lead) .c-img {
     width: 96px; height: auto; min-height: 0; aspect-ratio: 3 / 4;
     object-fit: contain; background: var(--surface-2);
+  }
+
+  /* أغلفة جاك العلم تتضمن نصًا: مساحة عرض كاملة فوق العنوان دون قص أطرافها. */
+  .grid-3.jak-index-grid .m-card:not(.m-tall) {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .grid-3.jak-index-grid .m-card:not(.m-tall) .m-media { width: 100%; }
+  .grid-3.jak-index-grid .m-card:not(.m-tall) .c-img {
+    width: 100%; height: auto; min-height: 0; max-height: none;
+    aspect-ratio: 16 / 9; object-fit: contain;
   }
 
   .series-index-hero,

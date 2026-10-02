@@ -13,7 +13,7 @@ export function JakReportIndex({ reports, preview = false }: { reports: JakCodeR
       </div>
       <p className="hub-count">{visible.length} تقارير{preview ? " · معاينة خاصة" : ""}</p>
     </section>
-    {visible.length ? <div className="grid-3 sx-grid" style={{ marginTop: 0 }}>
+    {visible.length ? <div className="grid-3 sx-grid jak-index-grid" style={{ marginTop: 0 }}>
       {visible.map((report) => {
         const href = preview ? `/tahrir/jak-reports/${report.id}/preview` : `/jak/${report.id}/${encodeURIComponent(report.slug)}`;
         return <article className="m-card" key={report.id}>
