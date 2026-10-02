@@ -45,6 +45,22 @@ function Kick({ story }: { story: Story }) {
   );
 }
 
+/** شارة السلسلة مستقلة عن تصنيف قصة الصدارة. */
+function HeroLabels({ story }: { story: Story }) {
+  const series = seriesOf(story);
+  return (
+    <div className="sh-lead-labels" style={{ "--kc": series?.color } as React.CSSProperties}>
+      {series ? (
+        <span className="sh-lead-series">
+          <span className="sh-lead-series-label">سلسلة</span>
+          <span>{series.name}</span>
+        </span>
+      ) : null}
+      <span className="sh-lead-section">{sectionName(story.section)}</span>
+    </div>
+  );
+}
+
 // كيكر + عنوان قائدة البلوك — يُركَّب فوق الصورة حين توجد، وتحتها حين لا توجد.
 function LeadHead({ story }: { story: Story }) {
   return (
@@ -123,7 +139,7 @@ export default async function Home() {
             data-story-id={hero.id}
           >
             <div className="sh-lead-copy">
-              <Kick story={hero} />
+              <HeroLabels story={hero} />
               <h1>
                 <Link className="story-link" href={storyHref(hero)}>{hero.title}</Link>
               </h1>
