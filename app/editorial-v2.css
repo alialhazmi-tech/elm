@@ -312,7 +312,7 @@ body {
 /* تتساوى عروض أغلفة جاك؛ الارتفاع يتبع المصدر بلا قص أو تصغير داخل إطار ثابت. */
 .grid-3.jak-index-grid .m-card:not(.m-tall) .m-media .c-img {
   width: 100%; height: auto; min-height: 0; max-height: none;
-  aspect-ratio: auto; object-fit: contain;
+  aspect-ratio: auto; object-fit: contain; transform: none;
 }
 
 .ask-block.ai-surface {
