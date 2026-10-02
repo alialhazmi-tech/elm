@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { JakCodeReport } from "@/lib/jak-report-types";
+import { formatArticleTimestamp } from "@/lib/format";
 
 export function JakReportIndex({ reports, preview = false }: { reports: JakCodeReport[]; preview?: boolean }) {
   const visible = reports.filter((report) => report.showOnHomepage);
@@ -16,15 +17,16 @@ export function JakReportIndex({ reports, preview = false }: { reports: JakCodeR
     {visible.length ? <div className="grid-3 sx-grid jak-index-grid" style={{ marginTop: 0 }}>
       {visible.map((report) => {
         const href = preview ? `/tahrir/jak-reports/${report.id}/preview` : `/jak/${report.id}/${encodeURIComponent(report.slug)}`;
+        const publishedAt = report.sourcePublishedAt ?? report.publishedAt ?? undefined;
+        const publishedTimestamp = formatArticleTimestamp(publishedAt);
         return <article className="m-card" key={report.id}>
           {report.image && <Link className="m-media" href={href} tabIndex={-1} aria-hidden="true">
             <Image unoptimized className="c-img" src={report.image} width={640} height={400} alt="" />
           </Link>}
           <div className="m-body">
-            <div className="m-kick"><span>جاك العلم</span>{preview && <span>تجريبي · {report.status === "published" ? "منشور" : "غير منشور"}</span>}</div>
+            {preview && <div className="m-kick"><span>تجريبي · {report.status === "published" ? "منشور" : "غير منشور"}</span></div>}
             <h2 style={{ fontSize: "1.25rem" }}><Link href={href}>{report.title}</Link></h2>
-            {report.excerpt && <p>{report.excerpt}</p>}
-            <div className="m-meta"><span>تقرير تفاعلي</span></div>
+            {publishedTimestamp && <time className="m-meta" dateTime={publishedAt}>{publishedTimestamp}</time>}
           </div>
         </article>;
       })}
