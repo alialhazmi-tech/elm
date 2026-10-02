@@ -309,6 +309,12 @@ body {
   object-fit: contain; background: var(--surface-2);
 }
 
+/* تتساوى عروض أغلفة جاك؛ الارتفاع يتبع المصدر بلا قص أو تصغير داخل إطار ثابت. */
+.grid-3.jak-index-grid .m-card:not(.m-tall) .m-media .c-img {
+  width: 100%; height: auto; min-height: 0; max-height: none;
+  aspect-ratio: auto; object-fit: contain; transform: none;
+}
+
 .ask-block.ai-surface {
   margin-top: 30px !important;
   padding: 0 0 28px;
@@ -704,10 +710,6 @@ body {
     gap: 14px;
   }
   .grid-3.jak-index-grid .m-card:not(.m-tall) .m-media { width: 100%; }
-  .grid-3.jak-index-grid .m-card:not(.m-tall) .c-img {
-    width: 100%; height: auto; min-height: 0; max-height: none;
-    aspect-ratio: 16 / 9; object-fit: contain;
-  }
 
   .series-index-hero,
   .series-detail-hero { padding: 39px 14px 27px; }
