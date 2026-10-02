@@ -216,6 +216,20 @@ const isVideo = (story: Story) => story.section === "videos" || story.format ===
 const isInfographic = (story: Story) =>
   story.section === "infographics" || story.format === "infographics";
 
+/** أرشيفا الشكلين يجمعان المواد بحسب القسم القديم أو الصيغة الصريحة. */
+function sectionDbFilter(section: string) {
+  return section === "videos" || section === "infographics"
+    ? or(eq(storiesTable.section, section), eq(storiesTable.format, section))
+    : eq(storiesTable.section, section);
+}
+
+function sectionSeedFilter(section: string) {
+  return (story: Story) =>
+    section === "videos" ? isVideo(story) :
+    section === "infographics" ? isInfographic(story) :
+    story.section === section;
+}
+
 /* ============ العاجل ============ */
 
 export interface BreakingItem {
@@ -403,13 +417,12 @@ export async function pageBySection(
   section: string,
   rawPage: string | undefined | null,
 ): Promise<PageSlice<Story>> {
-  // «مرئي» أرشيف شكل لا قسم موضوعي: الفيديو يحتفظ بقسمه الأصلي وتجمعه الصفحة عبر format.
-  const dbFilter = section === "videos"
-    ? or(eq(storiesTable.section, section), eq(storiesTable.format, "videos"))
-    : eq(storiesTable.section, section);
-  const seedFilter = (story: Story) => section === "videos" ? isVideo(story) : story.section === section;
+  // «مرئي» و«إنفوجرافيك» أرشيفا شكل لا قسم موضوعي: قد يحتفظ المحتوى بقسمه
+  // الموضوعي، لذلك يجب أن تجمع الصفحة بين section وformat مثل معرض الرئيسية.
+  const dbFilter = sectionDbFilter(section);
+  const seedFilter = sectionSeedFilter(section);
   return dbOrSeed(
-    `page:section:${section}:${parsePage(rawPage)}`,
+    `page:section:v2:${section}:${parsePage(rawPage)}`,
     DB_CACHE_MS,
     (db) => pageFromDb(db, and(PUBLISHED, dbFilter), rawPage),
     () => paginate(seedAll.filter(seedFilter).sort(byDateDesc), rawPage),
@@ -849,12 +862,10 @@ export const seedContentProvider: ContentProvider = {
   },
 
   async listBySection(section) {
-    const dbFilter = section === "videos"
-      ? or(eq(storiesTable.section, section), eq(storiesTable.format, "videos"))
-      : eq(storiesTable.section, section);
-    const seedFilter = (story: Story) => section === "videos" ? isVideo(story) : story.section === section;
+    const dbFilter = sectionDbFilter(section);
+    const seedFilter = sectionSeedFilter(section);
     return dbOrSeed(
-      `list:section:${section}`,
+      `list:section:v2:${section}`,
       DB_CACHE_MS,
       async (db) => {
         const rows = await db

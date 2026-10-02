@@ -77,10 +77,9 @@ test("روابط Instagram تُطبَّع إلى منشور عام بصيغة ca
 });
 
 test("المحرر وصفحة المادة يستخدمان نفس المشغّل وسياسة المحتوى تسمح بمضيفي التضمين المحددين", async () => {
-  const [page, styles, provider, config, route, migrate, schema, editor, details, player] = await Promise.all([
+  const [page, styles, config, route, migrate, schema, editor, details, player] = await Promise.all([
     read("app/[section]/[id]/[slug]/page.tsx"),
     read("app/soft.css"),
-    read("lib/content/provider.ts"),
     Promise.resolve(contentSecurityPolicy(false)),
     read("app/api/tahrir/story/route.ts"),
     read("scripts/wp-migrate.mjs"),
@@ -99,8 +98,8 @@ test("المحرر وصفحة المادة يستخدمان نفس المشغّ�
   assert.doesNotMatch(player, /XPost|createTweet/);
   assert.match(styles, /\.sa-head\.has-video \{ grid-template-columns: minmax\(0, 1fr\); \}/);
   assert.match(styles, /\.sa-video iframe \{[^}]*width: 100%;[^}]*aspect-ratio: 16 \/ 9;/);
-  assert.match(provider, /section === "videos"[\s\S]*or\(eq\(storiesTable\.section, section\), eq\(storiesTable\.format, "videos"\)\)/);
-  assert.match(provider, /section === "videos" \? isVideo\(story\) : story\.section === section/);
+  // SQL/seed archive membership is exercised by infographics-archive.integration.mjs,
+  // including video-format stories in topical sections and legacy video sections.
   assert.match(config, /frame-src [^;]*https:\/\/www\.youtube-nocookie\.com/);
   assert.match(config, /frame-src [^;]*https:\/\/www\.instagram\.com/);
   assert.doesNotMatch(config, /frame-src[^"]*youtube\.com[^-]/);
