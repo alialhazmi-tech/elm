@@ -16,13 +16,16 @@ export function JakReportIndex({ reports, preview = false }: { reports: JakCodeR
       <p className="hub-count">{visible.length} تقارير{preview ? " · معاينة خاصة" : ""}</p>
     </section>
     {visible.length ? <div className="grid-3 sx-grid jak-index-grid" style={{ marginTop: 0 }}>
-      {visible.map((report) => {
+      {visible.map((report, index) => {
         const href = preview ? `/tahrir/jak-reports/${report.id}/preview` : `/jak/${report.id}/${encodeURIComponent(report.slug)}`;
         const publishedAt = jakPublicationTime(report);
         const publishedTimestamp = formatArticleTimestamp(publishedAt);
         return <article className="m-card" key={report.id}>
           {report.image && <Link className="m-media" href={href} tabIndex={-1} aria-hidden="true">
-            <Image unoptimized className="c-img" src={report.image} width={640} height={400} alt="" />
+            <Image className="c-img" src={report.image} width={640} height={400} alt=""
+              sizes="(max-width: 940px) calc(100vw - 32px), (max-width: 1120px) 50vw, (max-width: 1280px) 33vw, 400px"
+              loading={index < 3 ? "eager" : "lazy"}
+              fetchPriority={index === 0 ? "high" : "auto"} />
           </Link>}
           <div className="m-body">
             {preview && <div className="m-kick"><span>تجريبي · {report.status === "published" ? "منشور" : "غير منشور"}</span></div>}
