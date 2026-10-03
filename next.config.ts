@@ -50,8 +50,9 @@ const nextConfig: NextConfig = {
     return [
       {
         // Executable report documents set their own sandbox policy. A second app
-        // CSP would block both the iframe and the original report's resources.
-        source: "/:path((?!api/jak-reports/[^/]+/document/?$|api/tahrir/jak-reports/preview/?$).*)",
+        // CSP would block the original report's resources. Public report routes
+        // also supply their own opaque-origin sandbox, including on 404s.
+        source: "/:path((?!api/jak-reports/[^/]+/document/?$|api/tahrir/jak-reports/preview/?$|jak/[^/]+/[^/]+/?$).*)",
         headers: securityHeaders,
       },
       { source: "/:path*", headers: securityHeaders.filter(({ key }) => !["Content-Security-Policy", "X-Frame-Options"].includes(key)) },

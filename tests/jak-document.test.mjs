@@ -57,12 +57,14 @@ test("separate CSS cannot close its style element", () => {
   assert.match(result, /<\\\/style>/);
 });
 
-test("built routing excludes only the sandbox documents from application frame denial", async () => {
+test("built routing delegates only report documents to their dedicated sandbox policies", async () => {
   const routes = JSON.parse(await readFile(`${process.env.NEXT_DIST_DIR ?? ".next-gate"}/routes-manifest.json`, "utf8"));
   const policies = (path) => routes.headers.filter((rule) => new RegExp(rule.regex).test(path)).flatMap((rule) => rule.headers).filter((header) => ["Content-Security-Policy", "X-Frame-Options"].includes(header.key));
   assert.deepEqual(policies("/api/jak-reports/example/document"), []);
   assert.deepEqual(policies("/api/tahrir/jak-reports/preview"), []);
-  for (const path of ["/", "/tahrir", "/jak", "/api/tahrir/jak-reports", "/api/jak-reports/example/document/extra"]) {
+  assert.deepEqual(policies("/jak/1/report"), []);
+  assert.deepEqual(policies("/jak/82ad2759-12cb-4d33-a0ae-886b631aa728/report"), []);
+  for (const path of ["/", "/tahrir", "/jak", "/jak/1", "/jak/1/report/extra", "/api/tahrir/jak-reports", "/api/jak-reports/example/document/extra"]) {
     assert.ok(policies(path).some((header) => header.key === "X-Frame-Options" && header.value === "DENY"), path);
   }
 });

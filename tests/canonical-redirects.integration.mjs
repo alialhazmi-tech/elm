@@ -57,16 +57,16 @@ try {
   await write('app/[section]/page.jsx', `export default async function Page({params}) {
     return <main>section:{(await params).section}</main> }`);
   // Exercise Jak's real numeric and historical UUID routes alongside generic story routes.
-  for (const file of ['app/jak/[id]/route.ts', 'app/jak/[id]/[slug]/page.tsx', 'lib/jak-urls.ts', 'lib/jak-report-types.ts']) {
+  for (const file of ['app/jak/[id]/route.ts', 'app/jak/[id]/[slug]/route.ts', 'lib/jak-urls.ts', 'lib/jak-report-types.ts']) {
     await write(file, await readFile(file, 'utf8'));
   }
   await write('lib/tahrir/jak-reports.ts', `export async function getPublishedJakReportByPublicId(id: string) {
     return ['1', '11111111-1111-4111-8111-111111111111'].includes(id)
       ? { id:'11111111-1111-4111-8111-111111111111', publicNumber:1, slug:'الفيفا-لعبة-المال', title:'الفيفا', status:'published' } : null;
   }`);
-  await write('lib/jak-sharing.ts', `import {jakReportHref} from './jak-urls';
-    export function jakReportMetadata(report: any) {return {alternates:{canonical:jakReportHref(report)}}}`);
-  await write('components/jak-code-frame.tsx', 'export function JakCodeFrame({id}: {id:string;title:string}) {return <iframe title="report" src={"/api/jak-reports/"+id+"/document"}/>}');
+  await write('lib/jak-public-document.ts', `export function buildPublicJakDocument(report:any, _options?:any){return '<!doctype html><html><body><h1>'+report.title+'</h1></body></html>'}
+    export function publicJakDocumentHeaders(){return {'Content-Type':'text/html; charset=utf-8','Cache-Control':'private, no-store','X-Robots-Tag':'index, follow'}}`);
+  await write('lib/jak-report-document.ts', 'export const isMobileJakReader=(_ua:string)=>false;');
   await write('app/layout.jsx', 'export default function Layout({children}) { return <html><body>{children}</body></html> }');
   await write('app/page.jsx', 'export default function Page() {return <main>ready</main>}');
   for (const [route, method] of [['permanent', 'permanentRedirect'], ['temporary', 'redirect']]) {
@@ -159,9 +159,9 @@ try {
     }
   }
   const jakHtml = await (await fetch('http://127.0.0.1:' + port + jakCanonical)).text();
-  assert.ok(jakHtml.includes('/api/jak-reports/11111111-1111-4111-8111-111111111111/document'), 'iframe keeps internal UUID');
-  assert.ok(jakHtml.includes('rel="canonical" href="' + jakCanonical + '"'), 'numeric canonical metadata');
-  console.log('Jak short links: GET/HEAD numeric, old UUID, Arabic slug, canonical metadata, iframe identity and missing/draft IDs passed.');
+  assert.ok(jakHtml.includes('<h1>'), 'native report body');
+  assert.ok(!jakHtml.includes('<iframe'), 'no iframe wrapper');
+  console.log('Jak short links: GET/HEAD numeric, old UUID, Arabic slug, native body and missing/draft IDs passed.');
   console.log('Social short links: GET/HEAD, old sections, Arabic paths, query strings, trailing slash and missing/draft IDs passed.');
   for (const method of ['GET', 'HEAD']) {
     for (const [id, target] of [['264631', canonical], ['74689', '/varieties/74689/'+encodeURIComponent('حقيقة-الدرج-اللانهائي')], ['1658', '/world/1660/'+encodeURIComponent('خطط-دولية-ربما-تجبر-الشركات-الكبرى-على')]]) {

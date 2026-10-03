@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import type { JakCodeReport } from "@/lib/jak-report-types";
 import { formatArticleTimestamp } from "@/lib/format";
 import { jakPublicationTime } from "@/lib/jak-publication";
@@ -22,15 +21,15 @@ export function JakReportIndex({ reports, preview = false }: { reports: JakCodeR
         const publishedAt = jakPublicationTime(report);
         const publishedTimestamp = formatArticleTimestamp(publishedAt);
         return <article className="m-card" key={report.id}>
-          {report.image && <Link className="m-media" href={href} tabIndex={-1} aria-hidden="true">
+          {report.image && <a className="m-media" href={href} tabIndex={-1} aria-hidden="true">
             <Image className="c-img" src={report.image} width={640} height={400} alt=""
               sizes="(max-width: 940px) calc(100vw - 32px), (max-width: 1120px) 50vw, (max-width: 1280px) 33vw, 400px"
               loading={index < 3 ? "eager" : "lazy"}
               fetchPriority={index === 0 ? "high" : "auto"} />
-          </Link>}
+          </a>}
           <div className="m-body">
             {preview && <div className="m-kick"><span>تجريبي · {report.status === "published" ? "منشور" : "غير منشور"}</span></div>}
-            <h2 style={{ fontSize: "1.25rem" }}><Link href={href}>{report.title}</Link></h2>
+            <h2 style={{ fontSize: "1.25rem" }}><a href={href}>{report.title}</a></h2>
             {publishedTimestamp && <time className="m-meta" dateTime={publishedAt}>{publishedTimestamp}</time>}
           </div>
         </article>;
