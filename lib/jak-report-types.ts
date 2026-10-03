@@ -3,6 +3,8 @@ export type JakCodeReportStatus = "draft" | "review" | "published" | "archived";
 
 export interface JakCodeReport {
   id: string;
+  /** رقم الرابط العام؛ قد يغيب فقط عن fixtures القديمة خارج قاعدة البيانات. */
+  publicNumber: number;
   slug: string;
   title: string;
   excerpt: string;

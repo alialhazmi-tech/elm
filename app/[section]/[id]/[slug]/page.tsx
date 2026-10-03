@@ -42,6 +42,7 @@ import { articleMetaDescription, cleanMetadataTitle } from "@/lib/seo/metadata";
 import { articleStructuredData, PUBLIC_SITE_URL } from "@/lib/seo/schema";
 import { imageFocusStyle } from "@/lib/content/image-focus";
 import { getPublishedJakReportBySourceId } from "@/lib/tahrir/jak-reports";
+import { jakReportHref } from "@/lib/jak-urls";
 
 export const revalidate = 300;
 /** الأرشيف 29 ألف مادة: يُبنى مسبقًا أحدثها فقط والبقية ISR عند الطلب. */
@@ -93,7 +94,7 @@ export default async function ArticlePage({ params }: Params) {
   const legacyJakId = story.format === "jakalelm" ? /^jak-(\d+)$/.exec(story.id) : null;
   if (legacyJakId) {
     const report = await getPublishedJakReportBySourceId(Number(legacyJakId[1]));
-    if (report) permanentRedirect(`/jak/${report.id}/${encodeURIComponent(report.slug)}`);
+    if (report) permanentRedirect(jakReportHref(report));
   }
 
   // حارس canonical (شرط الهجرة): المعرّف يحسم — أي قسم أو سلاج مخالف للرابط المحفوظ

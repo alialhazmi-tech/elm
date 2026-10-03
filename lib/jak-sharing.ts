@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import type { JakCodeReport } from "./jak-report-types.ts";
 import { sharingMetadata } from "./sharing.ts";
 import { cleanMetadataText, cleanMetadataTitle } from "./seo/metadata.ts";
+import { jakReportHref } from "./jak-urls.ts";
 
 export const JAK_TITLE = "جاك العلم";
 export const JAK_DESCRIPTION = "تقارير بصرية تفاعلية تشرح الملفات الكبرى وتضع الأحداث في سياقها.";
@@ -17,10 +18,10 @@ export function jakIndexMetadata(): Metadata {
   };
 }
 
-export function jakReportMetadata(report: Pick<JakCodeReport, "id" | "slug" | "title" | "excerpt" | "image" | "publishedAt" | "sourcePublishedAt">): Metadata {
+export function jakReportMetadata(report: Pick<JakCodeReport, "id" | "publicNumber" | "slug" | "title" | "excerpt" | "image" | "publishedAt" | "sourcePublishedAt">): Metadata {
   const title = `${cleanMetadataTitle(report.title)} | ${JAK_TITLE}`;
   const description = cleanMetadataText(report.excerpt) || JAK_DESCRIPTION;
-  const path = `/jak/${report.id}/${encodeURIComponent(report.slug)}`;
+  const path = jakReportHref(report);
   const sharing = sharingMetadata({
     title, description, path, type: "article", format: "jakalelm",
     storyId: `jak-report-${report.id}`, image: report.image ?? undefined,

@@ -506,6 +506,8 @@ export const podcastEpisodes = pgTable("podcast_episodes", {
 /** تقارير «جاك» HTML/CSS المستقلة — لا تختلط بمواد stories أو شرائح جاك القديمة. */
 export const jakCodeReports = pgTable("jak_code_reports", {
   id: text("id").primaryKey(),
+  /** رقم الرابط العام الثابت؛ يختلف عن UUID الداخلي ولا يُستخدم في الصلاحيات. */
+  publicNumber: integer("public_number").notNull().default(sql`nextval('jak_code_reports_public_number_seq')`),
   slug: text("slug").notNull(),
   title: text("title").notNull(),
   excerpt: text("excerpt").notNull().default(""),
@@ -525,10 +527,12 @@ export const jakCodeReports = pgTable("jak_code_reports", {
   sourcePublishedAt: text("source_published_at"),
   sourceModifiedAt: text("source_modified_at"),
 }, (table) => [
+  uniqueIndex("jak_code_reports_public_number_uidx").on(table.publicNumber),
   index("jak_code_reports_status_time_idx").on(table.status, sql`coalesce(${table.sourcePublishedAt}, ${table.publishedAt}, ${table.createdAt}) desc`, table.id.desc()),
   index("jak_code_reports_homepage_time_idx").on(table.showOnHomepage, sql`coalesce(${table.sourcePublishedAt}, ${table.publishedAt}, ${table.createdAt}) desc`, table.id.desc()).where(sql`${table.status} = 'published'`),
   uniqueIndex("jak_code_reports_source_post_uidx").on(table.sourcePostId),
   check("jak_code_reports_homepage_bool", sql`${table.showOnHomepage} in (0, 1)`),
   check("jak_code_reports_status_valid", sql`${table.status} in ('draft', 'review', 'published', 'archived')`),
   check("jak_code_reports_version_positive", sql`${table.version} > 0`),
+  check("jak_code_reports_public_number_positive", sql`${table.publicNumber} > 0`),
 ]);
