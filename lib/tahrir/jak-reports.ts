@@ -26,6 +26,7 @@ function requireDb() {
 function toReport(row: JakReportRow): JakCodeReport {
   return {
     id: row.id,
+    publicNumber: row.publicNumber,
     slug: row.slug,
     title: row.title,
     excerpt: row.excerpt,
@@ -104,7 +105,7 @@ function assertOwnOrAny(actor: WriteActor, report: JakReportRow | null) {
 
 function reportProjection(alias = "mutated") {
   const table = sql.raw(alias);
-  return sql`${table}."id" as "id", ${table}."slug" as "slug", ${table}."title" as "title", ${table}."excerpt" as "excerpt", ${table}."image" as "image", ${table}."html" as "html", ${table}."css" as "css", ${table}."show_on_homepage" as "showOnHomepage", ${table}."status" as "status", ${table}."author_id" as "authorId", ${table}."version" as "version", ${table}."created_at" as "createdAt", ${table}."updated_at" as "updatedAt", ${table}."published_at" as "publishedAt", ${table}."source_url" as "sourceUrl", ${table}."source_post_id" as "sourcePostId", ${table}."source_published_at" as "sourcePublishedAt", ${table}."source_modified_at" as "sourceModifiedAt"`;
+  return sql`${table}."id" as "id", ${table}."public_number" as "publicNumber", ${table}."slug" as "slug", ${table}."title" as "title", ${table}."excerpt" as "excerpt", ${table}."image" as "image", ${table}."html" as "html", ${table}."css" as "css", ${table}."show_on_homepage" as "showOnHomepage", ${table}."status" as "status", ${table}."author_id" as "authorId", ${table}."version" as "version", ${table}."created_at" as "createdAt", ${table}."updated_at" as "updatedAt", ${table}."published_at" as "publishedAt", ${table}."source_url" as "sourceUrl", ${table}."source_post_id" as "sourcePostId", ${table}."source_published_at" as "sourcePublishedAt", ${table}."source_modified_at" as "sourceModifiedAt"`;
 }
 
 async function mutationResult(db: ReturnType<typeof getDb>, query: ReturnType<typeof sql>): Promise<JakCodeReport> {
@@ -132,6 +133,32 @@ export async function getPublishedJakReportBySourceId(sourcePostId: number): Pro
   if (!db || !Number.isSafeInteger(sourcePostId) || sourcePostId < 1) return null;
   const [row] = await db.select().from(jakCodeReports).where(and(
     eq(jakCodeReports.sourcePostId, sourcePostId),
+    eq(jakCodeReports.status, "published"),
+  )).limit(1);
+  return row ? toReport(row) : null;
+}
+
+const MAX_PUBLIC_JAK_REPORT_NUMBER = 2_147_483_647;
+
+/** القراءة العامة: UUID قديم أو رقم رابط عام موجب، للمواد المنشورة فقط. */
+export async function getPublishedJakReportByPublicId(publicId: string): Promise<JakCodeReport | null> {
+  const db = getDb();
+  if (!db || typeof publicId !== "string") return null;
+  const clean = publicId.trim();
+  const isUuid = UUID_RE.test(clean);
+  const isPublicNumber = /^[1-9][0-9]*$/u.test(clean);
+  if (!isUuid && !isPublicNumber) return null;
+  if (isPublicNumber) {
+    const number = Number(clean);
+    if (!Number.isSafeInteger(number) || number < 1 || number > MAX_PUBLIC_JAK_REPORT_NUMBER) return null;
+    const [row] = await db.select().from(jakCodeReports).where(and(
+      eq(jakCodeReports.publicNumber, number),
+      eq(jakCodeReports.status, "published"),
+    )).limit(1);
+    return row ? toReport(row) : null;
+  }
+  const [row] = await db.select().from(jakCodeReports).where(and(
+    eq(jakCodeReports.id, clean),
     eq(jakCodeReports.status, "published"),
   )).limit(1);
   return row ? toReport(row) : null;

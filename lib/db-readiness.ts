@@ -37,6 +37,22 @@ select 'public.stories_search_text_trgm_idx' where not exists (
     and indrelid=to_regclass('public.stories') and indisvalid and indisready
 )
 union all
+select 'public.jak_code_reports_public_number_seq' where to_regclass('public.jak_code_reports_public_number_seq') is null
+union all
+select 'public.jak_code_reports_public_number_uidx' where not exists (
+  select 1 from pg_index
+  where indexrelid=to_regclass('public.jak_code_reports_public_number_uidx')
+    and indrelid=to_regclass('public.jak_code_reports')
+    and indisunique and indisvalid and indisready and indpred is null
+)
+union all
+select 'public.jak_code_reports_public_number_positive' where not exists (
+  select 1 from pg_constraint
+  where conrelid=to_regclass('public.jak_code_reports')
+    and conname='jak_code_reports_public_number_positive'
+    and contype='c' and convalidated
+)
+union all
 select 'public.stories_editor_search_trgm_idx' where not exists (
   select 1 from pg_index
   where indexrelid=to_regclass('public.stories_editor_search_trgm_idx')

@@ -14,7 +14,7 @@ test("Jak section shares its own identity and URL on Open Graph and Twitter", ()
 });
 
 test("each report overrides inherited sharing tags with its own branded title and JPEG", () => {
-  const report = { id: "82ad2759-12cb-4d33-a0ae-886b631aa728", slug: "الفيفا", title: "الفيفا لعبة المال والفساد", excerpt: "<p>وصف التقرير</p>", image: "https://jakelelm.alelm.net/wp-content/uploads/2026/08/cover.webp", publishedAt: "2026-09-30T00:00:00Z", sourcePublishedAt: "2026-08-01T00:00:00Z" };
+  const report = { publicNumber: 12, id: "82ad2759-12cb-4d33-a0ae-886b631aa728", slug: "الفيفا", title: "الفيفا لعبة المال والفساد", excerpt: "<p>وصف التقرير</p>", image: "https://jakelelm.alelm.net/wp-content/uploads/2026/08/cover.webp", publishedAt: "2026-09-30T00:00:00Z", sourcePublishedAt: "2026-08-01T00:00:00Z" };
   const meta = jakReportMetadata(report);
   assert.deepEqual(meta.title, { absolute: `${report.title} | جاك العلم` });
   assert.equal(meta.openGraph.title, meta.twitter.title);
@@ -22,7 +22,8 @@ test("each report overrides inherited sharing tags with its own branded title an
   assert.equal(meta.openGraph.siteName, "جاك العلم");
   assert.equal(meta.openGraph.type, "article");
   assert.equal(meta.openGraph.publishedTime, report.sourcePublishedAt);
-  assert.equal(meta.openGraph.url, `https://alelm.net/jak/${report.id}/${encodeURIComponent(report.slug)}`);
+  assert.equal(meta.alternates.canonical, `/jak/12/${encodeURIComponent(report.slug)}`);
+  assert.equal(meta.openGraph.url, `https://alelm.net/jak/${report.publicNumber}/${encodeURIComponent(report.slug)}`);
   assert.match(meta.openGraph.images[0].url, /\/share-images\/jak-report-82ad2759-12cb-4d33-a0ae-886b631aa728\.v.+\.jpg$/);
   assert.equal(meta.twitter.images[0].url, meta.openGraph.images[0].url);
   assert.equal(meta.openGraph.images[0].type, "image/jpeg");

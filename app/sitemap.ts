@@ -7,6 +7,7 @@ import { publicStoryId } from "@/lib/content/canonical-stories";
 import { listPodcastShows } from "@/lib/podcast-catalog";
 import { podcastShowPath } from "@/lib/podcasts";
 import { listJakReports } from "@/lib/tahrir/jak-reports";
+import { jakReportHref } from "@/lib/jak-urls";
 
 /**
  * خريطة الموقع الشاملة: الصفحات الثابتة والأقسام والسلاسل وكل المواد المنشورة (stories).
@@ -51,6 +52,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const jakPages: MetadataRoute.Sitemap = (await listJakReports({ publicOnly: true, limit: 100 }))
-    .map((report) => ({ url: `${BASE_URL}/jak/${report.id}/${encodeURIComponent(report.slug)}`, lastModified: report.updatedAt }));
+    .map((report) => ({ url: `${BASE_URL}${jakReportHref(report)}`, lastModified: report.updatedAt }));
   return [...staticPages, ...sectionPages, ...seriesPages, ...podcastPages, ...storyPages, ...jakPages];
 }

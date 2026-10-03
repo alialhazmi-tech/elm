@@ -56,6 +56,17 @@ try {
   // A competing one-segment section route reproduces the original routing bug.
   await write('app/[section]/page.jsx', `export default async function Page({params}) {
     return <main>section:{(await params).section}</main> }`);
+  // Exercise Jak's real numeric and historical UUID routes alongside generic story routes.
+  for (const file of ['app/jak/[id]/route.ts', 'app/jak/[id]/[slug]/page.tsx', 'lib/jak-urls.ts', 'lib/jak-report-types.ts']) {
+    await write(file, await readFile(file, 'utf8'));
+  }
+  await write('lib/tahrir/jak-reports.ts', `export async function getPublishedJakReportByPublicId(id: string) {
+    return ['1', '11111111-1111-4111-8111-111111111111'].includes(id)
+      ? { id:'11111111-1111-4111-8111-111111111111', publicNumber:1, slug:'الفيفا-لعبة-المال', title:'الفيفا', status:'published' } : null;
+  }`);
+  await write('lib/jak-sharing.ts', `import {jakReportHref} from './jak-urls';
+    export function jakReportMetadata(report: any) {return {alternates:{canonical:jakReportHref(report)}}}`);
+  await write('components/jak-code-frame.tsx', 'export function JakCodeFrame({id}: {id:string;title:string}) {return <iframe title="report" src={"/api/jak-reports/"+id+"/document"}/>}');
   await write('app/layout.jsx', 'export default function Layout({children}) { return <html><body>{children}</body></html> }');
   await write('app/page.jsx', 'export default function Page() {return <main>ready</main>}');
   for (const [route, method] of [['permanent', 'permanentRedirect'], ['temporary', 'redirect']]) {
@@ -119,6 +130,38 @@ try {
   assert.equal(short.statusCode, 301);
   assert.equal(short.headers.location, canonical + query);
   assert.equal((await response(port, short.headers.location)).statusCode, 200);
+  const jakCanonical = '/jak/1/' + encodeURIComponent('الفيفا-لعبة-المال');
+  for (const method of ['GET', 'HEAD']) {
+    for (const id of ['1', '11111111-1111-4111-8111-111111111111']) {
+      const short = await response(port, '/jak/' + id + query, method);
+      assert.equal(short.statusCode, 301);
+      assert.equal(short.headers.location, jakCanonical + query);
+      assert.equal((await response(port, short.headers.location, method)).statusCode, 200);
+      for (const slug of ['alias', encodeURIComponent('الفيفا-لعبة-المال')]) {
+        const result = await response(port, '/jak/' + id + '/' + slug, method);
+        if (id === '1' && slug !== 'alias') {
+          assert.equal(result.statusCode, 200);
+          assert.equal(result.headers.location, undefined);
+        } else {
+          assert.equal(result.statusCode, 308);
+          assert.equal(result.headers.location, jakCanonical);
+          assert.equal(result.rawHeaders.filter((value, index) => index % 2 === 0 && value.toLowerCase() === 'location').length, 1);
+          assert.equal((await response(port, result.headers.location, method)).statusCode, 200);
+        }
+      }
+    }
+    for (const id of ['missing', 'draft', 'archived', '2147483648']) {
+      const result = await response(port, '/jak/' + id, method);
+      assert.equal(result.statusCode, 404);
+      assert.equal(result.headers.location, undefined);
+      assert.match(result.headers['cache-control'], /no-store/);
+      assert.equal((await response(port, '/jak/' + id + '/alias', method)).statusCode, 404);
+    }
+  }
+  const jakHtml = await (await fetch('http://127.0.0.1:' + port + jakCanonical)).text();
+  assert.ok(jakHtml.includes('/api/jak-reports/11111111-1111-4111-8111-111111111111/document'), 'iframe keeps internal UUID');
+  assert.ok(jakHtml.includes('rel="canonical" href="' + jakCanonical + '"'), 'numeric canonical metadata');
+  console.log('Jak short links: GET/HEAD numeric, old UUID, Arabic slug, canonical metadata, iframe identity and missing/draft IDs passed.');
   console.log('Social short links: GET/HEAD, old sections, Arabic paths, query strings, trailing slash and missing/draft IDs passed.');
   for (const method of ['GET', 'HEAD']) {
     for (const [id, target] of [['264631', canonical], ['74689', '/varieties/74689/'+encodeURIComponent('حقيقة-الدرج-اللانهائي')], ['1658', '/world/1660/'+encodeURIComponent('خطط-دولية-ربما-تجبر-الشركات-الكبرى-على')]]) {

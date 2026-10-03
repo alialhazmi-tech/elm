@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRightIcon, CheckIcon, Code2Icon, ExternalLinkIcon, ImagePlusIcon, SaveIcon, SendIcon, UploadCloudIcon } from "lucide-react";
 
 import type { JakCodeReport } from "@/lib/jak-report-types";
+import { jakReportHref } from "@/lib/jak-urls";
 import { JakCodePreview } from "@/components/jak-code-preview";
 import { useDraftRecovery, useDraftTabToken } from "@/components/tahrir/use-draft-recovery";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -87,6 +88,8 @@ export function JakReportEditor({
   const router = useRouter();
   const tabToken = useDraftTabToken();
   const [id, setId] = useState(initial?.id ?? "");
+  const [publicNumber, setPublicNumber] = useState<number | null>(initial?.publicNumber ?? null);
+  const [savedSlug, setSavedSlug] = useState(initial?.slug ?? "");
   const [version, setVersion] = useState(initial?.version ?? 0);
   const [status, setStatus] = useState<Status>(initial?.status ?? "draft");
   const [form, setForm] = useState<Snapshot>(() => snapshotOf(initial));
@@ -164,6 +167,8 @@ export function JakReportEditor({
       return null;
     }
     setId(result.report.id);
+    setPublicNumber(result.report.publicNumber);
+    setSavedSlug(result.report.slug);
     setVersion(result.report.version);
     setStatus(result.report.status);
     savedReport.current = result.report;
@@ -209,6 +214,8 @@ export function JakReportEditor({
       return;
     }
     setId(result.report.id);
+    setPublicNumber(result.report.publicNumber);
+    setSavedSlug(result.report.slug);
     setVersion(result.report.version);
     setStatus(result.report.status);
     savedReport.current = result.report;
@@ -348,7 +355,7 @@ export function JakReportEditor({
             </CardContent>
           </Card>
 
-          {id ? <Card className="gap-2 p-3"><p className="text-xs text-muted-foreground">روابط</p><Button asChild variant="outline" size="sm"><Link href={`/tahrir/jak-reports/${id}/preview`}><ExternalLinkIcon data-icon="inline-start" /> معاينة خاصة</Link></Button>{status === "published" ? <Button asChild variant="ghost" size="sm"><Link href={`/jak/${id}/${encodeURIComponent(form.title || "report")}`} target="_blank"><ExternalLinkIcon data-icon="inline-start" /> فتح الرابط العام</Link></Button> : null}{initial?.sourceUrl ? <a href={initial.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"><ExternalLinkIcon className="size-3" aria-hidden /> فتح مصدر الاستيراد</a> : null}</Card> : null}
+          {id ? <Card className="gap-2 p-3"><p className="text-xs text-muted-foreground">روابط</p><Button asChild variant="outline" size="sm"><Link href={`/tahrir/jak-reports/${id}/preview`}><ExternalLinkIcon data-icon="inline-start" /> معاينة خاصة</Link></Button>{status === "published" && savedSlug ? <Button asChild variant="ghost" size="sm"><Link href={jakReportHref({ id, publicNumber, slug: savedSlug })} target="_blank"><ExternalLinkIcon data-icon="inline-start" /> فتح الرابط العام</Link></Button> : null}{initial?.sourceUrl ? <a href={initial.sourceUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 px-2 py-1 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"><ExternalLinkIcon className="size-3" aria-hidden /> فتح مصدر الاستيراد</a> : null}</Card> : null}
         </aside>
       </div>
     </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { JakCodeReport } from "@/lib/jak-report-types";
 import { formatArticleTimestamp } from "@/lib/format";
 import { jakPublicationTime } from "@/lib/jak-publication";
+import { jakReportHref } from "@/lib/jak-urls";
 
 export function JakReportIndex({ reports, preview = false }: { reports: JakCodeReport[]; preview?: boolean }) {
   const visible = reports.filter((report) => report.showOnHomepage);
@@ -17,7 +18,7 @@ export function JakReportIndex({ reports, preview = false }: { reports: JakCodeR
     </section>
     {visible.length ? <div className="grid-3 sx-grid jak-index-grid" style={{ marginTop: 0 }}>
       {visible.map((report, index) => {
-        const href = preview ? `/tahrir/jak-reports/${report.id}/preview` : `/jak/${report.id}/${encodeURIComponent(report.slug)}`;
+        const href = preview ? `/tahrir/jak-reports/${report.id}/preview` : jakReportHref(report);
         const publishedAt = jakPublicationTime(report);
         const publishedTimestamp = formatArticleTimestamp(publishedAt);
         return <article className="m-card" key={report.id}>
