@@ -3,7 +3,7 @@ const sections = new Set(['news', 'politics', 'economy', 'business', 'technology
 const series = new Set(['absat', 'aghrab', 'efhamha-sah', 'bel-arqam', 'shakhsiat', 'limatha', 'matha-law', 'matha-baad', 'bel-tarikh']);
 export function publicPerformanceRoute(pathname: string): string | null {
   const path = pathname.split(/[?#]/, 1)[0].replace(/\/$/, '') || '/';
-  if (['/', '/search', '/series', '/about', '/contact', '/privacy-policy', '/jak'].includes(path)) return path;
+  if (['/', '/search', '/series', '/about', '/ai', '/contact', '/privacy-policy', '/jak'].includes(path)) return path;
   const parts = path.split('/').slice(1);
   if (parts[0] === 'keywords' && parts.length === 2 && parts[1]) return '/keywords/[keyword]';
   if (parts[0] === 'series' && parts.length === 2 && series.has(parts[1])) return path;

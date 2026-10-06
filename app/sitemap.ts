@@ -27,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/podcasts` },
     { url: `${BASE_URL}/jak` },
     { url: `${BASE_URL}/about` },
+    { url: `${BASE_URL}/ai` },
     { url: `${BASE_URL}/contact` },
     { url: `${BASE_URL}/privacy-policy` },
   ];
