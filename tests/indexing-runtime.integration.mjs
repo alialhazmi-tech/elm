@@ -74,7 +74,7 @@ for(const path of ['/sciences','/series/bel-arqam']) {
  const description=archive.html.match(/<meta[^>]*name="description"[^>]*content="([^"]*)"/)?.[1];
  assert.ok(description?.trim());
 }
-for(const [path,count] of [['/contact',2],['/privacy-policy',1]]) {
+for(const [path,count] of [['/contact',2],['/privacy-policy',2],['/about',1],['/ai',1]]) {
  const page=await get(path);assert.equal(page.r.status,200);
  assert.ok((page.html.match(/<!--email_off-->/g)??[]).length>=count,'Public email links opt out of Cloudflare rewriting');
  assert.ok((page.html.match(/href="mailto:/g)??[]).length>=count,'Email links work in the server-rendered response');

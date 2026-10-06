@@ -113,18 +113,20 @@ test("الصفحات الإرثية الأربع حية بروابطها الق�
     read("app/landing-page/page.tsx"),
     read("app/_components/site-chrome.tsx"),
   ]);
-  assert.match(about, /العلم منصة إعلامية معرفية/u);
-  assert.match(about, /المنصة المعرفية اليومية للمتلقي/u);
-  assert.match(about, /صناعة التأثير عبر الإعلام/u);
+  assert.match(about, /العلم منصة إعلامية معرفية سعودية/u);
+  assert.match(about, /المعرفة وراء الخبر/u);
+  assert.match(about, /سلاسلنا التحريرية/u);
   assert.match(contact, /شارع الأمير ناصر بن سعود/u);
   assert.match(contact, /\+966552653222/u);
   assert.match(contact, /alelm@trenddc\.com/u);
-  assert.match(privacy, /حماية حقوق الطبع والملكية الفكرية/u);
-  assert.match(privacy, /الكوكيز وإعدادات الشبكة/u);
+  assert.match(privacy, /بياناتك عند استخدام الذكاء الاصطناعي/u);
+  assert.match(privacy, /ملفات الارتباط وتقنيات القياس/u);
+  assert.match(privacy, /لا نبيع البيانات الشخصية ولا نؤجرها/u);
   assert.match(privacy, /info@alelm\.net/u);
   assert.match(chrome, /href="\/about">من نحن/u);
   assert.match(chrome, /href="\/contact">تواصل معنا/u);
   assert.match(chrome, /href="\/privacy-policy">سياسة الخصوصية/u);
+  assert.match(chrome, /href="\/ai">الذكاء الاصطناعي في العلم/u);
   assert.match(chrome, /href="\/sitemap\.xml">خريطة المنصة/u);
   assert.doesNotMatch(chrome, /المحتوى من مواد منشورة/u);
   assert.match(chrome, /سجّل بريدك في قائمة نشرة «العلم» لتصلك الإصدارات عند إطلاقها/u);
@@ -133,6 +135,7 @@ test("الصفحات الإرثية الأربع حية بروابطها الق�
   assert.match(sitemap, /\$\{BASE_URL\}\/about/u);
   assert.match(sitemap, /\$\{BASE_URL\}\/contact/u);
   assert.match(sitemap, /\$\{BASE_URL\}\/privacy-policy/u);
+  assert.match(sitemap, /\$\{BASE_URL\}\/ai\b/u);
   // الإرثية التسويقية خارج الفهرسة حتى لا تزاحم الرئيسية.
   assert.match(landing, /index: false/u);
 });

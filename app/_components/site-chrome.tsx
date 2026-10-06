@@ -249,6 +249,8 @@ export async function SiteFooter() {
           <div className="ft-legal-left">
             <Link href="/about">من نحن</Link>
             <span className="ft-sep" aria-hidden="true">·</span>
+            <Link href="/ai">الذكاء الاصطناعي في العلم</Link>
+            <span className="ft-sep" aria-hidden="true">·</span>
             <Link href="/contact">تواصل معنا</Link>
             <span className="ft-sep" aria-hidden="true">·</span>
             <Link href="/privacy-policy">سياسة الخصوصية</Link>
