@@ -88,16 +88,16 @@ export async function publishCheckedStory(story: WorkflowStory, actor: string, d
   await db.batch([
     lockStory(original), lockStory(story), snapshotQuery(original.id, actor),
     db.update(stories).set({ ...content, authorId: original.authorId, authorName: original.authorName,
-      slug: original.slug, section: original.section, status: "published", publicNumber: PUBLIC_NUMBER_ON_PUBLISH, returnedAt: null, publishedAt: original.publishedAt ?? now,
+      slug: original.slug, section: story.section, status: "published", publicNumber: PUBLIC_NUMBER_ON_PUBLISH, returnedAt: null, publishedAt: original.publishedAt ?? now,
       scheduledAt: null, updatedAt: now, version: original.version + 1 }).where(eq(stories.id, original.id)),
     db.execute(sql`delete from story_slides where story_id=${original.id}`),
     copySlides(story.id, original.id), copySource(story.id, original.id),
     db.update(stories).set({ status: "archived", scheduledAt: null, version: story.version + 1, updatedAt: now }).where(eq(stories.id, story.id)),
-    auditQuery(actor, "revision:published", original.id, `${detail} · ${story.id}`, { before: original, after: { ...content, authorId: original.authorId, authorName: original.authorName, slug: original.slug, section: original.section, status: "published", returnedAt: null, publishedAt: original.publishedAt ?? now, scheduledAt: null } }),
+    auditQuery(actor, "revision:published", original.id, `${detail} · ${story.id}`, { before: original, after: { ...content, authorId: original.authorId, authorName: original.authorName, slug: original.slug, section: story.section, status: "published", returnedAt: null, publishedAt: original.publishedAt ?? now, scheduledAt: null } }),
     auditQuery(actor, "revision:merged", story.id, "اعتماد مسودة التعديل ودمجها في المادة الأصلية", { before: story, after: { status: "archived", scheduledAt: null } }),
   ]);
   invalidateStatusCounts();
-  return { id: original.id, slug: original.slug, section: original.section, version: original.version + 1 };
+  return { id: original.id, slug: original.slug, section: story.section, version: original.version + 1 };
 }
 
 /** الاستعادة اقتراح جديد يمر بالحارس والاعتماد المعتاد؛ لا تستبدل الأصل. */

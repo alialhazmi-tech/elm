@@ -124,8 +124,11 @@ export async function saveDraft(input: DraftInput, actor: WriteActor) {
   const fork = !input.returnToDraft && existing && ["published", "scheduled"].includes(existing.status);
   const id = fork ? crypto.randomUUID() : input.id;
   // الحفظ التلقائي يبدأ مبكرًا؛ تبقى هوية المسودة الجديدة قابلة للاستكمال.
-  // المنشور ومسودات تعديله يحافظان على الرابط والقسم المعتمدين.
-  const identity = stableIdentity(existing?.status === "draft" && !existing.revisionOf && !existing.publishedAt ? null : existing, input, id);
+  // المنشور ومسودات تعديله يحافظان على الرابط المعتمد؛ القسم يُصحَّح ويمر بالاعتماد مع بقية التعديل.
+  // السحب إلى مسودة يُبطل رابط المادة المنشور كما هو، فلا يغيّر قسمها في الخطوة نفسها.
+  const identity = input.returnToDraft && existing
+    ? { slug: existing.slug, section: existing.section }
+    : stableIdentity(existing?.status === "draft" && !existing.revisionOf && !existing.publishedAt ? null : existing, input, id);
   // نقطة التركيز تخص الصورة: تغيير الصورة دون نقطة جديدة يعيدها إلى المنتصف.
   const imageFocus = !input.image ? null
     : input.imageFocus !== undefined ? normalizeImageFocus(input.imageFocus)

@@ -258,7 +258,7 @@ export function DetailsPanel(props: DetailsPanelProps) {
       </Section>
 
       <Section title="القسم">
-        <Select dir="rtl" disabled={props.identityLocked} value={props.section} onValueChange={props.onSection}>
+        <Select dir="rtl" value={props.section} onValueChange={props.onSection}>
           <SelectTrigger className="w-full" aria-label="القسم">
             <SelectValue placeholder={getSectionName(props.section)} />
           </SelectTrigger>

@@ -24,7 +24,9 @@ export function assertExpectedVersion(actual: number, expected: unknown) {
 }
 
 export function stableIdentity(existing: { slug: string; section: string } | null, input: { slug?: string; section?: string; title?: string }, id: string) {
-  if (existing) return { slug: existing.slug, section: existing.section };
+  // الرابط (slug) يثبت بعد أول اعتماد؛ القسم يبقى قابلًا للتصحيح لأن صفحة المادة تبحث بالمعرّف
+  // وتحوّل الرابط القديم إلى القسم الجديد تحويلًا دائمًا.
+  if (existing) return { slug: existing.slug, section: input.section?.trim() || existing.section };
   const requested = input.slug?.trim();
   const source = !requested || requested === `story-${id.slice(0, 8)}` ? input.title || requested || "" : requested;
   // التشكيل والتنوين علامات لا حروف؛ تُسقط كي لا تكسر الكلمة («خلافًا» → «خلافا» لا «خلاف-ا»).

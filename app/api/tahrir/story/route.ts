@@ -148,7 +148,7 @@ async function saveStory(request: Request) {
       title: input.title.trim(),
       excerpt: input.excerpt?.trim() ?? "",
       body,
-      section: input.section?.trim() || "news",
+      section: input.section?.trim() || existing?.section || "news",
       slug,
       seriesSlug: input.seriesSlug || null,
       image: input.image?.trim() || null,

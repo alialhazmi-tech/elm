@@ -127,6 +127,9 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
   const [excerpt, setExcerpt] = useState(initial?.excerpt ?? "");
   const [body, setBody] = useState(initial?.body ?? "");
   const [section, setSection] = useState(initial?.section ?? "news");
+  // قسم اختاره المحرر (أو محفوظ مسبقًا ضمن الأقسام) لا تكتب فوقه الملحقات ولا التحرير الشامل؛
+  // يغيّره فقط اختيار يدوي أو «صنّف المادة ← طبّق».
+  const [sectionChosen, setSectionChosen] = useState(() => sections.some(([key]) => key === initial?.section));
   const [slug, setSlug] = useState(initial?.slug ?? "");
   const [seriesSlug, setSeriesSlug] = useState(initial?.seriesSlug ?? null);
   const [image, setImage] = useState(initial?.image ?? "");
@@ -235,6 +238,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
     setTitle(value.title); setExcerpt(value.excerpt); setBody(value.body);
     richRef.current?.setHtml(value.body);
     setSection(value.section); setSlug(value.slug); setSeriesSlug(value.seriesSlug);
+    if (sections.some(([key]) => key === value.section)) setSectionChosen(true);
     setImage(value.image); setImageFocus(value.imageFocus ?? ""); setFormat(value.format); setSeoTitle(value.seoTitle);
     setSeoDescription(value.seoDescription); setKeywords(value.keywords); setVideoUrl(value.videoUrl);
     setPinned(value.pinned ?? false); setBreakingUntil(value.breakingUntil ?? null);
@@ -330,7 +334,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
     setSeoDescription(data.seo.seoDescription);
     setKeywords(data.seo.keywords);
     setSeriesSlug(data.classify.seriesSlug);
-    if (!initial?.publishedAt && !revisionOf && status === "draft") setSection(data.classify.section);
+    if (!sectionChosen) setSection(data.classify.section);
     setFormat(data.classify.format);
     guard.scheduleGuard({ body: bodyHtml(), format: data.classify.format });
     setMessage({ kind: "ok", text: "اعتُمدت الملحقات في المسودة. تابع حالة الحفظ على الخادم." });
@@ -346,7 +350,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
     setSeoDescription(fullEdit.seo.seoDescription);
     setKeywords(fullEdit.seo.keywords);
     if (fullEdit.classify.seriesSlug) setSeriesSlug(fullEdit.classify.seriesSlug);
-    setSection(fullEdit.classify.section);
+    if (!sectionChosen) setSection(fullEdit.classify.section);
     setFormat(fullEdit.classify.format);
     guard.scheduleGuard({ title: fullEdit.title.text, body: bodyHtml(), format: fullEdit.classify.format });
     full.clearFullEdit();
@@ -479,7 +483,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
           </div>
 
           {!full.fullBusy && !full.fullEdit ? <FullEditBar onStart={() => void full.runFullEdit({ storyId: id || undefined, title, body: bodyText() })} disabled={metadataBusy || busy || workflowBusy}>
-            <MetadataGenerator disabled={full.fullBusy || busy || workflowBusy} lockedSection={initial?.publishedAt || revisionOf || status !== "draft" ? section : null} getDraft={getDraft} onApply={applyMetadata} onBusyChange={setMetadataBusy} sections={sections} series={series} formats={FORMATS} />
+            <MetadataGenerator disabled={full.fullBusy || busy || workflowBusy} lockedSection={sectionChosen ? section : null} getDraft={getDraft} onApply={applyMetadata} onBusyChange={setMetadataBusy} sections={sections} series={series} formats={FORMATS} />
           </FullEditBar> : null}
           {full.fullBusy ? <FullEditProgressView progress={full.fullProgress} elapsed={full.fullElapsed} onStop={full.stopFullEdit} /> : null}
           {full.fullEdit ? (
@@ -543,6 +547,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
                   section={section}
                   onSection={(value) => {
                     markDraftChanged();
+                    setSectionChosen(true);
                     setSection(value);
                   }}
                   image={image}
@@ -665,6 +670,7 @@ export function EditorClient({ actorId, canApprove, canSchedule = false, canPin 
                   onClassify={(c) => {
                     markDraftChanged();
                     if (c.seriesSlug) setSeriesSlug(c.seriesSlug);
+                    setSectionChosen(true);
                     setSection(c.section);
                     setFormat(c.format);
                     guard.scheduleGuard({ body: bodyHtml(), format: c.format });
