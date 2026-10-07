@@ -62,7 +62,7 @@ export function MetadataGenerator({ disabled, lockedSection, getDraft, onApply, 
             {row("شكل المادة", formats.find(([key]) => key === data.classify.format)?.[1] ?? data.classify.format)}
             {row("السلسلة", series.find(item => item.slug === data.classify.seriesSlug)?.name ?? "بلا سلسلة")}
           </dl>
-          {lockedSection && <p className="text-xs text-muted-foreground">يبقى قسم المادة المعتمدة ثابتًا لحماية رابطها؛ تُطبّق بقية الملحقات.</p>}
+          {lockedSection && <p className="text-xs text-muted-foreground">يبقى القسم الذي اخترته كما هو؛ تُطبّق بقية الملحقات. لتغييره استخدم قائمة القسم أو «صنّف المادة».</p>}
           {[...data.excerpt.guard.findings, ...data.seo.guard.findings].map((finding, i) => <p key={i} className="text-xs text-muted-foreground">{finding.message}</p>)}
           <Button type="button" onClick={apply} disabled={disabled || busy || !data.excerpt.guard.ok || !data.seo.guard.ok}>اعتماد الملحقات</Button>
         </>}

@@ -225,7 +225,8 @@ try {
   const published = await withDb(() => subject.getStory("original"));
   const revision = await withDb(() => subject.saveDraft({ ...input, title: "نسخة جديدة", slug: "changed", section: "world", expectedVersion: published.version }, editor));
   assert.notEqual(revision.id, "original");
-  assert.equal(revision.slug, input.slug); assert.equal(revision.section, input.section);
+  assert.equal(revision.slug, input.slug); assert.equal(revision.section, "world");
+  assert.equal((await withDb(() => subject.getStory("original"))).section, input.section);
   assert.equal((await withDb(() => subject.getStory("original"))).title, input.title); checks++;
   await assert.rejects(withDb(() => subject.setStatus(published, "review", "editor")), /المسودة/); checks++;
   await assert.rejects(withDb(() => subject.replaceSlides("original", [], editor, "", published.version)), /مسودة مراجعة/); checks++;
@@ -238,7 +239,9 @@ try {
   assert.equal(outcomes.filter(r => r.status === "fulfilled").length, 1);
   assert.equal((await admin.query("select count(*)::int as n from audit_log where action='revision:published'")).rows[0].n, 1);
   assert.equal((await admin.query("select count(*)::int as n from story_versions")).rows[0].n, 1);
-  assert.equal((await withDb(() => subject.getStory("original"))).title, "نسخة جديدة"); checks++;
+  assert.equal((await withDb(() => subject.getStory("original"))).title, "نسخة جديدة");
+  assert.equal((await withDb(() => subject.getStory("original"))).section, "world");
+  assert.equal((await withDb(() => subject.getStory("original"))).slug, input.slug); checks++;
   const newDraft = await withDb(() => subject.saveDraft({ ...input, id: "scheduled" }, editor));
   const schedRow = await withDb(() => subject.getStory(newDraft.id));
   await withDb(() => subject.scheduleStory(schedRow, "2030-01-01T00:00:00.000Z", "publisher"));
@@ -443,7 +446,7 @@ try {
   assert.equal(savedScheduled.id,scheduledInput.id);assert.equal(savedScheduled.status,'scheduled');assert.equal(savedScheduled.revisionOf,null);assert.equal(savedScheduled.version,2);assert.equal(savedScheduled.scheduledAt,originalDeadline);
   let persistedScheduled=await withDb(()=>subject.getStory(scheduledInput.id));
   assert.equal(persistedScheduled.title,scheduledInput.title);assert.equal(persistedScheduled.scheduledAt,originalDeadline);
-  assert.equal(persistedScheduled.slug,'scheduled-original');assert.equal(persistedScheduled.section,'news');assert.equal(persistedScheduled.authorName,'Original author');
+  assert.equal(persistedScheduled.slug,'scheduled-original');assert.equal(persistedScheduled.section,'world');assert.equal(persistedScheduled.authorName,'Original author');
   assert.equal((await admin.query("select count(*)::int n from stories where revision_of='scheduled-edit-fixture'")).rows[0].n,0);
   assert.equal((await admin.query("select count(*)::int n from story_versions where story_id='scheduled-edit-fixture'")).rows[0].n,1);
   assert.equal((await admin.query("select count(*)::int n from audit_log where story_id='scheduled-edit-fixture' and action='scheduled:update'")).rows[0].n,1);
