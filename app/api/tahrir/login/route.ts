@@ -61,10 +61,7 @@ export async function POST(request: Request) {
 
   const user = await findLoginUser(username);
   // كلمة المرور تُفحص دائمًا — ضد تجزئة وهمية عند غياب الحساب — فلا يفرق الزمن بين اسم موجود وآخر مختلق.
-  const hash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
-  // كلمات مؤقتة تُنسخ من رسائل الجوال بمسافة زائدة في طرفها؛ تُجرَّب بلا المسافة إن فشل النص الحرفي.
-  const trimmed = password.trim();
-  const passwordOk = await verifyPassword(password, hash) || (trimmed !== password && !!trimmed && await verifyPassword(trimmed, hash));
+  const passwordOk = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
   if (!user || !passwordOk) {
     await audit(user?.username ?? "anonymous", "login:failed", undefined, user ? "كلمة مرور غير صحيحة" : "حساب غير معروف");
     return NextResponse.json({ error: "بيانات الدخول غير صحيحة." }, { status: 401 });
