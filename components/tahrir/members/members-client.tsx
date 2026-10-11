@@ -199,6 +199,12 @@ export function MembersClient({ members, roles, groups, me, can }: Props) {
                         <span className="truncate text-[11px] text-muted-foreground" dir="ltr">
                           {member.email || member.username}
                         </span>
+                        {/* اسم الدخول يختلف أحيانًا عن البريد؛ إخفاؤه جعل الإدارة تعطي الأعضاء البريد فيُرفضون. */}
+                        {member.email && member.email.toLowerCase() !== member.username.toLowerCase() ? (
+                          <span className="truncate text-[11px] text-muted-foreground">
+                            اسم الدخول: <span dir="ltr">{member.username}</span>
+                          </span>
+                        ) : null}
                         {/* على الجوال ينزل الدور وآخر دخول تحت الاسم بدل أعمدة خارج الشاشة. */}
                         <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10.5px] text-muted-foreground md:hidden">
                           <span className={cn("rounded bg-muted/70 px-1.5 py-0.5 font-display font-semibold", member.role === ADMIN_ROLE && "text-(--t-warn)")}>
@@ -428,6 +434,11 @@ function MemberForm({
         <SheetDescription>
           {editing ? "اسم المستخدم ثابت؛ الدور الجديد يسري على الطلب التالي مباشرة." : "يدخل بكلمة مرور مؤقتة ويُجبر على تغييرها أول مرة."}
         </SheetDescription>
+        {editing ? (
+          <p className="text-[13px]">
+            اسم الدخول: <span dir="ltr" className="select-all font-semibold">{editing.username}</span>
+          </p>
+        ) : null}
       </SheetHeader>
       {!editing ? (
         <div className="grid gap-1.5">
