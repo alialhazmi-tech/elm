@@ -48,6 +48,18 @@ export async function findUser(username: string): Promise<UserRow | null> {
   return rows[0] ?? null;
 }
 
+/**
+ * حساب الدخول: اسم المستخدم أولًا، ثم البريد إذا كان المُدخل بريدًا ولم يطابق اسمًا.
+ * البريد ليس فريدًا في الجدول، فلا يُقبل إلا إذا طابق عضوًا واحدًا بالضبط.
+ */
+export async function findLoginUser(identifier: string): Promise<UserRow | null> {
+  const byUsername = await findUser(identifier);
+  const email = identifier.trim().toLowerCase();
+  if (byUsername || !email.includes("@")) return byUsername;
+  const rows = await requireDb().select().from(users).where(eq(sql`lower(btrim(${users.email}))`, email)).limit(2);
+  return rows.length === 1 ? rows[0] : null;
+}
+
 export async function audit(actor: string, action: string, storyId?: string, detail = "") {
   if (storyId) { await auditQuery(actor, action, storyId, detail); return; }
   const db = requireDb();

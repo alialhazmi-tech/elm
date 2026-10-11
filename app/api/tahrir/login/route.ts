@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 import { users } from "@/db/schema";
 import { getDb } from "@/lib/db";
 import { createSessionToken, sessionCookie, verifyPassword } from "@/lib/tahrir/auth";
-import { audit, findUser } from "@/lib/tahrir/service";
+import { audit, findLoginUser } from "@/lib/tahrir/service";
 
 /** نافذة الحظر: 10 محاولات للحساب و40 للشبكة كل 15 دقيقة — أُعيدت بعد إيقافها المؤقت في #111. */
 const WINDOW_SECONDS = 900;
@@ -59,9 +59,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "الدخول غير متاح مؤقتًا." }, { status: 503 });
   }
 
-  const user = await findUser(username.trim());
+  const user = await findLoginUser(username);
   // كلمة المرور تُفحص دائمًا — ضد تجزئة وهمية عند غياب الحساب — فلا يفرق الزمن بين اسم موجود وآخر مختلق.
-  const passwordOk = await verifyPassword(password, user?.passwordHash ?? DUMMY_PASSWORD_HASH);
+  const hash = user?.passwordHash ?? DUMMY_PASSWORD_HASH;
+  // كلمات مؤقتة تُنسخ من رسائل الجوال بمسافة زائدة في طرفها؛ تُجرَّب بلا المسافة إن فشل النص الحرفي.
+  const trimmed = password.trim();
+  const passwordOk = await verifyPassword(password, hash) || (trimmed !== password && !!trimmed && await verifyPassword(trimmed, hash));
   if (!user || !passwordOk) {
     await audit(user?.username ?? "anonymous", "login:failed", undefined, user ? "كلمة مرور غير صحيحة" : "حساب غير معروف");
     return NextResponse.json({ error: "بيانات الدخول غير صحيحة." }, { status: 401 });

@@ -41,8 +41,8 @@ export function LoginForm() {
   return (
     <form onSubmit={submit} className="grid gap-4">
       <div className="grid gap-1.5">
-        <Label htmlFor="th-user">اسم المستخدم</Label>
-        <Input id="th-user" name="username" autoComplete="username" required className="h-10" />
+        <Label htmlFor="th-user">اسم المستخدم أو البريد</Label>
+        <Input id="th-user" name="username" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} dir="ltr" required className="h-10" />
       </div>
       <div className="grid gap-1.5">
         <Label htmlFor="th-pass">كلمة المرور</Label>
