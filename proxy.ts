@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { originAccess, ORIGIN_TOKEN_HEADER } from "@/lib/security/origin-access";
 import { contentSecurityPolicy } from "@/lib/security/csp";
+import { brokenStoryRedirect } from "@/lib/seo/broken-story-url";
 
 export function proxy(request: NextRequest) {
   const access = originAccess(request, {
@@ -12,6 +13,8 @@ export function proxy(request: NextRequest) {
   if (!access.allowed) return new NextResponse(access.status === 503 ? "الخدمة غير مهيأة." : "الوصول غير مسموح.", {
     status: access.status, headers: { "Cache-Control": "no-store", "Content-Type": "text/plain; charset=utf-8" },
   });
+  const repaired = brokenStoryRedirect(request.nextUrl.pathname);
+  if (repaired) return NextResponse.redirect(new URL(repaired + request.nextUrl.search, request.url), 308);
   const headers = new Headers(request.headers);
   headers.delete(ORIGIN_TOKEN_HEADER);
   headers.delete("x-nonce");
