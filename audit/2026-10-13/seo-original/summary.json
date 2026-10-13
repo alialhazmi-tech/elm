@@ -1,0 +1,35 @@
+{
+  "started_utc": "2026-10-13T12:56:19.255853+00:00",
+  "ended_utc": "2026-10-13T13:02:28.967512+00:00",
+  "source_csv_sha256": "177342713e43ace6345850c8eff94a8ccd1eb0212a61d4bf80953c99a4a5d2f4",
+  "source_records": 848,
+  "unique_requested_urls": 848,
+  "initial_status_counts": {
+    "200": 846,
+    "": 1,
+    "308": 1
+  },
+  "final_status_counts": {
+    "200": 847,
+    "": 1
+  },
+  "fetch_errors": 1,
+  "direct_200_pages": 846,
+  "missing": {
+    "title": 0,
+    "description": 0,
+    "canonical": 0
+  },
+  "duplicate_groups": {
+    "title": 0,
+    "description": 0,
+    "canonical": 0
+  },
+  "duplicate_pages": {
+    "title": 0,
+    "description": 0,
+    "canonical": 0
+  },
+  "protected_email_links": 0,
+  "method": "Exact extracted values; duplicate/missing counts use direct HTTP 200 pages only. Redirects and errors are reported separately."
+}

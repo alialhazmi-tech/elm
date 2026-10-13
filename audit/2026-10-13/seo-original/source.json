@@ -1,0 +1,14 @@
+{
+  "workbook_name": "تدقيق لوقع العلم.xlsx",
+  "workbook_sha256": "ebb18a3a82981a2745c2a4af1bc9b94714dd95e5fb93a5b19a15fd4d00ceac35",
+  "source_sheet": "Sheet1",
+  "source_cell": "B7",
+  "source_url": "https://drive.google.com/file/d/1SO21j-1aV4Mm7YaWta8uEjJ0MdmYNg5S/view?usp=sharing",
+  "source_title": "alelm.net_duplicate_meta_description_20260913.csv",
+  "source_modified_utc": "2026-09-13T12:08:41.417Z",
+  "local_copy": "source-meta-descriptions.csv",
+  "local_copy_note": "Readable text obtained through authenticated Google Drive fetch; line endings normalized to LF. Hash in summary is for this normalized copy.",
+  "original_records": 848,
+  "independent_eight_title_cases_provided": false,
+  "limits": "Workbook contains only Sheet1 (10 findings), no separate affected-URL or explanation sheets. Its B7 hyperlink is a meta-description export, not an eight-title-cases list."
+}
