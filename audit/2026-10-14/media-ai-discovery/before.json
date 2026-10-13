@@ -1,0 +1,565 @@
+{
+  "checkedAt": "2026-10-13T21:29:35.214Z",
+  "base": "https://alelm.net",
+  "limitations": [
+    "User-Agent tests do not verify crawler IP identity.",
+    "mainTextWords includes visible controls and navigation within main, not only article prose.",
+    "Request timings are not mobile performance or Core Web Vitals measurements.",
+    "No settings, content or analytics configuration are changed."
+  ],
+  "pages": [
+    {
+      "url": "https://alelm.net/",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 158,
+      "h1": [
+        "Anthropic ترصد سيناريو لانتشار الذكاء الاصطناعي «يصعب إيقافه»"
+      ],
+      "canonical": "https://alelm.net",
+      "mainTextWords": 1244,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "location": null,
+      "contentType": "text/plain; charset=UTF-8",
+      "durationMs": 133,
+      "h1": [],
+      "canonical": null,
+      "mainTextWords": 0,
+      "schemaTypes": [],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/rss.xml",
+      "status": 200,
+      "location": null,
+      "contentType": "application/rss+xml; charset=utf-8",
+      "durationMs": 159,
+      "h1": [],
+      "canonical": null,
+      "mainTextWords": 0,
+      "schemaTypes": [],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "location": null,
+      "contentType": "text/plain",
+      "durationMs": 129,
+      "h1": [],
+      "canonical": null,
+      "mainTextWords": 0,
+      "schemaTypes": [],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/about",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 168,
+      "h1": [
+        "المعرفة وراء الخبر"
+      ],
+      "canonical": "https://alelm.net/about",
+      "mainTextWords": 332,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/ai",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 159,
+      "h1": [
+        "الذكاء الاصطناعي في العلم"
+      ],
+      "canonical": "https://alelm.net/ai",
+      "mainTextWords": 679,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/podcasts",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 156,
+      "h1": [
+        "حوارات تُسمع بهدوء"
+      ],
+      "canonical": "https://alelm.net/podcasts",
+      "mainTextWords": 137,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 162,
+      "h1": [
+        "Anthropic ترصد سيناريو لانتشار الذكاء الاصطناعي «يصعب إيقافه»"
+      ],
+      "canonical": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "mainTextWords": 929,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/economy/300377/%D9%85%D9%86-%D8%A7%D9%84%D8%B9%D9%82%D8%A7%D8%B1%D8%A7%D8%AA-%D8%A5%D9%84%D9%89-%D8%A7%D9%84%D8%B0%D9%87%D8%A8-%D9%84%D9%85%D8%A7%D8%B0%D8%A7-%D8%AA%D8%BA%D9%8A%D8%B1-%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%AC%D9%87%D8%A9-%D8%AB%D8%B1%D9%88%D8%AA%D9%87%D8%A7",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 148,
+      "h1": [
+        "لماذا تواصل الصين شراء الذهب رغم هبوط الأسعار؟"
+      ],
+      "canonical": "https://alelm.net/economy/300377/%D9%85%D9%86-%D8%A7%D9%84%D8%B9%D9%82%D8%A7%D8%B1%D8%A7%D8%AA-%D8%A5%D9%84%D9%89-%D8%A7%D9%84%D8%B0%D9%87%D8%A8-%D9%84%D9%85%D8%A7%D8%B0%D8%A7-%D8%AA%D8%BA%D9%8A%D8%B1-%D8%A7%D9%84%D8%B5%D9%8A%D9%86-%D9%88%D8%AC%D9%87%D8%A9-%D8%AB%D8%B1%D9%88%D8%AA%D9%87%D8%A7",
+      "mainTextWords": 1034,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/health/300376/%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%AD%D8%AF%D8%AB-%D9%84%D8%AF%D9%85%D8%A7%D8%BA%D9%83-%D8%B9%D9%86%D8%AF%D9%85%D8%A7-%D8%AA%D8%A8%D8%AA%D8%B9%D8%AF-%D8%B9%D9%86-%D8%A7%D9%84%D9%87%D8%A7%D8%AA%D9%81-3-%D8%A3%D9%8A%D8%A7%D9%85",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 146,
+      "h1": [
+        "ماذا يحدث لدماغك لو ابتعدت عن الهاتف 72 ساعة؟"
+      ],
+      "canonical": "https://alelm.net/health/300376/%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%AD%D8%AF%D8%AB-%D9%84%D8%AF%D9%85%D8%A7%D8%BA%D9%83-%D8%B9%D9%86%D8%AF%D9%85%D8%A7-%D8%AA%D8%A8%D8%AA%D8%B9%D8%AF-%D8%B9%D9%86-%D8%A7%D9%84%D9%87%D8%A7%D8%AA%D9%81-3-%D8%A3%D9%8A%D8%A7%D9%85",
+      "mainTextWords": 704,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/art/300375/%D8%A2%D8%B1-%D8%AC%D9%8A%D9%87-%D9%85%D9%8A%D8%AA%D9%8A-%D8%B1%D8%AD%D9%8A%D9%84-%D9%86%D8%AC%D9%85-%D8%A8%D8%B1%D9%8A%D9%83%D9%8A%D9%86%D8%BA-%D8%A8%D8%A7%D8%AF-%D8%A7%D9%84%D8%B0%D9%8A-%D8%AD%D9%88%D9%84-%D8%AA%D8%AC%D8%B1%D8%A8%D8%AA%D9%87-%D9%85%D8%B9-%D8%A7%D9%84%D8%B4%D9%84%D9%84-%D8%A7%D9%84%D8%AF%D9%85%D8%A7%D8%BA%D9%8A-%D8%A5%D9%84%D9%89-%D8%B1%D8%B3%D8%A7%D9%84%D8%A9-%D8%A5%D9%86%D8%B3%D8%A7%D9%86%D9%8A%D8%A9-%D8%AA%D9%88%D9%81%D9%8A-%D8%A7%D9%84%D9%85%D9%85%D8%AB%D9%84-%D8%A7%D9%84%D8%A3%D9%85%D8%B1%D9%8A%D9%83",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 162,
+      "h1": [
+        "آر جيه ميتي.. من هو نجم «بريكينج باد» الراحل؟"
+      ],
+      "canonical": "https://alelm.net/art/300375/%D8%A2%D8%B1-%D8%AC%D9%8A%D9%87-%D9%85%D9%8A%D8%AA%D9%8A-%D8%B1%D8%AD%D9%8A%D9%84-%D9%86%D8%AC%D9%85-%D8%A8%D8%B1%D9%8A%D9%83%D9%8A%D9%86%D8%BA-%D8%A8%D8%A7%D8%AF-%D8%A7%D9%84%D8%B0%D9%8A-%D8%AD%D9%88%D9%84-%D8%AA%D8%AC%D8%B1%D8%A8%D8%AA%D9%87-%D9%85%D8%B9-%D8%A7%D9%84%D8%B4%D9%84%D9%84-%D8%A7%D9%84%D8%AF%D9%85%D8%A7%D8%BA%D9%8A-%D8%A5%D9%84%D9%89-%D8%B1%D8%B3%D8%A7%D9%84%D8%A9-%D8%A5%D9%86%D8%B3%D8%A7%D9%86%D9%8A%D8%A9-%D8%AA%D9%88%D9%81%D9%8A-%D8%A7%D9%84%D9%85%D9%85%D8%AB%D9%84-%D8%A7%D9%84%D8%A3%D9%85%D8%B1%D9%8A%D9%83",
+      "mainTextWords": 1057,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/health/300374/%D8%A7%D9%84%D9%88%D8%B9%D9%8A-%D9%8A%D8%A8%D8%AF%D8%A3-%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%A3%D8%B9%D8%B1%D8%A7%D8%B6-%D9%85%D8%A7-%D8%A7%D9%84%D8%B0%D9%8A-%D9%8A%D9%86%D8%A8%D8%BA%D9%8A-%D9%85%D8%B9%D8%B1%D9%81%D8%AA%D9%87-%D8%B9%D9%86-%D8%B3%D8%B1%D8%B7%D8%A7%D9%86-%D8%A7%D9%84%D8%AB%D8%AF%D9%8A",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 158,
+      "h1": [
+        "الأعراض المبكرة لسرطان الثدي.. وكيفية التحضير لفحص الماموجرام"
+      ],
+      "canonical": "https://alelm.net/health/300374/%D8%A7%D9%84%D9%88%D8%B9%D9%8A-%D9%8A%D8%A8%D8%AF%D8%A3-%D9%82%D8%A8%D9%84-%D8%A7%D9%84%D8%A3%D8%B9%D8%B1%D8%A7%D8%B6-%D9%85%D8%A7-%D8%A7%D9%84%D8%B0%D9%8A-%D9%8A%D9%86%D8%A8%D8%BA%D9%8A-%D9%85%D8%B9%D8%B1%D9%81%D8%AA%D9%87-%D8%B9%D9%86-%D8%B3%D8%B1%D8%B7%D8%A7%D9%86-%D8%A7%D9%84%D8%AB%D8%AF%D9%8A",
+      "mainTextWords": 1638,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/economy/300269/%D8%AE%D8%B1%D9%8A%D8%B7%D8%A9-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%AD%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 165,
+      "h1": [
+        "السياحة السعودية في 2026.. وجهات تخطف الأنظار"
+      ],
+      "canonical": "https://alelm.net/economy/300269/%D8%AE%D8%B1%D9%8A%D8%B7%D8%A9-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%AD%D8%A9-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A%D8%A9",
+      "mainTextWords": 240,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/technology/300181/%D8%AA%D9%82%D9%86%D9%8A%D8%A7%D8%AA-%D8%AD%D8%AF%D9%8A%D8%AB%D8%A9-%D8%AA%D9%83%D8%B3%D8%B1-%D8%AD%D9%88%D8%A7%D8%AC%D8%B2-%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84-%D8%A3%D9%85%D8%A7%D9%85-%D8%A7%D9%84%D8%B5%D9%85",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 139,
+      "h1": [
+        "تقنيات حديثة تكسر حواجز التواصل أمام الصم"
+      ],
+      "canonical": "https://alelm.net/technology/300181/%D8%AA%D9%82%D9%86%D9%8A%D8%A7%D8%AA-%D8%AD%D8%AF%D9%8A%D8%AB%D8%A9-%D8%AA%D9%83%D8%B3%D8%B1-%D8%AD%D9%88%D8%A7%D8%AC%D8%B2-%D8%A7%D9%84%D8%AA%D9%88%D8%A7%D8%B5%D9%84-%D8%A3%D9%85%D8%A7%D9%85-%D8%A7%D9%84%D8%B5%D9%85",
+      "mainTextWords": 337,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/politics/264578/%D8%AF%D9%84%D9%8A%D9%84%D9%83-%D8%A7%D9%84%D8%B3%D8%B1%D9%8A%D8%B9-%D9%84%D9%81%D9%87%D9%85-%D8%A7%D9%84%D9%85%D8%B5%D8%B7%D9%84%D8%AD%D8%A7%D8%AA-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B3%D9%8A%D8%A9",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 140,
+      "h1": [
+        "دليلك السريع لفهم المصطلحات السياسية المعقّدة"
+      ],
+      "canonical": "https://alelm.net/politics/264578/%D8%AF%D9%84%D9%8A%D9%84%D9%83-%D8%A7%D9%84%D8%B3%D8%B1%D9%8A%D8%B9-%D9%84%D9%81%D9%87%D9%85-%D8%A7%D9%84%D9%85%D8%B5%D8%B7%D9%84%D8%AD%D8%A7%D8%AA-%D8%A7%D9%84%D8%B3%D9%8A%D8%A7%D8%B3%D9%8A%D8%A9",
+      "mainTextWords": 250,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/varieties/175839/%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D8%A7%D9%84%D8%BA%D8%A8%D9%88%D9%82",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 188,
+      "h1": [
+        "الغبوق"
+      ],
+      "canonical": "https://alelm.net/varieties/175839/%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D8%A7%D9%84%D8%BA%D8%A8%D9%88%D9%82",
+      "mainTextWords": 1579,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/varieties/92137/%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D9%85%D9%84%D8%A7%D9%85%D8%AD",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 314,
+      "h1": [
+        "ملامح"
+      ],
+      "canonical": "https://alelm.net/varieties/92137/%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D9%85%D9%84%D8%A7%D9%85%D8%AD",
+      "mainTextWords": 1085,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/varieties/71148/%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D8%B9%D8%AA%D9%85%D8%A9",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 182,
+      "h1": [
+        "عتمة"
+      ],
+      "canonical": "https://alelm.net/varieties/71148/%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D8%B9%D8%AA%D9%85%D8%A9",
+      "mainTextWords": 461,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    },
+    {
+      "url": "https://alelm.net/economy/70190/%D8%A7%D9%84%D8%B9%D9%84%D9%85-%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D8%AA%D9%82%D8%B1%D9%8A%D8%B1-%D9%83%D8%A8%D8%A7%D8%B1-%D8%A7%D9%84%D8%B3%D9%86",
+      "status": 200,
+      "location": null,
+      "contentType": "text/html; charset=utf-8",
+      "durationMs": 180,
+      "h1": [
+        "تقرير"
+      ],
+      "canonical": "https://alelm.net/economy/70190/%D8%A7%D9%84%D8%B9%D9%84%D9%85-%D8%A8%D9%88%D8%AF%D9%83%D8%A7%D8%B3%D8%AA-%D8%AA%D9%82%D8%B1%D9%8A%D8%B1-%D9%83%D8%A8%D8%A7%D8%B1-%D8%A7%D9%84%D8%B3%D9%86",
+      "mainTextWords": 581,
+      "schemaTypes": [
+        "NewsMediaOrganization",
+        "WebSite",
+        "BreadcrumbList",
+        "NewsArticle"
+      ],
+      "schemaErrors": [],
+      "media": [],
+      "mediaErrors": [],
+      "noindex": false
+    }
+  ],
+  "botProbes": [
+    {
+      "userAgent": "OAI-SearchBot",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "userAgent": "OAI-SearchBot",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 122
+    },
+    {
+      "userAgent": "OAI-SearchBot",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 155
+    },
+    {
+      "userAgent": "ChatGPT-User",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "userAgent": "ChatGPT-User",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "userAgent": "ChatGPT-User",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 154
+    },
+    {
+      "userAgent": "Claude-SearchBot",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 135
+    },
+    {
+      "userAgent": "Claude-SearchBot",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 137
+    },
+    {
+      "userAgent": "Claude-SearchBot",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 148
+    },
+    {
+      "userAgent": "Claude-User",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 119
+    },
+    {
+      "userAgent": "Claude-User",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 155
+    },
+    {
+      "userAgent": "Claude-User",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 147
+    },
+    {
+      "userAgent": "PerplexityBot",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 125
+    },
+    {
+      "userAgent": "PerplexityBot",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 139
+    },
+    {
+      "userAgent": "PerplexityBot",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 146
+    },
+    {
+      "userAgent": "Perplexity-User",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 131
+    },
+    {
+      "userAgent": "Perplexity-User",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 116
+    },
+    {
+      "userAgent": "Perplexity-User",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 141
+    },
+    {
+      "userAgent": "Googlebot",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "userAgent": "Googlebot",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 121
+    },
+    {
+      "userAgent": "Googlebot",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 140
+    },
+    {
+      "userAgent": "GPTBot",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "userAgent": "GPTBot",
+      "url": "https://alelm.net/llms.txt",
+      "status": 200,
+      "durationMs": 136
+    },
+    {
+      "userAgent": "GPTBot",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 200,
+      "durationMs": 195
+    },
+    {
+      "userAgent": "ClaudeBot",
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "durationMs": 134
+    },
+    {
+      "userAgent": "ClaudeBot",
+      "url": "https://alelm.net/llms.txt",
+      "status": 403,
+      "durationMs": 98
+    },
+    {
+      "userAgent": "ClaudeBot",
+      "url": "https://alelm.net/technology/300378/%D8%AA%D8%AD%D8%B0%D9%8A%D8%B1-%D9%85%D9%86-anthropic-%D8%A7%D9%84%D8%B0%D9%83%D8%A7%D8%A1-%D8%A7%D9%84%D8%A7%D8%B5%D8%B7%D9%86%D8%A7%D8%B9%D9%8A-%D9%82%D8%AF-%D9%8A%D9%86%D8%AA%D8%B4%D8%B1-%D8%B9%D8%A8%D8%B1-%D8%A3%D8%AC%D9%87%D8%B2%D8%A9-%D8%A7%D9%84%D9%85%D9%86%D8%B2%D9%84-%D8%AE%D9%84%D8%A7%D9%84-%D8%A3%D8%B4%D9%87%D8%B1",
+      "status": 403,
+      "durationMs": 102
+    }
+  ]
+}

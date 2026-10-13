@@ -8,6 +8,7 @@ import { toLatinDigits } from "@/lib/format";
 import { usePodcastDock } from "./podcast-dock";
 
 export interface PlayerEpisode {
+  id: string;
   title: string;
   guest: string | null;
   audioUrl: string;
@@ -68,7 +69,7 @@ export function PodcastPlayer({ showName, accent, episodes, youtube, dateLabels 
         {episodes.map((episode, index) => {
           const active = dock.track?.audioUrl === episode.audioUrl;
           return (
-            <article key={episode.audioUrl} className={`pp-episode${active ? " is-active" : ""}`}>
+            <article id={episode.id} key={episode.audioUrl} className={`pp-episode${active ? " is-active" : ""}`}>
               <button
                 type="button"
                 className="pp-play"
