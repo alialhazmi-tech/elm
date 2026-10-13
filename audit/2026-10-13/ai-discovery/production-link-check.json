@@ -1,0 +1,124 @@
+{
+  "date": "2026-10-13",
+  "note": "Read-only pre-deployment check. /rss.xml is new in this branch; production 404 is expected.",
+  "results": [
+    {
+      "url": "https://alelm.net/about",
+      "status": 200,
+      "finalUrl": "https://alelm.net/about",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/ai",
+      "status": 200,
+      "finalUrl": "https://alelm.net/ai",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/contact",
+      "status": 200,
+      "finalUrl": "https://alelm.net/contact",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/",
+      "status": 200,
+      "finalUrl": "https://alelm.net/",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/rss.xml",
+      "status": 404
+    },
+    {
+      "url": "https://alelm.net/series",
+      "status": 200,
+      "finalUrl": "https://alelm.net/series",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/politics",
+      "status": 200,
+      "finalUrl": "https://alelm.net/politics",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/economy",
+      "status": 200,
+      "finalUrl": "https://alelm.net/economy",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/technology",
+      "status": 200,
+      "finalUrl": "https://alelm.net/technology",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/sciences",
+      "status": 200,
+      "finalUrl": "https://alelm.net/sciences",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/health",
+      "status": 200,
+      "finalUrl": "https://alelm.net/health",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/sport",
+      "status": 200,
+      "finalUrl": "https://alelm.net/sport",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/infographics",
+      "status": 200,
+      "finalUrl": "https://alelm.net/infographics",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/videos",
+      "status": 200,
+      "finalUrl": "https://alelm.net/videos",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/podcasts",
+      "status": 200,
+      "finalUrl": "https://alelm.net/podcasts",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/sitemap.xml",
+      "status": 200,
+      "finalUrl": "https://alelm.net/sitemap.xml",
+      "type": "application/xml"
+    },
+    {
+      "url": "https://alelm.net/sitemap-news.xml",
+      "status": 200,
+      "finalUrl": "https://alelm.net/sitemap-news.xml",
+      "type": "application/xml; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/sitemap-videos.xml",
+      "status": 200,
+      "finalUrl": "https://alelm.net/sitemap-videos.xml",
+      "type": "application/xml; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/privacy-policy",
+      "status": 200,
+      "finalUrl": "https://alelm.net/privacy-policy",
+      "type": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://alelm.net/robots.txt",
+      "status": 200,
+      "finalUrl": "https://alelm.net/robots.txt",
+      "type": "text/plain"
+    }
+  ]
+}
