@@ -40,6 +40,7 @@ import { InfographicLightbox } from "@/app/_components/infographic-lightbox";
 import { PublicBreadcrumbs } from "@/app/_components/public-breadcrumbs";
 import { articleMetaDescription, cleanMetadataTitle } from "@/lib/seo/metadata";
 import { articleStructuredData, PUBLIC_SITE_URL } from "@/lib/seo/schema";
+import { videoStructuredData } from "@/lib/seo/media";
 import { imageFocusStyle } from "@/lib/content/image-focus";
 import { getPublishedJakReportBySourceId } from "@/lib/tahrir/jak-reports";
 import { jakReportHref } from "@/lib/jak-urls";
@@ -207,6 +208,7 @@ export default async function ArticlePage({ params }: Params) {
     sectionName: sectionName(story.section),
     includeEditorialTeam: true,
   });
+  const videoSchema = videoStructuredData(story, canonicalUrl);
 
   return (
     <>
@@ -226,6 +228,7 @@ export default async function ArticlePage({ params }: Params) {
         <article data-story-id={story.id}>
           {podcastShow ? (
             <PodcastShowView
+              canonicalUrl={canonicalUrl}
               show={podcastShow}
               cover={podcastShow.cover ?? story.image}
               description={podcastShow.description || story.excerpt}
@@ -387,10 +390,10 @@ export default async function ArticlePage({ params }: Params) {
 
       <SiteFooter />
 
-      <script
+      {!podcastShow ? <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema).replace(/</g, "\\u003c") }}
-      />
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(videoSchema ? [articleSchema, videoSchema] : articleSchema).replace(/</g, "\\u003c") }}
+      /> : null}
     </>
   );
 }

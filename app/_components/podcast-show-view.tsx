@@ -5,6 +5,7 @@ import { PodcastHeroPlay } from "@/app/_components/podcast-hero";
 import { PodcastPlayer } from "@/app/_components/podcast-player";
 import { brandDate, toLatinDigits } from "@/lib/format";
 import { formatPodcastDuration, presentEpisode, type PodcastEpisode, type PodcastShow } from "@/lib/podcasts";
+import { podcastEpisodeAnchor, podcastStructuredData } from "@/lib/seo/media";
 
 /**
  * صفحة برنامج بودكاست: الترويسة بالغلاف والتشغيل ثم قائمة الحلقات.
@@ -16,6 +17,7 @@ export function PodcastShowView({
   description,
   since,
   episodes,
+  canonicalUrl,
 }: {
   show: PodcastShow;
   cover: string | null | undefined;
@@ -23,6 +25,7 @@ export function PodcastShowView({
   /** تاريخ بداية البرنامج في الترويسة — تاريخ مادته القديمة إن وُجد. */
   since?: string | null;
   episodes: PodcastEpisode[];
+  canonicalUrl: string;
 }) {
   const latest = episodes[0]
     ? (() => {
@@ -35,6 +38,9 @@ export function PodcastShowView({
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{
+        __html: JSON.stringify(podcastStructuredData({ show, cover, description, episodes, canonicalUrl })).replace(/</g, "\\u003c"),
+      }} />
       <header className="pc-hero podcast-show" style={{ "--pc": show.accent } as React.CSSProperties}>
         <div className="pc-hero-cover">
           {cover ? <Image src={cover} alt="" fill sizes="(max-width: 640px) 160px, 260px" unoptimized={unoptimized} priority /> : null}
@@ -72,6 +78,7 @@ export function PodcastShowView({
           episodes={episodes.map((episode) => {
             const presented = presentEpisode(episode.title, show.name, episode.description, episode.guest);
             return {
+              id: podcastEpisodeAnchor(episode.audioUrl),
               title: presented.title,
               guest: presented.guest,
               audioUrl: episode.audioUrl,

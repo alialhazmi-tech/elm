@@ -10,6 +10,7 @@ import { getPodcastShow, showEpisodes } from "@/lib/podcast-catalog";
 import { PODCAST_SHOW_ID } from "@/lib/podcast-input";
 import { podcastShowPath } from "@/lib/podcasts";
 import { sharingMetadata } from "@/lib/sharing";
+import { PUBLIC_SITE_URL } from "@/lib/seo/schema";
 import "@/app/_components/podcast-player.css";
 
 /**
@@ -72,7 +73,7 @@ export default async function PodcastShowPage({ params }: Params) {
       <main id="main-content" className="article-shell">
         <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "بودكاست العلم", href: "/podcasts" }, { label: show.name }]} />
         <article>
-          <PodcastShowView show={show} cover={show.cover} description={show.description} episodes={episodes} />
+          <PodcastShowView show={show} cover={show.cover} description={show.description} episodes={episodes} canonicalUrl={new URL(podcastShowPath(show), PUBLIC_SITE_URL).href} />
         </article>
       </main>
       <SiteFooter />
