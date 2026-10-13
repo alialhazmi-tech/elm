@@ -1,0 +1,71 @@
+{
+  "checked_at": "2026-10-13T11:14:06.468437+00:00",
+  "cases": [
+    {
+      "url": "https://alelm.net/health/300362/old-slug",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 308 ",
+        "location: /health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86",
+        "HTTP/2 200 ",
+        "FINAL=https://alelm.net/health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86 STATUS=200 REDIRECTS=1 TLS=0"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://alelm.net/politics/300362/old-slug",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 308 ",
+        "location: /health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86",
+        "HTTP/2 200 ",
+        "FINAL=https://alelm.net/health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86 STATUS=200 REDIRECTS=1 TLS=0"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://alelm.net/300362",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 301 ",
+        "location: /health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86",
+        "HTTP/2 200 ",
+        "FINAL=https://alelm.net/health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86 STATUS=200 REDIRECTS=1 TLS=0"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://alelm.net/?p=300362",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 301 ",
+        "location: /health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86?p=300362",
+        "HTTP/2 200 ",
+        "FINAL=https://alelm.net/health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86?p=300362 STATUS=200 REDIRECTS=1 TLS=0"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://alelm.net/uncategorized",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 308 ",
+        "location: /varieties",
+        "HTTP/2 200 ",
+        "FINAL=https://alelm.net/varieties STATUS=200 REDIRECTS=1 TLS=0"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://alelm.net/tag/%D8%A3%D8%A8%D8%B3%D8%B7",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 301 ",
+        "location: /series/absat",
+        "HTTP/2 200 ",
+        "FINAL=https://alelm.net/series/absat STATUS=200 REDIRECTS=1 TLS=0"
+      ],
+      "error": ""
+    }
+  ]
+}

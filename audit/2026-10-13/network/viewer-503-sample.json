@@ -1,0 +1,773 @@
+{
+  "serviceId": "d20d73c0-e417-448e-a0cd-5e53f2fd28db",
+  "deploymentId": "e3ffddf7-5ad1-42f7-916b-1376d7f567f9",
+  "note": "Filtered sample, not an error-rate denominator. Client IPs and user agents omitted.",
+  "requests": [
+    {
+      "timestamp": "2026-10-13T09:30:22.357759696Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 56,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:35:26.293892670Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 17,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:35:37.745598402Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 18,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:35:38.779767410Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 42,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:35:46.188143778Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 17,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:35:50.585678211Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 85,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:35:53.868174977Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 26,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:36:11.779796834Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 82,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:36:14.322070458Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 18,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:43:21.815338843Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 21,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:43:23.505462661Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 22,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:43:33.762997706Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 53,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:43:40.849113796Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 45,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:44:00.893732645Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 77,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:44:01.026154282Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 46,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:44:38.156664870Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 52,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:44:48.529547824Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 97,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:51:34.199056509Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 41,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:51:39.410927999Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 17,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:51:55.685611179Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 60,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:52:10.051785887Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 46,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:52:17.021922824Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 24,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T09:52:21.759755505Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 53,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:10.809621023Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 19,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:12.396009248Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 19,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:16.198876895Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 48,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:21.063152816Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 22,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:21.626310501Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 20,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:23.760082532Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 18,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:00:47.017799625Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 86,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:01:42.163549353Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 20,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:01:43.563577096Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 27,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:02:16.426445439Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 49,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:08:53.298452794Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 63,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:11.292652199Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 45,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:15.421925162Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:17.560789955Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 18,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:20.691744951Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 59,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:27.676820822Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 125,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:51.541114892Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:52.943553967Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:09:55.797204573Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 18,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:14.639115034Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 36,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:15.440623029Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 21,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:17.901052737Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 17,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:28.516102466Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 37,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:30.700064448Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 59,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:30.918332902Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 20,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:16:46.799638947Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 77,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:17:07.837432075Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 22,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:17:44.393009448Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 24,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:17:59.093115199Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 45,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:25:19.474889804Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 46,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:25:55.841166251Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 22,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:26:03.010776864Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 19,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:26:45.728279983Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 47,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:26:47.531056496Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 20,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:26:50.598280722Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:32:46.796366974Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 37,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:32:51.123496891Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 34,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:32:53.569422269Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 19,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:32:54.185711288Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 21,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:32:54.761560230Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 17,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:32:55.280448276Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 21,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:33:15.788411429Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 37,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:39:10.720514074Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 63,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:39:36.450881132Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 126,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:39:41.442191079Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:39:43.999409097Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 21,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:39:52.706015995Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 51,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:40:05.509828755Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 45,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:40:17.006068735Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 79,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:40:26.578325750Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 14,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:47:14.114386233Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 15,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:47:23.434785423Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 20,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:47:27.842659224Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 19,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:47:38.209093314Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 101,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:47:45.455819738Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 49,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:47:54.313744846Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 20,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:48:09.701619691Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:48:10.580586379Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 16,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:54:48.036828010Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 119,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:54:48.647061584Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 53,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:55:22.199302803Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 22,
+      "upstreamErrors": ""
+    },
+    {
+      "timestamp": "2026-10-13T10:55:25.044599088Z",
+      "method": "GET",
+      "path": "/api/viewer",
+      "host": "alelm.net",
+      "httpStatus": 503,
+      "totalDuration": 17,
+      "upstreamErrors": ""
+    }
+  ],
+  "captureDate": "2026-10-13"
+}

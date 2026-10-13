@@ -9,12 +9,16 @@ import {mkdir, writeFile, readFile} from 'node:fs/promises';
 const [label, manifest, output]=process.argv.slice(2);
 await mkdir(output,{recursive:true});
 const urls=JSON.parse(await readFile(manifest,'utf8'));
+// Reports retain timing/size evidence without analytics client/session identifiers.
+const redactTelemetry = (_key, value) => typeof value === 'string'
+  ? value.replace(/https:\/\/(?:[a-z0-9.-]+\.)?google-analytics\.com\/g\/collect\?[^\s"<>]*/gi, 'https://www.google-analytics.com/g/collect?[redacted]')
+  : value;
 for(const [name,url] of Object.entries(urls)) for(let run=1;run<=3;run++) {
  const chrome=await launch({chromePath:process.env.CHROME_PATH,chromeFlags:['--headless','--no-sandbox']});
  try {
   const {lhr}=await lighthouse(url,{port:chrome.port,logLevel:'error',onlyCategories:['performance'],maxWaitForLoad:45000});
   const a=lhr.audits; const summary={label,name,run,url:lhr.finalDisplayedUrl,fetchTime:lhr.fetchTime,version:lhr.lighthouseVersion,environment:lhr.environment,settings:lhr.configSettings,warnings:lhr.runWarnings,error:lhr.runtimeError,score:lhr.categories.performance.score,metrics:a.metrics.details,element:a['largest-contentful-paint-element']?.details,breakdown:a['lcp-breakdown-insight']?.details,network:a['network-requests']?.details,unusedJS:a['unused-javascript']?.details,renderBlocking:a['render-blocking-resources']?.details};
-  await writeFile(`${output}/${label}-${name}-${run}.json`,JSON.stringify(summary,null,2));
+  await writeFile(`${output}/${label}-${name}-${run}.json`,JSON.stringify(summary,redactTelemetry,2));
   if(run===3 && a['final-screenshot']?.details?.data) await writeFile(`${output}/${label}-${name}-mobile.jpg`,Buffer.from(a['final-screenshot'].details.data.split(',')[1],'base64'));
   console.log(label,name,run,summary.score,a['largest-contentful-paint'].numericValue);
  } finally {await chrome.kill();}

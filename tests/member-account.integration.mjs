@@ -83,7 +83,7 @@ try {
               "next/cache":
                 "export const unstable_cache=load=>load; export function revalidateTag(){} export function revalidatePath(){}",
               "next/headers":
-                "export const cookies=async()=>({delete:name=>globalThis.__memberAccountCalls.push({method:'deleteCookie',name})});",
+                "export const cookies=async()=>({get:name=>name==='__Secure-neon-auth.session_token'&&globalThis.__memberAccountUser?{value:'fixture-session'}:undefined,delete:name=>globalThis.__memberAccountCalls.push({method:'deleteCookie',name})});",
               "next/navigation":
                 'export function redirect(url){throw new Error("REDIRECT:"+url)}',
               "@/lib/membership/email/notifications":

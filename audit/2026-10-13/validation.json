@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-13",
+  "runtime": {
+    "node": "24.19.0",
+    "npm": "10.9.4",
+    "platform": "darwin arm64"
+  },
+  "npm_test": {
+    "exitCode": 0,
+    "stages": [
+      "eslint",
+      "tsc --noEmit",
+      "isolated Next.js production build",
+      "unit tests",
+      "performance budget"
+    ],
+    "tests": 476,
+    "passed": 476,
+    "failed": 0,
+    "existingWarnings": [
+      "brand-mark.tsx:17 @next/next/no-img-element",
+      "next.config.ts experimental.staleTimes.static minimum 30"
+    ],
+    "scope": "Final source after reverting both font experiments and updating integration cookie fixtures; npm test rerun successfully."
+  },
+  "localIntegration": {
+    "status": "passed",
+    "command": "npm run test:integration",
+    "programs": 20,
+    "database": "isolated temporary PostgreSQL 17.10, loopback only",
+    "productionDataUsed": false,
+    "scope": [
+      "sessions",
+      "permissions",
+      "MFA",
+      "membership",
+      "viewer",
+      "privacy",
+      "canonical redirects",
+      "images",
+      "indexing",
+      "origin protection"
+    ]
+  },
+  "ci": {
+    "status": "see_pull_request_checks",
+    "workflow": ".github/workflows/ci.yml",
+    "commands": [
+      "npm test",
+      "npm run test:integration"
+    ],
+    "branchProtection": {
+      "enabled": false,
+      "requiredStatusChecks": []
+    },
+    "note": "GitHub Actions result is recorded in the PR description after this evidence commit is pushed; local results do not imply CI success."
+  },
+  "production": {
+    "deployed": false,
+    "closure": "Requires connected test identities and post-deployment viewer log comparison."
+  },
+  "focused_tests": {
+    "passed": 4,
+    "failed": 0,
+    "files": [
+      "viewer-route.test.mjs",
+      "keyword-breadcrumbs.test.mjs",
+      "member-verification-session.test.mjs"
+    ]
+  },
+  "additionalOptionalCheck": {
+    "command": "node tests/mobile-tahrir.integration.mjs",
+    "status": "failed",
+    "includedInCI": false,
+    "assertion": "Old jak story save expected 200; existing app/api/tahrir/story/route.ts returns 410 for retired jakalelm format. Failure before member-cookie checks. No changes retained in this optional test.",
+    "location": "tests/mobile-tahrir.integration.mjs:208 (temporary cookie fixture was present during exploratory run)"
+  }
+}

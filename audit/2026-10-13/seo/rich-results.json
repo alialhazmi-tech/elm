@@ -1,0 +1,32 @@
+{
+  "timezone": "Asia/Riyadh",
+  "tests": [
+    {
+      "url": "https://alelm.net/",
+      "testedAt": "2026-10-13T14:06:04+03:00",
+      "result": "Crawled successfully; No items detected",
+      "report": "https://search.google.com/test/rich-results/result?id=s88mJo6WuDL2_LxHPpHgUg",
+      "note": "HTML contains NewsMediaOrganization and WebSite. No rich-result item detected is not proof of absent JSON-LD."
+    },
+    {
+      "url": "https://alelm.net/health/300362/الشاشات-كيف-تؤثر-على-دماغ-المراهقين",
+      "testedAt": "2026-10-13T14:07:21+03:00",
+      "result": "2 valid items: Articles and Breadcrumbs",
+      "report": "https://search.google.com/test/rich-results/result?id=vixx3JKmbtQnuNpowOG49w",
+      "warning": "author.url is missing (optional); no critical Article errors"
+    },
+    {
+      "url": "https://alelm.net/keywords/الشاشات",
+      "testedAt": "2026-10-13T14:09:25+03:00",
+      "result": "1 invalid BreadcrumbList; Missing field item at position 2 (الكلمات المفتاحية)",
+      "report": "https://search.google.com/test/rich-results/result?id=Dr0nsJc-DnqJXhetSwtuEw",
+      "fix": "Remove the unlinked intermediate category from BOTH visible and structured trail; preserve keyword URL."
+    },
+    {
+      "environment": "isolated keyword page render from PR source, code-input mode (not deployed)",
+      "result": "1 valid BreadcrumbList; no critical errors",
+      "report": "https://search.google.com/test/rich-results/result?id=pFHwTmcUyGofoInDVGTMFQ",
+      "input": "keyword-after.html"
+    }
+  ]
+}

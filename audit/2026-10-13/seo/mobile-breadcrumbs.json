@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-13",
+  "environment": "Production Chrome, 390 x 844 CSS pixels",
+  "checks": [
+    { "path": "/health/300362/الشاشات-كيف-تؤثر-على-دماغ-المراهقين", "visible": ["الرئيسية", "صحة", "الشاشات ودماغ المراهقين.. علاقة معقدة وتأثيرات متداخلة"], "matchesJsonLd": true, "horizontalOverflow": false },
+    { "path": "/health", "visible": ["الرئيسية", "صحة"], "matchesJsonLd": true, "horizontalOverflow": false },
+    { "path": "/series/absat", "visible": ["الرئيسية", "السلاسل", "أبسط"], "matchesJsonLd": true, "horizontalOverflow": false },
+    { "path": "/keywords/الشاشات", "visible": ["الرئيسية", "الكلمات المفتاحية", "الشاشات"], "matchesJsonLd": true, "horizontalOverflow": false, "validAncestors": false, "note": "Position 2 has no URL: confirmed by Google Rich Results. Code fix covered by keyword-breadcrumbs.test.mjs; production unchanged." }
+  ]
+}
