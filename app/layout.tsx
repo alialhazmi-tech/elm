@@ -83,6 +83,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       suppressHydrationWarning
     >
       <head>
+        <link rel="alternate" type="application/rss+xml" title="أحدث مواد العلم" href="https://alelm.net/rss.xml" />
+        <link rel="describedby" href="https://alelm.net/llms.txt" />
         <script id="google-tag-manager" dangerouslySetInnerHTML={{ __html: tagManagerInit }} />
         <script
           id="site-structured-data"

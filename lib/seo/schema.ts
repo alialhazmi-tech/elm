@@ -1,5 +1,6 @@
 import type { Story } from "../content/types.ts";
 import { articleMetaDescription, cleanMetadataText } from "./metadata.ts";
+import { SOCIAL_LINKS } from "../social-links.ts";
 
 export const PUBLIC_SITE_URL = "https://alelm.net";
 export const ORGANIZATION_ID = `${PUBLIC_SITE_URL}/#organization`;
@@ -10,6 +11,8 @@ const publisher = {
   "@id": ORGANIZATION_ID,
   name: "العلم",
   url: `${PUBLIC_SITE_URL}/`,
+  // The same official profiles published in the footer; no separate identity list.
+  sameAs: SOCIAL_LINKS.filter((link) => link.id !== "whatsapp").map((link) => link.href),
   logo: {
     "@type": "ImageObject",
     "@id": `${PUBLIC_SITE_URL}/#logo`,

@@ -62,6 +62,18 @@ assert.equal(new Set(fontPreloads.map(([tag])=>tag.match(/href="([^"]+)"/)?.[1])
 assert.ok(structuredData(home.html).some(item=>item['@type']==='WebSite'));
 assert.ok(structuredData(home.html).some(item=>item['@type']==='NewsMediaOrganization'));
 const articleData=structuredData(article.html).find(item=>item['@type']==='NewsArticle');
+const publisher=structuredData(article.html).find(item=>item['@type']==='NewsMediaOrganization');
+assert.equal(publisher.name,'العلم');
+assert.ok(publisher.sameAs.includes('https://www.youtube.com/c/alelmmedia'));
+assert.ok(article.html.includes('rel="alternate" type="application/rss+xml" title="أحدث مواد العلم" href="https://alelm.net/rss.xml"'));
+assert.ok(article.html.includes('rel="describedby" href="https://alelm.net/llms.txt"'));
+const llms=await get('/llms.txt');assert.equal(llms.r.status,200);
+assert.match(llms.r.headers.get('content-type'),/text\/plain/);
+assert.ok(llms.html.startsWith('# العلم\n'));
+assert.ok(llms.html.includes('https://alelm.net/rss.xml'));
+const rss=await get('/rss.xml');assert.equal(rss.r.status,503,'No database must not publish a seed feed');
+assert.equal(rss.r.headers.get('cache-control'),'no-store');
+const retiredFeed=await get('/feed');assert.equal(retiredFeed.r.status,404);
 assert.ok(articleData);
 assert.equal(articleData.headline.trim().length>0,true);
 assert.ok(articleData.mainEntityOfPage,'NewsArticle identifies its canonical page');
