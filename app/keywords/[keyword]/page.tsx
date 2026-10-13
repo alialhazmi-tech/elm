@@ -50,7 +50,7 @@ export default async function KeywordPage({ params, searchParams }: Props) {
       <a className="skip-link" href="#main-content">انتقل إلى المحتوى</a>
       <SiteHeader />
       <main id="main-content" className="wrap keyword-page" dir="rtl">
-        <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: "الكلمات المفتاحية" }, { label: keyword }]} />
+        <PublicBreadcrumbs items={[{ label: "الرئيسية", href: "/" }, { label: keyword }]} />
         <header className="keyword-hero">
           <p className="eyebrow">أرشيف الكلمة المفتاحية</p>
           <h1>{keyword}</h1>
