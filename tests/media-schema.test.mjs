@@ -3,7 +3,7 @@ import test from "node:test";
 import { podcastDurationIso, podcastEpisodeAnchor, podcastStructuredData, videoStructuredData } from "../lib/seo/media.ts";
 
 const canonical = "https://alelm.net/videos/123/عنوان";
-const story = { format: "videos", videoUrl: "https://youtu.be/abcdefghijk", title: "عنوان الفيديو", excerpt: "وصف الفيديو الظاهر للقارئ", publishedAt: "2026-10-12T08:00:00Z" };
+const story = { format: "videos", videoUrl: "https://youtu.be/abcdefghijk", image: "/uploads/video-thumbnail.jpg", title: "عنوان الفيديو", excerpt: "وصف الفيديو الظاهر للقارئ", publishedAt: "2026-10-12T08:00:00Z" };
 const show = { id: "sample", storyId: null, name: "ملامح", description: "وصف البرنامج", feedUrl: "https://media.rss.com/malameh/feed.xml", youtube: "https://www.youtube.com/c/alelmmedia", accent: "#222" };
 const episode = { title: "ملامح | موضوع الحلقة مع ضيف الحلقة", description: "وصف الحلقة المنشور", audioUrl: "/podcast-audio/episode.mp3", mime: "audio/mpeg", publishedAt: "2026-10-10T08:00:00Z", duration: "23:45", episode: "13", season: "1" };
 
@@ -14,13 +14,13 @@ test("video schema describes the rendered player and publication on the site wit
   assert.equal(video.description, story.excerpt);
   assert.equal(video.uploadDate, "2026-10-12T08:00:00.000Z");
   assert.equal(video.embedUrl, "https://www.youtube-nocookie.com/embed/abcdefghijk?rel=0&modestbranding=1&hl=ar");
-  assert.deepEqual(video.thumbnailUrl, ["https://i.ytimg.com/vi/abcdefghijk/hqdefault.jpg"]);
+  assert.deepEqual(video.thumbnailUrl, ["https://alelm.net/uploads/video-thumbnail.jpg"]);
   assert.equal(video.associatedArticle["@id"], canonical+"#article");
   for (const key of ["contentUrl", "duration", "transcript", "author", "publisher", "copyrightHolder"]) assert.equal(key in video, false);
 });
 
 test("non-video posts, unverified social embeds and incomplete video data are omitted", () => {
-  for (const change of [{ format: "news" }, { videoUrl: "https://x.com/i/status/123" }, { videoUrl: "https://instagram.com/p/example" }, { videoUrl: "https://youtube.com.evil/watch?v=abcdefghijk" }, { publishedAt: "not-date" }, { publishedAt: undefined }, { title: " " }, { excerpt: "" }]) {
+  for (const change of [{ format: "news" }, { videoUrl: "https://x.com/i/status/123" }, { videoUrl: "https://instagram.com/p/example" }, { videoUrl: "https://youtube.com.evil/watch?v=abcdefghijk" }, { publishedAt: "not-date" }, { publishedAt: undefined }, { title: " " }, { excerpt: "" }, { image: undefined }, { image: "javascript:alert(1)" }, { image: "https://user:password@example.com/image.jpg" }]) {
     assert.equal(videoStructuredData({ ...story, ...change }, canonical), null);
   }
 });

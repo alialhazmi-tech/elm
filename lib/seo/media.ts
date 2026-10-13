@@ -75,19 +75,22 @@ export function podcastStructuredData(input: {
 }
 
 /** Only the YouTube video actually displayed by the article's video template. */
-export function videoStructuredData(story: Pick<Story, "format" | "videoUrl" | "title" | "excerpt" | "publishedAt">, canonicalUrl: string) {
+export function videoStructuredData(story: Pick<Story, "format" | "videoUrl" | "title" | "excerpt" | "publishedAt" | "image">, canonicalUrl: string) {
   if (story.format !== "videos") return null;
   const videoId = youtubeIdFrom(story.videoUrl);
   const embedUrl = videoEmbedUrl(story.videoUrl);
   const name = cleanMetadataText(story.title);
   const description = cleanMetadataText(story.excerpt);
   const uploadDate = dateValue(story.publishedAt);
-  if (!videoId || !embedUrl || !name || !description || !uploadDate) return null;
+  // Reuse the editorial thumbnail used in this material's cards/sharing metadata.
+  // Do not guess an external YouTube image URL: it can return 404 for old embeds.
+  const thumbnail = publicUrl(story.image);
+  if (!videoId || !embedUrl || !name || !description || !uploadDate || !thumbnail) return null;
   return {
     "@context": "https://schema.org", "@type": "VideoObject",
     "@id": `${canonicalUrl}#video`, url: canonicalUrl,
     name, description, embedUrl,
-    thumbnailUrl: [`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`],
+    thumbnailUrl: [thumbnail],
     // Publication on alelm.net, matching the visible date; not a claimed YouTube upload date.
     uploadDate,
     associatedArticle: { "@id": `${canonicalUrl}#article` },
