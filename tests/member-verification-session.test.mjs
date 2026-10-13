@@ -36,7 +36,7 @@ test('successful OTP clears stale Neon session data; account and viewer read ver
         '@/lib/db':'export const getDb=()=>globalThis.__verificationFixture.db;',
         '@/lib/tahrir/access':'export const loadActor=async()=>null;',
         '@/lib/membership/email/notifications':'export const notifyAccountChange=input=>globalThis.__verificationFixture.notices.push(input);',
-        'next/headers':'export const cookies=async()=>({delete:name=>globalThis.__verificationFixture.jar.delete(name)});',
+        'next/headers':'export const cookies=async()=>({get:name=>({value:globalThis.__verificationFixture.jar.get(name)}),delete:name=>globalThis.__verificationFixture.jar.delete(name)});',
         'next/cache':'export const revalidatePath=path=>globalThis.__verificationFixture.invalidations.push(path);export const unstable_cache=f=>f;export const revalidateTag=()=>{};',
         'next/navigation':'export const redirect=path=>{throw new Error("REDIRECT:"+path)};',
       };

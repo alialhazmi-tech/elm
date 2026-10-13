@@ -12,6 +12,7 @@ import { NextResponse } from "next/server";
 
 import { rolePermissions, roles, userPermissions, users } from "@/db/schema";
 import { getDb } from "@/lib/db";
+import { SessionReadError, sessionOperation } from "@/lib/session-diagnostics";
 
 import { getSession } from "./auth";
 import {
@@ -99,16 +100,19 @@ export interface Actor {
  * null عند غياب الجلسة أو تعليق العضوية أو حذفها — والطبقة العليا تعيد إلى الدخول.
  * مغلّف بـ cache() فيتشاركه الـlayout والصفحة في الرندر الواحد.
  */
-export const loadActor = cache(async (): Promise<Actor | null> => {
-  const session = await getSession();
+export const loadActor = cache(async ({ strict = false }: { strict?: boolean } = {}): Promise<Actor | null> => {
+  const session = await sessionOperation("editor.session", getSession);
   if (!session) return null;
-  const db = getDb();
-  if (!db) return null;
+  const db = await sessionOperation("editor.profile", async () => getDb());
+  if (!db) {
+    if (strict) throw new SessionReadError("editor.profile", { code: "STORAGE_UNAVAILABLE" });
+    return null;
+  }
 
   const [userRows, overrideRows, roleMap] = await Promise.all([
-    db.select().from(users).where(eq(users.id, session.userId)).limit(1),
-    db.select().from(userPermissions).where(eq(userPermissions.userId, session.userId)),
-    loadRoleMap(),
+    sessionOperation("editor.profile", () => db.select().from(users).where(eq(users.id, session.userId)).limit(1)),
+    sessionOperation("editor.permissions", async () => await db.select().from(userPermissions).where(eq(userPermissions.userId, session.userId))),
+    sessionOperation("editor.permissions", loadRoleMap),
   ]);
   const user = userRows[0];
   if (!user || (session.sessionVersion ?? 0) !== user.sessionVersion || user.status !== "active") return null;

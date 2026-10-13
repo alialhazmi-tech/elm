@@ -1,0 +1,2070 @@
+{
+  "label": "production",
+  "name": "story",
+  "run": 2,
+  "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+  "fetchTime": "2026-10-13T11:03:23.271Z",
+  "version": "12.8.2",
+  "environment": {
+    "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36",
+    "hostUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "benchmarkIndex": 4774,
+    "credits": {}
+  },
+  "settings": {
+    "output": "json",
+    "maxWaitForFcp": 30000,
+    "maxWaitForLoad": 15000,
+    "pauseAfterFcpMs": 1000,
+    "pauseAfterLoadMs": 1000,
+    "networkQuietThresholdMs": 1000,
+    "cpuQuietThresholdMs": 1000,
+    "formFactor": "mobile",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "throttlingMethod": "simulate",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36",
+    "auditMode": false,
+    "gatherMode": false,
+    "clearStorageTypes": [
+      "file_systems",
+      "shader_cache",
+      "service_workers",
+      "cache_storage"
+    ],
+    "disableStorageReset": false,
+    "debugNavigation": false,
+    "channel": "node",
+    "usePassiveGathering": false,
+    "disableFullPageScreenshot": false,
+    "skipAboutBlank": false,
+    "blankPage": "about:blank",
+    "ignoreStatusCode": false,
+    "locale": "en-US",
+    "blockedUrlPatterns": null,
+    "additionalTraceCategories": null,
+    "extraHeaders": null,
+    "precomputedLanternData": null,
+    "onlyAudits": null,
+    "onlyCategories": [
+      "performance"
+    ],
+    "skipAudits": null
+  },
+  "warnings": [
+    "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+  ],
+  "score": 0.66,
+  "metrics": {
+    "type": "debugdata",
+    "items": [
+      {
+        "firstContentfulPaint": 2825,
+        "largestContentfulPaint": 11347,
+        "interactive": 11488,
+        "speedIndex": 5468,
+        "totalBlockingTime": 45,
+        "maxPotentialFID": 124,
+        "cumulativeLayoutShift": 0,
+        "cumulativeLayoutShiftMainFrame": 0,
+        "timeToFirstByte": 492,
+        "observedTimeOrigin": 0,
+        "observedTimeOriginTs": 568046886585,
+        "observedNavigationStart": 0,
+        "observedNavigationStartTs": 568046886585,
+        "observedFirstPaint": 2543,
+        "observedFirstPaintTs": 568049429347,
+        "observedFirstContentfulPaint": 2543,
+        "observedFirstContentfulPaintTs": 568049429347,
+        "observedFirstContentfulPaintAllFrames": 2543,
+        "observedFirstContentfulPaintAllFramesTs": 568049429347,
+        "observedLargestContentfulPaint": 2543,
+        "observedLargestContentfulPaintTs": 568049429347,
+        "observedLargestContentfulPaintAllFrames": 2543,
+        "observedLargestContentfulPaintAllFramesTs": 568049429347,
+        "observedTraceEnd": 15004,
+        "observedTraceEndTs": 568061890447,
+        "observedLoad": 2300,
+        "observedLoadTs": 568049186121,
+        "observedDomContentLoaded": 684,
+        "observedDomContentLoadedTs": 568047570187,
+        "observedCumulativeLayoutShift": 0,
+        "observedCumulativeLayoutShiftMainFrame": 0,
+        "observedFirstVisualChange": 2543,
+        "observedFirstVisualChangeTs": 568049429585,
+        "observedLastVisualChange": 10007,
+        "observedLastVisualChangeTs": 568056893585,
+        "observedSpeedIndex": 2621,
+        "observedSpeedIndexTs": 568049507721
+      },
+      {
+        "lcpInvalidated": false
+      }
+    ]
+  },
+  "element": {
+    "type": "list",
+    "items": [
+      {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "valueType": "node",
+            "label": "Element"
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "page-2-H1",
+              "path": "1,HTML,1,BODY,8,MAIN,2,ARTICLE,0,HEADER,0,DIV,0,DIV,0,H1",
+              "selector": "header.sa-head > div.sa-head-copy > div.sa-head-top > h1",
+              "boundingRect": {
+                "top": 267,
+                "bottom": 440,
+                "left": 16,
+                "right": 396,
+                "width": 380,
+                "height": 173
+              },
+              "snippet": "<h1>",
+              "nodeLabel": "بعد إعلان ترامب.. ماذا يعني وقف إطلاق النار في مجال الطاقة بين روسيا وأوكرانيا؟"
+            }
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "headings": [
+          {
+            "key": "phase",
+            "valueType": "text",
+            "label": "Phase"
+          },
+          {
+            "key": "percent",
+            "valueType": "text",
+            "label": "% of LCP"
+          },
+          {
+            "key": "timing",
+            "valueType": "ms",
+            "label": "Timing"
+          }
+        ],
+        "items": [
+          {
+            "phase": "TTFB",
+            "timing": 492.124,
+            "percent": "4%"
+          },
+          {
+            "phase": "Load Delay",
+            "timing": 0,
+            "percent": "0%"
+          },
+          {
+            "phase": "Load Time",
+            "timing": 0,
+            "percent": "0%"
+          },
+          {
+            "phase": "Render Delay",
+            "timing": 10854.499999999996,
+            "percent": "96%"
+          }
+        ]
+      }
+    ]
+  },
+  "breakdown": {
+    "type": "list",
+    "items": [
+      {
+        "type": "table",
+        "headings": [
+          {
+            "key": "label",
+            "valueType": "text",
+            "label": "Subpart"
+          },
+          {
+            "key": "duration",
+            "valueType": "ms",
+            "label": "Duration"
+          }
+        ],
+        "items": [
+          {
+            "subpart": "timeToFirstByte",
+            "label": "Time to first byte",
+            "duration": 352.174
+          },
+          {
+            "subpart": "elementRenderDelay",
+            "label": "Element render delay",
+            "duration": 2190.588
+          }
+        ]
+      },
+      {
+        "type": "node",
+        "lhId": "page-2-H1",
+        "path": "1,HTML,1,BODY,8,MAIN,2,ARTICLE,0,HEADER,0,DIV,0,DIV,0,H1",
+        "selector": "header.sa-head > div.sa-head-copy > div.sa-head-top > h1",
+        "boundingRect": {
+          "top": 267,
+          "bottom": 440,
+          "left": 16,
+          "right": 396,
+          "width": 380,
+          "height": 173
+        },
+        "snippet": "<h1>",
+        "nodeLabel": "بعد إعلان ترامب.. ماذا يعني وقف إطلاق النار في مجال الطاقة بين روسيا وأوكرانيا؟"
+      }
+    ]
+  },
+  "network": {
+    "type": "table",
+    "headings": [
+      {
+        "key": "url",
+        "valueType": "url",
+        "label": "URL"
+      },
+      {
+        "key": "protocol",
+        "valueType": "text",
+        "label": "Protocol"
+      },
+      {
+        "key": "networkRequestTime",
+        "valueType": "ms",
+        "granularity": 1,
+        "label": "Network Request Time"
+      },
+      {
+        "key": "networkEndTime",
+        "valueType": "ms",
+        "granularity": 1,
+        "label": "Network End Time"
+      },
+      {
+        "key": "transferSize",
+        "valueType": "bytes",
+        "displayUnit": "kb",
+        "granularity": 1,
+        "label": "Transfer Size"
+      },
+      {
+        "key": "resourceSize",
+        "valueType": "bytes",
+        "displayUnit": "kb",
+        "granularity": 1,
+        "label": "Resource Size"
+      },
+      {
+        "key": "statusCode",
+        "valueType": "text",
+        "label": "Status Code"
+      },
+      {
+        "key": "mimeType",
+        "valueType": "text",
+        "label": "MIME Type"
+      },
+      {
+        "key": "resourceType",
+        "valueType": "text",
+        "label": "Resource Type"
+      }
+    ],
+    "items": [
+      {
+        "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 0,
+        "networkRequestTime": 0.3140000104904175,
+        "networkEndTime": 366.4499999284744,
+        "finished": true,
+        "transferSize": 24383,
+        "resourceSize": 132040,
+        "statusCode": 200,
+        "mimeType": "text/html",
+        "resourceType": "Document",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/280fac012b00b901-s.p.3ihiqn4pviisd.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 361.95099997520447,
+        "networkRequestTime": 362.2919999361038,
+        "networkEndTime": 689.5659999847412,
+        "finished": true,
+        "transferSize": 36892,
+        "resourceSize": 35884,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/3347fc7792f0b5ea-s.p.0c7ha31nuacbu.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.11899995803833,
+        "networkRequestTime": 362.41799998283386,
+        "networkEndTime": 641.1100000143051,
+        "finished": true,
+        "transferSize": 15794,
+        "resourceSize": 14792,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/441492499fc86682-s.p.1fbvi_fot8u4l.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.1520000696182,
+        "networkRequestTime": 362.6599999666214,
+        "networkEndTime": 477.7999999523163,
+        "finished": true,
+        "transferSize": 16095,
+        "resourceSize": 15092,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/4641603b8553767b-s.p.1y712r_ow2ydl.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.18300008773804,
+        "networkRequestTime": 362.7740000486374,
+        "networkEndTime": 689.694000005722,
+        "finished": true,
+        "transferSize": 31739,
+        "resourceSize": 30720,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/57696fb0c8dcfe1f-s.p.29a202atpp3ye.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.21399998664856,
+        "networkRequestTime": 362.8819999694824,
+        "networkEndTime": 677.1789999008179,
+        "finished": true,
+        "transferSize": 32196,
+        "resourceSize": 31188,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/5ad8fdb5805e9b4a-s.p.0-uv4l43gdmt7.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.24699997901917,
+        "networkRequestTime": 362.97699999809265,
+        "networkEndTime": 689.3890000581741,
+        "finished": true,
+        "transferSize": 34649,
+        "resourceSize": 33628,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/5d6231e6818a3930-s.p.2vs72h_x6qrve.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.2810000181198,
+        "networkRequestTime": 363.06900000572205,
+        "networkEndTime": 627.4839999675751,
+        "finished": true,
+        "transferSize": 14952,
+        "resourceSize": 13944,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/744885950b1fe0ff-s.p.30d2r2x65bwdm.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.30999994277954,
+        "networkRequestTime": 363.1710000038147,
+        "networkEndTime": 706.9570000171661,
+        "finished": true,
+        "transferSize": 124828,
+        "resourceSize": 123796,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/84cd8d504984ae62-s.p.0iritm8hg8q1a.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.3379999399185,
+        "networkRequestTime": 363.2919999361038,
+        "networkEndTime": 485.23800003528595,
+        "finished": true,
+        "transferSize": 15212,
+        "resourceSize": 14208,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/8f2ca9bed5019488-s.p.1rne3a59172go.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.3679999113083,
+        "networkRequestTime": 363.3989999294281,
+        "networkEndTime": 687.0239999294281,
+        "finished": true,
+        "transferSize": 31136,
+        "resourceSize": 30128,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/c9a0d344f313d307-s.p.3ik2qu-u9tgho.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.39600002765656,
+        "networkRequestTime": 363.6119999885559,
+        "networkEndTime": 691.5049999952316,
+        "finished": true,
+        "transferSize": 34520,
+        "resourceSize": 33512,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/media/ceec3e50f42c26e3-s.p.0da8nscnv1nkd.woff2",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.4169999361038,
+        "networkRequestTime": 363.75300002098083,
+        "networkEndTime": 691.5609999895096,
+        "finished": true,
+        "transferSize": 36891,
+        "resourceSize": 35884,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/image-variants?src=%2Fuploads%2Fdda51a54-b899-407d-8fcd-c8eaf67d7def.jpg&w=1080&v=1",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.4539999961853,
+        "networkRequestTime": 367.2299998998642,
+        "networkEndTime": 702.7589999437332,
+        "finished": true,
+        "transferSize": 60319,
+        "resourceSize": 58816,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/brand/alelm-logo-light.png",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.48800003528595,
+        "networkRequestTime": 367.1399999856949,
+        "networkEndTime": 621.8099999427795,
+        "finished": true,
+        "transferSize": 8990,
+        "resourceSize": 7541,
+        "statusCode": 200,
+        "mimeType": "image/png",
+        "resourceType": "Image",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/1b-s9a675dzfi.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.52499997615814,
+        "networkRequestTime": 366.08899998664856,
+        "networkEndTime": 677.3880000114441,
+        "finished": true,
+        "transferSize": 26092,
+        "resourceSize": 134156,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2jjoylr5w9w_7.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.5549999475479,
+        "networkRequestTime": 366.6209999322891,
+        "networkEndTime": 651.9769999980927,
+        "finished": true,
+        "transferSize": 15549,
+        "resourceSize": 74847,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/0ycd_swqj51bv.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.59500002861023,
+        "networkRequestTime": 366.74199998378754,
+        "networkEndTime": 566.7269999980927,
+        "finished": true,
+        "transferSize": 2256,
+        "resourceSize": 1928,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/3y47rrlwuxrd9.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.6230000257492,
+        "networkRequestTime": 366.8679999113083,
+        "networkEndTime": 568.7319999933243,
+        "finished": true,
+        "transferSize": 2119,
+        "resourceSize": 1518,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/3zx6ms9wqmdys.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.652999997139,
+        "networkRequestTime": 366.95699989795685,
+        "networkEndTime": 454.42900002002716,
+        "finished": true,
+        "transferSize": 1733,
+        "resourceSize": 502,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2q24e4--frqyj.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.6889998912811,
+        "networkRequestTime": 679.3349999189377,
+        "networkEndTime": 781.9340000152588,
+        "finished": true,
+        "transferSize": 7632,
+        "resourceSize": 19117,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/11jq0c2_zavac.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.71399998664856,
+        "networkRequestTime": 679.4179999828339,
+        "networkEndTime": 783.8989999294281,
+        "finished": true,
+        "transferSize": 9975,
+        "resourceSize": 31917,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/19q-xeasc4s7u.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.7369999885559,
+        "networkRequestTime": 679.5699999332428,
+        "networkEndTime": 795.8229999542236,
+        "finished": true,
+        "transferSize": 72858,
+        "resourceSize": 228147,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2amc2af3ufrvg.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.75800001621246,
+        "networkRequestTime": 679.6379998922348,
+        "networkEndTime": 782.1000000238419,
+        "finished": true,
+        "transferSize": 43760,
+        "resourceSize": 154019,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/turbopack-3gmerry464k82.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.89999997615814,
+        "networkRequestTime": 679.7059999704361,
+        "networkEndTime": 779.4129999876022,
+        "finished": true,
+        "transferSize": 5772,
+        "resourceSize": 10877,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/121xt2ytn-vn7.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.92400002479553,
+        "networkRequestTime": 679.7740000486374,
+        "networkEndTime": 784.0759999752045,
+        "finished": true,
+        "transferSize": 10051,
+        "resourceSize": 28583,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/227g9c638ghp0.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.9489998817444,
+        "networkRequestTime": 679.8409999608994,
+        "networkEndTime": 775.0239999294281,
+        "finished": true,
+        "transferSize": 1653,
+        "resourceSize": 215,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/32114b1dgmz48.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.9689999818802,
+        "networkRequestTime": 679.9120000600815,
+        "networkEndTime": 783.6799999475479,
+        "finished": true,
+        "transferSize": 11278,
+        "resourceSize": 25992,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2wt73yf2e5nt1.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 362.99199998378754,
+        "networkRequestTime": 679.9809999465942,
+        "networkEndTime": 785.7850000858307,
+        "finished": true,
+        "transferSize": 22603,
+        "resourceSize": 70327,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2f9qktzexzvxy.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 363.01599991321564,
+        "networkRequestTime": 680.0460000038147,
+        "networkEndTime": 794.9860000610352,
+        "finished": true,
+        "transferSize": 70198,
+        "resourceSize": 241086,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/brand/alelm-wordmark.png",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 363.03799998760223,
+        "networkRequestTime": 680.1959999799728,
+        "networkEndTime": 816.5199999809265,
+        "finished": true,
+        "transferSize": 6059,
+        "resourceSize": 4615,
+        "statusCode": 200,
+        "mimeType": "image/png",
+        "resourceType": "Image",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/0099pwr-t-o67.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 363.0609999895096,
+        "networkRequestTime": 367.05400002002716,
+        "networkEndTime": 568.8320000171661,
+        "finished": true,
+        "transferSize": 2032,
+        "resourceSize": 4035,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/manifest.webmanifest",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 367.29499995708466,
+        "networkRequestTime": 622.0249999761581,
+        "networkEndTime": 844.3849999904633,
+        "finished": true,
+        "transferSize": 1785,
+        "resourceSize": 295,
+        "statusCode": 200,
+        "mimeType": "application/manifest+json",
+        "resourceType": "Manifest",
+        "priority": "Medium",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MLB68TX2",
+        "sessionTargetType": "page",
+        "protocol": "h2",
+        "rendererStartTime": 678.9669998884201,
+        "networkRequestTime": 680.3999999761581,
+        "networkEndTime": 1624.5879999399185,
+        "finished": true,
+        "transferSize": 124975,
+        "resourceSize": 356378,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "Google Tag Manager"
+      },
+      {
+        "url": "https://static.cloudflareinsights.com/beacon.min.js/v4bc70e2c01a94c73b74392e4234840661791215815920",
+        "sessionTargetType": "page",
+        "protocol": "",
+        "rendererStartTime": 683.1490000486374,
+        "networkRequestTime": 683.1490000486374,
+        "networkEndTime": 683.1520000696182,
+        "finished": true,
+        "transferSize": 0,
+        "resourceSize": 0,
+        "statusCode": -1,
+        "mimeType": "",
+        "resourceType": "Script",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "Cloudflare"
+      },
+      {
+        "url": "https://alelm.net/social/instagram.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 688.8870000839233,
+        "networkRequestTime": 689.010999917984,
+        "networkEndTime": 825.0900000333786,
+        "finished": true,
+        "transferSize": 1709,
+        "resourceSize": 367,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/facebook.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 688.9450000524521,
+        "networkRequestTime": 689.0939999818802,
+        "networkEndTime": 825.0039999485016,
+        "finished": true,
+        "transferSize": 1678,
+        "resourceSize": 271,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/threads.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 688.970999956131,
+        "networkRequestTime": 689.2579998970032,
+        "networkEndTime": 828.113000035286,
+        "finished": true,
+        "transferSize": 1952,
+        "resourceSize": 850,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/x.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 689.0019999742508,
+        "networkRequestTime": 689.8910000324249,
+        "networkEndTime": 825.0509999990463,
+        "finished": true,
+        "transferSize": 1830,
+        "resourceSize": 562,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/linkedin.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 689.0259999036789,
+        "networkRequestTime": 690.0640000104904,
+        "networkEndTime": 822.4780000448227,
+        "finished": true,
+        "transferSize": 1710,
+        "resourceSize": 368,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/youtube.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 689.0520000457764,
+        "networkRequestTime": 690.1510000228882,
+        "networkEndTime": 818.720999956131,
+        "finished": true,
+        "transferSize": 1704,
+        "resourceSize": 412,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/snapchat.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 689.0749999284744,
+        "networkRequestTime": 690.2359999418259,
+        "networkEndTime": 802.1840000152588,
+        "finished": true,
+        "transferSize": 1938,
+        "resourceSize": 819,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/whatsapp.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 689.1010000705719,
+        "networkRequestTime": 690.3609999418259,
+        "networkEndTime": 830.3600000143051,
+        "finished": true,
+        "transferSize": 2267,
+        "resourceSize": 1494,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/social/tiktok.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 689.1339999437332,
+        "networkRequestTime": 690.5130000114441,
+        "networkEndTime": 818.7959998846054,
+        "finished": true,
+        "transferSize": 3166,
+        "resourceSize": 3599,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/viewer",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 830.1269999742508,
+        "networkRequestTime": 830.4860000610352,
+        "networkEndTime": 1044.2610000371933,
+        "finished": false,
+        "transferSize": 1490,
+        "resourceSize": 45,
+        "statusCode": 503,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/content/news-strip",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 830.5980000495911,
+        "networkRequestTime": 830.8870000839233,
+        "networkEndTime": 1001.0350000858307,
+        "finished": true,
+        "transferSize": 2079,
+        "resourceSize": 1251,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/content/interactions?storyId=e9aca2b1-0871-4847-9c82-4fd0c2cd6fc5",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 831.4249999523163,
+        "networkRequestTime": 831.7509999275208,
+        "networkEndTime": 1094.0709999799728,
+        "finished": true,
+        "transferSize": 1592,
+        "resourceSize": 51,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/content/insights?storyId=e9aca2b1-0871-4847-9c82-4fd0c2cd6fc5",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 832.3439999818802,
+        "networkRequestTime": 832.6539999246597,
+        "networkEndTime": 1042.2259999513626,
+        "finished": true,
+        "transferSize": 1610,
+        "resourceSize": 226,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/me/related?storyId=e9aca2b1-0871-4847-9c82-4fd0c2cd6fc5",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 832.8809999227524,
+        "networkRequestTime": 833.1560000181198,
+        "networkEndTime": 1019.5889999866486,
+        "finished": true,
+        "transferSize": 2800,
+        "resourceSize": 2874,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/me/article-state?storyId=e9aca2b1-0871-4847-9c82-4fd0c2cd6fc5",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 835.210000038147,
+        "networkRequestTime": 835.3709999322891,
+        "networkEndTime": 1050.305999994278,
+        "finished": true,
+        "transferSize": 1540,
+        "resourceSize": 123,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/content/reading",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1095.244999885559,
+        "networkRequestTime": 1095.641000032425,
+        "networkEndTime": 1258.9329999685287,
+        "finished": true,
+        "transferSize": 1480,
+        "resourceSize": 17,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1539.9550000429153,
+        "networkRequestTime": 1540.3199999332428,
+        "networkEndTime": 1672.776999950409,
+        "finished": true,
+        "transferSize": 2174,
+        "resourceSize": 1969,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/search?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1540.0950000286102,
+        "networkRequestTime": 1540.5469999313354,
+        "networkEndTime": 1672.8279999494553,
+        "finished": true,
+        "transferSize": 1672,
+        "resourceSize": 266,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1540.1560000181198,
+        "networkRequestTime": 1540.9659999608994,
+        "networkEndTime": 1670.1870000362396,
+        "finished": true,
+        "transferSize": 2176,
+        "resourceSize": 1988,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series/absat?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1540.2120000123978,
+        "networkRequestTime": 1541.097000002861,
+        "networkEndTime": 1673.054999947548,
+        "finished": true,
+        "transferSize": 1681,
+        "resourceSize": 336,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtag/destination?id=G-HDXL9ZXL9V&cx=c&gtm=4e6a91",
+        "sessionTargetType": "page",
+        "protocol": "h2",
+        "rendererStartTime": 1643.720999956131,
+        "networkRequestTime": 1643.916000008583,
+        "networkEndTime": 2260.746999979019,
+        "finished": true,
+        "transferSize": 164060,
+        "resourceSize": 472174,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "Google Tag Manager"
+      },
+      {
+        "url": "https://alelm.net/series/aghrab?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1671.3660000562668,
+        "networkRequestTime": 1671.5219999551773,
+        "networkEndTime": 1795.5,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 337,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/politics?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1673.6880000829697,
+        "networkRequestTime": 1673.8159999847412,
+        "networkEndTime": 1798.2000000476837,
+        "finished": true,
+        "transferSize": 1847,
+        "resourceSize": 585,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/1pu58ell4nos5.css",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1673.982999920845,
+        "networkRequestTime": 1674.1259999275208,
+        "networkEndTime": 1762.4710000753403,
+        "finished": true,
+        "transferSize": 7116,
+        "resourceSize": 26373,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/join?next=%2Fpolitics%2F300364%2F%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7&mode=signin&_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1674.2279999256134,
+        "networkRequestTime": 1674.3420000076294,
+        "networkEndTime": 1794.2579998970032,
+        "finished": true,
+        "transferSize": 1822,
+        "resourceSize": 696,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/?_rsc=OMeqj1szefOtCEVH",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1674.738000035286,
+        "networkRequestTime": 1674.857999920845,
+        "networkEndTime": 1795.416000008583,
+        "finished": true,
+        "transferSize": 4257,
+        "resourceSize": 7187,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/?_rsc=gOvhm-fcBDtGaRW0",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1795.6499999761581,
+        "networkRequestTime": 1795.913999915123,
+        "networkEndTime": 1936.8769999742508,
+        "finished": true,
+        "transferSize": 19128,
+        "resourceSize": 93049,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/3-08q7p7y8l1d.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1796.7640000581741,
+        "networkRequestTime": 1796.972000002861,
+        "networkEndTime": 1891.7480000257492,
+        "finished": true,
+        "transferSize": 10371,
+        "resourceSize": 27388,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/search?_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1798.4290000200272,
+        "networkRequestTime": 1798.6469999551773,
+        "networkEndTime": 1923.2749999761581,
+        "finished": true,
+        "transferSize": 2106,
+        "resourceSize": 3766,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/varieties/300373/%D9%84%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D9%82%D8%B9-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82-%D9%81%D9%8A-%D9%81%D8%AE-%D8%A7%D9%84%D9%87%D8%A7%D8%AA%D9%81-%D9%88%D9%8A%D8%B5%D8%B9%D8%A8-%D8%B9%D9%84%D9%8A%D9%87-%D8%AA%D8%B1%D9%83%D9%87?_rsc=pWoeo_rtA5tzCs0a",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1799.0080000162125,
+        "networkRequestTime": 1799.194000005722,
+        "networkEndTime": 1933.6110000610352,
+        "finished": true,
+        "transferSize": 15911,
+        "resourceSize": 68365,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series?_rsc=iok-OGghCXN3mvV1",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1799.7389999628067,
+        "networkRequestTime": 1799.9060000181198,
+        "networkEndTime": 1923.9570000171661,
+        "finished": true,
+        "transferSize": 8667,
+        "resourceSize": 39425,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series/absat?_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1924.8559999465942,
+        "networkRequestTime": 1925.222000002861,
+        "networkEndTime": 2042.8960000276566,
+        "finished": true,
+        "transferSize": 2831,
+        "resourceSize": 3587,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/3txas6j1m3kn5.js",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1926.523999929428,
+        "networkRequestTime": 1926.8289999961853,
+        "networkEndTime": 2012.597000002861,
+        "finished": true,
+        "transferSize": 6268,
+        "resourceSize": 13371,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series/aghrab?_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1927.8550000190735,
+        "networkRequestTime": 1928.4140000343323,
+        "networkEndTime": 2040.044000029564,
+        "finished": true,
+        "transferSize": 2057,
+        "resourceSize": 3566,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series/efhamha-sah?_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1935.0590000152588,
+        "networkRequestTime": 1935.3830000162125,
+        "networkEndTime": 2048.917999982834,
+        "finished": true,
+        "transferSize": 2852,
+        "resourceSize": 3644,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/series/bel-arqam?_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 1938.2549999952316,
+        "networkRequestTime": 1938.4769999980927,
+        "networkEndTime": 2057.4379999637604,
+        "finished": true,
+        "transferSize": 2137,
+        "resourceSize": 3608,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/politics?_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 2041.0140000581741,
+        "networkRequestTime": 2041.4280000925064,
+        "networkEndTime": 2185.4789999723434,
+        "finished": true,
+        "transferSize": 2211,
+        "resourceSize": 4146,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/join?next=%2Fpolitics%2F300364%2F%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7&mode=signin&_rsc=kbttbnZuUeEHdlV9",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 2044.152999997139,
+        "networkRequestTime": 2044.4380000829697,
+        "networkEndTime": 2165.164999961853,
+        "finished": true,
+        "transferSize": 2348,
+        "resourceSize": 4414,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/join?_rsc=95u0tk2jQaZDtwQ4",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 2166.0920000076294,
+        "networkRequestTime": 2166.4749999046326,
+        "networkEndTime": 2280.848000049591,
+        "finished": true,
+        "transferSize": 1672,
+        "resourceSize": 264,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://www.google-analytics.com/g/collect?[redacted]",
+        "sessionTargetType": "page",
+        "protocol": "h2",
+        "rendererStartTime": 2297.9359999895096,
+        "networkRequestTime": 2298.3919999599457,
+        "networkEndTime": 2696.6299999952316,
+        "finished": true,
+        "transferSize": 543,
+        "resourceSize": 0,
+        "statusCode": 204,
+        "mimeType": "text/plain",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "Google Analytics"
+      },
+      {
+        "url": "https://alelm.net/favicon.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 2300.5299999713898,
+        "networkRequestTime": 2300.664999961853,
+        "networkEndTime": 2414.0460000038147,
+        "finished": true,
+        "transferSize": 1688,
+        "resourceSize": 345,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Other",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/favicon.svg",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 2300.59299993515,
+        "networkRequestTime": 2300.7730000019073,
+        "networkEndTime": 2414.4240000247955,
+        "finished": true,
+        "transferSize": 0,
+        "resourceSize": 345,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Other",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/brand/alelm-icon.png",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 2416.125,
+        "networkRequestTime": 2416.2580000162125,
+        "networkEndTime": 2530.2839999198914,
+        "finished": true,
+        "transferSize": 4061,
+        "resourceSize": 2620,
+        "statusCode": 200,
+        "mimeType": "image/png",
+        "resourceType": "Other",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/api/performance",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 4301.96899998188,
+        "networkRequestTime": 4302.901999950409,
+        "networkEndTime": 4440.399999976158,
+        "finished": true,
+        "transferSize": 1426,
+        "resourceSize": 0,
+        "statusCode": 204,
+        "mimeType": "",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/health/300372/%D8%A7%D9%84%D8%B3%D9%83%D8%B1%D9%8A-%D9%85%D9%86-%D8%A7%D9%84%D9%86%D9%88%D8%B9-%D8%A7%D9%84%D8%AE%D8%A7%D9%85%D8%B3-%D9%85%D8%B1%D8%B6-%D8%AD%D9%8A%D8%B1-%D8%A7%D9%84%D8%B9%D9%84%D9%85%D8%A7%D8%A1-%D9%82%D8%B1%D8%A7%D8%A8%D8%A9-70-%D8%B9%D8%A7%D9%85%D8%A7?_rsc=pWoeo_rtA5tzCs0a",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 6840.804999947548,
+        "networkRequestTime": 6841.441999912262,
+        "networkEndTime": 6967.72100007534,
+        "finished": true,
+        "transferSize": 15566,
+        "resourceSize": 66542,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      },
+      {
+        "url": "https://alelm.net/health/300371/%D9%85%D8%A7%D8%B0%D8%A7-%D8%B3%D9%8A%D8%AD%D8%AF%D8%AB-%D9%84%D9%84%D8%B5%D8%AD%D8%A9-%D8%A7%D9%84%D9%86%D9%81%D8%B3%D9%8A%D8%A9-%D9%84%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86-%D9%81%D9%8A-%D8%B9%D8%B5%D8%B1-%D8%A7%D9%84%D9%80ai?_rsc=pWoeo_rtA5tzCs0a",
+        "sessionTargetType": "page",
+        "protocol": "h3",
+        "rendererStartTime": 12840.96499991417,
+        "networkRequestTime": 12841.675999999046,
+        "networkEndTime": 12959.00300002098,
+        "finished": true,
+        "transferSize": 16270,
+        "resourceSize": 68370,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "alelm.net"
+      }
+    ],
+    "debugData": {
+      "type": "debugdata",
+      "networkStartTimeTs": 568046886860,
+      "initiators": [
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 460
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 592
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 724
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 856
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 988
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1120
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1252
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1384
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1516
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1648
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1780
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 1912
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2399
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2466
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2559
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2652
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2745
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2838
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 2931
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3029
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3090
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3160
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3230
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3310
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3395
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3480
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3565
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3650
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3735
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3809
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 3887
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 8018
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 0,
+          "columnNumber": 116017
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        },
+        {
+          "type": "parser",
+          "url": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+          "lineNumber": 1,
+          "columnNumber": 15
+        }
+      ]
+    }
+  },
+  "unusedJS": {
+    "type": "opportunity",
+    "headings": [
+      {
+        "key": "url",
+        "valueType": "url",
+        "subItemsHeading": {
+          "key": "source",
+          "valueType": "code"
+        },
+        "label": "URL"
+      },
+      {
+        "key": "totalBytes",
+        "valueType": "bytes",
+        "subItemsHeading": {
+          "key": "sourceBytes"
+        },
+        "label": "Transfer Size"
+      },
+      {
+        "key": "wastedBytes",
+        "valueType": "bytes",
+        "subItemsHeading": {
+          "key": "sourceWastedBytes"
+        },
+        "label": "Est Savings"
+      }
+    ],
+    "items": [
+      {
+        "url": "https://www.googletagmanager.com/gtag/destination?id=G-HDXL9ZXL9V&cx=c&gtm=4e6a91",
+        "totalBytes": 163675,
+        "wastedBytes": 74697,
+        "wastedPercent": 45.63720154011021
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2f9qktzexzvxy.js",
+        "totalBytes": 68709,
+        "wastedBytes": 68671,
+        "wastedPercent": 99.94524775391355
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MLB68TX2",
+        "totalBytes": 124619,
+        "wastedBytes": 64963,
+        "wastedPercent": 52.129480495429014
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/19q-xeasc4s7u.js",
+        "totalBytes": 71434,
+        "wastedBytes": 24627,
+        "wastedPercent": 34.47514102749543
+      }
+    ],
+    "overallSavingsMs": 1340,
+    "overallSavingsBytes": 232958,
+    "sortedBy": [
+      "wastedBytes"
+    ],
+    "debugData": {
+      "type": "debugdata",
+      "metricSavings": {
+        "FCP": 0,
+        "LCP": 1340
+      }
+    }
+  },
+  "renderBlocking": {
+    "type": "opportunity",
+    "headings": [
+      {
+        "key": "url",
+        "valueType": "url",
+        "label": "URL"
+      },
+      {
+        "key": "totalBytes",
+        "valueType": "bytes",
+        "label": "Transfer Size"
+      },
+      {
+        "key": "wastedMs",
+        "valueType": "timespanMs",
+        "label": "Duration"
+      }
+    ],
+    "items": [
+      {
+        "url": "https://alelm.net/_next/static/chunks/1b-s9a675dzfi.css",
+        "totalBytes": 26092,
+        "wastedMs": 1069
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/2jjoylr5w9w_7.css",
+        "totalBytes": 15549,
+        "wastedMs": 1069
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/3y47rrlwuxrd9.css",
+        "totalBytes": 2119,
+        "wastedMs": 658
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/0ycd_swqj51bv.css",
+        "totalBytes": 2256,
+        "wastedMs": 658
+      },
+      {
+        "url": "https://alelm.net/_next/static/chunks/3zx6ms9wqmdys.css",
+        "totalBytes": 1733,
+        "wastedMs": 658
+      }
+    ],
+    "overallSavingsMs": 158
+  }
+}

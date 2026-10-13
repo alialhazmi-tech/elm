@@ -1,0 +1,37 @@
+{
+  "source": "https://pagespeed.web.dev/analysis/https-alelm-net/86wbdpyyms?form_factor=mobile",
+  "capturedAt": "2026-10-13T14:31:48+03:00",
+  "field": {
+    "scope": "origin",
+    "origin": "https://alelm.net",
+    "urlLevelDataAvailable": false,
+    "formFactor": "PHONE",
+    "periodLabel": "Latest 28-day period",
+    "percentile": 75,
+    "cwv": "Passed",
+    "lcpMs": 2100,
+    "inpMs": 108,
+    "cls": 0.01,
+    "fcpMs": 2100,
+    "ttfbMs": 900,
+    "lcpDistributionPercent": {
+      "good": 81,
+      "needsImprovement": 12,
+      "poor": 7
+    },
+    "historyLink": "https://cruxvis.withgoogle.com/#/?view=cwvsummary&url=https%3A%2F%2Falelm.net%2F&identifier=origin&device=PHONE"
+  },
+  "lab": {
+    "version": "13.5.0",
+    "chrome": "153.0.8010.36",
+    "device": "Moto G Power",
+    "throttling": "Slow 4G",
+    "score": 63,
+    "lcpMs": 8948,
+    "fcpMs": 2808,
+    "tbtMs": 239,
+    "cls": 0,
+    "note": "Single external production run; different Lighthouse version from repeated local measurements. Not a before/after comparison."
+  },
+  "interpretation": "Production before this PR. The origin passes field CWV; this does not show each news URL passing or improvement caused by this unpublished change."
+}

@@ -1,0 +1,51 @@
+{
+  "source": "source-meta-descriptions.csv",
+  "requested_urls": 848,
+  "initial_status_counts_after_documented_retry": {
+    "200": 847,
+    "308": 1
+  },
+  "final_status_counts_after_documented_retry": {
+    "200": 848
+  },
+  "direct_200_pages": 847,
+  "unresolved_fetch_errors": 0,
+  "first_pass_transport_errors": 1,
+  "recovered_on_second_attempt": 1,
+  "missing": {
+    "title": 0,
+    "description": 0,
+    "canonical": 0
+  },
+  "duplicate_groups": {
+    "title": 0,
+    "description": 0,
+    "canonical": 0
+  },
+  "duplicate_pages": {
+    "title": 0,
+    "description": 0,
+    "canonical": 0
+  },
+  "protected_email_links": 0,
+  "redirects": [
+    {
+      "url": "https://alelm.net/world/1658/خطط-دولية-ربما-تجبر-الشركات-الكبرى-على-2",
+      "initial_status": "308",
+      "final_status": "200",
+      "final_url": "https://alelm.net/world/1660/خطط-دولية-ربما-تجبر-الشركات-الكبرى-على",
+      "redirect_count": "1",
+      "title": "خطط دولية ربما تجبر الشركات الكبرى على وداع ملاذاتها الضريبية | العلم",
+      "description": "خطط دولية ربما تجبر الشركات الكبرى على وداع ملاذاتها الضريبية — واجهت حكومات الاقتصادات الكبرى لسنوات تحدياً خطيراً متمثلاً في فرض ضرائب على الشركات الكبرى، مثل عمالقة التقنية جوجل وفيسبوك، التي تعمل…",
+      "canonical": "https://alelm.net/world/1660/%D8%AE%D8%B7%D8%B7-%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D8%B1%D8%A8%D9%85%D8%A7-%D8%AA%D8%AC%D8%A8%D8%B1-%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A7%D8%AA-%D8%A7%D9%84%D9%83%D8%A8%D8%B1%D9%89-%D8%B9%D9%84%D9%89",
+      "description_count": "1",
+      "canonical_count": "1",
+      "protected_email_links": "0",
+      "html_sha256": "f7690f01543b8438389f00fb6db92ca6318d2fe35084a8fbbb64956a3dd7ae58",
+      "error": "",
+      "redirects": "[{\"status\": 308, \"from\": \"https://alelm.net/world/1658/%D8%AE%D8%B7%D8%B7-%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D8%B1%D8%A8%D9%85%D8%A7-%D8%AA%D8%AC%D8%A8%D8%B1-%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A7%D8%AA-%D8%A7%D9%84%D9%83%D8%A8%D8%B1%D9%89-%D8%B9%D9%84%D9%89-2\", \"to\": \"https://alelm.net/world/1660/%D8%AE%D8%B7%D8%B7-%D8%AF%D9%88%D9%84%D9%8A%D8%A9-%D8%B1%D8%A8%D9%85%D8%A7-%D8%AA%D8%AC%D8%A8%D8%B1-%D8%A7%D9%84%D8%B4%D8%B1%D9%83%D8%A7%D8%AA-%D8%A7%D9%84%D9%83%D8%A8%D8%B1%D9%89-%D8%B9%D9%84%D9%89\"}]",
+      "verification_attempt": 1
+    }
+  ],
+  "scope": "847 direct 200 pages, excluding the 308 alias from duplicate counts. First-pass crawl.csv and summary.json are preserved, with the one independent retry in transport-retry.json. This does not identify the separate eight title cases."
+}

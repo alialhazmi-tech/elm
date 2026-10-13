@@ -1,0 +1,20 @@
+{
+  "checked_at_utc": "2026-10-13T13:01:45.195022+00:00",
+  "reason": "First pass transport failed with RemoteDisconnected; first-pass failure remains in crawl.csv.",
+  "result": {
+    "url": "https://alelm.net/series/matha-baad?p=9",
+    "initial_status": 200,
+    "final_status": 200,
+    "final_url": "https://alelm.net/series/matha-baad?p=9",
+    "redirect_count": 0,
+    "title": "سلسلة ماذا بعد — صفحة 9 | العلم",
+    "description": "قراءة التداعيات — الصفحة 9",
+    "canonical": "https://alelm.net/series/matha-baad?p=9",
+    "description_count": 1,
+    "canonical_count": 1,
+    "protected_email_links": 0,
+    "html_sha256": "876fbb78ec946ea498e8c28b8ef06ddd585fb70e79f2b2deef07836ffb3b91b3",
+    "error": "",
+    "redirects": "[]"
+  }
+}

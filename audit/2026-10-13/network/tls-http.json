@@ -1,0 +1,84 @@
+{
+  "checked_at": "2026-10-13T11:06:39.254135+00:00",
+  "vantage": "local host network, public HTTPS, certificate verification enabled",
+  "requests": [
+    {
+      "url": "https://www.alelm.net/",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 308 ",
+        "location: https://alelm.net/",
+        "server: cloudflare",
+        "TLS=0 HTTP=308"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://www.alelm.net/health?audit=20261013&source=www",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 308 ",
+        "location: https://alelm.net/health?audit=20261013&source=www",
+        "server: cloudflare",
+        "TLS=0 HTTP=308"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://elm-production-ea24.up.railway.app/",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 403 ",
+        "cache-control: no-store",
+        "server: railway-hikari",
+        "x-robots-tag: noindex, nofollow",
+        "TLS=0 HTTP=403"
+      ],
+      "error": ""
+    },
+    {
+      "url": "https://elm-production-ea24.up.railway.app/api/health",
+      "exit": 0,
+      "evidence": [
+        "HTTP/2 200 ",
+        "cache-control: no-store",
+        "server: railway-hikari",
+        "x-robots-tag: noindex, nofollow",
+        "TLS=0 HTTP=200"
+      ],
+      "error": ""
+    }
+  ],
+  "alelm.net": {
+    "certificate": "issuer= /C=US/O=Google Trust Services/CN=WE1\nsubject= /CN=alelm.net\nnotBefore=Sep  4 20:04:53 2026 GMT\nnotAfter=Dec  3 21:02:10 2026 GMT\n",
+    "openssl_verify": [
+      "    Verify return code: 0 (ok)"
+    ]
+  },
+  "www.alelm.net": {
+    "certificate": "issuer= /C=US/O=Google Trust Services/CN=WE1\nsubject= /CN=alelm.net\nnotBefore=Sep  4 20:04:53 2026 GMT\nnotAfter=Dec  3 21:02:10 2026 GMT\n",
+    "openssl_verify": [
+      "    Verify return code: 0 (ok)"
+    ]
+  },
+  "dns": {
+    "www.alelm.net": [
+      "104.21.2.90",
+      "172.67.129.1"
+    ],
+    "alelm.net": [
+      "104.21.2.90",
+      "172.67.129.1"
+    ],
+    "x7thax3u.up.railway.app": [
+      "69.46.46.93"
+    ]
+  },
+  "railway_origin_tls": {
+    "url": "https://www.alelm.net/",
+    "resolved_to": "69.46.46.93 (x7thax3u.up.railway.app)",
+    "exit": 60,
+    "result": "TLS=1 HTTP=000",
+    "error": "curl: (60) SSL: no alternative certificate subject name matches target host name 'www.alelm.net'\nMore details here: https://curl.se/docs/sslcerts.html\n\ncurl failed to verify the legitimacy of the server and therefore could not\nestablish a secure connection to it. To learn more about this situation and\nhow to fix it, please visit the web page mentioned above.\n"
+  }
+}

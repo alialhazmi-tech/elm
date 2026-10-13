@@ -1,0 +1,2078 @@
+{
+  "label": "experiment-arabic-only",
+  "name": "home",
+  "run": 3,
+  "url": "http://localhost:3101/",
+  "fetchTime": "2026-10-13T11:18:52.844Z",
+  "version": "12.8.2",
+  "environment": {
+    "networkUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36",
+    "hostUserAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36",
+    "benchmarkIndex": 4647,
+    "credits": {}
+  },
+  "settings": {
+    "output": "json",
+    "maxWaitForFcp": 30000,
+    "maxWaitForLoad": 45000,
+    "pauseAfterFcpMs": 1000,
+    "pauseAfterLoadMs": 1000,
+    "networkQuietThresholdMs": 1000,
+    "cpuQuietThresholdMs": 1000,
+    "formFactor": "mobile",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "throttlingMethod": "simulate",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "emulatedUserAgent": "Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36",
+    "auditMode": false,
+    "gatherMode": false,
+    "clearStorageTypes": [
+      "file_systems",
+      "shader_cache",
+      "service_workers",
+      "cache_storage"
+    ],
+    "disableStorageReset": false,
+    "debugNavigation": false,
+    "channel": "node",
+    "usePassiveGathering": false,
+    "disableFullPageScreenshot": false,
+    "skipAboutBlank": false,
+    "blankPage": "about:blank",
+    "ignoreStatusCode": false,
+    "locale": "en-US",
+    "blockedUrlPatterns": null,
+    "additionalTraceCategories": null,
+    "extraHeaders": null,
+    "precomputedLanternData": null,
+    "onlyAudits": null,
+    "onlyCategories": [
+      "performance"
+    ],
+    "skipAudits": null
+  },
+  "warnings": [],
+  "score": 0.85,
+  "metrics": {
+    "type": "debugdata",
+    "items": [
+      {
+        "firstContentfulPaint": 1505,
+        "largestContentfulPaint": 4342,
+        "interactive": 8268,
+        "speedIndex": 1578,
+        "totalBlockingTime": 29,
+        "maxPotentialFID": 97,
+        "cumulativeLayoutShift": 0.005379852934202416,
+        "cumulativeLayoutShiftMainFrame": 0.005379852934202416,
+        "lcpLoadStart": 557,
+        "lcpLoadEnd": 1220,
+        "timeToFirstByte": 453,
+        "observedTimeOrigin": 0,
+        "observedTimeOriginTs": 568976447432,
+        "observedNavigationStart": 0,
+        "observedNavigationStartTs": 568976447432,
+        "observedFirstPaint": 85,
+        "observedFirstPaintTs": 568976532554,
+        "observedFirstContentfulPaint": 85,
+        "observedFirstContentfulPaintTs": 568976532554,
+        "observedFirstContentfulPaintAllFrames": 85,
+        "observedFirstContentfulPaintAllFramesTs": 568976532554,
+        "observedLargestContentfulPaint": 85,
+        "observedLargestContentfulPaintTs": 568976532554,
+        "observedLargestContentfulPaintAllFrames": 85,
+        "observedLargestContentfulPaintAllFramesTs": 568976532554,
+        "observedTraceEnd": 3976,
+        "observedTraceEndTs": 568980423086,
+        "observedLoad": 1660,
+        "observedLoadTs": 568978107411,
+        "observedDomContentLoaded": 76,
+        "observedDomContentLoadedTs": 568976523786,
+        "observedCumulativeLayoutShift": 0.005379852934202416,
+        "observedCumulativeLayoutShiftMainFrame": 0.005379852934202416,
+        "observedFirstVisualChange": 89,
+        "observedFirstVisualChangeTs": 568976536432,
+        "observedLastVisualChange": 3763,
+        "observedLastVisualChangeTs": 568980210432,
+        "observedSpeedIndex": 131,
+        "observedSpeedIndexTs": 568976578092
+      },
+      {
+        "lcpInvalidated": false
+      }
+    ]
+  },
+  "element": {
+    "type": "list",
+    "items": [
+      {
+        "type": "table",
+        "headings": [
+          {
+            "key": "node",
+            "valueType": "node",
+            "label": "Element"
+          }
+        ],
+        "items": [
+          {
+            "node": {
+              "type": "node",
+              "lhId": "page-0-IMG",
+              "path": "1,HTML,1,BODY,7,MAIN,1,DIV,0,SECTION,1,A,0,IMG",
+              "selector": "div.sh-top > section.sh-lead > a.sh-lead-media > img",
+              "boundingRect": {
+                "top": 209,
+                "bottom": 446,
+                "left": 17,
+                "right": 395,
+                "width": 378,
+                "height": 236
+              },
+              "snippet": "<img alt=\"\" fetchpriority=\"high\" loading=\"eager\" decoding=\"async\" data-nimg=\"fill\" style=\"position: absolute; height: 100%; width: 100%; inset: 0px;\" sizes=\"(max-width: 900px) 100vw, 560px\" srcset=\"/image-variants?src=wp%2F2026%2F08%2Fمن-هو-تود-بلانش-المدعي-العام-الجديد-ف…\" src=\"http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%85%D9%86-%D9…\">",
+              "nodeLabel": "div.sh-top > section.sh-lead > a.sh-lead-media > img"
+            }
+          }
+        ]
+      },
+      {
+        "type": "table",
+        "headings": [
+          {
+            "key": "phase",
+            "valueType": "text",
+            "label": "Phase"
+          },
+          {
+            "key": "percent",
+            "valueType": "text",
+            "label": "% of LCP"
+          },
+          {
+            "key": "timing",
+            "valueType": "ms",
+            "label": "Timing"
+          }
+        ],
+        "items": [
+          {
+            "phase": "TTFB",
+            "timing": 452.64195,
+            "percent": "10%"
+          },
+          {
+            "phase": "Load Delay",
+            "timing": 104.46560036789737,
+            "percent": "2%"
+          },
+          {
+            "phase": "Load Time",
+            "timing": 662.6427635667528,
+            "percent": "15%"
+          },
+          {
+            "phase": "Render Delay",
+            "timing": 3122.1384610653504,
+            "percent": "72%"
+          }
+        ]
+      }
+    ]
+  },
+  "breakdown": {
+    "type": "list",
+    "items": [
+      {
+        "type": "table",
+        "headings": [
+          {
+            "key": "label",
+            "valueType": "text",
+            "label": "Subpart"
+          },
+          {
+            "key": "duration",
+            "valueType": "ms",
+            "label": "Duration"
+          }
+        ],
+        "items": [
+          {
+            "subpart": "timeToFirstByte",
+            "label": "Time to first byte",
+            "duration": 4.989
+          },
+          {
+            "subpart": "resourceLoadDelay",
+            "label": "Resource load delay",
+            "duration": 4.584
+          },
+          {
+            "subpart": "resourceLoadDuration",
+            "label": "Resource load duration",
+            "duration": 14.34
+          },
+          {
+            "subpart": "elementRenderDelay",
+            "label": "Element render delay",
+            "duration": 61.209
+          }
+        ]
+      },
+      {
+        "type": "node",
+        "lhId": "page-0-IMG",
+        "path": "1,HTML,1,BODY,7,MAIN,1,DIV,0,SECTION,1,A,0,IMG",
+        "selector": "div.sh-top > section.sh-lead > a.sh-lead-media > img",
+        "boundingRect": {
+          "top": 209,
+          "bottom": 446,
+          "left": 17,
+          "right": 395,
+          "width": 378,
+          "height": 236
+        },
+        "snippet": "<img alt=\"\" fetchpriority=\"high\" loading=\"eager\" decoding=\"async\" data-nimg=\"fill\" style=\"position: absolute; height: 100%; width: 100%; inset: 0px;\" sizes=\"(max-width: 900px) 100vw, 560px\" srcset=\"/image-variants?src=wp%2F2026%2F08%2Fمن-هو-تود-بلانش-المدعي-العام-الجديد-ف…\" src=\"http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%85%D9%86-%D9…\">",
+        "nodeLabel": "div.sh-top > section.sh-lead > a.sh-lead-media > img"
+      }
+    ]
+  },
+  "network": {
+    "type": "table",
+    "headings": [
+      {
+        "key": "url",
+        "valueType": "url",
+        "label": "URL"
+      },
+      {
+        "key": "protocol",
+        "valueType": "text",
+        "label": "Protocol"
+      },
+      {
+        "key": "networkRequestTime",
+        "valueType": "ms",
+        "granularity": 1,
+        "label": "Network Request Time"
+      },
+      {
+        "key": "networkEndTime",
+        "valueType": "ms",
+        "granularity": 1,
+        "label": "Network End Time"
+      },
+      {
+        "key": "transferSize",
+        "valueType": "bytes",
+        "displayUnit": "kb",
+        "granularity": 1,
+        "label": "Transfer Size"
+      },
+      {
+        "key": "resourceSize",
+        "valueType": "bytes",
+        "displayUnit": "kb",
+        "granularity": 1,
+        "label": "Resource Size"
+      },
+      {
+        "key": "statusCode",
+        "valueType": "text",
+        "label": "Status Code"
+      },
+      {
+        "key": "mimeType",
+        "valueType": "text",
+        "label": "MIME Type"
+      },
+      {
+        "key": "resourceType",
+        "valueType": "text",
+        "label": "Resource Type"
+      }
+    ],
+    "items": [
+      {
+        "url": "http://localhost:3101/",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 0,
+        "networkRequestTime": 0.3229999542236328,
+        "networkEndTime": 5.5899999141693115,
+        "finished": true,
+        "transferSize": 31714,
+        "resourceSize": 171234,
+        "statusCode": 200,
+        "mimeType": "text/html",
+        "resourceType": "Document",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/280fac012b00b901-s.p.3ihiqn4pviisd.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.051999926567078,
+        "networkRequestTime": 9.438999891281128,
+        "networkEndTime": 15.383999943733215,
+        "finished": true,
+        "transferSize": 37505,
+        "resourceSize": 35884,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/57696fb0c8dcfe1f-s.p.29a202atpp3ye.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.187999963760376,
+        "networkRequestTime": 10.09499990940094,
+        "networkEndTime": 15.76199996471405,
+        "finished": true,
+        "transferSize": 32809,
+        "resourceSize": 31188,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/5ad8fdb5805e9b4a-s.p.0-uv4l43gdmt7.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.209999918937683,
+        "networkRequestTime": 10.280999898910522,
+        "networkEndTime": 16.640999913215637,
+        "finished": true,
+        "transferSize": 35249,
+        "resourceSize": 33628,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/c9a0d344f313d307-s.p.3ik2qu-u9tgho.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.236999988555908,
+        "networkRequestTime": 10.424999952316284,
+        "networkEndTime": 19.066999912261963,
+        "finished": true,
+        "transferSize": 35133,
+        "resourceSize": 33512,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/ceec3e50f42c26e3-s.p.0da8nscnv1nkd.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.260999917984009,
+        "networkRequestTime": 10.515999913215637,
+        "networkEndTime": 20.68999993801117,
+        "finished": true,
+        "transferSize": 37505,
+        "resourceSize": 35884,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%85%D9%86-%D9%87%D9%88-%D8%AA%D9%88%D8%AF-%D8%A8%D9%84%D8%A7%D9%86%D8%B4-%D8%A7%D9%84%D9%85%D8%AF%D8%B9%D9%8A-%D8%A7%D9%84%D8%B9%D8%A7%D9%85-%D8%A7%D9%84%D8%AC%D8%AF%D9%8A%D8%AF-%D9%81%D9%8A-%D8%A5%D8%AF%D8%A7%D8%B1%D8%A9-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8%D8%9F.webp&w=1080&q=60&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.288999915122986,
+        "networkRequestTime": 10.637999892234802,
+        "networkEndTime": 23.628999948501587,
+        "finished": true,
+        "transferSize": 24013,
+        "resourceSize": 22398,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "High",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/brand/alelm-logo-light.png",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.316999912261963,
+        "networkRequestTime": 24.603999853134155,
+        "networkEndTime": 27.543999910354614,
+        "finished": true,
+        "transferSize": 9142,
+        "resourceSize": 7541,
+        "statusCode": 200,
+        "mimeType": "image/png",
+        "resourceType": "Image",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.33899986743927,
+        "networkRequestTime": 12.792999863624573,
+        "networkEndTime": 25.075999975204468,
+        "finished": true,
+        "transferSize": 26308,
+        "resourceSize": 134132,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/2jjoylr5w9w_7.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.357999920845032,
+        "networkRequestTime": 13.12499988079071,
+        "networkEndTime": 24.465999960899353,
+        "finished": true,
+        "transferSize": 15792,
+        "resourceSize": 74847,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/0ycd_swqj51bv.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.373999953269958,
+        "networkRequestTime": 13.733999848365784,
+        "networkEndTime": 21.912999987602234,
+        "finished": true,
+        "transferSize": 2499,
+        "resourceSize": 1928,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/1pu58ell4nos5.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.388999938964844,
+        "networkRequestTime": 13.810999870300293,
+        "networkEndTime": 24.144999980926514,
+        "finished": true,
+        "transferSize": 7339,
+        "resourceSize": 26373,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/3y47rrlwuxrd9.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.403999924659729,
+        "networkRequestTime": 13.860999941825867,
+        "networkEndTime": 23.929999947547913,
+        "finished": true,
+        "transferSize": 2360,
+        "resourceSize": 1518,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/2q24e4--frqyj.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.42199993133545,
+        "networkRequestTime": 26.538999915122986,
+        "networkEndTime": 29.932999968528748,
+        "finished": true,
+        "transferSize": 7851,
+        "resourceSize": 19117,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/11jq0c2_zavac.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.438999891281128,
+        "networkRequestTime": 26.847999930381775,
+        "networkEndTime": 30.018999934196472,
+        "finished": true,
+        "transferSize": 10222,
+        "resourceSize": 31917,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/19q-xeasc4s7u.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.45200002193451,
+        "networkRequestTime": 27.20200002193451,
+        "networkEndTime": 35.50199997425079,
+        "finished": true,
+        "transferSize": 73177,
+        "resourceSize": 228147,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/2amc2af3ufrvg.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.46399998664856,
+        "networkRequestTime": 27.38599991798401,
+        "networkEndTime": 33.194000005722046,
+        "finished": true,
+        "transferSize": 44043,
+        "resourceSize": 154019,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/turbopack-3gmerry464k82.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.476999878883362,
+        "networkRequestTime": 27.44700002670288,
+        "networkEndTime": 29.800999999046326,
+        "finished": true,
+        "transferSize": 6000,
+        "resourceSize": 10877,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/121xt2ytn-vn7.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.488999962806702,
+        "networkRequestTime": 27.578999876976013,
+        "networkEndTime": 30.551999926567078,
+        "finished": true,
+        "transferSize": 10314,
+        "resourceSize": 28583,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/19hpkysouvtg1.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.504999876022339,
+        "networkRequestTime": 29.847999811172485,
+        "networkEndTime": 32.74499988555908,
+        "finished": true,
+        "transferSize": 10593,
+        "resourceSize": 27388,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/32114b1dgmz48.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.519999861717224,
+        "networkRequestTime": 30.081999897956848,
+        "networkEndTime": 32.83399987220764,
+        "finished": true,
+        "transferSize": 11501,
+        "resourceSize": 25992,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/brand/alelm-wordmark.png",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.538999915122986,
+        "networkRequestTime": 30.11299991607666,
+        "networkEndTime": 32.33999991416931,
+        "finished": true,
+        "transferSize": 6216,
+        "resourceSize": 4615,
+        "statusCode": 200,
+        "mimeType": "image/png",
+        "resourceType": "Image",
+        "priority": "Low",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/0099pwr-t-o67.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 9.553999900817871,
+        "networkRequestTime": 13.894999980926514,
+        "networkEndTime": 24.554999947547913,
+        "finished": true,
+        "transferSize": 2717,
+        "resourceSize": 4035,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/manifest.webmanifest",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 13.979999899864197,
+        "networkRequestTime": 23.74500000476837,
+        "networkEndTime": 27.033999919891357,
+        "finished": true,
+        "transferSize": 1959,
+        "resourceSize": 295,
+        "statusCode": 200,
+        "mimeType": "application/manifest+json",
+        "resourceType": "Manifest",
+        "priority": "Medium",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MLB68TX2",
+        "sessionTargetType": "page",
+        "protocol": "h2",
+        "rendererStartTime": 26.262999892234802,
+        "networkRequestTime": 27.707000017166138,
+        "networkEndTime": 994.4719998836517,
+        "finished": true,
+        "transferSize": 124975,
+        "resourceSize": 356378,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "Google Tag Manager"
+      },
+      {
+        "url": "http://localhost:3101/social/instagram.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.41699981689453,
+        "networkRequestTime": 37.55299997329712,
+        "networkEndTime": 40.139999866485596,
+        "finished": true,
+        "transferSize": 1993,
+        "resourceSize": 367,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/facebook.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.48099994659424,
+        "networkRequestTime": 37.63499987125397,
+        "networkEndTime": 40.19700002670288,
+        "finished": true,
+        "transferSize": 1897,
+        "resourceSize": 271,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/threads.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.50399994850159,
+        "networkRequestTime": 37.73899984359741,
+        "networkEndTime": 40.23299992084503,
+        "finished": true,
+        "transferSize": 2476,
+        "resourceSize": 850,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/x.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.526999950408936,
+        "networkRequestTime": 37.805999875068665,
+        "networkEndTime": 40.258999943733215,
+        "finished": true,
+        "transferSize": 2188,
+        "resourceSize": 562,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/linkedin.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.55199992656708,
+        "networkRequestTime": 37.85599994659424,
+        "networkEndTime": 40.64999997615814,
+        "finished": true,
+        "transferSize": 1994,
+        "resourceSize": 368,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/youtube.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.57599997520447,
+        "networkRequestTime": 37.906999826431274,
+        "networkEndTime": 40.62599992752075,
+        "finished": true,
+        "transferSize": 2038,
+        "resourceSize": 412,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/snapchat.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.59499990940094,
+        "networkRequestTime": 40.288999915122986,
+        "networkEndTime": 41.94599986076355,
+        "finished": true,
+        "transferSize": 2445,
+        "resourceSize": 819,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/whatsapp.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.62399995326996,
+        "networkRequestTime": 40.32599985599518,
+        "networkEndTime": 42.121999979019165,
+        "finished": true,
+        "transferSize": 2476,
+        "resourceSize": 1494,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/social/tiktok.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.644999980926514,
+        "networkRequestTime": 40.34700000286102,
+        "networkEndTime": 41.9799998998642,
+        "finished": true,
+        "transferSize": 3372,
+        "resourceSize": 3599,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/441492499fc86682-s.1fbvi_fot8u4l.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.7960000038147,
+        "networkRequestTime": 72.88099992275238,
+        "networkEndTime": 85.87399995326996,
+        "finished": true,
+        "transferSize": 16713,
+        "resourceSize": 15092,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/744885950b1fe0ff-s.30d2r2x65bwdm.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.824999928474426,
+        "networkRequestTime": 72.93299984931946,
+        "networkEndTime": 86.00799989700317,
+        "finished": true,
+        "transferSize": 125419,
+        "resourceSize": 123796,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/5d6231e6818a3930-s.2vs72h_x6qrve.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.8549998998642,
+        "networkRequestTime": 72.97899985313416,
+        "networkEndTime": 87.31499993801117,
+        "finished": true,
+        "transferSize": 15565,
+        "resourceSize": 13944,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/8f2ca9bed5019488-s.1rne3a59172go.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.888999938964844,
+        "networkRequestTime": 73.0259999036789,
+        "networkEndTime": 86.29599988460541,
+        "finished": true,
+        "transferSize": 31749,
+        "resourceSize": 30128,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/84cd8d504984ae62-s.0iritm8hg8q1a.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 37.912999868392944,
+        "networkRequestTime": 73.07199990749359,
+        "networkEndTime": 86.56599998474121,
+        "finished": true,
+        "transferSize": 15829,
+        "resourceSize": 14208,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/3347fc7792f0b5ea-s.0c7ha31nuacbu.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 47.139999866485596,
+        "networkRequestTime": 75.39999985694885,
+        "networkEndTime": 87.2169998884201,
+        "finished": true,
+        "transferSize": 16413,
+        "resourceSize": 14792,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/media/4641603b8553767b-s.1y712r_ow2ydl.woff2",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 47.526999950408936,
+        "networkRequestTime": 75.5239999294281,
+        "networkEndTime": 90.45499992370605,
+        "finished": true,
+        "transferSize": 32341,
+        "resourceSize": 30720,
+        "statusCode": 200,
+        "mimeType": "font/woff2",
+        "resourceType": "Font",
+        "priority": "VeryHigh",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%81%D9%8A-%D8%A7%D9%84%D9%8A%D9%88%D9%85-%D8%A7%D9%84%D8%B9%D8%A7%D9%84%D9%85%D9%8A-%D9%84%D9%84%D9%82%D8%B7%D8%B7.-%D8%B9%D9%84%D8%A7%D9%85%D8%A7%D8%AA-%D8%AA%D9%8F%D8%B4%D9%8A%D8%B1-%D9%84%D8%A5%D8%B5%D8%A7%D8%A8%D8%A9-%D9%82%D8%B7%D8%AA%D9%83-%D8%A8%D8%A7%D9%84%D8%AE%D8%B1%D9%81.webp&w=168&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.0569999217987,
+        "networkRequestTime": 72.26599991321564,
+        "networkEndTime": 74.2739999294281,
+        "finished": true,
+        "transferSize": 5468,
+        "resourceSize": 3854,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%87%D9%84-%D8%AA%D8%AA%D9%88%D9%82%D9%81-%D8%AC%D8%A7%D8%B0%D8%A8%D9%8A%D8%A9-%D8%A7%D9%84%D8%A3%D8%B1%D8%B6-7-%D8%AB%D9%88%D8%A7%D9%86%D9%8D-%D9%81%D9%8A-12-%D8%A3%D8%BA%D8%B3%D8%B7%D8%B3%D8%9F.webp&w=168&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.11499989032745,
+        "networkRequestTime": 72.38499987125397,
+        "networkEndTime": 75.4449999332428,
+        "finished": true,
+        "transferSize": 3728,
+        "resourceSize": 2114,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2FEsports-World-Cup.webp&w=1080&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.14099991321564,
+        "networkRequestTime": 72.51399993896484,
+        "networkEndTime": 76.85199987888336,
+        "finished": true,
+        "transferSize": 62853,
+        "resourceSize": 61238,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D8%A8%D8%A3%D8%B7%D9%88%D9%84-%D8%B4%D8%B9%D8%B1.-%D9%87%D9%86%D8%AF%D9%8A%D8%A9-%D8%AA%D8%AA%D9%88%D9%91%D8%AC-%D9%81%D9%8A-%D9%85%D9%88%D8%B3%D9%88%D8%B9%D8%A9-%D8%BA%D9%8A%D9%86%D9%8A%D8%B3-%D9%84%D9%84%D8%A3%D8%B1%D9%82%D8%A7%D9%85-%D8%A7%D9%84%D9%82%D9%8A%D8%A7%D8%B3%D9%8A%D8%A9.webp&w=360&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.15599989891052,
+        "networkRequestTime": 72.58299994468689,
+        "networkEndTime": 78.93499994277954,
+        "finished": true,
+        "transferSize": 19387,
+        "resourceSize": 17772,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%88%D9%81%D8%A7%D8%A9-%D8%AE%D9%88%D8%B1%D8%AE%D9%8A-%D9%85%D9%8A%D8%B3%D9%8A-%D9%88%D8%A7%D9%84%D8%AF-%D9%86%D8%AC%D9%85-%D8%A7%D9%84%D9%83%D8%B1%D8%A9-%D8%A7%D9%84%D8%A3%D8%B1%D8%AC%D9%86%D8%AA%D9%8A%D9%86%D9%8A%D8%A9.webp&w=360&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.16999983787537,
+        "networkRequestTime": 72.64299988746643,
+        "networkEndTime": 80.17299997806549,
+        "finished": true,
+        "transferSize": 14405,
+        "resourceSize": 12790,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F05%2F%D9%87%D8%B1%D9%85%D8%B2-1.webp&w=360&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.18999993801117,
+        "networkRequestTime": 72.70199990272522,
+        "networkEndTime": 81.49899995326996,
+        "finished": true,
+        "transferSize": 16033,
+        "resourceSize": 14418,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D9%85%D8%B6%D9%8A%D9%82-%D9%87%D8%B1%D9%85%D8%B2-1.webp&w=360&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.20299994945526,
+        "networkRequestTime": 86.12799990177155,
+        "networkEndTime": 87.74899983406067,
+        "finished": true,
+        "transferSize": 10726,
+        "resourceSize": 9112,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2F%D8%A5%D9%86%D8%AA%D8%A7%D8%AC-%D8%A7%D9%84%D9%86%D9%81%D8%B7-%D8%A7%D9%84%D8%B3%D8%B9%D9%88%D8%AF%D9%8A.webp&w=1080&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.21799993515015,
+        "networkRequestTime": 86.47299993038177,
+        "networkEndTime": 89.06299984455109,
+        "finished": true,
+        "transferSize": 62411,
+        "resourceSize": 60796,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/image-variants?src=wp%2F2026%2F08%2FWhatsApp-Image-2026-08-05-at-10.03.11-PM.webp&w=1080&v=1",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 72.23299992084503,
+        "networkRequestTime": 86.625,
+        "networkEndTime": 89.89999997615814,
+        "finished": true,
+        "transferSize": 30875,
+        "resourceSize": 29260,
+        "statusCode": 200,
+        "mimeType": "image/webp",
+        "resourceType": "Image",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/api/viewer",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 123.4099999666214,
+        "networkRequestTime": 123.6949999332428,
+        "networkEndTime": 125.29699993133545,
+        "finished": true,
+        "transferSize": 1697,
+        "resourceSize": 29,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/api/content/news-strip",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 123.71499991416931,
+        "networkRequestTime": 123.90499985218048,
+        "networkEndTime": 126.46199989318848,
+        "finished": true,
+        "transferSize": 3086,
+        "resourceSize": 1453,
+        "statusCode": 200,
+        "mimeType": "application/json",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/search?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 130.45899999141693,
+        "networkRequestTime": 130.60799992084503,
+        "networkEndTime": 134.77699983119965,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 266,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/infographics/262846/%d8%a5%d9%86%d9%81%d9%88%d8%ac%d8%b1%d8%a7%d9%81%d9%8a%d9%8313-%d8%b3%d8%b9%d9%88%d8%af%d9%8a%d9%8b%d8%a7-%d9%81%d9%8a-%d9%82%d8%a7%d8%a6%d9%85%d8%a9-%d9%81%d9%88%d8%b1%d8%a8%d8%b3-%d9%84%d8%a3%d9%82?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 130.5239998102188,
+        "networkRequestTime": 130.7039999961853,
+        "networkEndTime": 134.76699995994568,
+        "finished": true,
+        "transferSize": 2513,
+        "resourceSize": 1950,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/absat?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 130.56299996376038,
+        "networkRequestTime": 130.8769998550415,
+        "networkEndTime": 136.14199995994568,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 336,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/aghrab?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 130.5939999818802,
+        "networkRequestTime": 130.93899989128113,
+        "networkEndTime": 136.49699997901917,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 337,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/efhamha-sah?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 135.41699981689453,
+        "networkRequestTime": 135.54499995708466,
+        "networkEndTime": 139.28399991989136,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 342,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/3zx6ms9wqmdys.css",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 135.67899990081787,
+        "networkRequestTime": 135.78599989414215,
+        "networkEndTime": 139.0829999446869,
+        "finished": true,
+        "transferSize": 2156,
+        "resourceSize": 502,
+        "statusCode": 200,
+        "mimeType": "text/css",
+        "resourceType": "Stylesheet",
+        "priority": "VeryHigh",
+        "isLinkPreload": true,
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/bel-arqam?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 136.02099990844727,
+        "networkRequestTime": 136.12999999523163,
+        "networkEndTime": 139.67799997329712,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 340,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/join?mode=signin&_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 136.42400002479553,
+        "networkRequestTime": 136.52799999713898,
+        "networkEndTime": 140.20699989795685,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 276,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/?_rsc=yIp22O3xgPPxC28X",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 136.82599985599518,
+        "networkRequestTime": 136.92699992656708,
+        "networkEndTime": 139.47899997234344,
+        "finished": true,
+        "transferSize": 4478,
+        "resourceSize": 7187,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/?_rsc=8nTjltbQWvg6NcbE",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 139.52699995040894,
+        "networkRequestTime": 139.64199995994568,
+        "networkEndTime": 144.98099994659424,
+        "finished": true,
+        "transferSize": 15268,
+        "resourceSize": 78003,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/search?_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 140.11099982261658,
+        "networkRequestTime": 140.21099996566772,
+        "networkEndTime": 146.7189998626709,
+        "finished": true,
+        "transferSize": 2044,
+        "resourceSize": 3766,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/infographics/262846/%d8%a5%d9%86%d9%81%d9%88%d8%ac%d8%b1%d8%a7%d9%81%d9%8a%d9%8313-%d8%b3%d8%b9%d9%88%d8%af%d9%8a%d9%8b%d8%a7-%d9%81%d9%8a-%d9%82%d8%a7%d8%a6%d9%85%d8%a9-%d9%81%d9%88%d8%b1%d8%a8%d8%b3-%d9%84%d8%a3%d9%82?_rsc=yZmXjC9qbLozW1Z7",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 140.4119999408722,
+        "networkRequestTime": 140.50499999523163,
+        "networkEndTime": 144.635999917984,
+        "finished": true,
+        "transferSize": 4789,
+        "resourceSize": 11312,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/absat?_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 140.97299993038177,
+        "networkRequestTime": 141.06199991703033,
+        "networkEndTime": 146.41599988937378,
+        "finished": true,
+        "transferSize": 1684,
+        "resourceSize": 3587,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/227g9c638ghp0.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 145.05999994277954,
+        "networkRequestTime": 145.20099985599518,
+        "networkEndTime": 149.97499990463257,
+        "finished": true,
+        "transferSize": 1882,
+        "resourceSize": 215,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/0d448_2itgz0v.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 145.18299996852875,
+        "networkRequestTime": 145.28999996185303,
+        "networkEndTime": 152.50699996948242,
+        "finished": true,
+        "transferSize": 22839,
+        "resourceSize": 70327,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/2f9qktzexzvxy.js",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 145.27699995040894,
+        "networkRequestTime": 145.42499995231628,
+        "networkEndTime": 156.48199999332428,
+        "finished": true,
+        "transferSize": 70456,
+        "resourceSize": 241086,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/aghrab?_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 145.65899991989136,
+        "networkRequestTime": 145.75,
+        "networkEndTime": 152.39299988746643,
+        "finished": true,
+        "transferSize": 2329,
+        "resourceSize": 3566,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/efhamha-sah?_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 146.29099988937378,
+        "networkRequestTime": 146.39300000667572,
+        "networkEndTime": 152.8439999818802,
+        "finished": true,
+        "transferSize": 2335,
+        "resourceSize": 3644,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/bel-arqam?_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 146.63399994373322,
+        "networkRequestTime": 146.72499990463257,
+        "networkEndTime": 153.12000000476837,
+        "finished": true,
+        "transferSize": 2335,
+        "resourceSize": 3608,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/series/shakhsiat?_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 146.8989999294281,
+        "networkRequestTime": 150.01399993896484,
+        "networkEndTime": 153.21999990940094,
+        "finished": true,
+        "transferSize": 2257,
+        "resourceSize": 3611,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/politics/263004/%d8%aa%d9%88%d8%af-%d8%a8%d9%84%d8%a7%d9%86%d8%b4?_rsc=yZmXjC9qbLozW1Z7",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 152.7279999256134,
+        "networkRequestTime": 152.89999997615814,
+        "networkEndTime": 155.36500000953674,
+        "finished": true,
+        "transferSize": 4701,
+        "resourceSize": 10606,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/join?mode=signin&_rsc=tXyZJ52UQVBCVsD3",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 153.05199992656708,
+        "networkRequestTime": 153.14299988746643,
+        "networkEndTime": 155.7759999036789,
+        "finished": true,
+        "transferSize": 2065,
+        "resourceSize": 3824,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/join?_rsc=5CB68i4pnAekjehf",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 155.93899989128113,
+        "networkRequestTime": 156.0459998846054,
+        "networkEndTime": 157.38299989700317,
+        "finished": true,
+        "transferSize": 1865,
+        "resourceSize": 264,
+        "statusCode": 200,
+        "mimeType": "text/x-component",
+        "resourceType": "Fetch",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtag/destination?id=G-HDXL9ZXL9V&cx=c&gtm=4e6a91",
+        "sessionTargetType": "page",
+        "protocol": "h2",
+        "rendererStartTime": 1013.1679998636246,
+        "networkRequestTime": 1013.384999871254,
+        "networkEndTime": 1628.9629999399185,
+        "finished": true,
+        "transferSize": 164060,
+        "resourceSize": 472174,
+        "statusCode": 200,
+        "mimeType": "application/javascript",
+        "resourceType": "Script",
+        "priority": "Low",
+        "experimentalFromMainFrame": true,
+        "entity": "Google Tag Manager"
+      },
+      {
+        "url": "https://www.google-analytics.com/g/collect?[redacted]",
+        "sessionTargetType": "page",
+        "protocol": "h2",
+        "rendererStartTime": 1657.9889999628067,
+        "networkRequestTime": 1658.4899998903275,
+        "networkEndTime": 2050.8969999551773,
+        "finished": true,
+        "transferSize": 546,
+        "resourceSize": 0,
+        "statusCode": 204,
+        "mimeType": "text/plain",
+        "resourceType": "Fetch",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "Google Analytics"
+      },
+      {
+        "url": "http://localhost:3101/favicon.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 1661.2539998292923,
+        "networkRequestTime": 1661.468999862671,
+        "networkEndTime": 1662.969999909401,
+        "finished": true,
+        "transferSize": 1971,
+        "resourceSize": 345,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Other",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/favicon.svg",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 1661.3289999961853,
+        "networkRequestTime": 1661.5999999046326,
+        "networkEndTime": 1664.6049998998642,
+        "finished": true,
+        "transferSize": 1563,
+        "resourceSize": 345,
+        "statusCode": 200,
+        "mimeType": "image/svg+xml",
+        "resourceType": "Other",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      },
+      {
+        "url": "http://localhost:3101/brand/alelm-icon.png",
+        "sessionTargetType": "page",
+        "protocol": "http/1.1",
+        "rendererStartTime": 1664.1729999780655,
+        "networkRequestTime": 1664.4209998846054,
+        "networkEndTime": 1665.7459999322891,
+        "finished": true,
+        "transferSize": 4220,
+        "resourceSize": 2620,
+        "statusCode": 200,
+        "mimeType": "image/png",
+        "resourceType": "Other",
+        "priority": "High",
+        "experimentalFromMainFrame": true,
+        "entity": "localhost"
+      }
+    ],
+    "debugData": {
+      "type": "debugdata",
+      "networkStartTimeTs": 568976447716.0001,
+      "initiators": [
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 460
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 592
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 724
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 856
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 988
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 1611
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 1678
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 1771
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 1864
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 1957
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2050
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2143
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2241
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2302
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2372
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2442
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2522
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2607
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2692
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2777
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2851
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 2929
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 0,
+          "columnNumber": 5580
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css"
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        },
+        {
+          "type": "parser",
+          "url": "http://localhost:3101/",
+          "lineNumber": 12,
+          "columnNumber": 134738
+        }
+      ]
+    }
+  },
+  "unusedJS": {
+    "type": "opportunity",
+    "headings": [
+      {
+        "key": "url",
+        "valueType": "url",
+        "subItemsHeading": {
+          "key": "source",
+          "valueType": "code"
+        },
+        "label": "URL"
+      },
+      {
+        "key": "totalBytes",
+        "valueType": "bytes",
+        "subItemsHeading": {
+          "key": "sourceBytes"
+        },
+        "label": "Transfer Size"
+      },
+      {
+        "key": "wastedBytes",
+        "valueType": "bytes",
+        "subItemsHeading": {
+          "key": "sourceWastedBytes"
+        },
+        "label": "Est Savings"
+      }
+    ],
+    "items": [
+      {
+        "url": "https://www.googletagmanager.com/gtag/destination?id=G-HDXL9ZXL9V&cx=c&gtm=4e6a91",
+        "totalBytes": 163675,
+        "wastedBytes": 74663,
+        "wastedPercent": 45.61665826580879
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/2f9qktzexzvxy.js",
+        "totalBytes": 68755,
+        "wastedBytes": 68717,
+        "wastedPercent": 99.94524775391355
+      },
+      {
+        "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MLB68TX2",
+        "totalBytes": 124619,
+        "wastedBytes": 64963,
+        "wastedPercent": 52.129480495429014
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/19q-xeasc4s7u.js",
+        "totalBytes": 71476,
+        "wastedBytes": 25125,
+        "wastedPercent": 35.151021052216336
+      }
+    ],
+    "overallSavingsMs": 150,
+    "overallSavingsBytes": 233468,
+    "sortedBy": [
+      "wastedBytes"
+    ],
+    "debugData": {
+      "type": "debugdata",
+      "metricSavings": {
+        "FCP": 0,
+        "LCP": 150
+      }
+    }
+  },
+  "renderBlocking": {
+    "type": "opportunity",
+    "headings": [
+      {
+        "key": "url",
+        "valueType": "url",
+        "label": "URL"
+      },
+      {
+        "key": "totalBytes",
+        "valueType": "bytes",
+        "label": "Transfer Size"
+      },
+      {
+        "key": "wastedMs",
+        "valueType": "timespanMs",
+        "label": "Duration"
+      }
+    ],
+    "items": [
+      {
+        "url": "http://localhost:3101/_next/static/chunks/0gffqxsy25oa2.css",
+        "totalBytes": 26308,
+        "wastedMs": 753
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/2jjoylr5w9w_7.css",
+        "totalBytes": 15792,
+        "wastedMs": 603
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/1pu58ell4nos5.css",
+        "totalBytes": 7339,
+        "wastedMs": 453
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/3y47rrlwuxrd9.css",
+        "totalBytes": 2360,
+        "wastedMs": 303
+      },
+      {
+        "url": "http://localhost:3101/_next/static/chunks/0ycd_swqj51bv.css",
+        "totalBytes": 2499,
+        "wastedMs": 303
+      }
+    ],
+    "overallSavingsMs": 450
+  }
+}

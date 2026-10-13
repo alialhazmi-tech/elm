@@ -1,0 +1,190 @@
+{
+  "checkedDate": "2026-10-13",
+  "sources": [
+    "Google Search Console API via connected Composio",
+    "Google Analytics Admin/Data API via connected Composio"
+  ],
+  "property": "sc-domain:alelm.net",
+  "permission": "siteFullUser",
+  "railwayOriginPropertyAccessible": false,
+  "railwayOriginIndexingStatus": "unknown: not included in connected verified properties",
+  "sitemaps": [
+    {
+      "errors": "0",
+      "isPending": false,
+      "isSitemapsIndex": false,
+      "lastDownloaded": "2026-10-08T02:02:36.301Z",
+      "lastSubmitted": "2026-09-08T17:37:05.482Z",
+      "path": "https://alelm.net/sitemap.xml",
+      "type": "sitemap",
+      "warnings": "0",
+      "contents": [
+        {
+          "submitted": "29560",
+          "type": "web"
+        }
+      ]
+    },
+    {
+      "errors": "0",
+      "isPending": false,
+      "isSitemapsIndex": false,
+      "lastDownloaded": "2026-10-10T08:02:25.482Z",
+      "lastSubmitted": "2026-09-08T17:36:41.482Z",
+      "path": "https://alelm.net/sitemap-videos.xml",
+      "type": "sitemap",
+      "warnings": "0",
+      "contents": [
+        {
+          "submitted": "668",
+          "type": "web"
+        },
+        {
+          "submitted": "668",
+          "type": "video"
+        }
+      ]
+    },
+    {
+      "errors": "0",
+      "isPending": false,
+      "isSitemapsIndex": false,
+      "lastDownloaded": "2026-10-12T08:10:52.006Z",
+      "lastSubmitted": "2026-09-07T07:59:30.213Z",
+      "path": "https://alelm.net/sitemap-news.xml",
+      "type": "sitemap",
+      "warnings": "0",
+      "contents": [
+        {
+          "submitted": "11",
+          "type": "web"
+        },
+        {
+          "submitted": "11",
+          "type": "news"
+        }
+      ]
+    }
+  ],
+  "deprecatedIndexedField": "contents[].indexed ignored per https://developers.google.com/webmaster-tools/v1/sitemaps; zero is not a count of indexed pages",
+  "inspections": [
+    {
+      "indexStatusResult": {
+        "coverageState": "Submitted and indexed",
+        "crawledAs": "MOBILE",
+        "googleCanonical": "https://alelm.net/",
+        "indexingState": "INDEXING_ALLOWED",
+        "lastCrawlTime": "2026-10-13T04:03:18Z",
+        "pageFetchState": "SUCCESSFUL",
+        "referringUrls": [
+          "https://alelm.net/infographics/261313/%D9%83%D8%B3%D9%88%D9%81-%D9%86%D8%A7%D8%AF%D8%B1-%D9%81%D9%8A-%D8%A7%D9%84%D9%85%D9%85%D9%84%D9%83%D8%A9",
+          "https://alelm.net/contact/"
+        ],
+        "robotsTxtState": "ALLOWED",
+        "userCanonical": "https://alelm.net/",
+        "verdict": "PASS"
+      },
+      "inspectionResultLink": "https://search.google.com/search-console/inspect?resource_id=sc-domain:alelm.net&id=AgIcpeJhGpQemEVjx8PjxA&utm_medium=link&utm_source=api",
+      "mobileUsabilityResult": {
+        "verdict": "VERDICT_UNSPECIFIED"
+      }
+    },
+    {
+      "indexStatusResult": {
+        "coverageState": "Submitted and indexed",
+        "crawledAs": "MOBILE",
+        "googleCanonical": "https://alelm.net/health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86",
+        "indexingState": "INDEXING_ALLOWED",
+        "lastCrawlTime": "2026-10-12T01:09:27Z",
+        "pageFetchState": "SUCCESSFUL",
+        "referringUrls": [
+          "https://alelm.net/art/157751/%D8%A7%D9%84%D8%AA%D8%B5%D9%86%D9%8A%D9%81-%D8%A7%D9%84%D8%B9%D9%85%D8%B1%D9%8A-%D9%84%D9%84%D8%A3%D9%81%D9%84%D8%A7%D9%85-%D8%A7%D9%84%D8%B3%D9%8A%D9%86%D9%85%D8%A7%D8%A6%D9%8A%D8%A9"
+        ],
+        "robotsTxtState": "ALLOWED",
+        "sitemap": [
+          "https://alelm.net/sitemap-news.xml"
+        ],
+        "userCanonical": "https://alelm.net/health/300362/%D8%A7%D9%84%D8%B4%D8%A7%D8%B4%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D8%AA%D8%A4%D8%AB%D8%B1-%D8%B9%D9%84%D9%89-%D8%AF%D9%85%D8%A7%D8%BA-%D8%A7%D9%84%D9%85%D8%B1%D8%A7%D9%87%D9%82%D9%8A%D9%86",
+        "verdict": "PASS"
+      },
+      "inspectionResultLink": "https://search.google.com/search-console/inspect?resource_id=sc-domain:alelm.net&id=T83p9ovWNRPlVyHNDL3a-w&utm_medium=link&utm_source=api",
+      "mobileUsabilityResult": {
+        "verdict": "VERDICT_UNSPECIFIED"
+      },
+      "richResultsResult": {
+        "detectedItems": [
+          {
+            "items": [
+              {
+                "name": "Unnamed item"
+              }
+            ],
+            "richResultType": "Breadcrumbs"
+          }
+        ],
+        "verdict": "PASS"
+      }
+    },
+    {
+      "indexStatusResult": {
+        "coverageState": "Submitted and indexed",
+        "crawledAs": "MOBILE",
+        "googleCanonical": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+        "indexingState": "INDEXING_ALLOWED",
+        "lastCrawlTime": "2026-10-12T08:08:51Z",
+        "pageFetchState": "SUCCESSFUL",
+        "robotsTxtState": "ALLOWED",
+        "sitemap": [
+          "https://alelm.net/sitemap-news.xml"
+        ],
+        "userCanonical": "https://alelm.net/politics/300364/%D8%A8%D8%B9%D8%AF-%D8%A5%D8%B9%D9%84%D8%A7%D9%86-%D8%AA%D8%B1%D8%A7%D9%85%D8%A8-%D9%85%D8%A7%D8%B0%D8%A7-%D9%8A%D8%B9%D9%86%D9%8A-%D9%88%D9%82%D9%81-%D8%A5%D8%B7%D9%84%D8%A7%D9%82-%D8%A7%D9%84%D9%86%D8%A7%D8%B1-%D9%81%D9%8A-%D9%85%D8%AC%D8%A7%D9%84-%D8%A7%D9%84%D8%B7%D8%A7%D9%82%D8%A9-%D8%A8%D9%8A%D9%86-%D8%B1%D9%88%D8%B3%D9%8A%D8%A7-%D9%88%D8%A3%D9%88%D9%83%D8%B1%D8%A7%D9%86%D9%8A%D8%A7",
+        "verdict": "PASS"
+      },
+      "inspectionResultLink": "https://search.google.com/search-console/inspect?resource_id=sc-domain:alelm.net&id=ZAhcgujDgLLPMXWmZNRZUg&utm_medium=link&utm_source=api",
+      "mobileUsabilityResult": {
+        "verdict": "VERDICT_UNSPECIFIED"
+      },
+      "richResultsResult": {
+        "detectedItems": [
+          {
+            "items": [
+              {
+                "name": "Unnamed item"
+              }
+            ],
+            "richResultType": "Breadcrumbs"
+          }
+        ],
+        "verdict": "PASS"
+      }
+    }
+  ],
+  "www": {
+    "coverageState": "Page with redirect",
+    "googleCanonical": "https://alelm.net/",
+    "lastCrawlTime": "2026-10-12T18:16:02Z",
+    "verdict": "NEUTRAL",
+    "inspectionResultLink": "https://search.google.com/search-console/inspect?resource_id=sc-domain:alelm.net&id=c-UfAxVKnH-_kR3n26yg1A"
+  },
+  "analytics": {
+    "timeZone": "Asia/Riyadh",
+    "dateRange": {
+      "startDate": "2026-09-15",
+      "endDate": "2026-10-12"
+    },
+    "hostName": "alelm.net",
+    "customDimensions": [
+      "event_category",
+      "event_label"
+    ],
+    "customMetrics": [],
+    "eventNames": [
+      "page_view",
+      "session_start",
+      "first_visit"
+    ],
+    "rowCount": 3,
+    "webVitalsAvailable": false,
+    "note": "No registered custom Web Vitals metric or matching LCP event in the returned complete event list; this is not a field LCP measurement. Traffic counts and unrelated account details omitted."
+  }
+}

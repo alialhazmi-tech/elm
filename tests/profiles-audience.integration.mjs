@@ -107,7 +107,7 @@ try {
           b.onResolve(
             {
               filter:
-                /^(?:@\/lib\/db|@\/lib\/membership\/auth|@\/lib\/tahrir\/access|\.\/images)$/,
+                /^(?:@\/lib\/db|@\/lib\/membership\/auth|@\/lib\/tahrir\/access|next\/headers|\.\/images)$/,
             },
             (args) => ({ path: args.path, namespace: "fixture" }),
           );
@@ -115,6 +115,7 @@ try {
             loader: "js",
             contents: {
               "@/lib/db": "export const getDb=()=>globalThis.__profiles.db;",
+              "next/headers": "export const cookies=async()=>({get:name=>name==='__Secure-neon-auth.session_token'&&globalThis.__profiles.user?{value:'fixture-session'}:undefined});",
               "@/lib/membership/auth":
                 "export const memberAuthConfigured=true; export const memberAuth={handler:()=>({GET:async()=>Response.json({ok:true}),POST:async()=>Response.json({ok:true})}),getSession:async()=>({data:globalThis.__profiles.user?{user:globalThis.__profiles.user}:null})};",
               "@/lib/tahrir/access": `export const loadActor=async()=>globalThis.__profiles.actor; export async function requireActor(){const actor=await loadActor(); return actor?{ok:true,actor}:{ok:false,response:Response.json({error:'unauthorized'},{status:401})};} export async function requirePermission(key){const gate=await requireActor(); return !gate.ok?gate:gate.actor.can(key)?gate:{ok:false,response:Response.json({error:'forbidden'},{status:403})};}`,

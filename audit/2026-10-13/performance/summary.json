@@ -1,0 +1,786 @@
+[
+  {
+    "label": "production",
+    "page": "home",
+    "runs": 3,
+    "warnings": [
+      [],
+      [],
+      []
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          8449,
+          8410,
+          10836
+        ],
+        "median": 8449,
+        "min": 8410,
+        "max": 10836
+      },
+      "firstContentfulPaint": {
+        "values": [
+          2408,
+          3428,
+          2928
+        ],
+        "median": 2928,
+        "min": 2408,
+        "max": 3428
+      },
+      "timeToFirstByte": {
+        "values": [
+          724,
+          729,
+          486
+        ],
+        "median": 724,
+        "min": 486,
+        "max": 729
+      },
+      "totalBlockingTime": {
+        "values": [
+          103,
+          94,
+          42
+        ],
+        "median": 94,
+        "min": 42,
+        "max": 103
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0,
+          0,
+          0
+        ],
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    }
+  },
+  {
+    "label": "production",
+    "page": "news",
+    "runs": 3,
+    "warnings": [
+      [],
+      [],
+      []
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          9464,
+          9528,
+          9431
+        ],
+        "median": 9464,
+        "min": 9431,
+        "max": 9528
+      },
+      "firstContentfulPaint": {
+        "values": [
+          2715,
+          2758,
+          2736
+        ],
+        "median": 2736,
+        "min": 2715,
+        "max": 2758
+      },
+      "timeToFirstByte": {
+        "values": [
+          486,
+          493,
+          488
+        ],
+        "median": 488,
+        "min": 486,
+        "max": 493
+      },
+      "totalBlockingTime": {
+        "values": [
+          38,
+          46,
+          50
+        ],
+        "median": 46,
+        "min": 38,
+        "max": 50
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0,
+          0,
+          0
+        ],
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    }
+  },
+  {
+    "label": "production",
+    "page": "story",
+    "runs": 3,
+    "warnings": [
+      [],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          9958,
+          11347,
+          9521
+        ],
+        "median": 9958,
+        "min": 9521,
+        "max": 11347
+      },
+      "firstContentfulPaint": {
+        "values": [
+          2749,
+          2825,
+          3697
+        ],
+        "median": 2825,
+        "min": 2749,
+        "max": 3697
+      },
+      "timeToFirstByte": {
+        "values": [
+          476,
+          492,
+          484
+        ],
+        "median": 484,
+        "min": 476,
+        "max": 492
+      },
+      "totalBlockingTime": {
+        "values": [
+          47,
+          45,
+          57
+        ],
+        "median": 47,
+        "min": 45,
+        "max": 57
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0,
+          0,
+          0
+        ],
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    }
+  },
+  {
+    "label": "before",
+    "page": "home",
+    "runs": 3,
+    "warnings": [
+      [],
+      [],
+      []
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          5927,
+          5843,
+          5846
+        ],
+        "median": 5846,
+        "min": 5843,
+        "max": 5927
+      },
+      "firstContentfulPaint": {
+        "values": [
+          1509,
+          1506,
+          1506
+        ],
+        "median": 1506,
+        "min": 1506,
+        "max": 1509
+      },
+      "timeToFirstByte": {
+        "values": [
+          454,
+          453,
+          453
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 454
+      },
+      "totalBlockingTime": {
+        "values": [
+          57,
+          41,
+          62
+        ],
+        "median": 57,
+        "min": 41,
+        "max": 62
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.000838075830682561,
+          0.000838075830682561,
+          0.000838075830682561
+        ],
+        "median": 0.000838075830682561,
+        "min": 0.000838075830682561,
+        "max": 0.000838075830682561
+      }
+    }
+  },
+  {
+    "label": "before",
+    "page": "news",
+    "runs": 3,
+    "warnings": [
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          6247,
+          6319,
+          6247
+        ],
+        "median": 6247,
+        "min": 6247,
+        "max": 6319
+      },
+      "firstContentfulPaint": {
+        "values": [
+          1506,
+          1506,
+          1506
+        ],
+        "median": 1506,
+        "min": 1506,
+        "max": 1506
+      },
+      "timeToFirstByte": {
+        "values": [
+          453,
+          453,
+          453
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 453
+      },
+      "totalBlockingTime": {
+        "values": [
+          55,
+          37,
+          44
+        ],
+        "median": 44,
+        "min": 37,
+        "max": 55
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.008388403180528336,
+          0.008388403180528336,
+          0.03615129529629999
+        ],
+        "median": 0.008388403180528336,
+        "min": 0.008388403180528336,
+        "max": 0.03615129529629999
+      }
+    }
+  },
+  {
+    "label": "before",
+    "page": "story",
+    "runs": 3,
+    "warnings": [
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          6486,
+          6254,
+          6493
+        ],
+        "median": 6486,
+        "min": 6254,
+        "max": 6493
+      },
+      "firstContentfulPaint": {
+        "values": [
+          1506,
+          1506,
+          1508
+        ],
+        "median": 1506,
+        "min": 1506,
+        "max": 1508
+      },
+      "timeToFirstByte": {
+        "values": [
+          453,
+          453,
+          454
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 454
+      },
+      "totalBlockingTime": {
+        "values": [
+          32,
+          40,
+          30
+        ],
+        "median": 32,
+        "min": 30,
+        "max": 40
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.01368275705800254,
+          0.01368275705800254,
+          0.05509343184165123
+        ],
+        "median": 0.01368275705800254,
+        "min": 0.01368275705800254,
+        "max": 0.05509343184165123
+      }
+    }
+  },
+  {
+    "label": "experiment-arabic-only",
+    "page": "home",
+    "runs": 3,
+    "warnings": [
+      [],
+      [],
+      []
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          4358,
+          5488,
+          4342
+        ],
+        "median": 4358,
+        "min": 4342,
+        "max": 5488
+      },
+      "firstContentfulPaint": {
+        "values": [
+          1510,
+          2710,
+          1505
+        ],
+        "median": 1510,
+        "min": 1505,
+        "max": 2710
+      },
+      "timeToFirstByte": {
+        "values": [
+          455,
+          453,
+          453
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 455
+      },
+      "totalBlockingTime": {
+        "values": [
+          40,
+          60,
+          29
+        ],
+        "median": 40,
+        "min": 29,
+        "max": 60
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.005336668602806595,
+          0.005379852934202416,
+          0.005379852934202416
+        ],
+        "median": 0.005379852934202416,
+        "min": 0.005336668602806595,
+        "max": 0.005379852934202416
+      }
+    }
+  },
+  {
+    "label": "experiment-arabic-only",
+    "page": "news",
+    "runs": 3,
+    "warnings": [
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          5039,
+          5443,
+          5440
+        ],
+        "median": 5440,
+        "min": 5039,
+        "max": 5443
+      },
+      "firstContentfulPaint": {
+        "values": [
+          2259,
+          2260,
+          2258
+        ],
+        "median": 2259,
+        "min": 2258,
+        "max": 2260
+      },
+      "timeToFirstByte": {
+        "values": [
+          453,
+          453,
+          453
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 453
+      },
+      "totalBlockingTime": {
+        "values": [
+          45,
+          42,
+          40
+        ],
+        "median": 42,
+        "min": 40,
+        "max": 45
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.03615129529629999,
+          0.032467382194713505,
+          0.008388403180528336
+        ],
+        "median": 0.032467382194713505,
+        "min": 0.008388403180528336,
+        "max": 0.03615129529629999
+      }
+    }
+  },
+  {
+    "label": "experiment-arabic-only",
+    "page": "story",
+    "runs": 3,
+    "warnings": [
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          4966,
+          4962,
+          4967
+        ],
+        "median": 4966,
+        "min": 4962,
+        "max": 4967
+      },
+      "firstContentfulPaint": {
+        "values": [
+          2258,
+          2257,
+          2260
+        ],
+        "median": 2258,
+        "min": 2257,
+        "max": 2260
+      },
+      "timeToFirstByte": {
+        "values": [
+          453,
+          452,
+          453
+        ],
+        "median": 453,
+        "min": 452,
+        "max": 453
+      },
+      "totalBlockingTime": {
+        "values": [
+          41,
+          53,
+          36
+        ],
+        "median": 41,
+        "min": 36,
+        "max": 53
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.01368275705800254,
+          0.01368275705800254,
+          0.01368275705800254
+        ],
+        "median": 0.01368275705800254,
+        "min": 0.01368275705800254,
+        "max": 0.01368275705800254
+      }
+    }
+  },
+  {
+    "label": "experiment-kufi-deferred",
+    "page": "home",
+    "runs": 3,
+    "warnings": [
+      [],
+      [],
+      []
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          5812,
+          5920,
+          5921
+        ],
+        "median": 5920,
+        "min": 5812,
+        "max": 5921
+      },
+      "firstContentfulPaint": {
+        "values": [
+          2566,
+          2560,
+          2561
+        ],
+        "median": 2561,
+        "min": 2560,
+        "max": 2566
+      },
+      "timeToFirstByte": {
+        "values": [
+          455,
+          453,
+          454
+        ],
+        "median": 454,
+        "min": 453,
+        "max": 455
+      },
+      "totalBlockingTime": {
+        "values": [
+          47,
+          39,
+          39
+        ],
+        "median": 39,
+        "min": 39,
+        "max": 47
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.005379852934202416,
+          0.005379852934202416,
+          0.005379852934202416
+        ],
+        "median": 0.005379852934202416,
+        "min": 0.005379852934202416,
+        "max": 0.005379852934202416
+      }
+    }
+  },
+  {
+    "label": "experiment-kufi-deferred",
+    "page": "news",
+    "runs": 3,
+    "warnings": [
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          4967,
+          5417,
+          5423
+        ],
+        "median": 5417,
+        "min": 4967,
+        "max": 5423
+      },
+      "firstContentfulPaint": {
+        "values": [
+          1506,
+          1356,
+          1507
+        ],
+        "median": 1506,
+        "min": 1356,
+        "max": 1507
+      },
+      "timeToFirstByte": {
+        "values": [
+          453,
+          453,
+          454
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 454
+      },
+      "totalBlockingTime": {
+        "values": [
+          21,
+          53,
+          52
+        ],
+        "median": 52,
+        "min": 21,
+        "max": 53
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.008388403180528336,
+          0.03615129529629999,
+          0.008388403180528336
+        ],
+        "median": 0.008388403180528336,
+        "min": 0.008388403180528336,
+        "max": 0.03615129529629999
+      }
+    }
+  },
+  {
+    "label": "experiment-kufi-deferred",
+    "page": "story",
+    "runs": 3,
+    "warnings": [
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ],
+      [
+        "The page loaded too slowly to finish within the time limit. Results may be incomplete."
+      ]
+    ],
+    "metrics": {
+      "largestContentfulPaint": {
+        "values": [
+          4965,
+          5417,
+          5417
+        ],
+        "median": 5417,
+        "min": 4965,
+        "max": 5417
+      },
+      "firstContentfulPaint": {
+        "values": [
+          1505,
+          1506,
+          1506
+        ],
+        "median": 1506,
+        "min": 1505,
+        "max": 1506
+      },
+      "timeToFirstByte": {
+        "values": [
+          453,
+          453,
+          453
+        ],
+        "median": 453,
+        "min": 453,
+        "max": 453
+      },
+      "totalBlockingTime": {
+        "values": [
+          32,
+          48,
+          41
+        ],
+        "median": 41,
+        "min": 32,
+        "max": 48
+      },
+      "cumulativeLayoutShift": {
+        "values": [
+          0.01368275705800254,
+          0.01368275705800254,
+          0.01368275705800254
+        ],
+        "median": 0.01368275705800254,
+        "min": 0.01368275705800254,
+        "max": 0.01368275705800254
+      }
+    }
+  }
+]
