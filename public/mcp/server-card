@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "net.alelm/public-content",
+  "version": "1.0.0",
+  "title": "العلم — أخبار منشورة",
+  "description": "Search and read published Arabic news from العلم with canonical source links. Read-only, public.",
+  "websiteUrl": "https://alelm.net/docs/agents.md",
+  "icons": [{ "src": "https://alelm.net/brand/alelm-icon.png", "mimeType": "image/png", "sizes": ["64x64"] }],
+  "remotes": [{
+    "type": "streamable-http",
+    "url": "https://alelm.net/mcp",
+    "supportedProtocolVersions": ["2025-11-25", "2025-06-18"]
+  }]
+}

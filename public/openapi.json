@@ -63,6 +63,11 @@
               }
             }
           },
+          "429": {
+            "description": "Public read quota or concurrency limit reached. Wait before retrying.",
+            "headers": { "Retry-After": { "schema": { "type": "string" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+          },
           "503": {
             "description": "Source unavailable. No demo fallback.",
             "content": {
@@ -119,6 +124,11 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Public read quota or concurrency limit reached. Wait before retrying.",
+            "headers": { "Retry-After": { "schema": { "type": "string" } } },
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
           },
           "503": {
             "description": "Source unavailable. Respect Retry-After.",

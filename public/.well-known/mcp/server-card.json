@@ -1,0 +1,8 @@
+{
+  "serverInfo": { "name": "net.alelm/public-content", "version": "1.0.0", "title": "العلم — أخبار منشورة" },
+  "description": "Legacy discovery document for the public, read-only العلم MCP server. The current SEP-2127 card is at https://alelm.net/mcp/server-card.",
+  "endpoint": "https://alelm.net/mcp",
+  "transport": "streamable-http",
+  "capabilities": { "tools": {} },
+  "documentationUrl": "https://alelm.net/docs/agents.md"
+}

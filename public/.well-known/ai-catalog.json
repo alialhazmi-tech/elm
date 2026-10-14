@@ -1,0 +1,27 @@
+{
+  "specVersion": "1.0",
+  "host": { "displayName": "العلم", "identifier": "https://alelm.net" },
+  "entries": [
+    {
+      "identifier": "urn:air:alelm.net:mcp:public-content",
+      "displayName": "العلم — البحث وقراءة الأخبار المنشورة",
+      "type": "application/mcp-server-card+json",
+      "url": "https://alelm.net/mcp/server-card",
+      "representativeQueries": ["ابحث في العلم عن أخبار السعودية", "اقرأ خبرًا منشورًا مع رابطه المعتمد وتاريخ نشره", "ما أحدث أخبار التقنية المنشورة في العلم؟"]
+    },
+    {
+      "identifier": "urn:air:alelm.net:api:public-content",
+      "displayName": "واجهة قراءة المحتوى العام في العلم",
+      "type": "application/vnd.oai.openapi+json;version=3.1.0",
+      "url": "https://alelm.net/openapi.json",
+      "representativeQueries": ["كيف أبحث عن مقالات العلم عبر API؟", "كيف أحصل على النص العام والرابط المعتمد لخبر؟"]
+    },
+    {
+      "identifier": "urn:air:alelm.net:skill:read-alelm",
+      "displayName": "دليل البحث والقراءة والاستشهاد بالعلم",
+      "type": "text/markdown",
+      "url": "https://alelm.net/.well-known/agent-skills/read-alelm/SKILL.md",
+      "representativeQueries": ["كيف أنسب الخبر إلى العلم مع رابط المصدر؟", "كيف أميز تاريخ النشر عن تاريخ التحديث؟"]
+    }
+  ]
+}
