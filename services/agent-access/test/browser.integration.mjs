@@ -37,6 +37,8 @@ try {
   await page.goto(base, { waitUntil: 'networkidle0' });
   if (output) await page.screenshot({ path: output + '/home.png', fullPage: true });
   await page.goto(claim.claim_attempt.verification_uri);
+  await page.waitForFunction(() => location.hash === '' && document.querySelector('[name=claim_attempt_token]').value.length === 43);
+  assert.equal(page.url(), base + '/claim');
   await page.type('[name=email]', email); await page.type('[name=password]', password);
   await page.type('[name=user_code]', claim.claim_attempt.user_code);
   const [approved] = await Promise.all([page.waitForNavigation(), page.click('button[type=submit]')]);

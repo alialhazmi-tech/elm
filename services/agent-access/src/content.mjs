@@ -6,13 +6,13 @@ import { fail } from './credentials.mjs';
 const searchInput = z.object({ query: z.string().max(200).trim().min(1), page: z.number().int().min(1).max(10).default(1) }).strict();
 const readInput = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/) }).strict();
 
-export function contentReader(upstream, fetcher = fetch) {
+export function contentReader(upstream, fetcher = fetch, admit = () => true) {
   let active = 0; let windowStart = 0; let count = 0;
   return async function read(name, args) {
     const parsed = (name === 'search' ? searchInput : readInput).safeParse(args);
     if (!parsed.success) fail();
     if (Date.now() - windowStart >= 60_000) { windowStart = Date.now(); count = 0; }
-    if (active >= 4 || ++count > 30) fail('temporarily_unavailable', 429);
+    if (active >= 4 || ++count > 30 || !admit()) fail('temporarily_unavailable', 429);
     const path = name === 'search'
       ? `/api/content/v1/search?q=${encodeURIComponent(parsed.data.query)}&page=${parsed.data.page}`
       : `/api/content/v1/articles/${parsed.data.id}`;

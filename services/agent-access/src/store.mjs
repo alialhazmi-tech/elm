@@ -34,6 +34,7 @@ export function openStore(file) {
       expires INTEGER NOT NULL, failures INTEGER NOT NULL DEFAULT 0, consumed INTEGER NOT NULL DEFAULT 0
     );
     CREATE TABLE IF NOT EXISTS revoked_tokens (digest TEXT PRIMARY KEY, expires INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, expires INTEGER NOT NULL);
   `);
   return db;
 }
@@ -77,4 +78,30 @@ export function revokeRegistration(db, id) {
 export function prune(db, now) {
   db.prepare('DELETE FROM registrations WHERE expires<=?').run(now);
   db.prepare('DELETE FROM revoked_tokens WHERE expires<=?').run(now);
+  db.prepare('DELETE FROM rate_limits WHERE expires<=?').run(now);
+}
+
+export function consumeRate(db, key, maximum, now) {
+  const digest = hash(key);
+  return transaction(db, () => {
+    db.prepare('DELETE FROM rate_limits WHERE expires<=?').run(now);
+    const previous = db.prepare('SELECT count FROM rate_limits WHERE key=?').get(digest);
+    if (!previous && db.prepare('SELECT count(*) AS n FROM rate_limits').get().n >= 4096) return false;
+    const row = db.prepare(`INSERT INTO rate_limits (key,count,expires) VALUES (?,1,?)
+      ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count`).get(digest, now + 60);
+    return row.count <= maximum;
+  });
+}
+
+export function configureSigningGeneration(db, generation) {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(generation)) throw new Error('Invalid signing generation');
+  return transaction(db, () => {
+    const old = db.prepare("SELECT value FROM settings WHERE key='signing-generation'").get();
+    if (old && old.value !== generation) {
+      db.prepare('UPDATE registrations SET revoked=1,version=version+1').run();
+      db.prepare("DELETE FROM settings WHERE key='signing-key'").run();
+    }
+    db.prepare("INSERT OR REPLACE INTO settings (key,value) VALUES ('signing-generation',?)").run(generation);
+    return Boolean(old && old.value !== generation);
+  });
 }

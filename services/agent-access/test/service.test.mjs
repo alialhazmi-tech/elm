@@ -54,7 +54,7 @@ async function claimStart(e, reg, owner = email) {
   assert.equal(view.status, 200);
   const html = await view.text();
   return { claim, body: { email: owner, password, user_code: claim.claim_attempt.user_code,
-    claim_attempt_token: url.searchParams.get('attempt'), csrf: /name="csrf" value="([^"]+)"/.exec(html)[1] },
+    claim_attempt_token: new URLSearchParams(url.hash.slice(1)).get('attempt'), csrf: /name="csrf" value="([^"]+)"/.exec(html)[1] },
     headers: { Origin: issuer, Cookie: view.headers.get('set-cookie').split(';')[0] } };
 }
 const finish = (e, started, body = {}) => e.post('/agent/identity/claim/complete', { ...started.body, ...body }, { form: true, headers: started.headers });
