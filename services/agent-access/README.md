@@ -95,3 +95,30 @@ npm run admin -- revoke REGISTRATION_ID
 الخدمة لا تنفذ authorization-code/PKCE أو OIDC؛ عملاء MCP الذين يشترطون تسجيل دخول تفاعليًا يحتاجون عملاً منفصلًا. لم تُنشأ حسابات مالك عامة تلقائيًا؛ التسجيل المجهول والقراءة يعملان مباشرة. ربط المالك اختياري، يتطلب حسابًا مستقلًا ينشئه المشغّل عبر CLI داخل الخدمة. لا توجد صلاحية نشر أو إدارة الموقع.
 
 المراجع: [RFC 7523](https://www.rfc-editor.org/rfc/rfc7523)، [RFC 8414](https://www.rfc-editor.org/rfc/rfc8414)، [RFC 9728](https://www.rfc-editor.org/rfc/rfc9728)، [RFC 7009](https://www.rfc-editor.org/rfc/rfc7009)، [auth.md consumer guide](https://github.com/workos/auth.md/blob/main/agent-services/README.md). امتدادات auth.md ما زالت تتطور؛ تاريخ المراجعة 14 أكتوبر 2026.
+# Main-domain discovery and gateway
+
+The canonical authorization server remains `https://agents.alelm.net`. The main site's
+`/.well-known/oauth-authorization-server` redirects to its metadata; it does not claim
+that the main site is a second issuer. Clients discover the canonical issuer from
+`https://alelm.net/.well-known/oauth-protected-resource` before requesting its metadata.
+No interactive authorization endpoint or OIDC login is advertised.
+
+`https://alelm.net/auth.md` documents the optional bearer-protected gateway:
+`/api/agents/search`, `/api/agents/articles/:id`, and `/api/agents/mcp`.
+Exchange an assertion with `resource=https://alelm.net` to use these routes. The main
+app forwards only these fixed paths to the service's `/site-api/` adapter, with a
+bearer token and bounded bodies; site cookies, origin secrets and forwarding headers
+are never forwarded. It does not issue tokens, access the service database, or connect
+to member/editor authentication. The original public API and public MCP stay public.
+
+The service root resource is `https://agents.alelm.net`; its metadata now matches that
+identifier. The legacy resource `https://agents.alelm.net/api` remains supported with
+its path-specific metadata. Main-site tokens and service tokens are rejected when
+replayed against the other resource. Registration records, issuer, signing keys and
+backup format are unchanged, so existing registrations and legacy tokens survive.
+
+Deploy the updated independent service first, validate all three resource audiences,
+then deploy the main app. No new environment variables, DNS records or data migration
+are required. Roll back the main app first; the service update is backward compatible.
+Rolling back the service stops new main-site gateway calls but preserves the old API.
+Never disable DNSSEC signing while a matching DS remains published at the registrar.

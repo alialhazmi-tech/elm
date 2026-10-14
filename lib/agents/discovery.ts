@@ -9,6 +9,7 @@ export const DISCOVERY_LINKS = [
   '</.well-known/agent-skills/index.json>; rel="describedby"; type="application/json"',
   '</.well-known/ai-catalog.json>; rel="describedby"; type="application/ai-catalog+json"',
   '</mcp/server-card>; rel="describedby"; type="application/mcp-server-card+json"',
+  '</auth.md>; rel="service-doc"; type="text/markdown"',
 ].join(", ");
 
 /** An explicit Markdown preference is required; browsers and wildcard Accept stay HTML. */

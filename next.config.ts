@@ -59,6 +59,7 @@ const nextConfig: NextConfig = {
       { source: "/", headers: [{ key: "Link", value: DISCOVERY_LINKS }, { key: "Content-Signal", value: CONTENT_SIGNAL }] },
       { source: "/.well-known/api-catalog", headers: [{ key: "Content-Type", value: "application/linkset+json" }] },
       { source: "/docs/content-api.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
+      { source: "/auth.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }, { key: "X-Robots-Tag", value: "noindex" }] },
       { source: "/.well-known/agent-skills/:skill/SKILL.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
       { source: "/.well-known/ai-catalog.json", headers: [{ key: "Content-Type", value: "application/ai-catalog+json" }, { key: "Access-Control-Allow-Origin", value: "*" }] },
       { source: "/mcp/server-card", headers: [{ key: "Content-Type", value: "application/mcp-server-card+json" }, { key: "Access-Control-Allow-Origin", value: "*" }] },

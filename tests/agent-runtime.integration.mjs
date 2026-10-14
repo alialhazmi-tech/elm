@@ -30,6 +30,17 @@ async function withServer(enforced, check) {
 }
 
 await withServer(false, async (get, origin) => {
+  const as = await get('/.well-known/oauth-authorization-server');
+  assert.equal(as.status, 307);
+  assert.equal(as.headers.get('location'), 'https://agents.alelm.net/.well-known/oauth-authorization-server');
+  const prm = await get('/.well-known/oauth-protected-resource');
+  assert.equal(prm.status, 200); assert.equal(prm.headers.get('access-control-allow-origin'), '*');
+  assert.deepEqual((await prm.json()).authorization_servers, ['https://agents.alelm.net']);
+  const auth = await get('/auth.md'); assert.equal(auth.status, 200); assert.match(auth.headers.get('content-type'), /text\/markdown/);
+  assert.match(await auth.text(), /resource=https:\/\/alelm.net/);
+  const denied = await get('/api/agents/search?q=test'); assert.equal(denied.status, 401);
+  assert.match(denied.headers.get('www-authenticate'), /https:\/\/alelm.net\/\.well-known\/oauth-protected-resource/);
+  assert.equal((await get('/api/agents/admin')).status, 404);
   for (const accept of ["text/html", "*/*", "text/markdown;q=0", "text/html,text/markdown;q=0.5"]) {
     const html = await get("/", { accept });
     assert.equal(html.status, 200); assert.match(html.headers.get("content-type"), /text\/html/);
@@ -116,7 +127,7 @@ await withServer(false, async (get, origin) => {
   console.log("PASS agent runtime: HTTP Link/resources, content types, Accept negotiation, HTML preserved, private paths, marker spoofing and www redirect.");
 });
 await withServer(true, async (get, origin) => {
-  for (const pathname of ["/", "/content.md", "/api/content/v1", "/.well-known/api-catalog", "/mcp", "/mcp/server-card", "/.well-known/ai-catalog.json"]) {
+  for (const pathname of ["/", "/content.md", "/api/content/v1", "/.well-known/api-catalog", "/mcp", "/mcp/server-card", "/.well-known/ai-catalog.json", "/auth.md", "/.well-known/oauth-authorization-server", "/.well-known/oauth-protected-resource", "/api/agents/search?q=x"]) {
     assert.equal((await get(pathname, { accept: "text/markdown", "x-alelm-markdown-path": "/" })).status, 403, pathname);
   }
   const health = await get("/api/health");
