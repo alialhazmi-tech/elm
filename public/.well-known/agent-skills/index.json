@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "read-alelm",
+      "type": "skill-md",
+      "description": "Search and read published Arabic articles from العلم (alelm.net), verify publication dates and source links, and cite the canonical article URL.",
+      "url": "https://alelm.net/.well-known/agent-skills/read-alelm/SKILL.md",
+      "digest": "sha256:bbb4c9e4859e54d63ffe722e0550775ffdb8dfbaee12d57c340d46478d51e883"
+    }
+  ]
+}

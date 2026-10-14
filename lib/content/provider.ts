@@ -669,7 +669,7 @@ function extractNumbers(from: Story[]): NumberStat[] {
 
 /* ============ تركيب الرئيسية ============ */
 
-function composeHome(articles: Story[], videos: Story[], stories: Story[]): HomeData {
+export function composeHome(articles: Story[], videos: Story[], stories: Story[]): HomeData {
   const seen = new Set<string>();
 
   // المثبت بقرار معتمد يتصدر؛ وإلا فالهيرو يتجنب الإنفوجرافيك (صوره نصية متزاحمة).

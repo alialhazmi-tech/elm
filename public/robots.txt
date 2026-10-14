@@ -1,0 +1,12 @@
+User-agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
+Allow: /
+Allow: /api/content/v1$
+Allow: /api/content/v1/search?
+Allow: /api/content/v1/articles/
+Disallow: /api/
+
+Host: https://alelm.net
+Sitemap: https://alelm.net/sitemap.xml
+Sitemap: https://alelm.net/sitemap-news.xml
+Sitemap: https://alelm.net/sitemap-videos.xml

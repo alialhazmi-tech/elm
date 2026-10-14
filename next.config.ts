@@ -1,6 +1,7 @@
 import { contentSecurityPolicy } from "./lib/security/csp";
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import { CONTENT_SIGNAL, DISCOVERY_LINKS } from "./lib/agents/discovery";
 
 import { LEGACY_REDIRECTS, LEGACY_STORY_REWRITES, LEGACY_QUERY_REWRITES } from "./lib/content/redirects";
 
@@ -55,6 +56,10 @@ const nextConfig: NextConfig = {
         headers: securityHeaders,
       },
       { source: "/:path*", headers: securityHeaders.filter(({ key }) => !["Content-Security-Policy", "X-Frame-Options"].includes(key)) },
+      { source: "/", headers: [{ key: "Link", value: DISCOVERY_LINKS }, { key: "Content-Signal", value: CONTENT_SIGNAL }] },
+      { source: "/.well-known/api-catalog", headers: [{ key: "Content-Type", value: "application/linkset+json" }] },
+      { source: "/docs/content-api.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
+      { source: "/.well-known/agent-skills/:skill/SKILL.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
       { source: "/tahrir/recover", headers: [{ key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "private, no-store" }] },
       {
         // روابط iOS العالمية: آبل تشترط JSON صريحًا لملف الربط (بلا امتداد في public/).
@@ -79,7 +84,13 @@ const nextConfig: NextConfig = {
   },
   async rewrites() {
     // تُفحص قبل المسارات الديناميكية كي لا يُفسّر /74689 كاسم قسم.
-    return { beforeFiles: LEGACY_QUERY_REWRITES, afterFiles: LEGACY_STORY_REWRITES, fallback: [] };
+    return {
+      beforeFiles: [
+        { source: "/:path*", has: [{ type: "header" as const, key: "x-alelm-markdown-path" }], destination: "/content.md" },
+        ...LEGACY_QUERY_REWRITES,
+      ],
+      afterFiles: LEGACY_STORY_REWRITES, fallback: [],
+    };
   },
 };
 
