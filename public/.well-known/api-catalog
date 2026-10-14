@@ -1,0 +1,10 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://alelm.net/api/content/v1",
+      "service-desc": [{ "href": "https://alelm.net/openapi.json", "type": "application/json" }],
+      "service-doc": [{ "href": "https://alelm.net/docs/content-api.md", "type": "text/markdown" }],
+      "status": [{ "href": "https://alelm.net/api/health", "type": "application/json" }]
+    }
+  ]
+}

@@ -1,0 +1,288 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "العلم Public Content API",
+    "version": "1.0.0",
+    "description": "Read-only published Arabic content. No account access or authentication. Interactive Jak reports are excluded. Cite each article canonical URL."
+  },
+  "servers": [
+    {
+      "url": "https://alelm.net"
+    }
+  ],
+  "security": [],
+  "externalDocs": {
+    "url": "https://alelm.net/docs/content-api.md"
+  },
+  "paths": {
+    "/api/content/v1/search": {
+      "get": {
+        "operationId": "searchPublishedArticles",
+        "summary": "Search published articles",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "description": "Arabic-normalized query; whitespace-only input is invalid."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10,
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first; 20 per page, at most 200 results. capped indicates additional matches.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query or page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Source unavailable. No demo fallback.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "Delay in seconds before retrying."
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/content/v1/articles/{id}": {
+      "get": {
+        "operationId": "readPublishedArticle",
+        "summary": "Read a public article and its source links",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{1,64}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published content; bodyMarkdown can be empty for visual material.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Article"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unavailable, unpublished, or unsupported article.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Source unavailable. Respect Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArticleSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "description",
+          "url",
+          "section",
+          "image",
+          "publishedAt",
+          "updatedAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "section": {
+            "type": "string"
+          },
+          "image": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "publishedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updatedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Article": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ArticleSummary"
+          },
+          {
+            "type": "object",
+            "required": [
+              "publisher",
+              "language",
+              "bodyMarkdown",
+              "videoUrl",
+              "factCheck"
+            ],
+            "properties": {
+              "publisher": {
+                "type": "string",
+                "const": "العلم"
+              },
+              "language": {
+                "type": "string",
+                "const": "ar"
+              },
+              "bodyMarkdown": {
+                "type": "string"
+              },
+              "videoUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "factCheck": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "rumor": {
+                    "type": "string"
+                  },
+                  "truth": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SearchResults": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "pageCount",
+          "total",
+          "capped"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "maxItems": 20,
+            "items": {
+              "$ref": "#/components/schemas/ArticleSummary"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          },
+          "pageCount": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "total": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200
+          },
+          "capped": {
+            "type": "boolean"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

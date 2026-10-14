@@ -42,3 +42,6 @@ jobs:
       - run: node tests/rss.integration.mjs
         env:
           TEST_DATABASE_URL: postgresql://alelm_test:test_only@localhost:5432/alelm_test
+      - run: node tests/agent-content.integration.mjs && node tests/agent-runtime.integration.mjs
+        env:
+          TEST_DATABASE_URL: postgresql://alelm_test:test_only@localhost:5432/alelm_test

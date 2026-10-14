@@ -51,7 +51,7 @@ test("خريطة الموقع تضم كل المواد المنشورة وتُح
 test("خريطة أخبار Google News موجودة ومسجلة في robots", async () => {
   const [news, robots] = await Promise.all([
     read("app/sitemap-news.xml/route.ts"),
-    read("app/robots.ts"),
+    read("public/robots.txt"),
   ]);
   assert.match(news, /news:publication_date/u);
   assert.match(news, /<news:name>العلم<\/news:name>/u);
