@@ -7,6 +7,7 @@ export const JWT_GRANT = 'urn:ietf:params:oauth:grant-type:jwt-bearer';
 export const CLAIM_GRANT = 'urn:workos:agent-auth:grant-type:claim';
 export const ACCESS_TTL = 300;
 export const REGISTRATION_TTL = 86400;
+export const SITE_RESOURCE = 'https://alelm.net';
 export class HttpError extends Error {
   constructor(status, code) { super(code); this.status = status; this.code = code; }
 }
@@ -32,12 +33,12 @@ export async function credentials(db, issuer, now) {
     .setIssuer(issuer).setAudience(audience).setSubject(row.id).setJti(randomUUID())
     .setIssuedAt(now()).setExpirationTime(expires).sign(privateKey);
 
-  async function verify(token, kind) {
+  async function verify(token, kind, audience = resource) {
     let payload;
     try {
       if (typeof token !== 'string' || token.length > 8192) throw new Error();
       ({ payload } = await jwtVerify(token, publicKey, {
-        issuer, audience: kind === 'assertion' ? issuer : resource, algorithms: ['EdDSA'],
+        issuer, audience: kind === 'assertion' ? issuer : audience, algorithms: ['EdDSA'],
         typ: kind === 'assertion' ? 'oauth-id-jag+jwt' : 'at+jwt', currentDate: new Date(now() * 1000),
         requiredClaims: ['exp', 'iat', 'sub', 'jti'],
       }));
@@ -53,9 +54,9 @@ export async function credentials(db, issuer, now) {
     return { row, payload };
   }
 
-  async function access(row) {
+  async function access(row, audience = resource) {
     const expires = Math.min(now() + ACCESS_TTL, row.expires);
-    return { access_token: await sign(row, 'access', resource, expires), token_type: 'Bearer',
+    return { access_token: await sign(row, 'access', audience, expires), token_type: 'Bearer',
       expires_in: expires - now(), scope: SCOPE };
   }
   return { resource, verify, access, assertion: row => sign(row, 'assertion', issuer, row.expires),

@@ -13,6 +13,7 @@ import { JWT_GRANT, CLAIM_GRANT, SCOPE } from '../src/credentials.mjs';
 import { contentReader } from '../src/content.mjs';
 import { serve } from '../src/server.mjs';
 import { fixtureServer } from './fixture.mjs';
+import { agentAccessGateway } from '../../../lib/agents/access-gateway.ts';
 
 const issuer = 'http://127.0.0.1:4318';
 const password = 'a-unique-test-password-never-production';
@@ -72,12 +73,65 @@ test('discovery is internally consistent and advertises only implemented public-
   assert.deepEqual(prm.scopes_supported, [SCOPE]);
   assert.deepEqual(prm.bearer_methods_supported, ['header']);
   assert.equal(prm.resource, `${issuer}/api`);
+  assert.equal((await (await e.request('/.well-known/oauth-protected-resource')).json()).resource, issuer);
+  assert.equal(as.response_types_supported, undefined, 'Empty metadata arrays must be omitted (RFC 8414 section 3.2)');
   assert.equal(asResponse.headers.get('access-control-allow-origin'), '*');
   const jwks = await (await e.request('/.well-known/jwks.json')).json();
   assert.equal(jwks.keys.length, 1); assert.equal(jwks.keys[0].d, undefined);
   const doc = await e.request('/auth.md'); assert.match(doc.headers.get('content-type'), /text\/markdown/);
   assert.match(await doc.text(), /^# auth.md/);
   assert.equal((await e.request('/.well-known/openid-configuration')).status, 404);
+});
+
+test('main-site audience is isolated, legacy tokens survive, and every audience can be revoked', async t => {
+  const e = await env(t); const reg = await e.register();
+  const old = await e.access(reg);
+  const main = await (await e.exchange(reg.identity_assertion, { resource: 'https://alelm.net' })).json();
+  const root = await (await e.exchange(reg.identity_assertion, { resource: issuer })).json();
+  assert.equal(decodeJwt(main.access_token).aud, 'https://alelm.net');
+  assert.equal((await e.request('/site-api/search?q=علوم', { token: main.access_token })).status, 200);
+  assert.equal((await e.request('/site-api/articles/fixture-1', { token: main.access_token })).status, 200);
+  assert.equal((await e.request('/api/search?q=علوم', { token: main.access_token })).status, 401);
+  assert.equal((await e.request('/site-api/search?q=علوم', { token: old.access_token })).status, 401);
+  assert.equal((await e.request('/site-api/search?q=علوم', { token: root.access_token })).status, 401);
+  assert.equal((await e.request('/api/search?q=علوم', { token: root.access_token })).status, 200);
+  await e.restart();
+  assert.equal((await e.request('/api/search?q=علوم', { token: old.access_token })).status, 200);
+  for (const token of [old, main, root]) {
+    assert.equal((await e.post('/oauth2/revoke', { token: token.access_token }, { form: true })).status, 200);
+    for (const path of ['/api/search?q=علوم', '/site-api/search?q=علوم']) assert.equal((await e.request(path, { token: token.access_token })).status, 401);
+  }
+  const missing = await e.request('/site-api/search?q=علوم');
+  assert.match(missing.headers.get('www-authenticate'), /https:\/\/alelm.net\/\.well-known\/oauth-protected-resource/);
+  assert.ok(e.fixture.requests.every(r => !r.headers.authorization && !r.headers.cookie));
+});
+
+test('main-site gateway completes registration, token, search, MCP and revocation against the real service', async t => {
+  const e = await env(t); const reg = await e.register();
+  const token = await (await e.exchange(reg.identity_assertion, { resource: 'https://alelm.net' })).json();
+  const transport = (url, options) => {
+    const target = new URL(url);
+    assert.equal(target.origin, 'https://agents.alelm.net');
+    assert.equal(options.headers.has('cookie'), false);
+    return e.request(target.pathname + target.search, { method: options.method,
+      headers: Object.fromEntries([...options.headers].map(([k, v]) => [k === 'content-type' ? 'Content-Type' : k, v])),
+      ...(options.body ? { body: Buffer.from(options.body).toString() } : {}) });
+  };
+  const gateway = (path, body) => agentAccessGateway(new Request('https://alelm.net/api/agents' + path, {
+    method: body ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token.access_token}`,
+      Cookie: 'member=do-not-forward', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  }), transport);
+  const search = await gateway('/search?q=علوم');
+  assert.equal(search.status, 200); assert.equal((await search.json()).items[0].id, 'fixture-1');
+  assert.equal((await gateway('/articles/fixture-1')).status, 200);
+  const initialized = await gateway('/mcp', { jsonrpc: '2.0', id: 1, method: 'initialize',
+    params: { protocolVersion: '2025-11-25', capabilities: {}, clientInfo: { name: 'gateway-test', version: '1' } } });
+  assert.equal(initialized.status, 200);
+  const listing = await gateway('/mcp', { jsonrpc: '2.0', id: 2, method: 'tools/list' });
+  assert.deepEqual((await listing.json()).result.tools.map(t => t.name).sort(), ['read_article', 'search_articles']);
+  await e.post('/oauth2/revoke', { token: token.access_token }, { form: true });
+  assert.equal((await gateway('/search?q=علوم')).status, 401);
 });
 
 test('anonymous registration exchanges for bounded read-only tokens; reads work without site login', async t => {
