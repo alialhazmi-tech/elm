@@ -13,6 +13,7 @@
 
 ## اكتشاف المحتوى
 
+- [أدوات المساعدات](https://alelm.net/docs/agents.md): اتصال MCP وWebMCP للبحث والقراءة فقط، وفهرس القدرات العام.
 - [دليل القراءة الآلية](https://alelm.net/docs/content-api.md): البحث وقراءة الأخبار العامة وطلب Markdown؛ دون حسابات أو صلاحيات تحرير.
 - [فهرس واجهات القراءة](https://alelm.net/.well-known/api-catalog): روابط التوثيق ووصف OpenAPI والحالة.
 - [مهارات القراءة والاستشهاد](https://alelm.net/.well-known/agent-skills/index.json): دليل استخدام قابل للاكتشاف مع بصمة تحقق للملف.

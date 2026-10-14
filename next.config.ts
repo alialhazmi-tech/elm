@@ -60,6 +60,10 @@ const nextConfig: NextConfig = {
       { source: "/.well-known/api-catalog", headers: [{ key: "Content-Type", value: "application/linkset+json" }] },
       { source: "/docs/content-api.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
       { source: "/.well-known/agent-skills/:skill/SKILL.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
+      { source: "/.well-known/ai-catalog.json", headers: [{ key: "Content-Type", value: "application/ai-catalog+json" }, { key: "Access-Control-Allow-Origin", value: "*" }] },
+      { source: "/mcp/server-card", headers: [{ key: "Content-Type", value: "application/mcp-server-card+json" }, { key: "Access-Control-Allow-Origin", value: "*" }] },
+      { source: "/.well-known/mcp/server-card.json", headers: [{ key: "Access-Control-Allow-Origin", value: "*" }] },
+      { source: "/docs/agents.md", headers: [{ key: "Content-Type", value: "text/markdown; charset=utf-8" }] },
       { source: "/tahrir/recover", headers: [{ key: "Referrer-Policy", value: "no-referrer" }, { key: "Cache-Control", value: "private, no-store" }] },
       {
         // روابط iOS العالمية: آبل تشترط JSON صريحًا لملف الربط (بلا امتداد في public/).

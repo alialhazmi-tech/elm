@@ -1,0 +1,39 @@
+{
+  "browser": "Chrome/155.0.8059.41",
+  "flag": "--enable-blink-features=WebMCP",
+  "capability": {
+    "document": true,
+    "navigator": false,
+    "methods": [
+      "ontoolchange",
+      "executeTool",
+      "getTools",
+      "registerTool",
+      "constructor"
+    ]
+  },
+  "tools": [
+    {
+      "name": "read_article",
+      "annotations": {
+        "consequentialHint": false,
+        "readOnlyHint": true,
+        "untrustedContentHint": true
+      }
+    },
+    {
+      "name": "search_articles",
+      "annotations": {
+        "consequentialHint": false,
+        "readOnlyHint": true,
+        "untrustedContentHint": true
+      }
+    }
+  ],
+  "executionResult": "{\"id\":\"123\",\"publisher\":\"العلم\",\"bodyMarkdown\":\"نص اختبار عام\",\"url\":\"https://alelm.net/health/123/test\"}",
+  "requestMethod": "GET",
+  "sentCookies": false,
+  "privatePageTools": [],
+  "errors": [],
+  "fixture": "Published article API response mocked; production build and native WebMCP exercised. Database publication filters tested separately."
+}

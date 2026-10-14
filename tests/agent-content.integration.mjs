@@ -4,6 +4,8 @@ import { build } from "esbuild";
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 
 const source = process.env.TEST_DATABASE_URL;
 if (!source || !/^alelm_test/.test(new URL(source).pathname.slice(1))) throw new Error("Isolated TEST_DATABASE_URL named alelm_test* required");
@@ -22,6 +24,7 @@ try {
     export { GET as article } from './app/api/content/v1/articles/[id]/route';
     export { GET as search } from './app/api/content/v1/search/route';
     export { GET as markdown } from './app/content.md/route';
+    export { POST as mcp } from './app/mcp/route';
   `, resolveDir: process.cwd() }, outfile: `${directory}/subject.mjs`,
     bundle: true, platform: "node", format: "esm", packages: "external",
     plugins: [{ name: "isolated-database-and-cache", setup(b) {
@@ -61,6 +64,30 @@ try {
   assert.match(payload.bodyMarkdown, /\[المصدر\]\(https:\/\/example.org\/source\)/);
   assert.deepEqual(Object.keys(payload).sort(), ["id", "title", "description", "url", "section", "image", "publishedAt", "updatedAt", "publisher", "language", "bodyMarkdown", "videoUrl", "factCheck"].sort());
   assert.equal((await (await article("1658")).json()).id, "1660");
+  const mcp = new Client({ name: "public-read-test", version: "1.0.0" });
+  await mcp.connect(new StreamableHTTPClientTransport(new URL("https://alelm.net/mcp"), {
+    fetch: async (url, init) => subject.mcp(new Request(url, init)),
+  }));
+  try {
+    const tools = await mcp.listTools();
+    assert.deepEqual(tools.tools.map(tool => tool.name).sort(), ["read_article", "search_articles"]);
+    assert.ok(tools.tools.every(tool => tool.annotations.readOnlyHint && !tool.annotations.destructiveHint));
+    const found = await mcp.callTool({ name: "search_articles", arguments: { query: "الفضاء" } });
+    assert.equal(found.structuredContent.total, 2);
+    const read = await mcp.callTool({ name: "read_article", arguments: { id: "920001" } });
+    assert.deepEqual(read.structuredContent, payload);
+    for (const id of ["draft", "review", "scheduled", "archived", "future", "revision", "undated", "jak"]) {
+      const hidden = await mcp.callTool({ name: "read_article", arguments: { id } });
+      assert.equal(hidden.isError, true, `MCP must hide ${id}`);
+      assert.doesNotMatch(JSON.stringify(hidden), /PRIVATE_FIELD|postgres|select /i);
+    }
+    for (const args of [{ id: "../tahrir" }, { id: "https://example.org" }, { id: "920001", publish: true }]) {
+      assert.equal((await mcp.callTool({ name: "read_article", arguments: args })).isError, true);
+    }
+    for (const name of ["publish_article", "delete_article", "edit_article", "upload_file", "get_account"]) {
+      assert.equal((await mcp.callTool({ name, arguments: {} })).isError, true);
+    }
+  } finally { await mcp.close(); }
   for (const path of ["/sciences/920001/خبر", "/sciences/920001/%d8%ae%d8%a8%d8%b1"]) {
     const result = await md(path); assert.equal(result.status, 200);
     assert.equal(result.headers.get("Content-Type"), "text/markdown; charset=utf-8");
@@ -89,6 +116,13 @@ try {
   assert.equal((await (await search()).json()).total, 0);
   assert.equal((await md("/")).status, 200);
   await client.query("drop table stories cascade");
+  const unavailableMcp = await subject.mcp(new Request("https://alelm.net/mcp", {
+    method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream", "mcp-protocol-version": "2025-11-25" },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "read_article", arguments: { id: "920001" } } }),
+  }));
+  const unavailablePayload = await unavailableMcp.json();
+  assert.equal(unavailablePayload.result.isError, true);
+  assert.doesNotMatch(JSON.stringify(unavailablePayload), /postgres|select |DATABASE_URL|test_only/i);
   for (const noDb of [false, true]) {
     if (noDb) globalThis.__agentDb = null;
     for (const result of [await article("920001"), await search(), await md("/"), await md("/sciences/920001/خبر")]) {
